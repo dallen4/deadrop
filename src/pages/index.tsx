@@ -1,8 +1,8 @@
+import { useDeadDrop } from 'hooks/use-deaddrop';
 import React from 'react';
-import { useCrypto } from 'hooks/use-crypto';
 
 const Home = (props: any) => {
-    const {} = useCrypto();
+    const {} = useDeadDrop();
 
     return <div>Home</div>;
 };

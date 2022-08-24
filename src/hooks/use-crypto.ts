@@ -27,10 +27,18 @@ export const useCrypto = () => {
     const generateKey = (usages: KeyUsage[] = ['encrypt', 'decrypt']) =>
         cyrptoRef.current!.generateKey(KEY_GEN_PARAMS, true, usages);
 
+    const importKey = (input: JsonWebKey) =>
+        cyrptoRef.current!.importKey('jwk', input, KEY_GEN_PARAMS, true, [
+            'encrypt',
+            'decrypt',
+        ]);
+
+    const exportKey = (key: CryptoKey) =>
+        cyrptoRef.current!.exportKey('jwk', key).then(JSON.stringify);
+
     const storeKey = async (id: string, key: CryptoKey) => {
-        const keyValue = await cyrptoRef.current!.exportKey('jwk', key);
-        const keyString = JSON.stringify(keyValue);
-        await localForage.setItem(id, keyString);
+        const keyString = await exportKey(key);
+        return localForage.setItem(id, keyString);
     };
 
     const getKey = async (id: string) => {
@@ -38,12 +46,9 @@ export const useCrypto = () => {
 
         if (!keyString) return null;
 
-        const keyData = JSON.parse(keyString);
+        const keyData: JsonWebKey = JSON.parse(keyString);
 
-        return cyrptoRef.current!.importKey('jwk', keyData, KEY_GEN_PARAMS, true, [
-            'encrypt',
-            'decrypt',
-        ]);
+        return importKey(keyData);
     };
 
     const encrypt = (key: CryptoKey, iv: string, input: Record<string, any>) =>
@@ -58,7 +63,11 @@ export const useCrypto = () => {
             )
             .then(decode);
 
-    const decrypt = (key: CryptoKey, iv: string, data: string) =>
+    const decrypt = (
+        key: CryptoKey,
+        iv: string,
+        data: string,
+    ): Promise<Record<string, any>> =>
         cyrptoRef
             .current!.decrypt(
                 {
@@ -94,6 +103,8 @@ export const useCrypto = () => {
     return {
         generateKey,
         storeKey,
+        importKey,
+        exportKey,
         getKey,
         encrypt,
         decrypt,
