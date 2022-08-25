@@ -3,10 +3,10 @@ import { nanoid } from 'nanoid';
 import localForage from 'localforage';
 
 export const useDeadDrop = () => {
-    const { generateKey, storeKey, importKey, encrypt, decrypt } = useCrypto();
+    const { generateKey, generateId, storeKey, importKey, encrypt, decrypt } = useCrypto();
 
     const drop = async (input: Record<string, any>) => {
-        const id = nanoid();
+        const id = generateId();
 
         const encryptionKey = await generateKey();
         const encrypted = await encrypt(encryptionKey, id, input);

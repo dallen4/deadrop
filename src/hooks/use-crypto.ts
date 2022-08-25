@@ -1,21 +1,20 @@
-import { useEffect, useRef } from 'react';
 import localForage from 'localforage';
+import { nanoid } from 'nanoid';
+import { bufferFromString } from '@lib/util';
 
-const ENCRYPTION_ALGO = 'AES-CBC';
+const ENCRYPTION_ALGO = 'AES-GCM';
 const HASH_ALGO = 'SHA-256';
-const KEY_GEN_PARAMS: AesKeyGenParams = {
+const KEY_PARAMS = {
     name: ENCRYPTION_ALGO,
     length: 256,
 };
 
 export const useCrypto = () => {
-    const cyrptoRef = useRef<SubtleCrypto>();
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        cyrptoRef.current = window.crypto.subtle || (window.crypto as any).webkitSubtle;
-    }, []);
+    const tools =
+        typeof window !== 'undefined'
+            ? window.crypto.subtle ||
+              ((window.crypto as any).webkitSubtle as SubtleCrypto)
+            : undefined;
 
     const encode = (input: Record<string, any>) => {
         const data = JSON.stringify(input);
@@ -24,17 +23,16 @@ export const useCrypto = () => {
 
     const decode = (input: ArrayBuffer) => new TextDecoder().decode(input);
 
+    const generateId = () => nanoid(12);
+
     const generateKey = (usages: KeyUsage[] = ['encrypt', 'decrypt']) =>
-        cyrptoRef.current!.generateKey(KEY_GEN_PARAMS, true, usages);
+        tools!.generateKey!(KEY_PARAMS, true, usages);
 
     const importKey = (input: JsonWebKey) =>
-        cyrptoRef.current!.importKey('jwk', input, KEY_GEN_PARAMS, true, [
-            'encrypt',
-            'decrypt',
-        ]);
+        tools!.importKey!('jwk', input, KEY_PARAMS, true, ['encrypt', 'decrypt']);
 
     const exportKey = (key: CryptoKey) =>
-        cyrptoRef.current!.exportKey('jwk', key).then(JSON.stringify);
+        tools!.exportKey('jwk', key).then(JSON.stringify);
 
     const storeKey = async (id: string, key: CryptoKey) => {
         const keyString = await exportKey(key);
@@ -52,8 +50,8 @@ export const useCrypto = () => {
     };
 
     const encrypt = (key: CryptoKey, iv: string, input: Record<string, any>) =>
-        cyrptoRef
-            .current!.encrypt(
+        tools!
+            .encrypt(
                 {
                     name: ENCRYPTION_ALGO,
                     iv: Buffer.from(iv),
@@ -61,31 +59,28 @@ export const useCrypto = () => {
                 key,
                 encode(input),
             )
-            .then(decode);
+            .then(buffer => String.fromCharCode(...new Uint8Array(buffer)));
 
     const decrypt = (
         key: CryptoKey,
         iv: string,
         data: string,
     ): Promise<Record<string, any>> =>
-        cyrptoRef
-            .current!.decrypt(
+        tools!
+            .decrypt(
                 {
                     name: ENCRYPTION_ALGO,
                     iv: Buffer.from(iv),
                 },
                 key,
-                Buffer.from(data),
+                bufferFromString(data),
             )
             .then(decode)
             .then(JSON.parse);
 
     const hash = async (input: Record<string, any>) => {
         const stringified = JSON.stringify(input);
-        const digest = await cyrptoRef.current!.digest(
-            HASH_ALGO,
-            Buffer.from(stringified),
-        );
+        const digest = await tools!.digest!(HASH_ALGO, Buffer.from(stringified));
 
         // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
         const hash = Array.from(new Uint8Array(digest))
@@ -101,6 +96,7 @@ export const useCrypto = () => {
     };
 
     return {
+        generateId,
         generateKey,
         storeKey,
         importKey,
