@@ -2,11 +2,13 @@ import localForage from 'localforage';
 import { nanoid } from 'nanoid';
 import { bufferFromString } from '@lib/util';
 
-const ENCRYPTION_ALGO = 'AES-GCM';
+const ENCRYPTION_ALGO = 'RSA-OAEP';
 const HASH_ALGO = 'SHA-256';
-const KEY_PARAMS = {
+const KEY_PARAMS: RsaHashedKeyGenParams = {
     name: ENCRYPTION_ALGO,
-    length: 256,
+    modulusLength: 2048,
+    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+    hash: { name: 'SHA-256' },
 };
 
 export const useCrypto = () => {
@@ -25,11 +27,17 @@ export const useCrypto = () => {
 
     const generateId = () => nanoid(12);
 
-    const generateKey = (usages: KeyUsage[] = ['encrypt', 'decrypt']) =>
-        tools!.generateKey!(KEY_PARAMS, true, usages);
+    const generateKey = () =>
+        tools!.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+            'encrypt',
+            'decrypt',
+        ]);
 
-    const importKey = (input: JsonWebKey) =>
-        tools!.importKey!('jwk', input, KEY_PARAMS, true, ['encrypt', 'decrypt']);
+    const generateKeyPair = () =>
+        tools!.generateKey(KEY_PARAMS, true, ['encrypt', 'decrypt']);
+
+    const importKey = (input: JsonWebKey, usages: KeyUsage[]) =>
+        tools!.importKey('jwk', input, KEY_PARAMS, true, usages);
 
     const exportKey = (key: CryptoKey) =>
         tools!.exportKey('jwk', key).then(JSON.stringify);
@@ -39,14 +47,14 @@ export const useCrypto = () => {
         return localForage.setItem(id, keyString);
     };
 
-    const getKey = async (id: string) => {
+    const getKey = async (id: string, usages: KeyUsage[]) => {
         const keyString = await localForage.getItem<string>(id);
 
         if (!keyString) return null;
 
         const keyData: JsonWebKey = JSON.parse(keyString);
 
-        return importKey(keyData);
+        return importKey(keyData, usages);
     };
 
     const encrypt = (key: CryptoKey, iv: string, input: Record<string, any>) =>
@@ -59,7 +67,7 @@ export const useCrypto = () => {
                 key,
                 encode(input),
             )
-            .then(buffer => String.fromCharCode(...new Uint8Array(buffer)));
+            .then((buffer) => String.fromCharCode(...new Uint8Array(buffer)));
 
     const decrypt = (
         key: CryptoKey,
@@ -98,6 +106,7 @@ export const useCrypto = () => {
     return {
         generateId,
         generateKey,
+        generateKeyPair,
         storeKey,
         importKey,
         exportKey,

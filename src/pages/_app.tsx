@@ -3,6 +3,7 @@ import { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
 import { DefaultSeo } from 'next-seo';
 import { initGA, logPageView } from '@lib/analytics';
+import { MantineProvider } from '@mantine/core';
 
 export default function MyApp(props: AppProps) {
     const { Component, pageProps } = props;
@@ -35,7 +36,15 @@ export default function MyApp(props: AppProps) {
                 description={'e2e enncrypted secret sharing'}
                 openGraph={{}}
             />
-            <Component {...pageProps} />
+            <MantineProvider
+                withGlobalStyles
+                withNormalizeCSS
+                theme={{
+                    colorScheme: 'dark',
+                }}
+            >
+                <Component {...pageProps} />
+            </MantineProvider>
         </>
     );
 }

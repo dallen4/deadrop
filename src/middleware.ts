@@ -5,7 +5,7 @@ import { NONCE_COOKIE } from './constants';
 
 export function middleware(request: NextRequest) {
     const response = NextResponse.next();
-console.log('jfdskajflkdsjfkls')
+
     const nonce = request.cookies.get(NONCE_COOKIE);
 
     if (!nonce)

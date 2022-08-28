@@ -1,7 +1,28 @@
-import React from 'react';
-import Document, { Head, Html, Main, NextScript } from 'next/document';
+import Document, { DocumentContext, Head, Html, Main, NextScript } from 'next/document';
+import { ServerStyles, createStylesServer } from '@mantine/next';
 
-class CustomDocument extends Document {
+// optional: you can provide your cache as a fist argument in createStylesServer function
+const stylesServer = createStylesServer();
+
+export default class _Document extends Document {
+    static async getInitialProps(ctx: DocumentContext) {
+        const initialProps = await Document.getInitialProps(ctx);
+
+        // Add your app specific logic here
+
+        return {
+            ...initialProps,
+            styles: [
+                initialProps.styles,
+                <ServerStyles
+                    html={initialProps.html}
+                    server={stylesServer}
+                    key="styles"
+                />,
+            ],
+        };
+    }
+
     render() {
         return (
             <Html lang="en">
@@ -10,6 +31,12 @@ class CustomDocument extends Document {
                     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
                     {/* PWA primary color */}
                     {/* <meta name="theme-color" content={theme.palette.primary.main} /> */}
+
+                    <link rel="preconnect" href="https://fonts.gstatic.com" />
+                    <link
+                        href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+                        rel="stylesheet"
+                    />
                 </Head>
                 <body>
                     <Main />
@@ -19,40 +46,3 @@ class CustomDocument extends Document {
         );
     }
 }
-
-CustomDocument.getInitialProps = async (ctx) => {
-    // Resolution order
-    //
-    // On the server:
-    // 1. app.getInitialProps
-    // 2. page.getInitialProps
-    // 3. document.getInitialProps
-    // 4. app.render
-    // 5. page.render
-    // 6. document.render
-    //
-    // On the server with error:
-    // 1. document.getInitialProps
-    // 2. app.render
-    // 3. page.render
-    // 4. document.render
-    //
-    // On the client
-    // 1. app.getInitialProps
-    // 2. page.getInitialProps
-    // 3. app.render
-    // 4. page.render
-    const initialProps = await Document.getInitialProps(ctx);
-
-    return {
-        ...initialProps,
-        // Styles fragment is rendered after the app and page rendering finish.
-        styles: (
-            <React.Fragment>
-                {initialProps.styles}
-            </React.Fragment>
-        ),
-    };
-};
-
-export default CustomDocument;

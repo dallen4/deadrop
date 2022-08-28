@@ -3,17 +3,15 @@ import { nanoid } from 'nanoid';
 import localForage from 'localforage';
 
 export const useDeadDrop = () => {
-    const { generateKey, generateId, storeKey, importKey, encrypt, decrypt } = useCrypto();
+    const { generateKeyPair, generateId, storeKey, importKey, encrypt, decrypt } = useCrypto();
 
     const drop = async (input: Record<string, any>) => {
         const id = generateId();
 
-        const encryptionKey = await generateKey();
-        const encrypted = await encrypt(encryptionKey, id, input);
+        const encryptionKey = await generateKeyPair();
+        const encrypted = await encrypt(encryptionKey.publicKey, id, input);
 
-        const keyString = await storeKey(id, encryptionKey);
-
-        // write key to redis
+        const keyString = await storeKey(id, encryptionKey.publicKey);
 
         return id;
     };
@@ -23,7 +21,7 @@ export const useDeadDrop = () => {
 
         const keyInput: JsonWebKey = JSON.parse('');
 
-        const key = await importKey(keyInput);
+        const key = await importKey(keyInput, ['decrypt']);
 
         // get encrypted package from rerdis
 
