@@ -524,6 +524,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/randomcolor@^0.5.6":
+  version "0.5.6"
+  resolved "https://registry.yarnpkg.com/@types/randomcolor/-/randomcolor-0.5.6.tgz#c1085077c4ae0f6af60e0ad229d14721b9b3b58c"
+  integrity sha512-lKkW8DGUQpZldTrwa+HM5rY+7eTyaHOMTsnj9ewt7AAwXuMPwBmkLlfh8+SXdgOhBW9iNI4x4zRjQ/TQZkdycQ==
+
 "@types/react-dom@^17.0.11":
   version "17.0.17"
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-17.0.17.tgz#2e3743277a793a96a99f1bf87614598289da68a1"
@@ -2223,6 +2228,11 @@ qs@^6.10.3, qs@^6.5.0:
   integrity sha512-MvjoMCJwEarSbUYk5O+nmoSzSutSsTwF85zcHPQ9OrlFoZOYIjaqBAJIqIXjptyD5vThxGq52Xu/MaJzRkIk4Q==
   dependencies:
     side-channel "^1.0.4"
+
+randomcolor@^0.6.2:
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/randomcolor/-/randomcolor-0.6.2.tgz#7a57362ae1a1278439aeed2c15e5deb8ea33f56d"
+  integrity sha512-Mn6TbyYpFgwFuQ8KJKqf3bqqY9O1y37/0jgSK/61PUxV4QfIMv0+K2ioq8DfOjkBslcjwSzRfIDEXfzA9aCx7A==
 
 range-parser@~1.2.1:
   version "1.2.1"
