@@ -1,36 +1,47 @@
 import { useCrypto } from './use-crypto';
 import { nanoid } from 'nanoid';
 import localForage from 'localforage';
+import { useRef, useState } from 'react';
+import Peer, { DataConnection } from 'peerjs';
+import { initPeer } from '@lib/peer';
 
 export const useDeadDrop = () => {
-    const { generateKeyPair, generateId, storeKey, importKey, encrypt, decrypt } = useCrypto();
+    const peer = useRef<Peer>();
+    const [connection, setConnection] = useState<DataConnection>();
 
-    const drop = async (input: Record<string, any>) => {
-        const id = generateId();
+    const { generateKeyPair, deriveKey, generateId, encrypt, decrypt } = useCrypto();
+    const keyPair = useRef<CryptoKeyPair>();
+    const peerPubKey = useRef<CryptoKey>();
 
-        const encryptionKey = await generateKeyPair();
-        const encrypted = await encrypt(encryptionKey.publicKey, id, input);
+    const init = async () => {
+        const id =
+            (await localForage.getItem<string>('drop-session-id')) ||
+            (await localForage.setItem<string>('drop-session-id', generateId()));
 
-        const keyString = await storeKey(id, encryptionKey.publicKey);
-
-        return id;
+        peer.current = await initPeer(id);
+        keyPair.current = await generateKeyPair();
     };
 
-    const pickup = async (id: string) => {
-        // get from redis
+    const getPublicKey = () => keyPair.current!.publicKey;
 
-        const keyInput: JsonWebKey = JSON.parse('');
+    const getSharedKey = (peerPublicKey: CryptoKey) =>
+        deriveKey(keyPair.current!.privateKey, peerPublicKey);
 
-        const key = await importKey(keyInput, ['decrypt']);
+    const drop = async (input: Record<string, any>, peerPublicKey: CryptoKey) => {
+        const id = peer.current!.id;
 
-        // get encrypted package from rerdis
+        const encryptionKey = await getSharedKey(peerPublicKey);
+        const encrypted = await encrypt(encryptionKey, id, input);
 
-        const encrypted = '';
+        connection!.send({ data: encrypted });
+    };
 
-        return decrypt(key, id, encrypted);
+    const pickup = async (payload: string) => {
+        const iv = connection!.peer;
     };
 
     return {
+        init,
         drop,
     };
 };

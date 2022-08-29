@@ -2,13 +2,16 @@ import localForage from 'localforage';
 import { nanoid } from 'nanoid';
 import { bufferFromString } from '@lib/util';
 
-const ENCRYPTION_ALGO = 'RSA-OAEP';
+const ENCRYPTION_ALGO = 'AES-GCM';
 const HASH_ALGO = 'SHA-256';
-const KEY_PARAMS: RsaHashedKeyGenParams = {
+const DERIVED_KEY_PARAMS: AesDerivedKeyParams = {
     name: ENCRYPTION_ALGO,
-    modulusLength: 2048,
-    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-    hash: { name: 'SHA-256' },
+    length: 256,
+};
+
+const KEY_PAIR_PARAMS: EcKeyGenParams & EcKeyImportParams = {
+    name: 'ECDH',
+    namedCurve: 'P-384',
 };
 
 export const useCrypto = () => {
@@ -34,10 +37,22 @@ export const useCrypto = () => {
         ]);
 
     const generateKeyPair = () =>
-        tools!.generateKey(KEY_PARAMS, true, ['encrypt', 'decrypt']);
+        tools!.generateKey(KEY_PAIR_PARAMS, true, ['deriveKey']);
+
+    const deriveKey = (privateKey: CryptoKey, publicKey: CryptoKey) =>
+        window.crypto.subtle.deriveKey(
+            {
+                name: 'ECDH',
+                public: publicKey,
+            },
+            privateKey,
+            DERIVED_KEY_PARAMS,
+            false,
+            ['encrypt', 'decrypt'],
+        );
 
     const importKey = (input: JsonWebKey, usages: KeyUsage[]) =>
-        tools!.importKey('jwk', input, KEY_PARAMS, true, usages);
+        tools!.importKey('jwk', input, KEY_PAIR_PARAMS, true, usages);
 
     const exportKey = (key: CryptoKey) =>
         tools!.exportKey('jwk', key).then(JSON.stringify);
@@ -107,6 +122,7 @@ export const useCrypto = () => {
         generateId,
         generateKey,
         generateKeyPair,
+        deriveKey,
         storeKey,
         importKey,
         exportKey,
