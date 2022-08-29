@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useCrypto } from 'hooks/use-crypto';
-import { toDataURL } from 'qrcode';
 import {
     AppShell,
     useMantineTheme,
@@ -15,44 +13,29 @@ import {
     Image,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import { useDeadDrop } from 'hooks/use-deaddrop';
 
 const STEP_COUNT = 3;
 
 const Home = (props: any) => {
-    const { generateKeyPair, generateId, encrypt, decrypt, hash } = useCrypto();
-
     const theme = useMantineTheme();
     const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
 
     const [active, setActive] = useState(0);
     const [link, setLink] = useState('');
 
+    const { init } = useDeadDrop();
+
     const nextStep = () =>
         setActive((current) => (current < STEP_COUNT ? ++current : current));
     const prevStep = () => setActive((current) => (current > 0 ? --current : current));
 
     const test = async () => {
-        const { publicKey: pubKey1, privateKey: privKey1 } = await generateKeyPair();
-
-        const data = {
-            value: 'jkfldsjaklfjsklf',
-        };
-
-        const iv = generateId();
-
-        const enc = await encrypt(pubKey1, iv, data);
-
-        console.log(enc);
-
-        const dec = await decrypt(privKey1, iv, enc);
-
-        console.log(dec);
-
-        toDataURL('https://chat.nieky.dev').then(setLink);
     };
 
     useEffect(() => {
         test().catch(console.error);
+        init();
     }, []);
 
     return (

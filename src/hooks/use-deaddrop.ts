@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid';
 import localForage from 'localforage';
 import { useRef, useState } from 'react';
 import Peer, { DataConnection } from 'peerjs';
-import { initPeer } from '@lib/peer';
 
 export const useDeadDrop = () => {
     const peer = useRef<Peer>();
@@ -14,6 +13,8 @@ export const useDeadDrop = () => {
     const peerPubKey = useRef<CryptoKey>();
 
     const init = async () => {
+        const { initPeer } = await import('@lib/peer');
+
         const id =
             (await localForage.getItem<string>('drop-session-id')) ||
             (await localForage.setItem<string>('drop-session-id', generateId()));
