@@ -1,3 +1,6 @@
+import randomColor from 'randomcolor';
+import { toDataURL } from 'qrcode';
+
 export const bufferFromString = (input: string) => {
     const size = input.length;
 
@@ -8,3 +11,27 @@ export const bufferFromString = (input: string) => {
 
     return viewArray;
 };
+
+// ref: https://github.com/davidmerfield/randomColor#options
+const hues = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'monochrome'];
+
+export const generateColorSet = (amount: number = 2) => {
+    const colors = new Array<string>(amount);
+
+    for (let cIndex = 0; cIndex < amount; cIndex++) {
+        const hue = hues[Math.floor(Math.random() * hues.length)];
+
+        colors[cIndex] = randomColor({ hue, luminosity: 'bright' });
+    }
+
+    return colors;
+};
+
+export const generatePickupUrl = (id: string) => {
+    const params = new URLSearchParams({ drop: id });
+    const baseUrl = new URL('/pickup', window.location.host);
+
+    return `${baseUrl.toString()}?${params.toString()}`;
+};
+
+export const generateQrCodeUrl = (input: string) => toDataURL(input);
