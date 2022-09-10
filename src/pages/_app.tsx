@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { DefaultSeo } from 'next-seo';
 import { initGA, logPageView } from '@lib/analytics';
 import { MantineProvider } from '@mantine/core';
+import Layout from '../atoms/Layout';
 
 export default function MyApp(props: AppProps) {
     const { Component, pageProps } = props;
@@ -43,7 +44,9 @@ export default function MyApp(props: AppProps) {
                     colorScheme: 'dark',
                 }}
             >
-                <Component {...pageProps} />
+                <Layout>
+                    <Component {...pageProps} />
+                </Layout>
             </MantineProvider>
         </>
     );

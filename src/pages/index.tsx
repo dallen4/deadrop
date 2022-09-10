@@ -30,56 +30,15 @@ const Home = (props: any) => {
         setActive((current) => (current < STEP_COUNT ? ++current : current));
     const prevStep = () => setActive((current) => (current > 0 ? --current : current));
 
-    const test = async () => {
-    };
+    const test = async () => {};
 
-    useEffect(() => {
-        test().catch(console.error);
-        init();
-    }, []);
+    // useEffect(() => {
+    //     test().catch(console.error);
+    //     init();
+    // }, []);
 
     return (
-        <AppShell
-            padding={'md'}
-            styles={{
-                body: {
-                    justifyContent: 'center',
-                },
-                main: {
-                    maxWidth: '700px',
-                },
-            }}
-            header={
-                <Header
-                    height={90}
-                    withBorder={false}
-                    styles={(theme) => ({
-                        root: {
-                            padding: theme.spacing.md,
-                            textAlign: 'center',
-                        },
-                    })}
-                >
-                    <Title>deadDrop</Title>
-                </Header>
-            }
-            footer={
-                <Footer
-                    height={60}
-                    withBorder={false}
-                    styles={(theme) => ({
-                        root: {
-                            padding: theme.spacing.md,
-                            textAlign: 'center',
-                        },
-                    })}
-                >
-                    <Text size={'xs'}>
-                        Copyright &copy; Nieky Allen {new Date().getFullYear()}.
-                    </Text>
-                </Footer>
-            }
-        >
+        <>
             <Stepper active={active} orientation={'horizontal'}>
                 <Stepper.Step
                     label={'Start Session'}
@@ -108,7 +67,7 @@ const Home = (props: any) => {
                 <Stepper.Completed>
                     <Card style={{ margin: theme.spacing.md }}>
                         <Title size={'h1'}>All done!</Title>
-                        <Image radius={'sm'} src={link} width={200} height={200}/>
+                        <Image radius={'sm'} src={link} width={200} height={200} />
                     </Card>
                 </Stepper.Completed>
             </Stepper>
@@ -116,7 +75,7 @@ const Home = (props: any) => {
                 <Button onClick={prevStep}>Prev</Button>
                 <Button onClick={nextStep}>Next</Button>
             </Group>
-        </AppShell>
+        </>
     );
 };
 

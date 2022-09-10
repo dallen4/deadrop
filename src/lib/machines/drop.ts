@@ -26,6 +26,7 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
     {
         id: 'drop',
         preserveActionOrder: true,
+        predictableActionArguments: true,
         context: initDropContext(),
         initial: DropState.Initial,
         states: {

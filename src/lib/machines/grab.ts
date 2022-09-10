@@ -26,6 +26,7 @@ export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
     {
         id: 'grab',
         preserveActionOrder: true,
+        predictableActionArguments: true,
         context: initGrabContext(),
         initial: GrabState.Initial,
         states: {
