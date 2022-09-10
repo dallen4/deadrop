@@ -13,7 +13,7 @@ import {
     Image,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { useDeadDrop } from 'hooks/use-deaddrop';
+import { useDrop } from 'hooks/use-drop';
 
 const STEP_COUNT = 3;
 
@@ -24,7 +24,7 @@ const Home = (props: any) => {
     const [active, setActive] = useState(0);
     const [link, setLink] = useState('');
 
-    const { init } = useDeadDrop();
+    const { init } = useDrop();
 
     const nextStep = () =>
         setActive((current) => (current < STEP_COUNT ? ++current : current));

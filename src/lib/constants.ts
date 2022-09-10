@@ -11,8 +11,9 @@ export enum DropState {
     Ready = 'ready',
     Waiting = 'waiting',
     Connected = 'connected',
+    AwaitingHandshake = 'awaiting::handshake',
     Acknowledged = 'acknowledged',
-    AwaitingConfirmation = 'awaiting_confirmation',
+    AwaitingConfirmation = 'awaiting::confirmation',
     Completed = 'completed',
 };
 
@@ -34,3 +35,12 @@ export enum GrabState {
     Confirmed = 'confirmed',
     Completed = 'completed',
 };
+
+export enum GrabEventType {
+    Init = 'INITIALIZE',
+    Connect = 'CONNECT',
+    Handshake = 'HANDSHAKE',
+    Grab = 'GRAB',
+    Unwrap = 'UNWRAP',
+    Cleanup = 'CLEANUP',
+}

@@ -1,7 +1,7 @@
 import { DropState } from '../constants';
 import { assign as baseAssign, createMachine } from 'xstate';
 import { DataConnection } from 'peerjs';
-import { AnyDropEvent, InitDropEvent } from 'types/events';
+import type { AnyDropEvent, ConnectEvent, InitDropEvent, WrapEvent } from 'types/events';
 import Peer from 'peerjs';
 
 type DropContext = {
@@ -20,7 +20,7 @@ const initDropContext = (): DropContext => ({
     dropKey: null,
 });
 
-const assign = baseAssign<DropContext>;
+export const assign = baseAssign<DropContext>;
 
 export const dropMachine = createMachine<DropContext, AnyDropEvent>(
     {
@@ -47,21 +47,28 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
             },
             [DropState.Waiting]: {
                 on: {
-                    CONNECT: DropState.Connected,
-                },
-            },
-            [DropState.Connected]: {
-                entry: (context, event) => {
-                    return assign({ connection: event.connection as DataConnection });
-                },
-                on: {
-                    HANDSHAKE: {
-                        target: DropState.Acknowledged,
+                    CONNECT: {
+                        target: DropState.Connected,
+                        actions: ['setConnection'],
                     },
                 },
             },
-            // awaiting handshake
-            // confirm handshake
+            [DropState.Connected]: {
+                on: {
+                    HANDSHAKE: {
+                        target: DropState.AwaitingHandshake,
+                        actions: ['sendPublicKey'],
+                    },
+                },
+            },
+            [DropState.AwaitingHandshake]: {
+                on: {
+                    CONFIRM: {
+                        target: DropState.Acknowledged,
+                        actions: ['deriveKey'],
+                    },
+                },
+            },
             [DropState.Acknowledged]: {
                 on: {
                     DROP: {
@@ -72,12 +79,16 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
             },
             [DropState.AwaitingConfirmation]: {
                 on: {
-                    DROP: {
+                    CONFIRM: {
                         target: DropState.Completed,
+                        actions: ['verifyIntegrity'],
                     },
                 },
             },
             [DropState.Completed]: {
+                entry: (context, event) => {
+                    return assign(initDropContext());
+                },
                 type: 'final',
             },
         },
@@ -88,12 +99,18 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
                 // create key pair
                 assign({ keyPair: event.keyPair, peer: event.peer });
             },
-            setMessage: (context, event) => {
-                assign({ message: event.value });
+            setMessage: (context, event: WrapEvent) => {
+                assign({ message: event.payload });
             },
-            dropMessage: (context) => {
+            setConnection: (context, event: ConnectEvent) => {
+                assign({ connection: event.connection });
+            },
+            sendPublicKey: () => {},
+            deriveKey: () => {},
+            dropMessage: (context, event) => {
                 context.connection!.send(context.message);
             },
+            verifyIntegrity: () => {},
         },
     },
 );
