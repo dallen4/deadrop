@@ -1,9 +1,8 @@
 import { useCrypto } from './use-crypto';
-import localForage from 'localforage';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { assign, dropMachine } from '@lib/machines/drop';
 import { DropEventType } from '@lib/constants';
-import { InitDropEvent } from 'types/events';
+import type { InitDropEvent } from 'types/events';
 import { generatePickupUrl } from '@lib/util';
 
 export const useDrop = () => {
@@ -14,12 +13,15 @@ export const useDrop = () => {
             initDrop: async (context, event: InitDropEvent) => {
                 const { initPeer } = await import('@lib/peer');
 
-                const id =
-                    (await localForage.getItem<string>('drop-session-id')) ||
-                    (await localForage.setItem<string>('drop-session-id', generateId()));
+                const id = generateId();
 
                 const peer = await initPeer(id);
+
+                console.log(`Peer initialized: ${id}`);
+
                 const keyPair = await generateKeyPair();
+
+                console.log('Key pair generated');
 
                 peer.on('connection', (connection) => {
                     send({ type: DropEventType.Connect, connection });

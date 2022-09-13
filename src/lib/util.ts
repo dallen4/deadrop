@@ -1,5 +1,6 @@
 import randomColor from 'randomcolor';
 import { toDataURL } from 'qrcode';
+import { randomBytes } from 'crypto';
 
 export const bufferFromString = (input: string) => {
     const size = input.length;
@@ -35,3 +36,9 @@ export const generatePickupUrl = (id: string) => {
 };
 
 export const generateQrCodeUrl = (input: string) => toDataURL(input);
+
+export const generateDropKey = (id: string) => `drop:${id}`;
+
+export const generateIV = () => randomBytes(12).toString('binary');
+
+export const getIVBuffer = (iv: string) => Buffer.from(iv, 'binary');

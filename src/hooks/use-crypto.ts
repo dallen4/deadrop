@@ -1,6 +1,6 @@
 import localForage from 'localforage';
 import { nanoid } from 'nanoid';
-import { bufferFromString } from '@lib/util';
+import { bufferFromString, getIVBuffer } from '@lib/util';
 
 const ENCRYPTION_ALGO = 'AES-GCM';
 const HASH_ALGO = 'SHA-256';
@@ -77,7 +77,7 @@ export const useCrypto = () => {
             .encrypt(
                 {
                     name: ENCRYPTION_ALGO,
-                    iv: Buffer.from(iv),
+                    iv: getIVBuffer(iv),
                 },
                 key,
                 encode(input),
@@ -93,7 +93,7 @@ export const useCrypto = () => {
             .decrypt(
                 {
                     name: ENCRYPTION_ALGO,
-                    iv: Buffer.from(iv),
+                    iv: getIVBuffer(iv),
                 },
                 key,
                 bufferFromString(data),

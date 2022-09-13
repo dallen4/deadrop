@@ -1,23 +1,27 @@
 import { DropState } from '../constants';
 import { assign as baseAssign, createMachine } from 'xstate';
-import { DataConnection } from 'peerjs';
+import type { DataConnection } from 'peerjs';
 import type { AnyDropEvent, ConnectEvent, InitDropEvent, WrapEvent } from 'types/events';
 import Peer from 'peerjs';
 
 type DropContext = {
+    id: string | null;
     message: string;
     peer: Peer | null;
     connection: DataConnection | null;
     keyPair: CryptoKeyPair | null;
     dropKey: CryptoKey | null;
+    nonce: string | null;
 };
 
 const initDropContext = (): DropContext => ({
+    id: null,
     message: '',
     peer: null,
     connection: null,
     keyPair: null,
     dropKey: null,
+    nonce: null,
 });
 
 export const assign = baseAssign<DropContext>;

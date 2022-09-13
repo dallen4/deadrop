@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
     AppShell,
     useMantineTheme,
     Header,
     Title,
-    Footer,
     Text,
     Stepper,
     Group,
     Button,
     Card,
     Image,
+    Input,
+    PasswordInput,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useDrop } from 'hooks/use-drop';
+import StepCard from 'molecules/StepCard';
 
 const STEP_COUNT = 3;
 
@@ -24,14 +26,14 @@ const Home = (props: any) => {
     const [active, setActive] = useState(0);
     const [link, setLink] = useState('');
 
-    const { init } = useDrop();
+    const { status, init } = useDrop();
 
     const nextStep = () =>
         setActive((current) => (current < STEP_COUNT ? ++current : current));
     const prevStep = () => setActive((current) => (current > 0 ? --current : current));
 
     const test = async () => {};
-
+    console.log('STATUS: ', status);
     // useEffect(() => {
     //     test().catch(console.error);
     //     init();
@@ -39,35 +41,36 @@ const Home = (props: any) => {
 
     return (
         <>
-            <Stepper active={active} orientation={'horizontal'}>
+            <Stepper active={1} orientation={'horizontal'}>
                 <Stepper.Step
                     label={'Start Session'}
                     description={isMobile && 'Get started with a new drop'}
                 >
-                    <Card style={{ margin: theme.spacing.md }}>
-                        <Title size={'h4'}>starting a session</Title>
-                    </Card>
+                    <StepCard title={'starting a session'}>
+                        <Text>ready to start a drop?</Text>
+                        <Button onClick={init}>Start</Button>
+                    </StepCard>
                 </Stepper.Step>
                 <Stepper.Step
                     label={'Input secrets'}
                     description={isMobile && 'Add your secrets'}
                 >
-                    <Card style={{ margin: theme.spacing.md }}>
-                        <Title size={'h4'}>waiting for secrets</Title>
-                    </Card>
+                    <StepCard title={'waiting for secrets'}>
+                        <PasswordInput size={'md'} placeholder={'Your secret'} />
+                    </StepCard>
                 </Stepper.Step>
                 <Stepper.Step
                     label={'Share link'}
                     description={isMobile && 'Share your secrets'}
                 >
-                    <Card style={{ margin: theme.spacing.md }}>
-                        <Title size={'h4'}>send drop location</Title>
-                    </Card>
+                    <StepCard title={'share'}>
+                        <Title size={'h1'}>send drop link to friend</Title>
+                        <Image radius={'sm'} src={link} width={200} height={200} />
+                    </StepCard>
                 </Stepper.Step>
                 <Stepper.Completed>
                     <Card style={{ margin: theme.spacing.md }}>
                         <Title size={'h1'}>All done!</Title>
-                        <Image radius={'sm'} src={link} width={200} height={200} />
                     </Card>
                 </Stepper.Completed>
             </Stepper>
