@@ -5,19 +5,23 @@ import type { AnyGrabEvent } from 'types/events';
 import type Peer from 'peerjs';
 
 type GrabContext = {
-    message: string;
+    id: string | null;
+    message: Record<string, any> | null;
     peer: Peer | null;
     connection: DataConnection | null;
     keyPair: CryptoKeyPair | null;
     grabKey: CryptoKey | null;
+    nonce: string | null;
 };
 
 const initGrabContext = (): GrabContext => ({
-    message: '',
+    id: null,
+    message: null,
     peer: null,
     connection: null,
     keyPair: null,
     grabKey: null,
+    nonce: null,
 });
 
 export const assign = baseAssign<GrabContext>;

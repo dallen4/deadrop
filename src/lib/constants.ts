@@ -15,6 +15,7 @@ export enum DropState {
     Acknowledged = 'acknowledged',
     AwaitingConfirmation = 'awaiting::confirmation',
     Completed = 'completed',
+    Error = 'error',
 };
 
 export enum DropEventType {
@@ -22,6 +23,7 @@ export enum DropEventType {
     Wrap = 'WRAP',
     Connect = 'CONNECT',
     Handshake = 'HANDSHAKE',
+    HandshakeComplete = 'HANDSHAKE_COMPLETE',
     Drop = 'DROP',
     Confirm = 'CONFIRM',
 };
@@ -44,3 +46,12 @@ export enum GrabEventType {
     Unwrap = 'UNWRAP',
     Cleanup = 'CLEANUP',
 }
+
+export const DROP_PATH = '/api/drop';
+
+export enum MessageType {
+    Handshake = 'handshake',
+    Payload = 'payload',
+    Verify = 'verify',
+    ConfirmVerification = 'confirm',
+};

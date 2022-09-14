@@ -6,7 +6,8 @@ import Peer from 'peerjs';
 
 type DropContext = {
     id: string | null;
-    message: string;
+    message: Record<string, any>;
+    integrity: string | null;
     peer: Peer | null;
     connection: DataConnection | null;
     keyPair: CryptoKeyPair | null;
@@ -16,7 +17,8 @@ type DropContext = {
 
 const initDropContext = (): DropContext => ({
     id: null,
-    message: '',
+    message: {},
+    integrity: null,
     peer: null,
     connection: null,
     keyPair: null,
@@ -26,7 +28,11 @@ const initDropContext = (): DropContext => ({
 
 export const assign = baseAssign<DropContext>;
 
-export const dropMachine = createMachine<DropContext, AnyDropEvent>(
+export const dropMachine = createMachine<
+    DropContext,
+    AnyDropEvent,
+    { value: DropState; context: DropContext }
+>(
     {
         id: 'drop',
         preserveActionOrder: true,
@@ -68,9 +74,9 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
             },
             [DropState.AwaitingHandshake]: {
                 on: {
-                    CONFIRM: {
+                    HANDSHAKE_COMPLETE: {
                         target: DropState.Acknowledged,
-                        actions: ['deriveKey'],
+                        actions: ['setDropKey'],
                     },
                 },
             },
@@ -78,7 +84,6 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
                 on: {
                     DROP: {
                         target: DropState.AwaitingConfirmation,
-                        actions: ['dropMessage'],
                     },
                 },
             },
@@ -90,6 +95,8 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
                     },
                 },
             },
+            [DropState.Error]: {
+            },
             [DropState.Completed]: {
                 entry: (context, event) => {
                     return assign(initDropContext());
@@ -100,21 +107,11 @@ export const dropMachine = createMachine<DropContext, AnyDropEvent>(
     },
     {
         actions: {
-            initDrop: (context, event: InitDropEvent) => {
-                // create key pair
-                assign({ keyPair: event.keyPair, peer: event.peer });
-            },
-            setMessage: (context, event: WrapEvent) => {
-                assign({ message: event.payload });
-            },
-            setConnection: (context, event: ConnectEvent) => {
-                assign({ connection: event.connection });
-            },
+            initDrop: (context, event: InitDropEvent) => {},
+            setMessage: (context, event: WrapEvent) => {},
+            setConnection: (context, event: ConnectEvent) => {},
             sendPublicKey: () => {},
-            deriveKey: () => {},
-            dropMessage: (context, event) => {
-                context.connection!.send(context.message);
-            },
+            setDropKey: () => {},
             verifyIntegrity: () => {},
         },
     },
