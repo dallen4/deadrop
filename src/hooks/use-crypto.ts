@@ -97,11 +97,6 @@ export const useCrypto = () => {
         return hash;
     };
 
-    const checkHash = async (input: Record<string, any>, checksum: string) => {
-        const inputHash = await hash(input);
-        return inputHash === checksum;
-    };
-
     return {
         generateId,
         generateKey,
@@ -112,6 +107,5 @@ export const useCrypto = () => {
         encrypt,
         decrypt,
         hash,
-        checkHash,
     };
 };

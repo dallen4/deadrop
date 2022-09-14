@@ -8,7 +8,7 @@ import type {
     HandshakeCompleteEvent,
     InitDropEvent,
     WrapEvent,
-} from 'types/events';
+} from 'types/drop';
 import { generateGrabUrl } from '@lib/util';
 import { post } from '@lib/fetch';
 import { InitDropResult } from 'types/common';
@@ -75,7 +75,7 @@ export const useDrop = () => {
                 if (msg.type === MessageType.Handshake) {
                     const { input } = msg as HandshakeMessage;
 
-                    const pubKey = await importKey(input, ['encrypt']);
+                    const pubKey = await importKey(input, ['deriveKey']);
                     const dropKey = await deriveKey(context.keyPair!.privateKey, pubKey);
 
                     const event: HandshakeCompleteEvent = {

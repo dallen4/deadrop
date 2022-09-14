@@ -2,7 +2,7 @@ import { assign, grabMachine } from '@lib/machines/grab';
 import localForage from 'localforage';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { useCrypto } from './use-crypto';
-import { InitGrabEvent } from 'types/events';
+import { InitGrabEvent } from 'types/grab';
 import { GrabEventType } from '@lib/constants';
 
 export const useGrab = () => {

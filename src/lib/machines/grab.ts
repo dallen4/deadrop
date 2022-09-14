@@ -1,18 +1,7 @@
 import { GrabState } from '../constants';
 import { assign as baseAssign, createMachine } from 'xstate';
-import type { DataConnection } from 'peerjs';
-import type { AnyGrabEvent } from 'types/events';
-import type Peer from 'peerjs';
-
-type GrabContext = {
-    id: string | null;
-    message: Record<string, any> | null;
-    peer: Peer | null;
-    connection: DataConnection | null;
-    keyPair: CryptoKeyPair | null;
-    grabKey: CryptoKey | null;
-    nonce: string | null;
-};
+import type { AnyGrabEvent } from 'types/grab';
+import type { GrabContext } from 'types/grab';
 
 const initGrabContext = (): GrabContext => ({
     id: null,

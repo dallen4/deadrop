@@ -1,21 +1,20 @@
-import { DropEventType, GrabEventType } from '@lib/constants';
-import { EventObject } from 'xstate/lib/types';
-import Peer from 'peerjs';
-import { DataConnection } from 'peerjs';
+import type { BaseContext } from './common';
+import { DropEventType } from '@lib/constants';
+import type { EventObject } from 'xstate/lib/types';
+import type Peer from 'peerjs';
+import type { DataConnection } from 'peerjs';
+
+export type DropContext = BaseContext & {
+    message: Record<string, any>;
+    integrity: string | null;
+    dropKey: CryptoKey | null;
+};
 
 export type DropEvent = EventObject & {
     type: DropEventType;
 };
 
-export type GrabEvent = EventObject & {
-    type: GrabEventType;
-};
-
 export type AnyDropEvent = DropEvent & {
-    [key: string]: any;
-};
-
-export type AnyGrabEvent = GrabEvent & {
     [key: string]: any;
 };
 
@@ -50,15 +49,3 @@ export interface HandshakeCompleteEvent extends DropEvent {
 export interface CompleteEvent extends DropEvent {
     type: DropEventType.Confirm;
 }
-
-export interface InitGrabEvent extends GrabEvent {
-    type: GrabEventType.Init;
-    peer: Peer;
-    keyPair: CryptoKeyPair;
-}
-
-export interface ExecuteGrabEvent extends GrabEvent {
-    type: GrabEventType.Grab;
-    payload: string;
-}
-
