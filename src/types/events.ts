@@ -21,8 +21,10 @@ export type AnyGrabEvent = GrabEvent & {
 
 export interface InitDropEvent extends DropEvent {
     type: DropEventType.Init;
+    id: string;
     peer: Peer;
     keyPair: CryptoKeyPair;
+    nonce: string;
 }
 
 export interface ConnectEvent extends DropEvent {
@@ -32,8 +34,21 @@ export interface ConnectEvent extends DropEvent {
 
 export interface WrapEvent extends DropEvent {
     type: DropEventType.Wrap;
-    payload: string;
+    payload: Record<string, any>;
     integrity: string;
+}
+
+export interface HandshakeEvent extends DropEvent {
+    type: DropEventType.Handshake;
+}
+
+export interface HandshakeCompleteEvent extends DropEvent {
+    type: DropEventType.HandshakeComplete;
+    dropKey: CryptoKey;
+}
+
+export interface CompleteEvent extends DropEvent {
+    type: DropEventType.Confirm;
 }
 
 export interface InitGrabEvent extends GrabEvent {

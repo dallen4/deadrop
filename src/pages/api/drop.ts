@@ -2,6 +2,7 @@ import { getRedis } from '@lib/redis';
 import { generateDropKey, generateIV } from '@lib/util';
 import { nanoid } from 'nanoid';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { DropDetails } from 'types/common';
 
 const HOUR_IN_SECONDS = 60 * 60;
 const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24;
@@ -21,10 +22,11 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
                 error: 'Session not found',
             });
 
-        const { peerId, nonce } = data as { peerId: string; nonce: string };
+        const { peerId, nonce } = data as DropDetails;
 
         return res.status(200).json({
             peerId,
+            nonce,
         });
     } else if (req.method === 'POST') {
         const { id: peerId } = req.body as { id: string };
