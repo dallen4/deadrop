@@ -13,9 +13,7 @@ export const useGrab = () => {
             initDrop: async (context, event: InitGrabEvent) => {
                 const { initPeer } = await import('@lib/peer');
 
-                const id =
-                    (await localForage.getItem<string>('drop-session-id')) ||
-                    (await localForage.setItem<string>('drop-session-id', generateId()));
+                const id = generateId();
 
                 const peer = await initPeer(id);
                 const keyPair = await generateKeyPair();

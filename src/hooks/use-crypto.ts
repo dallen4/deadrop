@@ -1,4 +1,3 @@
-import localForage from 'localforage';
 import { nanoid } from 'nanoid';
 import { bufferFromString, getIVBuffer } from '@lib/util';
 
@@ -51,26 +50,11 @@ export const useCrypto = () => {
             ['encrypt', 'decrypt'],
         );
 
-    const importKey = (input: JsonWebKey, usages: KeyUsage[]) =>
-        tools!.importKey('jwk', input, KEY_PAIR_PARAMS, true, usages);
+    const importKey = (input: string, usages: KeyUsage[]) =>
+        tools!.importKey('jwk', JSON.parse(input), KEY_PAIR_PARAMS, true, usages);
 
     const exportKey = (key: CryptoKey) =>
         tools!.exportKey('jwk', key).then(JSON.stringify);
-
-    const storeKey = async (id: string, key: CryptoKey) => {
-        const keyString = await exportKey(key);
-        return localForage.setItem(id, keyString);
-    };
-
-    const getKey = async (id: string, usages: KeyUsage[]) => {
-        const keyString = await localForage.getItem<string>(id);
-
-        if (!keyString) return null;
-
-        const keyData: JsonWebKey = JSON.parse(keyString);
-
-        return importKey(keyData, usages);
-    };
 
     const encrypt = (key: CryptoKey, iv: string, input: Record<string, any>) =>
         tools!
@@ -123,10 +107,8 @@ export const useCrypto = () => {
         generateKey,
         generateKeyPair,
         deriveKey,
-        storeKey,
         importKey,
         exportKey,
-        getKey,
         encrypt,
         decrypt,
         hash,
