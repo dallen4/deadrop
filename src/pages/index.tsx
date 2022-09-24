@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useDrop } from 'hooks/use-drop';
-import StepCard from 'molecules/StepCard';
+import StepCard from 'molecules/steps/StepCard';
 import { DropState } from '@lib/constants';
 
 const STEP_COUNT = 3;
