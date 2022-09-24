@@ -3,8 +3,11 @@ import Peer from 'peerjs';
 let attempt = 0;
 
 export const initPeer = (id: string) => {
+    const server = new URL(process.env.NEXT_PUBLIC_PEER_SERVER_URL!);
+
     const peer = new Peer(id, {
-        host: 'uchat-server.herokuapp.com',
+        host: server.host,
+        path: server.pathname,
         secure: true,
         port: 443,
     });
@@ -14,7 +17,11 @@ export const initPeer = (id: string) => {
         call.close();
     });
 
-    peer.on('error', console.error);
+    peer.on('error', err => {
+        console.error(err);
+        console.log('reconnecting')
+        peer.reconnect();
+    });
 
     peer.on('disconnected', () => {
         if (attempt < 3) peer.reconnect();
