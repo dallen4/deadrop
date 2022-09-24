@@ -1,5 +1,7 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { bufferFromString, getIVBuffer } from '@lib/util';
+
+const { alphanumeric } = require('nanoid-dictionary');
 
 const ENCRYPTION_ALGO = 'AES-GCM';
 const HASH_ALGO = 'SHA-256';
@@ -27,7 +29,7 @@ export const useCrypto = () => {
 
     const decode = (input: ArrayBuffer) => new TextDecoder().decode(input);
 
-    const generateId = () => nanoid(12);
+    const generateId = () => customAlphabet(alphanumeric, 12)();
 
     const generateKey = () =>
         tools!.generateKey({ name: 'AES-GCM', length: 256 }, true, [
