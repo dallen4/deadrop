@@ -1,6 +1,7 @@
-import localForage from 'localforage';
-import { nanoid } from 'nanoid';
-import { bufferFromString } from '@lib/util';
+import { customAlphabet } from 'nanoid';
+import { bufferFromString, getIVBuffer } from '@lib/util';
+
+const { alphanumeric } = require('nanoid-dictionary');
 
 const ENCRYPTION_ALGO = 'AES-GCM';
 const HASH_ALGO = 'SHA-256';
@@ -28,7 +29,7 @@ export const useCrypto = () => {
 
     const decode = (input: ArrayBuffer) => new TextDecoder().decode(input);
 
-    const generateId = () => nanoid(12);
+    const generateId = () => customAlphabet(alphanumeric, 12)();
 
     const generateKey = () =>
         tools!.generateKey({ name: 'AES-GCM', length: 256 }, true, [
@@ -51,33 +52,18 @@ export const useCrypto = () => {
             ['encrypt', 'decrypt'],
         );
 
-    const importKey = (input: JsonWebKey, usages: KeyUsage[]) =>
-        tools!.importKey('jwk', input, KEY_PAIR_PARAMS, true, usages);
+    const importKey = (input: string, usages: KeyUsage[]) =>
+        tools!.importKey('jwk', JSON.parse(input), KEY_PAIR_PARAMS, true, usages);
 
     const exportKey = (key: CryptoKey) =>
         tools!.exportKey('jwk', key).then(JSON.stringify);
-
-    const storeKey = async (id: string, key: CryptoKey) => {
-        const keyString = await exportKey(key);
-        return localForage.setItem(id, keyString);
-    };
-
-    const getKey = async (id: string, usages: KeyUsage[]) => {
-        const keyString = await localForage.getItem<string>(id);
-
-        if (!keyString) return null;
-
-        const keyData: JsonWebKey = JSON.parse(keyString);
-
-        return importKey(keyData, usages);
-    };
 
     const encrypt = (key: CryptoKey, iv: string, input: Record<string, any>) =>
         tools!
             .encrypt(
                 {
                     name: ENCRYPTION_ALGO,
-                    iv: Buffer.from(iv),
+                    iv: getIVBuffer(iv),
                 },
                 key,
                 encode(input),
@@ -93,7 +79,7 @@ export const useCrypto = () => {
             .decrypt(
                 {
                     name: ENCRYPTION_ALGO,
-                    iv: Buffer.from(iv),
+                    iv: getIVBuffer(iv),
                 },
                 key,
                 bufferFromString(data),
@@ -113,23 +99,15 @@ export const useCrypto = () => {
         return hash;
     };
 
-    const checkHash = async (input: Record<string, any>, checksum: string) => {
-        const inputHash = await hash(input);
-        return inputHash === checksum;
-    };
-
     return {
         generateId,
         generateKey,
         generateKeyPair,
         deriveKey,
-        storeKey,
         importKey,
         exportKey,
-        getKey,
         encrypt,
         decrypt,
         hash,
-        checkHash,
     };
 };

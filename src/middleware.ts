@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
-import { NONCE_COOKIE } from './constants';
+import { NONCE_COOKIE } from '@lib/constants';
 
 export function middleware(request: NextRequest) {
     const response = NextResponse.next();
