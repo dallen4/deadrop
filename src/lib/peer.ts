@@ -17,10 +17,13 @@ export const initPeer = (id: string) => {
         call.close();
     });
 
-    peer.on('error', err => {
+    peer.on('error', (err) => {
         console.error(err);
-        console.log('reconnecting')
-        peer.reconnect();
+
+        if (peer.disconnected) {
+            console.log('reconnecting');
+            peer.reconnect();
+        }
     });
 
     peer.on('disconnected', () => {

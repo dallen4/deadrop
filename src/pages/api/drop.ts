@@ -22,12 +22,7 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
                 error: 'Session not found',
             });
 
-        const { peerId, nonce } = data as DropDetails;
-
-        return res.status(200).json({
-            peerId,
-            nonce,
-        });
+        return res.status(200).json(data as DropDetails);
     } else if (req.method === 'POST') {
         const { id: peerId } = req.body as { id: string };
 

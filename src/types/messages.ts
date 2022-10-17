@@ -21,5 +21,6 @@ export interface VerifyMessage extends BaseMessage {
 }
 
 export interface ConfirmIntegrityMessage extends BaseMessage {
-    type: MessageType.ConfirmVerification,
+    type: MessageType.ConfirmVerification;
+    verified: boolean;
 }

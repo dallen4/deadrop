@@ -1,11 +1,13 @@
-import { GrabState } from '../constants';
-import { assign as baseAssign, createMachine } from 'xstate';
+import { GrabEventType, GrabState } from '../constants';
+import { assign as baseAssign, createMachine, TransitionsConfig } from 'xstate';
 import type { AnyGrabEvent } from 'types/grab';
 import type { GrabContext } from 'types/grab';
+import { raise as baseRaise } from 'xstate/lib/actions';
 
 const initGrabContext = (): GrabContext => ({
     id: null,
     message: null,
+    dropperId: null,
     peer: null,
     connection: null,
     keyPair: null,
@@ -14,6 +16,8 @@ const initGrabContext = (): GrabContext => ({
 });
 
 export const assign = baseAssign<GrabContext>;
+
+export const raise = baseRaise<GrabContext, AnyGrabEvent>;
 
 export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
     {
@@ -27,9 +31,9 @@ export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
                 on: {
                     INITIALIZE: {
                         target: GrabState.Ready,
-                        actions: ['initGrab'],
+                        actions: ['initGrab', raise(GrabEventType.Connect)],
                     },
-                },
+                } as TransitionsConfig<GrabContext, AnyGrabEvent>,
             },
             [GrabState.Ready]: {
                 on: {
@@ -43,7 +47,7 @@ export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
                 on: {
                     HANDSHAKE: {
                         target: GrabState.Waiting,
-                        actions: ['deriveKey', 'sendPublicKey'],
+                        actions: ['setGrabKey', 'sendPublicKey'],
                     },
                 },
             },
@@ -57,9 +61,19 @@ export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
             },
             [GrabState.Received]: {
                 on: {
-                    UNWRAP: {
+                    VERIFY: {
                         target: GrabState.Confirmed,
-                        actions: ['decryptAndVerify'],
+                        actions: ['startVerification'],
+                    },
+                },
+            },
+            [GrabState.AwaitingConfirmation]: {
+                on: {
+                    CONFIRM: {
+                        target: GrabState.Confirmed,
+                    },
+                    FAILURE: {
+                        target: GrabState.Error,
                     },
                 },
             },
@@ -70,6 +84,7 @@ export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
                     },
                 },
             },
+            [GrabState.Error]: {},
             [GrabState.Completed]: {
                 entry: (context, event) => {
                     return assign(initGrabContext());
@@ -82,10 +97,10 @@ export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
         actions: {
             initGrab: () => {},
             initConnection: () => {},
-            deriveKey: () => {},
+            setGrabKey: () => {},
             sendPublicKey: () => {},
             grabMessage: () => {},
-            decryptAndVerify: () => {},
+            startVerification: () => {},
         },
     },
 );

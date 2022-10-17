@@ -25,6 +25,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     })}
                 >
                     <Title>deadDrop</Title>
+                    <Text>real-time end-to-end encrypted secrets handoff</Text>
                 </Header>
             }
             footer={

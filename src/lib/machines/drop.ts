@@ -1,7 +1,8 @@
-import { DropState } from '../constants';
-import { assign as baseAssign, createMachine } from 'xstate';
+import { DropEventType, DropState, GrabEventType } from '../constants';
+import { assign as baseAssign, createMachine, TransitionsConfig } from 'xstate';
 import type { AnyDropEvent, ConnectEvent, InitDropEvent, WrapEvent } from 'types/drop';
 import type { DropContext } from 'types/drop';
+import { raise as baseRaise } from 'xstate/lib/actions';
 
 const initDropContext = (): DropContext => ({
     id: null,
@@ -15,6 +16,8 @@ const initDropContext = (): DropContext => ({
 });
 
 export const assign = baseAssign<DropContext>;
+
+export const raise = baseRaise<DropContext, AnyDropEvent>;
 
 export const dropMachine = createMachine<
     DropContext,
@@ -48,9 +51,9 @@ export const dropMachine = createMachine<
                 on: {
                     CONNECT: {
                         target: DropState.Connected,
-                        actions: ['setConnection'],
+                        actions: ['setConnection', raise(DropEventType.Handshake)],
                     },
-                },
+                } as TransitionsConfig<DropContext, AnyDropEvent>,
             },
             [DropState.Connected]: {
                 on: {
@@ -79,7 +82,6 @@ export const dropMachine = createMachine<
                 on: {
                     CONFIRM: {
                         target: DropState.Completed,
-                        actions: ['verifyIntegrity'],
                     },
                 },
             },
