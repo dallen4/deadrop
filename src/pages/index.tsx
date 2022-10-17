@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
     useMantineTheme,
     Title,
@@ -15,6 +15,7 @@ import { useDrop } from 'hooks/use-drop';
 import StepCard from 'molecules/steps/StepCard';
 import { DropState } from '@lib/constants';
 import DropLog from 'molecules/DropLog';
+import { generateQR } from '@lib/qrcode';
 
 const STEP_COUNT = 3;
 
@@ -24,7 +25,9 @@ const Home = (props: any) => {
 
     const inputRef = useRef<HTMLInputElement>();
 
-    const { status, init, setPayload, getDropLink, getLogs } = useDrop();
+    const { status, init, setPayload, dropLink, getLogs } = useDrop();
+
+    const [link, setLink] = useState<string>();
 
     const currentStep = useMemo(() => {
         if (status === DropState.Initial) return 0;
@@ -33,11 +36,16 @@ const Home = (props: any) => {
         else return 0;
     }, [status]);
 
-    console.log('STATUS: ', status);
+    useEffect(() => {
+        dropLink && generateQR(dropLink).then(setLink);
+    }, [dropLink]);
 
     return (
         <>
-            <Stepper active={currentStep} orientation={'horizontal'}>
+            <Stepper
+                active={currentStep}
+                orientation={isMobile ? 'vertical' : 'horizontal'}
+            >
                 <Stepper.Step
                     label={'Start Session'}
                     description={isMobile && 'Get started with a new drop'}
@@ -68,7 +76,7 @@ const Home = (props: any) => {
                 >
                     <StepCard title={'share'}>
                         <Title size={'h1'}>send drop link to friend</Title>
-                        <Image radius={'sm'} src={getDropLink()} width={200} height={200} />
+                        <Image radius={'sm'} src={link} width={200} height={200} />
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Completed>

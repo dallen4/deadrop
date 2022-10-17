@@ -174,7 +174,7 @@ export const useDrop = () => {
         send(event);
     };
 
-    const getDropLink = () => typeof window !== 'undefined' ? generateGrabUrl(context.id!) : '';
+    const dropLink = typeof window !== 'undefined' ? generateGrabUrl(context.id!) : null;
 
     const startHandshake = async () => {
         const { connection, keyPair } = context;
@@ -215,7 +215,7 @@ export const useDrop = () => {
     return {
         init,
         setPayload,
-        getDropLink,
+        dropLink,
         startHandshake,
         drop,
         getLogs,

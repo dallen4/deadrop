@@ -31,12 +31,10 @@ export const generateColorSet = (amount: number = 2) => {
 
 export const generateGrabUrl = (id: string) => {
     const params = new URLSearchParams({ drop: id });
-    const baseUrl = new URL(GRAB_PATH, window.location.host);
+    const baseUrl = new URL(GRAB_PATH, window.location.protocol + window.location.host);
 
     return `${baseUrl.toString()}?${params.toString()}`;
 };
-
-export const generateQrCodeUrl = (input: string) => toDataURL(input);
 
 export const generateDropKey = (id: string) => `drop:${id}`;
 
