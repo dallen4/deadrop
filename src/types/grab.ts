@@ -3,6 +3,7 @@ import { GrabEventType } from '@lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
+import { useGrab } from 'hooks/use-grab';
 
 export type GrabContext = BaseContext & {
     message: Record<string, any> | null;
@@ -36,3 +37,5 @@ export interface ExecuteGrabEvent extends GrabEvent {
     type: GrabEventType.Grab;
     payload: string;
 }
+
+export type GrabContextValues = ReturnType<typeof useGrab>;

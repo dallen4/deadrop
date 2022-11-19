@@ -1,5 +1,4 @@
 import randomColor from 'randomcolor';
-import { toDataURL } from 'qrcode';
 import { randomBytes } from 'crypto';
 import { GRAB_PATH } from './constants';
 

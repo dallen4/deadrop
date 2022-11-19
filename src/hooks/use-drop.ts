@@ -1,10 +1,11 @@
+import { useRef } from 'react';
 import { useCrypto } from './use-crypto';
 import { useMachine } from '@xstate/react/lib/useMachine';
-import { assign, dropMachine } from '@lib/machines/drop';
+import { dropMachine, initDropContext } from '@lib/machines/drop';
 import { DropEventType, DropState, DROP_API_PATH, MessageType } from '@lib/constants';
 import type {
     CompleteEvent,
-    ConnectEvent,
+    DropContext,
     HandshakeCompleteEvent,
     InitDropEvent,
     WrapEvent,
@@ -19,7 +20,6 @@ import {
     HandshakeMessage,
     VerifyMessage,
 } from 'types/messages';
-import { useRef } from 'react';
 
 export const useDrop = () => {
     const {
@@ -33,55 +33,29 @@ export const useDrop = () => {
     } = useCrypto();
 
     const logsRef = useRef<Array<string>>([]);
+    const contextRef = useRef<DropContext>(initDropContext());
 
-    const [{ value: state, context }, send] = useMachine(dropMachine, {
-        actions: {
-            initDrop: (context, { id, peer, keyPair, nonce }: InitDropEvent) => {
-                assign({ id, peer, keyPair, nonce });
-            },
-            setMessage: (context, { payload, integrity }: WrapEvent) => {
-                assign({ message: payload, integrity });
-            },
-            setConnection: (context, { connection }: ConnectEvent) => {
-                assign({ connection });
-            },
-            sendPublicKey: async ({ connection, keyPair }, event) => {
-                logsRef.current.push('Beginning key exchange handshake...');
+    const [{ value: state }, send] = useMachine(dropMachine);
 
-                const pubKeyAsString = await exportKey(keyPair!.publicKey);
-
-                const message: HandshakeMessage = {
-                    type: MessageType.Handshake,
-                    input: pubKeyAsString,
-                };
-
-                connection!.send(message);
-
-                logsRef.current.push('Public key sent, awaiting acknowledgement...');
-            },
-            setDropKey: (context, { dropKey }: HandshakeCompleteEvent) => {
-                assign({ dropKey });
-            },
-        },
-    });
+    const pushLog = (message: string) => logsRef.current.push(message);
 
     const init = async () => {
         const { initPeer } = await import('@lib/peer');
 
         const keyPair = await generateKeyPair();
 
-        logsRef.current.push('Key pair generated...');
+        pushLog('Key pair generated...');
         console.log('Key pair generated');
 
         const peerId = generateId();
         const peer = await initPeer(peerId);
 
-        logsRef.current.push('Peer instance created successfully...');
+        pushLog('Peer instance created successfully...');
         console.log(`Peer initialized: ${peerId}`);
 
         peer.on('connection', (connection) => {
-            if (context.connection) {
-                console.error('Drop connection already exists!');
+            if (contextRef.current.connection) {
+                console.warn('Drop connection already exists!');
                 connection.close();
                 return;
             }
@@ -90,12 +64,17 @@ export const useDrop = () => {
                 if (msg.type === MessageType.Handshake) {
                     const { input } = msg as HandshakeMessage;
 
-                    logsRef.current.push('Handshake acknowledged, deriving drop key...');
+                    pushLog('Handshake acknowledged, deriving drop key...');
 
                     const pubKey = await importKey(input, ['deriveKey']);
-                    const dropKey = await deriveKey(context.keyPair!.privateKey, pubKey);
+                    const dropKey = await deriveKey(
+                        contextRef.current.keyPair!.privateKey,
+                        pubKey,
+                    );
 
-                    logsRef.current.push('Drop key derived successfully...');
+                    pushLog('Drop key derived successfully...');
+
+                    contextRef.current.dropKey = dropKey;
 
                     const event: HandshakeCompleteEvent = {
                         type: DropEventType.HandshakeComplete,
@@ -106,13 +85,11 @@ export const useDrop = () => {
                 } else if (msg.type === MessageType.Verify) {
                     const { integrity } = msg as VerifyMessage;
 
-                    logsRef.current.push('Integrity verification request received...');
+                    pushLog('Integrity verification request received...');
 
-                    const verified = integrity === context.integrity!;
+                    const verified = integrity === contextRef.current.integrity!;
 
-                    logsRef.current.push(
-                        `Integrity checked ${verified ? 'PASSED' : 'FAILED'}`,
-                    );
+                    pushLog(`Integrity checked ${verified ? 'PASSED' : 'FAILED'}`);
 
                     const message: ConfirmIntegrityMessage = {
                         type: MessageType.ConfirmVerification,
@@ -121,9 +98,7 @@ export const useDrop = () => {
 
                     connection.send(message);
 
-                    logsRef.current.push(
-                        'Integrity confirmation sent, completing drop...',
-                    );
+                    pushLog('Integrity confirmation sent, completing drop...');
 
                     const event: CompleteEvent = {
                         type: DropEventType.Confirm,
@@ -135,15 +110,24 @@ export const useDrop = () => {
                 }
             });
 
+            contextRef.current.connection = connection;
+
             send({ type: DropEventType.Connect, connection });
+
+            startHandshake();
         });
 
         const { id, nonce } = await post<InitDropResult, { id: string }>(DROP_API_PATH, {
             id: peer.id,
         });
 
-        logsRef.current.push('Session is ready to begin drop...');
+        pushLog('Session is ready to begin drop...');
         console.log('DROP READY');
+
+        contextRef.current.id = id;
+        contextRef.current.peer = peer;
+        contextRef.current.keyPair = keyPair;
+        contextRef.current.nonce = nonce;
 
         const event: InitDropEvent = {
             type: DropEventType.Init,
@@ -161,9 +145,12 @@ export const useDrop = () => {
             message,
         };
 
-        logsRef.current.push('Staging & hashing payload for integrity checks...');
+        pushLog('Staging & hashing payload for integrity checks...');
 
         const integrity = await hash(payload);
+
+        contextRef.current.integrity = integrity;
+        contextRef.current.message = payload;
 
         const event: WrapEvent = {
             type: DropEventType.Wrap,
@@ -174,12 +161,15 @@ export const useDrop = () => {
         send(event);
     };
 
-    const dropLink = typeof window !== 'undefined' ? generateGrabUrl(context.id!) : null;
+    const dropLink = () => {
+        const dropId = contextRef.current.id!;
+        return typeof window !== 'undefined' ? generateGrabUrl(dropId) : undefined;
+    };
 
     const startHandshake = async () => {
-        const { connection, keyPair } = context;
+        const { connection, keyPair } = contextRef.current;
 
-        logsRef.current.push('Beginning key exchange handshake...');
+        pushLog('Beginning key exchange handshake...');
 
         const pubKeyAsString = await exportKey(keyPair!.publicKey);
 
@@ -192,20 +182,24 @@ export const useDrop = () => {
     };
 
     const drop = async () => {
-        logsRef.current.push('Encrypting payload for drop...');
+        pushLog('Encrypting payload for drop...');
 
-        const payload = await encrypt(context.dropKey!, context.nonce!, context.message);
+        const payload = await encrypt(
+            contextRef.current.dropKey!,
+            contextRef.current.nonce!,
+            contextRef.current.message,
+        );
 
-        logsRef.current.push('Payload encrypted, dropping...');
+        pushLog('Payload encrypted, dropping...');
 
         const message: DropMessage = {
             type: MessageType.Payload,
             payload,
         };
 
-        context.connection!.send(message);
+        contextRef.current.connection!.send(message);
 
-        logsRef.current.push('Payload dropped, awaiting response...');
+        pushLog('Payload dropped, awaiting response...');
 
         send({ type: DropEventType.Drop });
     };

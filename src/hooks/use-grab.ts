@@ -1,9 +1,13 @@
-import { assign, grabMachine } from '@lib/machines/grab';
-import localForage from 'localforage';
+import { grabMachine, initGrabContext } from '@lib/machines/grab';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { useCrypto } from './use-crypto';
-import { AckHandshakeEvent, ExecuteGrabEvent, InitGrabEvent } from 'types/grab';
-import { DROP_API_PATH, GrabEventType, MessageType } from '@lib/constants';
+import {
+    AckHandshakeEvent,
+    ExecuteGrabEvent,
+    GrabContext,
+    InitGrabEvent,
+} from 'types/grab';
+import { DROP_API_PATH, GrabEventType, GrabState, MessageType } from '@lib/constants';
 import { useRef } from 'react';
 import { get } from '@lib/fetch';
 import { useRouter } from 'next/router';
@@ -29,83 +33,24 @@ export const useGrab = () => {
     } = useCrypto();
 
     const logsRef = useRef<Array<string>>([]);
+    const contextRef = useRef<GrabContext>(initGrabContext());
 
-    const [{ context, value: state }, send] = useMachine(grabMachine, {
-        actions: {
-            initGrab: (
-                context,
-                { id, dropperId, peer, keyPair, nonce }: InitGrabEvent,
-            ) => {
-                assign({ id, dropperId, peer, keyPair, nonce });
-            },
-            initConnection: async ({ peer, dropperId }) => {
-                const connect = () => {
-                    const pendingConnection = peer!.connect(dropperId!);
+    const [{ value: state }, send] = useMachine(grabMachine);
 
-                    return new Promise<typeof pendingConnection>((resolve) => {
-                        pendingConnection.on('open', () => {
-                            resolve(pendingConnection);
-                        });
-                    });
-                };
-
-                const connection = await connect();
-
-                assign({ connection });
-            },
-            setGrabKey: (context, { grabKey }: AckHandshakeEvent) => {
-                assign({ grabKey });
-            },
-            sendPublicKey: async ({ connection, keyPair }, event) => {
-                logsRef.current.push('Responding to handshake...');
-
-                const pubKeyAsString = await exportKey(keyPair!.publicKey);
-
-                const message: HandshakeMessage = {
-                    type: MessageType.Handshake,
-                    input: pubKeyAsString,
-                };
-
-                connection!.send(message);
-
-                logsRef.current.push('Public key sent, handshake acknowledged...');
-            },
-            grabMessage: async ({ grabKey, nonce }, { payload }: ExecuteGrabEvent) => {
-                logsRef.current.push('Decrypting payload...');
-
-                const message = await decrypt(grabKey!, nonce!, payload);
-
-                logsRef.current.push('Payload decrypted successfully...');
-
-                assign({ message });
-            },
-            startVerification: async ({ connection, message }) => {
-                logsRef.current.push('Generating payload integrity hash...');
-
-                const integrity = await hash(message!);
-
-                const msg: VerifyMessage = {
-                    type: MessageType.Verify,
-                    integrity,
-                };
-
-                connection!.send(msg);
-            },
-        },
-    });
+    const pushLog = (message: string) => logsRef.current.push(message);
 
     const init = async () => {
         const { initPeer } = await import('@lib/peer');
 
         const keyPair = await generateKeyPair();
 
-        logsRef.current.push('Key pair generated...');
+        pushLog('Key pair generated...');
         console.log('Key pair generated');
 
         const peerId = generateId();
         const peer = await initPeer(peerId);
 
-        logsRef.current.push('Peer instance created successfully...');
+        pushLog('Peer instance created successfully...');
         console.log(`Peer initialized: ${peerId}`);
 
         peer.on('connection', (connection) => {
@@ -113,12 +58,14 @@ export const useGrab = () => {
                 if (msg.type === MessageType.Handshake) {
                     const { input } = msg as HandshakeMessage;
 
-                    logsRef.current.push('Handshake request received...');
+                    pushLog('Handshake request received...');
 
                     const pubKey = await importKey(input, ['deriveKey']);
                     const grabKey = await deriveKey(keyPair.privateKey, pubKey);
 
-                    logsRef.current.push('Grab key derived successfully...');
+                    pushLog('Grab key derived successfully...');
+
+                    contextRef.current.grabKey = grabKey;
 
                     const event: AckHandshakeEvent = {
                         type: GrabEventType.Handshake,
@@ -126,10 +73,24 @@ export const useGrab = () => {
                     };
 
                     send(event);
+
+                    pushLog('Acknowledging handshhake, sending public key...');
+
+                    sendPublicKey();
                 } else if (msg.type === MessageType.Payload) {
                     const { payload } = msg as DropMessage;
 
-                    logsRef.current.push('Drop payload received...');
+                    pushLog('Drop payload received...');
+
+                    logsRef.current.push('Decrypting payload...');
+
+                    const { grabKey, nonce } = contextRef.current;
+
+                    const decryptedMessage = await decrypt(grabKey!, nonce!, payload);
+
+                    contextRef.current.message = decryptedMessage;
+
+                    pushLog('Payload decrypted successfully...');
 
                     const event: ExecuteGrabEvent = {
                         type: GrabEventType.Grab,
@@ -137,6 +98,23 @@ export const useGrab = () => {
                     };
 
                     send(event);
+
+                    pushLog('Generating payload integrity hash...');
+
+                    const integrity = await hash(decryptedMessage!);
+
+                    pushLog('Integrity hash computed, verifying...');
+
+                    const verificationMessage: VerifyMessage = {
+                        type: MessageType.Verify,
+                        integrity,
+                    };
+
+                    connection!.send(verificationMessage);
+
+                    pushLog('Verification request sent...');
+
+                    send({ type: GrabEventType.Verify });
                 } else if (msg.type === MessageType.ConfirmVerification) {
                     const { verified } = msg as ConfirmIntegrityMessage;
 
@@ -147,8 +125,6 @@ export const useGrab = () => {
                     console.error(`Invalid message received: ${msg.type}`);
                 }
             });
-
-            send({ type: GrabEventType.Connect, connection });
         });
 
         const dropId = router.query.id as string;
@@ -156,6 +132,12 @@ export const useGrab = () => {
         const { peerId: dropperId, nonce } = await get<DropDetails>(DROP_API_PATH, {
             id: dropId,
         });
+
+        contextRef.current.id = dropId;
+        contextRef.current.dropperId = dropperId;
+        contextRef.current.peer = peer;
+        contextRef.current.keyPair = keyPair;
+        contextRef.current.nonce = nonce;
 
         const event: InitGrabEvent = {
             type: GrabEventType.Init,
@@ -167,7 +149,36 @@ export const useGrab = () => {
         };
 
         send(event);
+
+        const connect = () => {
+            const pendingConnection = peer!.connect(dropperId!);
+
+            return new Promise<typeof pendingConnection>((resolve) => {
+                pendingConnection.on('open', () => {
+                    resolve(pendingConnection);
+                });
+            });
+        };
+
+        const connection = await connect();
+
+        contextRef.current.connection = connection;
     };
 
-    return { init };
+    const sendPublicKey = async () => {
+        const { connection, keyPair } = contextRef.current;
+
+        pushLog('Beginning key exchange handshake...');
+
+        const pubKeyAsString = await exportKey(keyPair!.publicKey);
+
+        const message: HandshakeMessage = {
+            type: MessageType.Handshake,
+            input: pubKeyAsString,
+        };
+
+        connection!.send(message);
+    };
+
+    return { init, status: state as GrabState };
 };
