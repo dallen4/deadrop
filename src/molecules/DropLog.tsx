@@ -17,8 +17,8 @@ const DropLog = ({ logs }: { logs: Array<string> }) => {
             </Button>
             <Collapse in={open}>
                 <Code block>
-                    {logs.map((log) => (
-                        <div>{log}</div>
+                    {logs.map((log, index) => (
+                        <div key={index}>{log}</div>
                     ))}
                 </Code>
             </Collapse>
