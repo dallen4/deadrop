@@ -12,8 +12,8 @@ import type {
 } from 'types/drop';
 import { generateGrabUrl } from '@lib/util';
 import { post } from '@lib/fetch';
-import { InitDropResult } from 'types/common';
-import {
+import type { InitDropResult } from 'types/common';
+import type {
     BaseMessage,
     ConfirmIntegrityMessage,
     DropMessage,
@@ -63,7 +63,7 @@ export const useDrop = () => {
             }
 
             connection.on('data', async (msg: BaseMessage) => {
-                console.log('MESSAGE RECEIVED:', msg)
+                console.log('MESSAGE RECEIVED:', msg);
                 if (msg.type === MessageType.Handshake) {
                     const { input } = msg as HandshakeMessage;
 
@@ -184,7 +184,7 @@ export const useDrop = () => {
 
         connection!.send(message);
 
-        pushLog('Public key sent...')
+        pushLog('Public key sent...');
     };
 
     const drop = async () => {
