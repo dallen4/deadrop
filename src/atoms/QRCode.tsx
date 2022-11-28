@@ -4,10 +4,8 @@ import { generateQR } from '@lib/qrcode';
 
 export const QRCode = ({ link }: { link: string | undefined }) => {
     const [src, setSrc] = useState<string>();
-console.log('link', link)
-console.log('src', src)
+
     useEffect(() => {
-        // TODO consider undefined state
         link && generateQR(link).then(setSrc);
     }, [link]);
 

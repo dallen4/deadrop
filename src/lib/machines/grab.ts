@@ -1,5 +1,5 @@
 import { GrabEventType, GrabState } from '../constants';
-import { assign as baseAssign, createMachine, TransitionsConfig } from 'xstate';
+import { createMachine, TransitionsConfig } from 'xstate';
 import type { AnyGrabEvent } from 'types/grab';
 import type { GrabContext } from 'types/grab';
 import { raise as baseRaise } from 'xstate/lib/actions';

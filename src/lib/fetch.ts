@@ -9,7 +9,7 @@ export const get = async <Data extends any>(
         url += '?' + query.toString();
     }
 
-    const res = await fetch(path, {
+    const res = await fetch(url, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

@@ -5,6 +5,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { DropDetails } from 'types/common';
 
 const HOUR_IN_SECONDS = 60 * 60;
+const FIVE_MINS_IN_SEC = 5 * 60;
 const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24;
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
@@ -17,7 +18,7 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
 
         const data = await client.hgetall(generateDropKey(dropId as string));
 
-        if (!data)
+        if (!data || Object.keys(data).length === 0)
             return res.status(404).json({
                 error: 'Session not found',
             });
@@ -31,7 +32,7 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
 
         const key = generateDropKey(dropId);
         await client.hset(key, { peerId, nonce });
-        await client.expire(key, HOUR_IN_SECONDS);
+        await client.expire(key, FIVE_MINS_IN_SEC);
 
         res.status(200).json({
             id: dropId,

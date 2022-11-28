@@ -37,6 +37,8 @@ export const useDrop = () => {
 
     const [{ value: state }, send] = useMachine(dropMachine);
 
+    console.log('GRAB STATE: ', state);
+
     const pushLog = (message: string) => logsRef.current.push(message);
 
     const init = async () => {
@@ -61,12 +63,13 @@ export const useDrop = () => {
             }
 
             connection.on('data', async (msg: BaseMessage) => {
+                console.log('MESSAGE RECEIVED:', msg)
                 if (msg.type === MessageType.Handshake) {
                     const { input } = msg as HandshakeMessage;
 
                     pushLog('Handshake acknowledged, deriving drop key...');
 
-                    const pubKey = await importKey(input, ['deriveKey']);
+                    const pubKey = await importKey(input, []);
                     const dropKey = await deriveKey(
                         contextRef.current.keyPair!.privateKey,
                         pubKey,
@@ -114,7 +117,7 @@ export const useDrop = () => {
 
             send({ type: DropEventType.Connect, connection });
 
-            startHandshake();
+            setTimeout(() => startHandshake(), 1000);
         });
 
         const { id, nonce } = await post<InitDropResult, { id: string }>(DROP_API_PATH, {
@@ -179,6 +182,8 @@ export const useDrop = () => {
         };
 
         connection!.send(message);
+
+        pushLog('Public key sent...')
     };
 
     const drop = async () => {

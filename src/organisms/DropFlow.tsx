@@ -9,14 +9,11 @@ import {
     PasswordInput,
     Title,
     Card,
-    CopyButton,
 } from '@mantine/core';
-import { useClipboard, useMediaQuery } from '@mantine/hooks';
-import { Copy } from 'react-feather';
+import { useMediaQuery } from '@mantine/hooks';
 import { DropProvider, useDropContext } from 'contexts/DropContext';
 import DropLog from 'molecules/DropLog';
 import StepCard from 'molecules/steps/StepCard';
-import { QRCode } from 'atoms/QRCode';
 import { SharePane } from 'molecules/SharePane';
 
 const STEP_COUNT = 3;
@@ -27,12 +24,14 @@ const DropFlow = () => {
 
     const inputRef = useRef<HTMLInputElement>();
 
-    const { status, init, setPayload, dropLink, getLogs } = useDropContext();
+    const { status, init, setPayload, dropLink, drop, getLogs } = useDropContext();
 
     const currentStep = useMemo(() => {
         if (status === DropState.Initial) return 0;
         else if (status === DropState.Ready) return 1;
-        else if (status === DropState.Waiting) return 2;
+        else if ([DropState.Waiting, DropState.AwaitingHandshake].includes(status))
+            return 2;
+        else if (status === DropState.Acknowledged) return 3;
         else return 0;
     }, [status]);
 
@@ -72,6 +71,14 @@ const DropFlow = () => {
                 >
                     <StepCard title={'share'}>
                         {dropLink() && <SharePane link={dropLink()!} />}
+                    </StepCard>
+                </Stepper.Step>
+                <Stepper.Step
+                    label={'Confirm drop'}
+                    description={isMobile && 'Drop your message'}
+                >
+                    <StepCard title={'finish your deaddrop'}>
+                        <Button onClick={drop}>Drop</Button>
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Completed>

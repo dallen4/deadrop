@@ -5,6 +5,15 @@ import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
 import { useDrop } from 'hooks/use-drop';
 
+export type DropOptions = {
+    decryptedAccess?: 'copy' | 'view' | 'both';
+
+    // premium
+    requireMFA?: boolean;
+    requireCaptcha?: boolean;
+    groupCount?: number;
+};
+
 export type DropContext = BaseContext & {
     message: Record<string, any>;
     integrity: string | null;

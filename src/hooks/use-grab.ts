@@ -53,85 +53,13 @@ export const useGrab = () => {
         pushLog('Peer instance created successfully...');
         console.log(`Peer initialized: ${peerId}`);
 
-        peer.on('connection', (connection) => {
-            connection.on('data', async (msg: BaseMessage) => {
-                if (msg.type === MessageType.Handshake) {
-                    const { input } = msg as HandshakeMessage;
+        const dropId = router.query.drop as string;
 
-                    pushLog('Handshake request received...');
-
-                    const pubKey = await importKey(input, ['deriveKey']);
-                    const grabKey = await deriveKey(keyPair.privateKey, pubKey);
-
-                    pushLog('Grab key derived successfully...');
-
-                    contextRef.current.grabKey = grabKey;
-
-                    const event: AckHandshakeEvent = {
-                        type: GrabEventType.Handshake,
-                        grabKey,
-                    };
-
-                    send(event);
-
-                    pushLog('Acknowledging handshhake, sending public key...');
-
-                    sendPublicKey();
-                } else if (msg.type === MessageType.Payload) {
-                    const { payload } = msg as DropMessage;
-
-                    pushLog('Drop payload received...');
-
-                    logsRef.current.push('Decrypting payload...');
-
-                    const { grabKey, nonce } = contextRef.current;
-
-                    const decryptedMessage = await decrypt(grabKey!, nonce!, payload);
-
-                    contextRef.current.message = decryptedMessage;
-
-                    pushLog('Payload decrypted successfully...');
-
-                    const event: ExecuteGrabEvent = {
-                        type: GrabEventType.Grab,
-                        payload,
-                    };
-
-                    send(event);
-
-                    pushLog('Generating payload integrity hash...');
-
-                    const integrity = await hash(decryptedMessage!);
-
-                    pushLog('Integrity hash computed, verifying...');
-
-                    const verificationMessage: VerifyMessage = {
-                        type: MessageType.Verify,
-                        integrity,
-                    };
-
-                    connection!.send(verificationMessage);
-
-                    pushLog('Verification request sent...');
-
-                    send({ type: GrabEventType.Verify });
-                } else if (msg.type === MessageType.ConfirmVerification) {
-                    const { verified } = msg as ConfirmIntegrityMessage;
-
-                    send({
-                        type: verified ? GrabEventType.Confirm : GrabEventType.Failure,
-                    });
-                } else {
-                    console.error(`Invalid message received: ${msg.type}`);
-                }
-            });
-        });
-
-        const dropId = router.query.id as string;
-
-        const { peerId: dropperId, nonce } = await get<DropDetails>(DROP_API_PATH, {
+        const resp = await get<DropDetails>(DROP_API_PATH, {
             id: dropId,
         });
+
+        const { peerId: dropperId, nonce } = resp;
 
         contextRef.current.id = dropId;
         contextRef.current.dropperId = dropperId;
@@ -150,17 +78,88 @@ export const useGrab = () => {
 
         send(event);
 
-        const connect = () => {
-            const pendingConnection = peer!.connect(dropperId!);
+        const connection = peer!.connect(dropperId);
 
-            return new Promise<typeof pendingConnection>((resolve) => {
-                pendingConnection.on('open', () => {
-                    resolve(pendingConnection);
+        connection.on('error', console.error);
+        connection.on('open', () => {
+            pushLog('Drop connection successful...');
+            console.log('Connection established');
+
+            send({ type: GrabEventType.Connect });
+        });
+
+        connection.on('data', async (msg: BaseMessage) => {
+            console.log('MESSAGE RECEIVED:', msg);
+            if (msg.type === MessageType.Handshake) {
+                const { input } = msg as HandshakeMessage;
+
+                pushLog('Handshake request received...');
+
+                const pubKey = await importKey(input, []);
+                const grabKey = await deriveKey(keyPair.privateKey, pubKey);
+
+                pushLog('Grab key derived successfully...');
+
+                contextRef.current.grabKey = grabKey;
+
+                const event: AckHandshakeEvent = {
+                    type: GrabEventType.Handshake,
+                    grabKey,
+                };
+
+                send(event);
+
+                pushLog('Acknowledging handshhake, sending public key...');
+
+                sendPublicKey();
+            } else if (msg.type === MessageType.Payload) {
+                const { payload } = msg as DropMessage;
+
+                pushLog('Drop payload received...');
+
+                logsRef.current.push('Decrypting payload...');
+
+                const { grabKey, nonce } = contextRef.current;
+
+                const decryptedMessage = await decrypt(grabKey!, nonce!, payload);
+
+                contextRef.current.message = decryptedMessage;
+
+                pushLog('Payload decrypted successfully...');
+
+                const event: ExecuteGrabEvent = {
+                    type: GrabEventType.Grab,
+                    payload,
+                };
+
+                send(event);
+
+                pushLog('Generating payload integrity hash...');
+
+                const integrity = await hash(decryptedMessage!);
+
+                pushLog('Integrity hash computed, verifying...');
+
+                const verificationMessage: VerifyMessage = {
+                    type: MessageType.Verify,
+                    integrity,
+                };
+
+                connection!.send(verificationMessage);
+
+                pushLog('Verification request sent...');
+
+                send({ type: GrabEventType.Verify });
+            } else if (msg.type === MessageType.ConfirmVerification) {
+                const { verified } = msg as ConfirmIntegrityMessage;
+
+                send({
+                    type: verified ? GrabEventType.Confirm : GrabEventType.Failure,
                 });
-            });
-        };
-
-        const connection = await connect();
+            } else {
+                console.error(`Invalid message received: ${msg.type}`);
+            }
+        });
 
         contextRef.current.connection = connection;
     };
@@ -180,5 +179,9 @@ export const useGrab = () => {
         connection!.send(message);
     };
 
-    return { init, status: state as GrabState };
+    const getLogs = () => logsRef.current;
+
+    const getSecret = () => contextRef.current.message;
+
+    return { init, status: state as GrabState, getLogs, getSecret };
 };
