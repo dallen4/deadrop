@@ -8,15 +8,16 @@ export function middleware(request: NextRequest) {
 
     const nonce = request.cookies.get(NONCE_COOKIE);
 
-    if (!nonce)
+    if (!nonce) {
         response.cookies.set(NONCE_COOKIE, nanoid(), {
             path: '/',
-            // secure: true,
+            secure: process.env.NODE_ENV !== 'development',
             httpOnly: true,
             sameSite: true,
         });
 
-    // validate nonce
+        console.log('Nonce set');
+    }
 
     return response;
 }

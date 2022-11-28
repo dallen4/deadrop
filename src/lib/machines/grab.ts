@@ -1,11 +1,13 @@
-import { GrabState } from '../constants';
-import { assign as baseAssign, createMachine } from 'xstate';
+import { GrabEventType, GrabState } from '../constants';
+import { createMachine, TransitionsConfig } from 'xstate';
 import type { AnyGrabEvent } from 'types/grab';
 import type { GrabContext } from 'types/grab';
+import { raise as baseRaise } from 'xstate/lib/actions';
 
-const initGrabContext = (): GrabContext => ({
+export const initGrabContext = (): GrabContext => ({
     id: null,
     message: null,
+    dropperId: null,
     peer: null,
     connection: null,
     keyPair: null,
@@ -13,79 +15,71 @@ const initGrabContext = (): GrabContext => ({
     nonce: null,
 });
 
-export const assign = baseAssign<GrabContext>;
+export const raise = baseRaise<GrabContext, AnyGrabEvent>;
 
-export const grabMachine = createMachine<GrabContext, AnyGrabEvent>(
-    {
-        id: 'grab',
-        preserveActionOrder: true,
-        predictableActionArguments: true,
-        context: initGrabContext(),
-        initial: GrabState.Initial,
-        states: {
-            [GrabState.Initial]: {
-                on: {
-                    INITIALIZE: {
-                        target: GrabState.Ready,
-                        actions: ['initGrab'],
-                    },
+export const grabMachine = createMachine<GrabContext, AnyGrabEvent>({
+    id: 'grab',
+    preserveActionOrder: true,
+    predictableActionArguments: true,
+    initial: GrabState.Initial,
+    states: {
+        [GrabState.Initial]: {
+            on: {
+                INITIALIZE: {
+                    target: GrabState.Ready,
+                    actions: [raise(GrabEventType.Connect)],
                 },
-            },
-            [GrabState.Ready]: {
-                on: {
-                    CONNECT: {
-                        target: GrabState.Connected,
-                        actions: ['initConnection'],
-                    },
+            } as TransitionsConfig<GrabContext, AnyGrabEvent>,
+        },
+        [GrabState.Ready]: {
+            on: {
+                CONNECT: {
+                    target: GrabState.Connected,
                 },
-            },
-            [GrabState.Connected]: {
-                on: {
-                    HANDSHAKE: {
-                        target: GrabState.Waiting,
-                        actions: ['deriveKey', 'sendPublicKey'],
-                    },
-                },
-            },
-            [GrabState.Waiting]: {
-                on: {
-                    GRAB: {
-                        target: GrabState.Received,
-                        actions: ['grabMessage'],
-                    },
-                },
-            },
-            [GrabState.Received]: {
-                on: {
-                    UNWRAP: {
-                        target: GrabState.Confirmed,
-                        actions: ['decryptAndVerify'],
-                    },
-                },
-            },
-            [GrabState.Confirmed]: {
-                on: {
-                    CLEANUP: {
-                        target: GrabState.Completed,
-                    },
-                },
-            },
-            [GrabState.Completed]: {
-                entry: (context, event) => {
-                    return assign(initGrabContext());
-                },
-                type: 'final',
             },
         },
-    },
-    {
-        actions: {
-            initGrab: () => {},
-            initConnection: () => {},
-            deriveKey: () => {},
-            sendPublicKey: () => {},
-            grabMessage: () => {},
-            decryptAndVerify: () => {},
+        [GrabState.Connected]: {
+            on: {
+                HANDSHAKE: {
+                    target: GrabState.Waiting,
+                },
+            },
+        },
+        [GrabState.Waiting]: {
+            on: {
+                GRAB: {
+                    target: GrabState.Received,
+                    actions: [raise(GrabEventType.Verify)],
+                },
+            } as TransitionsConfig<GrabContext, AnyGrabEvent>,
+        },
+        [GrabState.Received]: {
+            on: {
+                VERIFY: {
+                    target: GrabState.Confirmed,
+                },
+            },
+        },
+        [GrabState.AwaitingConfirmation]: {
+            on: {
+                CONFIRM: {
+                    target: GrabState.Confirmed,
+                },
+                FAILURE: {
+                    target: GrabState.Error,
+                },
+            },
+        },
+        [GrabState.Confirmed]: {
+            on: {
+                CLEANUP: {
+                    target: GrabState.Completed,
+                },
+            },
+        },
+        [GrabState.Error]: {},
+        [GrabState.Completed]: {
+            type: 'final',
         },
     },
-);
+});

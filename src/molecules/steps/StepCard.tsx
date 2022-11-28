@@ -6,7 +6,7 @@ const StepCard = ({ title, children }: { title: string; children: ReactNode }) =
 
     return (
         <Card style={{ margin: theme.spacing.md }}>
-            <Title size={'h4'}>{title}</Title>
+            <Title size={'h3'}>{title}</Title>
             {children}
         </Card>
     );

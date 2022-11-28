@@ -1,7 +1,8 @@
 import React from 'react';
+import GrabFlow from 'organisms/GrabFlow';
 
-const Grab = (props: any) => {
-    return <div>Grab</div>;
+const Grab = () => {
+    return <GrabFlow />;
 };
 
 export default Grab;

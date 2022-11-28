@@ -3,6 +3,16 @@ import { DropEventType } from '@lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
+import { useDrop } from 'hooks/use-drop';
+
+export type DropOptions = {
+    decryptedAccess?: 'copy' | 'view' | 'both';
+
+    // premium
+    requireMFA?: boolean;
+    requireCaptcha?: boolean;
+    groupCount?: number;
+};
 
 export type DropContext = BaseContext & {
     message: Record<string, any>;
@@ -18,7 +28,7 @@ export type AnyDropEvent = DropEvent & {
     [key: string]: any;
 };
 
-export interface InitDropEvent extends DropEvent {
+export interface InitDropEvent extends AnyDropEvent {
     type: DropEventType.Init;
     id: string;
     peer: Peer;
@@ -49,3 +59,5 @@ export interface HandshakeCompleteEvent extends DropEvent {
 export interface CompleteEvent extends DropEvent {
     type: DropEventType.Confirm;
 }
+
+export type DropContextValues = ReturnType<typeof useDrop>;

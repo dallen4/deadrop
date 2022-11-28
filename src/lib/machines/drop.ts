@@ -1,9 +1,10 @@
-import { DropState } from '../constants';
-import { assign as baseAssign, createMachine } from 'xstate';
+import { DropEventType, DropState, GrabEventType } from '../constants';
+import { assign as baseAssign, createMachine, TransitionsConfig } from 'xstate';
 import type { AnyDropEvent, ConnectEvent, InitDropEvent, WrapEvent } from 'types/drop';
 import type { DropContext } from 'types/drop';
+import { raise as baseRaise } from 'xstate/lib/actions';
 
-const initDropContext = (): DropContext => ({
+export const initDropContext = (): DropContext => ({
     id: null,
     message: {},
     integrity: null,
@@ -14,7 +15,7 @@ const initDropContext = (): DropContext => ({
     nonce: null,
 });
 
-export const assign = baseAssign<DropContext>;
+export const raise = baseRaise<DropContext, AnyDropEvent>;
 
 export const dropMachine = createMachine<
     DropContext,
@@ -25,14 +26,12 @@ export const dropMachine = createMachine<
         id: 'drop',
         preserveActionOrder: true,
         predictableActionArguments: true,
-        context: initDropContext(),
         initial: DropState.Initial,
         states: {
             [DropState.Initial]: {
                 on: {
                     INITIALIZE: {
                         target: DropState.Ready,
-                        actions: ['initDrop'],
                     },
                 },
             },
@@ -40,7 +39,6 @@ export const dropMachine = createMachine<
                 on: {
                     WRAP: {
                         target: DropState.Waiting,
-                        actions: ['setMessage'],
                     },
                 },
             },
@@ -48,15 +46,14 @@ export const dropMachine = createMachine<
                 on: {
                     CONNECT: {
                         target: DropState.Connected,
-                        actions: ['setConnection'],
+                        actions: [raise(DropEventType.Handshake)],
                     },
-                },
+                } as TransitionsConfig<DropContext, AnyDropEvent>,
             },
             [DropState.Connected]: {
                 on: {
                     HANDSHAKE: {
                         target: DropState.AwaitingHandshake,
-                        actions: ['sendPublicKey'],
                     },
                 },
             },
@@ -64,7 +61,6 @@ export const dropMachine = createMachine<
                 on: {
                     HANDSHAKE_COMPLETE: {
                         target: DropState.Acknowledged,
-                        actions: ['setDropKey'],
                     },
                 },
             },
@@ -79,27 +75,13 @@ export const dropMachine = createMachine<
                 on: {
                     CONFIRM: {
                         target: DropState.Completed,
-                        actions: ['verifyIntegrity'],
                     },
                 },
             },
             [DropState.Error]: {},
             [DropState.Completed]: {
-                entry: (context, event) => {
-                    return assign(initDropContext());
-                },
                 type: 'final',
             },
-        },
-    },
-    {
-        actions: {
-            initDrop: (context, event: InitDropEvent) => {},
-            setMessage: (context, event: WrapEvent) => {},
-            setConnection: (context, event: ConnectEvent) => {},
-            sendPublicKey: () => {},
-            setDropKey: () => {},
-            verifyIntegrity: () => {},
         },
     },
 );

@@ -1,7 +1,6 @@
 import randomColor from 'randomcolor';
-import { toDataURL } from 'qrcode';
 import { randomBytes } from 'crypto';
-import { DROP_PATH } from './constants';
+import { GRAB_PATH } from './constants';
 
 export const bufferFromString = (input: string) => {
     const size = input.length;
@@ -31,12 +30,10 @@ export const generateColorSet = (amount: number = 2) => {
 
 export const generateGrabUrl = (id: string) => {
     const params = new URLSearchParams({ drop: id });
-    const baseUrl = new URL(DROP_PATH, window.location.host);
+    const baseUrl = new URL(GRAB_PATH, window.location.protocol + window.location.host);
 
     return `${baseUrl.toString()}?${params.toString()}`;
 };
-
-export const generateQrCodeUrl = (input: string) => toDataURL(input);
 
 export const generateDropKey = (id: string) => `drop:${id}`;
 
