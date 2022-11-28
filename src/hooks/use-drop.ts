@@ -117,6 +117,7 @@ export const useDrop = () => {
 
             send({ type: DropEventType.Connect, connection });
 
+            // TODO should replace timeout with an a confirmation message from grabber
             setTimeout(() => startHandshake(), 1000);
         });
 
