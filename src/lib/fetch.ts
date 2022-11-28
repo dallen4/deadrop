@@ -24,11 +24,13 @@ export const get = async <Data extends any>(
 export const post = async <Data extends any, Body extends any>(
     path: string,
     body?: Body,
+    headers: HeadersInit = {},
 ) => {
     const res = await fetch(path, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            ...headers,
         },
         body: body ? JSON.stringify(body) : undefined,
     });
