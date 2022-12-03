@@ -49,7 +49,7 @@ const DropFlow = () => {
                 >
                     <StepCard title={'starting a session'}>
                         <Text>ready to start a drop?</Text>
-                        <Button onClick={init}>Start</Button>
+                        <Button onClick={init}>Begin</Button>
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Step

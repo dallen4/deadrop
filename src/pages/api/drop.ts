@@ -13,6 +13,8 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
 
     const client = getRedis();
 
+    const close = () => client.quit();
+
     if (req.method === 'GET') {
         const { id: dropId } = req.query;
 
