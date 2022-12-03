@@ -33,6 +33,7 @@ const DropFlow = () => {
         else if ([DropState.Waiting, DropState.AwaitingHandshake].includes(status))
             return 2;
         else if (status === DropState.Acknowledged) return 3;
+        else if (status === DropState.Completed) return 4;
         else return 0;
     }, [status]);
 
@@ -43,7 +44,7 @@ const DropFlow = () => {
                 orientation={isMobile ? 'vertical' : 'horizontal'}
             >
                 <Stepper.Step
-                    label={'Start session'}
+                    label={'Start'}
                     description={isMobile && 'Get started with a new drop'}
                 >
                     <StepCard title={'starting a session'}>
@@ -52,13 +53,13 @@ const DropFlow = () => {
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Step
-                    label={'Input secrets'}
+                    label={'Input'}
                     description={isMobile && 'Add your secrets'}
                 >
                     <SecretInputCard />
                 </Stepper.Step>
                 <Stepper.Step
-                    label={'Share link'}
+                    label={'Share'}
                     description={isMobile && 'Share your secrets'}
                 >
                     <StepCard title={'share'}>
@@ -66,7 +67,7 @@ const DropFlow = () => {
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Step
-                    label={'Confirm drop'}
+                    label={'Drop'}
                     description={isMobile && 'Drop your message'}
                 >
                     <StepCard title={'finish your deaddrop'}>
