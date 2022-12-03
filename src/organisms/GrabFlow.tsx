@@ -4,12 +4,13 @@ import { useMediaQuery } from '@mantine/hooks';
 import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
 import DropLog from 'molecules/DropLog';
 import { GrabState } from '@lib/constants';
+import { downloadFile } from '@lib/files';
 
 const GrabFlow = () => {
     const theme = useMantineTheme();
     const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
 
-    const { init, status, getLogs, getSecret } = useGrabContext();
+    const { init, status, getLogs, getMode, getSecret } = useGrabContext();
 
     const getLoaderText = () => {
         return status === GrabState.Ready
@@ -30,7 +31,18 @@ const GrabFlow = () => {
                 </>
             ) : status === GrabState.Confirmed ? (
                 <Box>
-                    <Code block>{JSON.stringify(getSecret())}</Code>
+                    {getMode() === 'raw' ? (
+                        <Code block>
+                            {JSON.stringify(getSecret() as Record<string, any>)}
+                        </Code>
+                    ) : (
+                        <>
+                            <Text>File received: {(getSecret() as File).name}</Text>
+                            <Button onClick={() => downloadFile(getSecret() as File)}>
+                                Download
+                            </Button>
+                        </>
+                    )}
                 </Box>
             ) : (
                 <Card>

@@ -15,6 +15,7 @@ import { DropProvider, useDropContext } from 'contexts/DropContext';
 import DropLog from 'molecules/DropLog';
 import StepCard from 'molecules/steps/StepCard';
 import { SharePane } from 'molecules/SharePane';
+import { SecretInputCard } from 'molecules/steps/SecretInputCard';
 
 const STEP_COUNT = 3;
 
@@ -24,7 +25,7 @@ const DropFlow = () => {
 
     const inputRef = useRef<HTMLInputElement>();
 
-    const { status, init, setPayload, dropLink, drop, getLogs } = useDropContext();
+    const { status, init, dropLink, drop, getLogs } = useDropContext();
 
     const currentStep = useMemo(() => {
         if (status === DropState.Initial) return 0;
@@ -54,16 +55,7 @@ const DropFlow = () => {
                     label={'Input secrets'}
                     description={isMobile && 'Add your secrets'}
                 >
-                    <StepCard title={'waiting for secrets'}>
-                        <PasswordInput
-                            ref={inputRef as any}
-                            size={'md'}
-                            placeholder={'Your secret'}
-                        />
-                        <Button onClick={() => setPayload(inputRef.current!.value)}>
-                            Wrap Message
-                        </Button>
-                    </StepCard>
+                    <SecretInputCard />
                 </Stepper.Step>
                 <Stepper.Step
                     label={'Share link'}
