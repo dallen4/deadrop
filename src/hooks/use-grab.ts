@@ -29,6 +29,7 @@ export const useGrab = () => {
         exportKey,
         generateId,
         decrypt,
+        decryptFile,
         hash,
     } = useCrypto();
 
@@ -65,7 +66,7 @@ export const useGrab = () => {
 
             sendPublicKey();
         } else if (msg.type === MessageType.Payload) {
-            const { payload } = msg as DropMessage;
+            const { payload, mode } = msg as DropMessage;
 
             pushLog('Drop payload received...');
 
@@ -73,15 +74,18 @@ export const useGrab = () => {
 
             const { grabKey, nonce } = contextRef.current;
 
-            const decryptedMessage = await decrypt(grabKey!, nonce!, payload);
+            const decryptedMessage =
+                mode === 'raw'
+                    ? await decrypt(grabKey!, nonce!, payload)
+                    : await decryptFile(grabKey!, nonce!, payload);
 
+            contextRef.current.mode = mode;
             contextRef.current.message = decryptedMessage;
 
             pushLog('Payload decrypted successfully...');
 
-            const event: ExecuteGrabEvent = {
+            const event = {
                 type: GrabEventType.Grab,
-                payload,
             };
 
             send(event);
@@ -108,6 +112,9 @@ export const useGrab = () => {
             send({
                 type: verified ? GrabEventType.Confirm : GrabEventType.Failure,
             });
+
+            contextRef.current.connection!.close();
+            contextRef.current.peer!.disconnect();
         } else {
             console.error(`Invalid message received: ${msg.type}`);
         }
@@ -184,7 +191,9 @@ export const useGrab = () => {
 
     const getLogs = () => logsRef.current;
 
+    const getMode = () => contextRef.current.mode;
+
     const getSecret = () => contextRef.current.message;
 
-    return { init, status: state as GrabState, getLogs, getSecret };
+    return { init, status: state as GrabState, getLogs, getMode, getSecret };
 };

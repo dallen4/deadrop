@@ -30,7 +30,9 @@ export const useDrop = () => {
         deriveKey,
         generateId,
         encrypt,
+        encryptFile,
         hash,
+        hashFile,
     } = useCrypto();
 
     const logsRef = useRef<Array<string>>([]);
@@ -87,6 +89,9 @@ export const useDrop = () => {
             };
 
             send(event);
+
+            contextRef.current.connection!.close();
+            contextRef.current.peer!.disconnect();
         } else {
             console.error(`Invalid message received: ${msg.type}`);
         }
@@ -148,22 +153,29 @@ export const useDrop = () => {
         send(event);
     };
 
-    const setPayload = async (content: string) => {
-        const payload = {
-            content,
-        };
-
+    const setPayload = async (content: string | File) => {
         pushLog('Staging & hashing payload for integrity checks...');
 
-        const integrity = await hash(payload);
+        const isRaw = typeof content === 'string';
+
+        const { payload, integrity } = isRaw
+            ? {
+                  payload: {
+                      content,
+                  },
+                  integrity: await hash({ content }),
+              }
+            : {
+                  payload: content,
+                  integrity: await hashFile(content),
+              };
 
         contextRef.current.integrity = integrity;
         contextRef.current.message = payload;
+        contextRef.current.mode = isRaw ? 'raw' : 'file';
 
-        const event: WrapEvent = {
+        const event = {
             type: DropEventType.Wrap,
-            payload,
-            integrity,
         };
 
         send(event);
@@ -194,16 +206,25 @@ export const useDrop = () => {
     const drop = async () => {
         pushLog('Encrypting payload for drop...');
 
-        const payload = await encrypt(
-            contextRef.current.dropKey!,
-            contextRef.current.nonce!,
-            contextRef.current.message,
-        );
+        const isFile = contextRef.current!.mode === 'file';
+
+        const payload = isFile
+            ? await encryptFile(
+                  contextRef.current.dropKey!,
+                  contextRef.current.nonce!,
+                  contextRef.current.message as File,
+              )
+            : await encrypt(
+                  contextRef.current.dropKey!,
+                  contextRef.current.nonce!,
+                  contextRef.current.message!,
+              );
 
         pushLog('Payload encrypted, dropping...');
 
         const message: DropMessage = {
             type: MessageType.Payload,
+            mode: contextRef.current.mode,
             payload,
         };
 
