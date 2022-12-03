@@ -6,6 +6,7 @@ import { raise as baseRaise } from 'xstate/lib/actions';
 
 export const initGrabContext = (): GrabContext => ({
     id: null,
+    mode: 'raw',
     message: null,
     dropperId: null,
     peer: null,

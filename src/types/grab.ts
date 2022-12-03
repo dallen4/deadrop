@@ -5,7 +5,6 @@ import type Peer from 'peerjs';
 import { useGrab } from 'hooks/use-grab';
 
 export type GrabContext = BaseContext & {
-    message: Record<string, any> | null;
     grabKey: CryptoKey | null;
     dropperId: string | null;
 };
