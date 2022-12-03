@@ -9,7 +9,8 @@
     "scripts": {
         "start": "next dev",
         "build": "next build",
-        "start:prod": "next build && next start"
+        "start:prod": "next build && next start",
+        "test:e2e": "playwright test"
     },
     "dependencies": {
         "@emotion/react": "^11.10.0",
@@ -48,6 +49,7 @@
         "yup": "^0.29.3"
     },
     "devDependencies": {
+        "@playwright/test": "^1.28.1",
         "@types/node": "^16",
         "@types/node-mailjet": "^3.3.8",
         "@types/qrcode": "^1.5.0",
