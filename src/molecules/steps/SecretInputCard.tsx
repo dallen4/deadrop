@@ -6,11 +6,14 @@ import {
     FileButton,
     JsonInput,
     SegmentedControl,
+    Group,
 } from '@mantine/core';
 import StepCard from './StepCard';
 import { useDropContext } from 'contexts/DropContext';
 import { PayloadInputMode } from 'types/common';
 import { Captcha } from 'atoms/Captcha';
+
+const ACCEPTED_FILE_TYPES = ['.json', '.yml', '.yaml', '.env'];
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
@@ -62,9 +65,14 @@ export const SecretInputCard = () => {
                     minRows={4}
                 />
             ) : mode === 'file' ? (
-                <FileButton onChange={setFile}>
-                    {(props) => <Button {...props}>Upload Secrets File</Button>}
-                </FileButton>
+                <Group position={'center'}>
+                    <FileButton onChange={setFile} accept={ACCEPTED_FILE_TYPES.join(',')}>
+                        {(props) => <Button {...props}>Upload Secrets File</Button>}
+                    </FileButton>
+                    <Text size={'sm'}>
+                        Allows extensions: {ACCEPTED_FILE_TYPES.join(', ')}
+                    </Text>
+                </Group>
             ) : (
                 <Text>Invalid Payload Mode</Text>
             )}
