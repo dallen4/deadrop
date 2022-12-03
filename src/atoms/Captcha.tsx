@@ -1,24 +1,33 @@
 import React from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
+import { post } from '@lib/fetch';
+import { CAPTCHA_API_PATCH } from '@lib/constants';
 
-export const Captcha = ({ setToken }: CaptchaProps) => {
-    const onVerify = (token: string, _ekey: string) => {
-        setToken(token);
+export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
+    const onVerify = async (token: string, _ekey: string) => {
+        const resp = await post<{ success: boolean }, { token: string }>(
+            CAPTCHA_API_PATCH,
+            { token },
+        );
+
+        if (resp.success) onSuccess();
     };
 
-    const onExpire = () => {
-        setToken(null);
+    const onError = (event: string) => {
+        console.warn(event);
     };
 
     return (
         <HCaptcha
             sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
             onVerify={onVerify}
+            onError={onError}
             onExpire={onExpire}
         />
     );
 };
 
 type CaptchaProps = {
-    setToken: (token: string | null) => void;
+    onSuccess: () => void;
+    onExpire: () => void;
 };
