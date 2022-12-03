@@ -1,4 +1,5 @@
 import { MessageType } from '@lib/constants';
+import { PayloadMode } from './common';
 
 export type BaseMessage = {
     type: MessageType;
@@ -12,6 +13,7 @@ export interface HandshakeMessage extends BaseMessage {
 
 export interface DropMessage extends BaseMessage {
     type: MessageType.Payload;
+    mode: PayloadMode;
     payload: string;
 }
 

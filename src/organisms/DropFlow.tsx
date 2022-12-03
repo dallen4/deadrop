@@ -15,6 +15,7 @@ import { DropProvider, useDropContext } from 'contexts/DropContext';
 import DropLog from 'molecules/DropLog';
 import StepCard from 'molecules/steps/StepCard';
 import { SharePane } from 'molecules/SharePane';
+import { SecretInputCard } from 'molecules/steps/SecretInputCard';
 
 const STEP_COUNT = 3;
 
@@ -24,7 +25,7 @@ const DropFlow = () => {
 
     const inputRef = useRef<HTMLInputElement>();
 
-    const { status, init, setPayload, dropLink, drop, getLogs } = useDropContext();
+    const { status, init, dropLink, drop, getLogs } = useDropContext();
 
     const currentStep = useMemo(() => {
         if (status === DropState.Initial) return 0;
@@ -32,6 +33,7 @@ const DropFlow = () => {
         else if ([DropState.Waiting, DropState.AwaitingHandshake].includes(status))
             return 2;
         else if (status === DropState.Acknowledged) return 3;
+        else if (status === DropState.Completed) return 4;
         else return 0;
     }, [status]);
 
@@ -42,31 +44,22 @@ const DropFlow = () => {
                 orientation={isMobile ? 'vertical' : 'horizontal'}
             >
                 <Stepper.Step
-                    label={'Start session'}
+                    label={'Start'}
                     description={isMobile && 'Get started with a new drop'}
                 >
                     <StepCard title={'starting a session'}>
                         <Text>ready to start a drop?</Text>
-                        <Button onClick={init}>Start</Button>
+                        <Button onClick={init}>Begin</Button>
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Step
-                    label={'Input secrets'}
+                    label={'Input'}
                     description={isMobile && 'Add your secrets'}
                 >
-                    <StepCard title={'waiting for secrets'}>
-                        <PasswordInput
-                            ref={inputRef as any}
-                            size={'md'}
-                            placeholder={'Your secret'}
-                        />
-                        <Button onClick={() => setPayload(inputRef.current!.value)}>
-                            Wrap Message
-                        </Button>
-                    </StepCard>
+                    <SecretInputCard />
                 </Stepper.Step>
                 <Stepper.Step
-                    label={'Share link'}
+                    label={'Share'}
                     description={isMobile && 'Share your secrets'}
                 >
                     <StepCard title={'share'}>
@@ -74,7 +67,7 @@ const DropFlow = () => {
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Step
-                    label={'Confirm drop'}
+                    label={'Drop'}
                     description={isMobile && 'Drop your message'}
                 >
                     <StepCard title={'finish your deaddrop'}>

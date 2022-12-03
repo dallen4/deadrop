@@ -15,7 +15,6 @@ export type DropOptions = {
 };
 
 export type DropContext = BaseContext & {
-    message: Record<string, any>;
     integrity: string | null;
     dropKey: CryptoKey | null;
 };

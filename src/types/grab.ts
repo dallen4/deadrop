@@ -2,11 +2,9 @@ import type { BaseContext } from './common';
 import { GrabEventType } from '@lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
-import type { DataConnection } from 'peerjs';
 import { useGrab } from 'hooks/use-grab';
 
 export type GrabContext = BaseContext & {
-    message: Record<string, any> | null;
     grabKey: CryptoKey | null;
     dropperId: string | null;
 };

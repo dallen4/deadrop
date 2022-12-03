@@ -1,5 +1,6 @@
 import { customAlphabet } from 'nanoid';
 import { bufferFromString, getIVBuffer } from '@lib/util';
+import { readFileAsBuffer } from '@lib/files';
 
 const { alphanumeric } = require('nanoid-dictionary');
 
@@ -70,6 +71,21 @@ export const useCrypto = () => {
             )
             .then((buffer) => String.fromCharCode(...new Uint8Array(buffer)));
 
+    const encryptFile = async (key: CryptoKey, iv: string, input: File) => {
+        const fileBuffer = await readFileAsBuffer(input);
+
+        const encryptedBuffer = await tools!.encrypt(
+            {
+                name: ENCRYPTION_ALGO,
+                iv: getIVBuffer(iv),
+            },
+            key,
+            fileBuffer,
+        );
+
+        return String.fromCharCode(...new Uint8Array(encryptedBuffer));
+    };
+
     const decrypt = (
         key: CryptoKey,
         iv: string,
@@ -87,9 +103,36 @@ export const useCrypto = () => {
             .then(decode)
             .then(JSON.parse);
 
+    const decryptFile = async (key: CryptoKey, iv: string, data: string) => {
+        const decryptedBuffer = await tools!.decrypt(
+            {
+                name: ENCRYPTION_ALGO,
+                iv: getIVBuffer(iv),
+            },
+            key,
+            bufferFromString(data),
+        );
+
+        const decryptedFile = new File([decryptedBuffer], 'secrets');
+
+        return decryptedFile;
+    };
+
     const hash = async (input: Record<string, any>) => {
         const stringified = JSON.stringify(input);
         const digest = await tools!.digest!(HASH_ALGO, Buffer.from(stringified));
+
+        // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
+        const hash = Array.from(new Uint8Array(digest))
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+
+        return hash;
+    };
+
+    const hashFile = async (file: File) => {
+        const fileAsArrayBuffer = await readFileAsBuffer(file);
+        const digest = await tools!.digest!(HASH_ALGO, fileAsArrayBuffer);
 
         // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
         const hash = Array.from(new Uint8Array(digest))
@@ -107,7 +150,10 @@ export const useCrypto = () => {
         importKey,
         exportKey,
         encrypt,
+        encryptFile,
         decrypt,
+        decryptFile,
         hash,
+        hashFile,
     };
 };
