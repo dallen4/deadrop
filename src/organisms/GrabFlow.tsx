@@ -20,6 +20,7 @@ const GrabFlow = () => {
             ? 'Waiting for payload drop...'
             : '';
     };
+
     return (
         <Box>
             {status === GrabState.Initial ? (
@@ -28,9 +29,9 @@ const GrabFlow = () => {
                     <Button onClick={init}>Begin</Button>
                 </>
             ) : status === GrabState.Confirmed ? (
-                <Code>
-                    {JSON.stringify(getSecret())}
-                </Code>
+                <Box>
+                    <Code block>{JSON.stringify(getSecret())}</Code>
+                </Box>
             ) : (
                 <Card>
                     <Loader color={'teal'} />

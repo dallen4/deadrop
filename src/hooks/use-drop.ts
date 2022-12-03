@@ -20,6 +20,7 @@ import type {
     HandshakeMessage,
     VerifyMessage,
 } from 'types/messages';
+import { DataConnection } from 'peerjs';
 
 export const useDrop = () => {
     const {
@@ -41,6 +42,73 @@ export const useDrop = () => {
 
     const pushLog = (message: string) => logsRef.current.push(message);
 
+    const onMessage = async (msg: BaseMessage) => {
+        if (msg.type === MessageType.Handshake) {
+            const { input } = msg as HandshakeMessage;
+
+            pushLog('Handshake acknowledged, deriving drop key...');
+
+            const pubKey = await importKey(input, []);
+            const dropKey = await deriveKey(
+                contextRef.current.keyPair!.privateKey,
+                pubKey,
+            );
+
+            pushLog('Drop key derived successfully...');
+
+            contextRef.current.dropKey = dropKey;
+
+            const event: HandshakeCompleteEvent = {
+                type: DropEventType.HandshakeComplete,
+                dropKey,
+            };
+
+            send(event);
+        } else if (msg.type === MessageType.Verify) {
+            const { integrity } = msg as VerifyMessage;
+
+            pushLog('Integrity verification request received...');
+
+            const verified = integrity === contextRef.current.integrity!;
+
+            pushLog(`Integrity checked ${verified ? 'PASSED' : 'FAILED'}`);
+
+            const message: ConfirmIntegrityMessage = {
+                type: MessageType.ConfirmVerification,
+                verified,
+            };
+
+            contextRef.current.connection!.send(message);
+
+            pushLog('Integrity confirmation sent, completing drop...');
+
+            const event: CompleteEvent = {
+                type: DropEventType.Confirm,
+            };
+
+            send(event);
+        } else {
+            console.error(`Invalid message received: ${msg.type}`);
+        }
+    };
+
+    const onConnection = (connection: DataConnection) => {
+        if (contextRef.current.connection) {
+            console.warn('Drop connection already exists!');
+            connection.close();
+            return;
+        }
+
+        contextRef.current.connection = connection;
+
+        connection.on('data', onMessage);
+
+        send({ type: DropEventType.Connect, connection });
+
+        // TODO should replace timeout with an a confirmation message from grabber
+        setTimeout(() => startHandshake(), 1000);
+    };
+
     const init = async () => {
         const { initPeer } = await import('@lib/peer');
 
@@ -55,71 +123,7 @@ export const useDrop = () => {
         pushLog('Peer instance created successfully...');
         console.log(`Peer initialized: ${peerId}`);
 
-        peer.on('connection', (connection) => {
-            if (contextRef.current.connection) {
-                console.warn('Drop connection already exists!');
-                connection.close();
-                return;
-            }
-
-            connection.on('data', async (msg: BaseMessage) => {
-                console.log('MESSAGE RECEIVED:', msg);
-                if (msg.type === MessageType.Handshake) {
-                    const { input } = msg as HandshakeMessage;
-
-                    pushLog('Handshake acknowledged, deriving drop key...');
-
-                    const pubKey = await importKey(input, []);
-                    const dropKey = await deriveKey(
-                        contextRef.current.keyPair!.privateKey,
-                        pubKey,
-                    );
-
-                    pushLog('Drop key derived successfully...');
-
-                    contextRef.current.dropKey = dropKey;
-
-                    const event: HandshakeCompleteEvent = {
-                        type: DropEventType.HandshakeComplete,
-                        dropKey,
-                    };
-
-                    send(event);
-                } else if (msg.type === MessageType.Verify) {
-                    const { integrity } = msg as VerifyMessage;
-
-                    pushLog('Integrity verification request received...');
-
-                    const verified = integrity === contextRef.current.integrity!;
-
-                    pushLog(`Integrity checked ${verified ? 'PASSED' : 'FAILED'}`);
-
-                    const message: ConfirmIntegrityMessage = {
-                        type: MessageType.ConfirmVerification,
-                        verified,
-                    };
-
-                    connection.send(message);
-
-                    pushLog('Integrity confirmation sent, completing drop...');
-
-                    const event: CompleteEvent = {
-                        type: DropEventType.Confirm,
-                    };
-
-                    send(event);
-                } else {
-                    console.error(`Invalid message received: ${msg.type}`);
-                }
-            });
-
-            contextRef.current.connection = connection;
-
-            send({ type: DropEventType.Connect, connection });
-
-            // TODO should replace timeout with an a confirmation message from grabber
-            setTimeout(() => startHandshake(), 1000);
-        });
+        peer.on('connection', onConnection);
 
         const { id, nonce } = await post<InitDropResult, { id: string }>(DROP_API_PATH, {
             id: peer.id,
@@ -144,9 +148,9 @@ export const useDrop = () => {
         send(event);
     };
 
-    const setPayload = async (message: string) => {
+    const setPayload = async (content: string) => {
         const payload = {
-            message,
+            content,
         };
 
         pushLog('Staging & hashing payload for integrity checks...');
