@@ -8,12 +8,11 @@ test('should start the drop session successfully', async ({ page }) => {
 
     await page.click('text=Begin');
 
-    const secretsHeading = page.getByRole('heading', { name: 'waiting for secrets' });
-    await expect(secretsHeading).toBeVisible({
-        timeout: 3_000,
+    await expect(page.getByRole('heading', { name: 'waiting for secrets' })).toBeVisible({
+        timeout: 10_000,
     });
 
     page.getByPlaceholder('Your secret').fill(secretValue);
 
-    await page.click('text="Confirm Payload"');
+    await page.click('text=Confirm Payload');
 });

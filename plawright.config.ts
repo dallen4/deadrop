@@ -7,7 +7,7 @@ const baseURL = process.env.TEST_URI || `http://localhost:${PORT}/`;
 
 // ref: https://playwright.dev/docs/test-configuration
 const config: PlaywrightTestConfig = {
-    timeout: 30 * 1000,
+    timeout: 30_000,
     testDir: path.join(__dirname, 'tests', 'e2e'),
     retries: 2,
     outputDir: 'test-results/',
@@ -15,7 +15,7 @@ const config: PlaywrightTestConfig = {
     webServer: {
         command: 'yarn run start',
         url: baseURL,
-        timeout: 120 * 1000,
+        timeout: 120_000,
         reuseExistingServer: !process.env.CI,
     },
     use: {

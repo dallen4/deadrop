@@ -13,11 +13,10 @@ test('should start the drop session successfully', async ({ playwright }) => {
 
         await dropperPage.click('text=Begin');
 
-        const secretsHeading = dropperPage.getByRole('heading', {
-            name: 'waiting for secrets',
-        });
-        await expect(secretsHeading).toBeVisible({
-            timeout: 3_000,
+        await expect(
+            dropperPage.getByRole('heading', { name: 'waiting for secrets' }),
+        ).toBeVisible({
+            timeout: 10_000,
         });
 
         dropperPage.getByPlaceholder('Your secret').fill(secretValue);
