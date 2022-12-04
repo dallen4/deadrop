@@ -27,8 +27,11 @@ export const initPeer = (id: string) => {
     });
 
     peer.on('disconnected', () => {
-        if (attempt < 3) peer.reconnect();
-        else window.onbeforeunload = null;
+        window.onbeforeunload = null;
+    });
+
+    peer.on('close', () => {
+        window.onbeforeunload = null;
     });
 
     return new Promise<Peer>((resolve) => {
