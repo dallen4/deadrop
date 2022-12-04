@@ -28,6 +28,7 @@
         "bowser": "^2.11.0",
         "cookies-next": "^2.0.4",
         "ioredis": "^5.0.4",
+        "js-cookie": "^3.0.1",
         "localforage": "^1.10.0",
         "nanoid": "^4.0.0",
         "nanoid-dictionary": "^4.3.0",
@@ -51,6 +52,7 @@
     "devDependencies": {
         "@playwright/test": "^1.28.1",
         "@testing-library/react-hooks": "^8.0.1",
+        "@types/js-cookie": "^3.0.2",
         "@types/node": "^16",
         "@types/node-mailjet": "^3.3.8",
         "@types/qrcode": "^1.5.0",
