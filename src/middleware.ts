@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
-import { NONCE_COOKIE } from '@lib/constants';
+import { DISABLE_CAPTCHA_COOKIE, NONCE_COOKIE } from '@lib/constants';
 
 export function middleware(request: NextRequest) {
     const response = NextResponse.next();
@@ -17,6 +17,15 @@ export function middleware(request: NextRequest) {
         });
 
         console.log('Nonce set');
+    }
+
+    // disable captcha if in development mode
+    if (
+        process.env.NODE_ENV === 'development' &&
+        !request.cookies.get(DISABLE_CAPTCHA_COOKIE)
+    ) {
+        console.log('Disabling captcha');
+        response.cookies.set(DISABLE_CAPTCHA_COOKIE, true, { sameSite: true });
     }
 
     return response;

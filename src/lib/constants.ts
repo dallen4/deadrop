@@ -1,4 +1,5 @@
 export const NONCE_COOKIE = 'drop-nonce';
+export const DISABLE_CAPTCHA_COOKIE = 'disable-captcha';
 
 export enum ConfirmationEvent {
     KeyReceived = 'PUB_KEY_RECEIVED',
