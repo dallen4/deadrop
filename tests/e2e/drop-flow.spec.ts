@@ -19,7 +19,7 @@ test('should start the drop session successfully', async ({ playwright }) => {
             timeout: 10_000,
         });
 
-        dropperPage.getByPlaceholder('Your secret').fill(secretValue);
+        await dropperPage.getByPlaceholder('Your secret').fill(secretValue);
 
         await dropperPage.click('text="Confirm Payload"');
 

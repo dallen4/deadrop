@@ -15,7 +15,5 @@ export const createPageForBrowser = async (browser: BrowserType) => {
         },
     ]);
 
-    console.log(await context.cookies());
-
     return context.newPage();
 };

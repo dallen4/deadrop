@@ -12,17 +12,13 @@ import StepCard from './StepCard';
 import { useDropContext } from 'contexts/DropContext';
 import { PayloadInputMode } from 'types/common';
 import { Captcha } from 'atoms/Captcha';
-import Cookies from 'js-cookie';
-import { DISABLE_CAPTCHA_COOKIE } from '@lib/constants';
 
 const ACCEPTED_FILE_TYPES = ['.json', '.yml', '.yaml', '.env'];
-
-const getCaptchaCookie = () => Cookies.get(DISABLE_CAPTCHA_COOKIE);
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
     const [file, setFile] = useState<File | null>(null);
-    const [canConfirm, setCanConfirm] = useState(!!getCaptchaCookie());
+    const [canConfirm, setCanConfirm] = useState(process.env.NODE_ENV === 'development');
 
     const textRef = useRef<HTMLInputElement>(null);
     const jsonRef = useRef<HTMLTextAreaElement>(null);
