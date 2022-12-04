@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, CopyButton, Button, useMantineTheme } from '@mantine/core';
+import { Box, Text, CopyButton, Button, useMantineTheme, Anchor } from '@mantine/core';
 import { Copy } from 'react-feather';
 import { QRCode } from 'atoms/QRCode';
 
@@ -19,7 +19,13 @@ export const SharePane = ({ link }: { link: string }) => {
         >
             <Text size={'sm'}>Invite a friend with a scan</Text>
             <QRCode link={link} />
-            <Text size={'sm'}>or copy the link below</Text>
+            <Text size={'sm'}>
+                or copy the{' '}
+                <Anchor id={'drop-link'} inherit inline href={link} target={'_blank'}>
+                    link
+                </Anchor>{' '}
+                below
+            </Text>
             <CopyButton value={link}>
                 {({ copied, copy }) => (
                     <Button color={copied ? 'cyan' : 'blue'} size={'sm'} onClick={copy}>
