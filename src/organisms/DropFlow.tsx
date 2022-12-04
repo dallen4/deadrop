@@ -1,15 +1,6 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { DropState } from '@lib/constants';
-import {
-    Box,
-    Button,
-    Text,
-    Stepper,
-    useMantineTheme,
-    PasswordInput,
-    Title,
-    Card,
-} from '@mantine/core';
+import { Box, Button, Text, Stepper, useMantineTheme, Title, Card } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { DropProvider, useDropContext } from 'contexts/DropContext';
 import DropLog from 'molecules/DropLog';
@@ -17,24 +8,28 @@ import StepCard from 'molecules/steps/StepCard';
 import { SharePane } from 'molecules/SharePane';
 import { SecretInputCard } from 'molecules/steps/SecretInputCard';
 
-const STEP_COUNT = 3;
-
 const DropFlow = () => {
     const theme = useMantineTheme();
     const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
 
-    const inputRef = useRef<HTMLInputElement>();
-
     const { status, init, dropLink, drop, getLogs } = useDropContext();
 
     const currentStep = useMemo(() => {
-        if (status === DropState.Initial) return 0;
-        else if (status === DropState.Ready) return 1;
-        else if ([DropState.Waiting, DropState.AwaitingHandshake].includes(status))
-            return 2;
-        else if (status === DropState.Acknowledged) return 3;
-        else if (status === DropState.Completed) return 4;
-        else return 0;
+        switch (status) {
+            case DropState.Initial:
+                return 0;
+            case DropState.Ready:
+                return 1;
+            case DropState.Waiting:
+            case DropState.AwaitingHandshake:
+                return 2;
+            case DropState.Acknowledged:
+                return 3;
+            case DropState.Completed:
+                return 4;
+            default:
+                return 0;
+        }
     }, [status]);
 
     return (
