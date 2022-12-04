@@ -1,4 +1,9 @@
 export const NONCE_COOKIE = 'drop-nonce';
+export const DISABLE_CAPTCHA_COOKIE = 'disable-captcha';
+
+export const MAX_PAYLOAD_SIZE = 16_000;
+
+export const ACCEPTED_FILE_TYPES = ['.json', '.yml', '.yaml', '.env'];
 
 export enum ConfirmationEvent {
     KeyReceived = 'PUB_KEY_RECEIVED',

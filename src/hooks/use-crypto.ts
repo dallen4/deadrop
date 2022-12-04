@@ -1,6 +1,7 @@
 import { customAlphabet } from 'nanoid';
 import { bufferFromString, getIVBuffer } from '@lib/util';
 import { readFileAsBuffer } from '@lib/files';
+import { DropMessage } from 'types/messages';
 
 const { alphanumeric } = require('nanoid-dictionary');
 
@@ -103,7 +104,12 @@ export const useCrypto = () => {
             .then(decode)
             .then(JSON.parse);
 
-    const decryptFile = async (key: CryptoKey, iv: string, data: string) => {
+    const decryptFile = async (
+        key: CryptoKey,
+        iv: string,
+        data: string,
+        meta: DropMessage['meta'],
+    ) => {
         const decryptedBuffer = await tools!.decrypt(
             {
                 name: ENCRYPTION_ALGO,
@@ -113,33 +119,30 @@ export const useCrypto = () => {
             bufferFromString(data),
         );
 
-        const decryptedFile = new File([decryptedBuffer], 'secrets');
+        const decryptedFile = new File([decryptedBuffer], meta!.name, {
+            type: meta!.type,
+        });
 
         return decryptedFile;
     };
 
-    const hash = async (input: Record<string, any>) => {
-        const stringified = JSON.stringify(input);
-        const digest = await tools!.digest!(HASH_ALGO, Buffer.from(stringified));
+    const hashBase = async (buffer: BufferSource) => {
+        const digest = await tools!.digest!(HASH_ALGO, buffer);
 
         // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
-        const hash = Array.from(new Uint8Array(digest))
+        return Array.from(new Uint8Array(digest))
             .map((b) => b.toString(16).padStart(2, '0'))
             .join('');
+    };
 
-        return hash;
+    const hash = async (input: Record<string, any>) => {
+        const stringified = JSON.stringify(input);
+        return hashBase(Buffer.from(stringified));
     };
 
     const hashFile = async (file: File) => {
         const fileAsArrayBuffer = await readFileAsBuffer(file);
-        const digest = await tools!.digest!(HASH_ALGO, fileAsArrayBuffer);
-
-        // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
-        const hash = Array.from(new Uint8Array(digest))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
-
-        return hash;
+        return hashBase(fileAsArrayBuffer);
     };
 
     return {

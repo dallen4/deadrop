@@ -226,6 +226,10 @@ export const useDrop = () => {
             type: MessageType.Payload,
             mode: contextRef.current.mode,
             payload,
+            meta: isFile ? {
+                name: contextRef.current.message!.name,
+                type: contextRef.current.message!.type,
+            } : undefined,
         };
 
         contextRef.current.connection!.send(message);
