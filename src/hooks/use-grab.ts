@@ -66,7 +66,7 @@ export const useGrab = () => {
 
             sendPublicKey();
         } else if (msg.type === MessageType.Payload) {
-            const { payload, mode } = msg as DropMessage;
+            const { payload, mode, meta } = msg as DropMessage;
 
             pushLog('Drop payload received...');
 
@@ -77,7 +77,7 @@ export const useGrab = () => {
             const decryptedMessage =
                 mode === 'raw'
                     ? await decrypt(grabKey!, nonce!, payload)
-                    : await decryptFile(grabKey!, nonce!, payload);
+                    : await decryptFile(grabKey!, nonce!, payload, meta!);
 
             contextRef.current.mode = mode;
             contextRef.current.message = decryptedMessage;

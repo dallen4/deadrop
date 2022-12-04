@@ -10,10 +10,9 @@ import {
 } from '@mantine/core';
 import StepCard from './StepCard';
 import { useDropContext } from 'contexts/DropContext';
-import { PayloadInputMode } from 'types/common';
+import type { PayloadInputMode } from 'types/common';
 import { Captcha } from 'atoms/Captcha';
-
-const ACCEPTED_FILE_TYPES = ['.json', '.yml', '.yaml', '.env'];
+import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@lib/constants';
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
@@ -28,8 +27,15 @@ export const SecretInputCard = () => {
     const confirmPayload = async () => {
         if (mode === 'text') setPayload(textRef.current!.value);
         else if (mode === 'json') setPayload(jsonRef.current!.value);
-        else if (mode === 'file') setPayload(file!);
-        else console.warn('Cannot confirm payload');
+        else if (mode === 'file') {
+            if (file!.size > MAX_PAYLOAD_SIZE) {
+                setFile(null);
+                alert('This file is too big');
+                return;
+            }
+
+            setPayload(file!);
+        } else console.warn('Cannot confirm payload');
     };
 
     return (
