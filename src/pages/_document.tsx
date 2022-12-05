@@ -2,12 +2,13 @@ import Document, { DocumentContext, Head, Html, Main, NextScript } from 'next/do
 import { ServerStyles, createStylesServer } from '@mantine/next';
 import { createEmotionCache } from '@mantine/core';
 import getConfig from 'next/config';
+import { emotionCache } from '@lib/emotion';
 
 const { publicRuntimeConfig } = getConfig();
 
 const nonce = publicRuntimeConfig.nonce;
 
-const stylesServer = createStylesServer(createEmotionCache({ key: 'styles', nonce }));
+const stylesServer = createStylesServer(emotionCache);
 
 export default class _Document extends Document {
     static async getInitialProps(ctx: DocumentContext) {

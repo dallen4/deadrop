@@ -5,6 +5,8 @@ const nonce = randomBytes(8).toString('base64');
 
 const webVitalsDomain = 'https://vitals.vercel-insights.com';
 
+const vercelLiveDomain = 'https://vercel.live';
+
 const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(' ');
 
 const safeConfig = {
@@ -18,9 +20,10 @@ const safeConfig = {
         'connect-src': `'self' ${webVitalsDomain} ${captchaDomains}`,
         'default-src': `'self'`,
         'font-src': `'self' data:`,
-        'frame-src': captchaDomains,
-        'script-src': `'self' 'unsafe-inline' https://vercel.live ${webVitalsDomain} ${captchaDomains}`,
+        'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
+        'script-src': `'self' 'unsafe-inline' ${vercelLiveDomain} ${webVitalsDomain} ${captchaDomains}`,
         'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
+        'img-src': `'self' https://assets.vercel.com`,
     },
 };
 
