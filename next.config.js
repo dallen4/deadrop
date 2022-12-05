@@ -1,12 +1,14 @@
-const webVitalsDomain = 'vitals.vercel-insights.com';
+// const baseDomains = [`'self'`, '']
+
+const webVitalsDomain = 'https://vitals.vercel-insights.com';
 
 const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(' ');
 
 const ContentSecurityPolicy = `
     default-src 'self';
-    script-src 'self' ${captchaDomains};
+    script-src 'self' https://vercel.live ${captchaDomains};
     connect-src ${webVitalsDomain} ${captchaDomains};
-    style-src 'self' ${captchaDomains};
+    style-src 'self' data: ${captchaDomains};
     frame-src ${captchaDomains};
     font-src 'self';
 `
