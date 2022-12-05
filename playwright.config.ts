@@ -21,6 +21,7 @@ const config: PlaywrightTestConfig = {
     use: {
         baseURL,
         trace: 'retry-with-trace',
+        bypassCSP: true,
     },
     projects: [
         {
