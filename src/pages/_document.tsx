@@ -13,8 +13,6 @@ export default class _Document extends Document {
     static async getInitialProps(ctx: DocumentContext) {
         const initialProps = await Document.getInitialProps(ctx);
 
-        // Add your app specific logic here
-
         return {
             ...initialProps,
             styles: [
@@ -31,9 +29,10 @@ export default class _Document extends Document {
     render() {
         return (
             <Html lang="en">
-                <Head nonce={nonce}>
+                <Head nonce={'test'}>
                     <meta charSet="utf-8" />
                     <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+                    <meta property="csp-nonce" content={nonce} />
                     {/* PWA primary color */}
                     {/* <meta name="theme-color" content={theme.palette.primary.main} /> */}
                 </Head>
