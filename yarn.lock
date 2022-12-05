@@ -1952,6 +1952,11 @@ netmask@^2.0.2:
   resolved "https://registry.yarnpkg.com/netmask/-/netmask-2.0.2.tgz#8b01a07644065d536383835823bc52004ebac5e7"
   integrity sha512-dBpDMdxv9Irdq66304OLfEmQ9tbNRFnFTuZiLo+bD+r332bBmMJ8GBLXklIXXgxd3+v9+KUnZaUR5PJMa75Gsg==
 
+next-safe@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/next-safe/-/next-safe-3.3.0.tgz#7bd4f2ba8b1950027a1929c24009506bbd3c6c06"
+  integrity sha512-IM+ohDK3GMoLk38/anwkvdPF7k6xxUSB/XmyfowssUpnYGbmRHNVJG5OsYv9HGjMg4Ug0h+xh4Cat7hRH/CPhg==
+
 next-seo@^4.11.0:
   version "4.29.0"
   resolved "https://registry.yarnpkg.com/next-seo/-/next-seo-4.29.0.tgz#d281e95ba47914117cc99e9e468599f0547d9b9b"

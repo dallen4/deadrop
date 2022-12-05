@@ -2,12 +2,16 @@ import React from 'react';
 import { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
 import { DefaultSeo } from 'next-seo';
-import { MantineProvider } from '@mantine/core';
+import { createEmotionCache, MantineProvider } from '@mantine/core';
 import Layout from '../atoms/Layout';
+import getConfig from 'next/config';
+
+const { publicRuntimeConfig } = getConfig();
+
+const nonce = publicRuntimeConfig.nonce;
 
 export default function MyApp(props: AppProps) {
     const { Component, pageProps } = props;
-    const Router = useRouter();
 
     React.useEffect(() => {
         // Remove the server-side injected CSS
@@ -30,6 +34,7 @@ export default function MyApp(props: AppProps) {
                 theme={{
                     colorScheme: 'dark',
                 }}
+                emotionCache={createEmotionCache({ key: 'styles', nonce })}
             >
                 <Layout>
                     <Component {...pageProps} />
