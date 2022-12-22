@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { post } from '@lib/fetch';
-import { CAPTCHA_API_PATCH } from '@lib/constants';
+import { CAPTCHA_API_PATCH } from '@config/paths';
 import Cookies from 'js-cookie';
-import { DISABLE_CAPTCHA_COOKIE } from '@lib/constants';
+import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
 
 export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
     useEffect(() => {

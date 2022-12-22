@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { baseURL } from './config';
 import { createPageForBrowser } from './util';
 
 test('should start the drop session successfully', async ({ playwright }) => {
@@ -9,7 +8,7 @@ test('should start the drop session successfully', async ({ playwright }) => {
     const grabberPage = await createPageForBrowser(playwright.chromium);
 
     const dropLink = await test.step('Setup drop', async () => {
-        await dropperPage.goto(baseURL);
+        await dropperPage.goto('/');
 
         await dropperPage.click('text=Begin');
 

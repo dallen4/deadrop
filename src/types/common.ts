@@ -21,15 +21,17 @@ export type InitDropResult = {
     nonce: string;
 };
 
-export type PayloadInputMode = 'text' | 'json' | 'file'
+export type PayloadInputMode = 'text' | 'json' | 'file';
 
 export type PayloadMode = 'raw' | 'file';
 
-export type DropPayload = {
-    mode: 'raw';
-    content: string;
-} | {
-    mode: 'file';
-    content: string;
-    type: string;
-};
+export type DropPayload =
+    | {
+          mode: 'raw';
+          content: string;
+      }
+    | {
+          mode: 'file';
+          content: string;
+          type: string;
+      };

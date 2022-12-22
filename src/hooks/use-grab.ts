@@ -7,7 +7,7 @@ import {
     GrabContext,
     InitGrabEvent,
 } from 'types/grab';
-import { DROP_API_PATH, GrabEventType, GrabState, MessageType } from '@lib/constants';
+import { GrabEventType, GrabState, MessageType } from '@lib/constants';
 import { useRef } from 'react';
 import { get } from '@lib/fetch';
 import { useRouter } from 'next/router';
@@ -19,6 +19,7 @@ import {
     HandshakeMessage,
     VerifyMessage,
 } from 'types/messages';
+import { DROP_API_PATH } from '@config/paths';
 
 export const useGrab = () => {
     const router = useRouter();

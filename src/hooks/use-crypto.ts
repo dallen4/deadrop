@@ -2,26 +2,19 @@ import { customAlphabet } from 'nanoid';
 import { bufferFromString, getIVBuffer } from '@lib/util';
 import { readFileAsBuffer } from '@lib/files';
 import { DropMessage } from 'types/messages';
+import {
+    KEY_PAIR_PARAMS,
+    DERIVED_KEY_PARAMS,
+    ENCRYPTION_ALGO,
+    HASH_ALGO,
+} from '@config/crypto';
 
 const { alphanumeric } = require('nanoid-dictionary');
-
-const ENCRYPTION_ALGO = 'AES-GCM';
-const HASH_ALGO = 'SHA-256';
-const DERIVED_KEY_PARAMS: AesDerivedKeyParams = {
-    name: ENCRYPTION_ALGO,
-    length: 256,
-};
-
-const KEY_PAIR_PARAMS: EcKeyGenParams & EcKeyImportParams = {
-    name: 'ECDH',
-    namedCurve: 'P-384',
-};
 
 export const useCrypto = () => {
     const tools =
         typeof window !== 'undefined'
-            ? window.crypto.subtle ||
-              ((window.crypto as any).webkitSubtle as SubtleCrypto)
+            ? window.crypto.subtle || window.crypto.webkitSubtle
             : undefined;
 
     const encode = (input: Record<string, any>) => {
@@ -42,8 +35,12 @@ export const useCrypto = () => {
     const generateKeyPair = () =>
         tools!.generateKey(KEY_PAIR_PARAMS, true, ['deriveKey']);
 
-    const deriveKey = (privateKey: CryptoKey, publicKey: CryptoKey) =>
-        window.crypto.subtle.deriveKey(
+    const deriveKey = (
+        privateKey: CryptoKey,
+        publicKey: CryptoKey,
+        usages: Array<KeyUsage> = ['encrypt', 'decrypt'],
+    ) =>
+        tools!.deriveKey(
             {
                 name: 'ECDH',
                 public: publicKey,
@@ -51,7 +48,7 @@ export const useCrypto = () => {
             privateKey,
             DERIVED_KEY_PARAMS,
             false,
-            ['encrypt', 'decrypt'],
+            usages,
         );
 
     const importKey = (input: string, usages: KeyUsage[]) =>

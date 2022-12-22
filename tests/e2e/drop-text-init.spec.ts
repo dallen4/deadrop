@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { baseURL } from './config';
 import { createPageForBrowser } from './util';
 
 test('should start the drop session successfully', async ({ playwright }) => {
     const page = await createPageForBrowser(playwright.webkit);
 
-    await page.goto(baseURL);
+    await page.goto('/');
 
     const secretValue = 'super secret value';
 

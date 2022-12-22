@@ -1,5 +1,7 @@
 # deaddop
 
+[![Playwright Tests](https://github.com/dallen4/deaddrop/actions/workflows/ci_workflow.yml/badge.svg?branch=main)](https://github.com/dallen4/deaddrop/actions/workflows/ci_workflow.yml)
+
 *deaddrop* is an e2e enncrypted secret sharing platform that leverages the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
 
 ## How it Works

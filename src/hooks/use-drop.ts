@@ -2,13 +2,12 @@ import { useRef } from 'react';
 import { useCrypto } from './use-crypto';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { dropMachine, initDropContext } from '@lib/machines/drop';
-import { DropEventType, DropState, DROP_API_PATH, MessageType } from '@lib/constants';
+import { DropEventType, DropState, MessageType } from '@lib/constants';
 import type {
     CompleteEvent,
     DropContext,
     HandshakeCompleteEvent,
     InitDropEvent,
-    WrapEvent,
 } from 'types/drop';
 import { generateGrabUrl } from '@lib/util';
 import { post } from '@lib/fetch';
@@ -20,7 +19,8 @@ import type {
     HandshakeMessage,
     VerifyMessage,
 } from 'types/messages';
-import { DataConnection } from 'peerjs';
+import type { DataConnection } from 'peerjs';
+import { DROP_API_PATH } from '@config/paths';
 
 export const useDrop = () => {
     const {
@@ -226,10 +226,12 @@ export const useDrop = () => {
             type: MessageType.Payload,
             mode: contextRef.current.mode,
             payload,
-            meta: isFile ? {
-                name: contextRef.current.message!.name,
-                type: contextRef.current.message!.type,
-            } : undefined,
+            meta: isFile
+                ? {
+                      name: contextRef.current.message!.name,
+                      type: contextRef.current.message!.type,
+                  }
+                : undefined,
         };
 
         contextRef.current.connection!.send(message);
