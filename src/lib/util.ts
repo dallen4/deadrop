@@ -1,6 +1,7 @@
 import randomColor from 'randomcolor';
 import { randomBytes } from 'crypto';
-import { GRAB_PATH } from './constants';
+import { GRAB_PATH } from '@config/paths';
+import { UAParser } from 'ua-parser-js';
 
 export const bufferFromString = (input: string) => {
     const size = input.length;
@@ -40,3 +41,5 @@ export const generateDropKey = (id: string) => `drop:${id}`;
 export const generateIV = () => randomBytes(12).toString('binary');
 
 export const getIVBuffer = (iv: string) => Buffer.from(iv, 'binary');
+
+export const getBrowserInfo = () => new UAParser().getResult();

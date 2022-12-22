@@ -40,6 +40,7 @@
         "react-dom": "^18.2.0",
         "react-feather": "^2.0.9",
         "sharp": "^0.26.3",
+        "ua-parser-js": "^1.0.32",
         "unique-names-generator": "^4.7.1",
         "xstate": "^4.33.4",
         "yup": "^0.29.3"
@@ -55,6 +56,7 @@
         "@types/randomcolor": "^0.5.6",
         "@types/react": "^17.0.34",
         "@types/react-dom": "^17.0.11",
+        "@types/ua-parser-js": "^0.7.36",
         "@types/yup": "^0.29.8",
         "prettier": "^2.1.2",
         "ts-node": "^10.7.0",

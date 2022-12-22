@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
-import { DISABLE_CAPTCHA_COOKIE, NONCE_COOKIE } from '@lib/constants';
+import { DISABLE_CAPTCHA_COOKIE, NONCE_COOKIE } from '@config/cookies';
 
 export function middleware(request: NextRequest) {
     const response = NextResponse.next();
