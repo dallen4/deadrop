@@ -8,7 +8,6 @@ import type {
     DropContext,
     HandshakeCompleteEvent,
     InitDropEvent,
-    WrapEvent,
 } from 'types/drop';
 import { generateGrabUrl } from '@lib/util';
 import { post } from '@lib/fetch';

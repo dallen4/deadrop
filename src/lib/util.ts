@@ -1,5 +1,5 @@
 import randomColor from 'randomcolor';
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 import { GRAB_PATH } from '@config/paths';
 import { UAParser } from 'ua-parser-js';
 
