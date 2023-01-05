@@ -3,6 +3,9 @@ const nextSafe = require('next-safe');
 
 const nonce = randomBytes(8).toString('base64');
 
+const peerHost = new URL(process.env.NEXT_PUBLIC_PEER_SERVER_URL).host;
+const peerDomain = `ws://${peerHost}`;
+
 const webVitalsDomain = 'https://vitals.vercel-insights.com';
 
 const vercelLiveDomain = 'https://vercel.live';
@@ -17,7 +20,7 @@ const safeConfig = {
     frameOptions: 'DENY',
     permissionsPolicy: false,
     contentSecurityPolicy: {
-        'connect-src': `'self' ${webVitalsDomain} ${captchaDomains}`,
+        'connect-src': `'self' ${peerDomain} ${webVitalsDomain} ${captchaDomains}`,
         'default-src': `'self'`,
         'font-src': `'self' data:`,
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
