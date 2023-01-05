@@ -1,8 +1,8 @@
 import type { BaseContext } from './common';
-import { GrabEventType } from '@lib/constants';
+import { GrabEventType } from '~lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
-import { useGrab } from 'hooks/use-grab';
+import { useGrab } from '~hooks/use-grab';
 
 export type GrabContext = BaseContext & {
     grabKey: CryptoKey | null;

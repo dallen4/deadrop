@@ -9,10 +9,10 @@ import {
     Group,
 } from '@mantine/core';
 import StepCard from './StepCard';
-import { useDropContext } from 'contexts/DropContext';
-import type { PayloadInputMode } from 'types/common';
-import { Captcha } from 'atoms/Captcha';
-import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@config/files';
+import { useDropContext } from '~contexts/DropContext';
+import type { PayloadInputMode } from '~types/common';
+import { Captcha } from '~atoms/Captcha';
+import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '~config/files';
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');

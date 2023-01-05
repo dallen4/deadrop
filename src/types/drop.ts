@@ -1,9 +1,9 @@
 import type { BaseContext } from './common';
-import { DropEventType } from '@lib/constants';
+import { DropEventType } from '~lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
-import { useDrop } from 'hooks/use-drop';
+import { useDrop } from '~hooks/use-drop';
 
 export type DropOptions = {
     decryptedAccess?: 'copy' | 'view' | 'both';

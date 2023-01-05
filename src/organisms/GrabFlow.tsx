@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Button, Card, Code, Loader, Text, useMantineTheme } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
-import DropLog from 'molecules/DropLog';
-import { GrabState } from '@lib/constants';
-import { downloadFile } from '@lib/files';
+import { GrabProvider, useGrabContext } from '~contexts/GrabContext';
+import DropLog from '~molecules/DropLog';
+import { GrabState } from '~lib/constants';
+import { downloadFile } from '~lib/files';
 
 const GrabFlow = () => {
     const theme = useMantineTheme();

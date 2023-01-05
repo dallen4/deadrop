@@ -1,4 +1,4 @@
-import { grabMachine, initGrabContext } from '@lib/machines/grab';
+import { grabMachine, initGrabContext } from '~lib/machines/grab';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { useCrypto } from './use-crypto';
 import {
@@ -6,20 +6,20 @@ import {
     ExecuteGrabEvent,
     GrabContext,
     InitGrabEvent,
-} from 'types/grab';
-import { GrabEventType, GrabState, MessageType } from '@lib/constants';
+} from '~types/grab';
+import { GrabEventType, GrabState, MessageType } from '~lib/constants';
 import { useRef } from 'react';
-import { get } from '@lib/fetch';
+import { get } from '~lib/fetch';
 import { useRouter } from 'next/router';
-import { DropDetails } from 'types/common';
+import { DropDetails } from '~types/common';
 import {
     BaseMessage,
     ConfirmIntegrityMessage,
     DropMessage,
     HandshakeMessage,
     VerifyMessage,
-} from 'types/messages';
-import { DROP_API_PATH } from '@config/paths';
+} from '~types/messages';
+import { DROP_API_PATH } from '~config/paths';
 
 export const useGrab = () => {
     const router = useRouter();
@@ -122,7 +122,7 @@ export const useGrab = () => {
     };
 
     const init = async () => {
-        const { initPeer } = await import('@lib/peer');
+        const { initPeer } = await import('~lib/peer');
 
         const keyPair = await generateKeyPair();
 

@@ -2,8 +2,8 @@ import React from 'react';
 import { AppProps } from 'next/app';
 import { DefaultSeo } from 'next-seo';
 import { MantineProvider } from '@mantine/core';
-import Layout from 'atoms/Layout';
-import { emotionCache } from '@lib/emotion';
+import Layout from '~atoms/Layout';
+import { emotionCache } from '~lib/emotion';
 
 export default function MyApp(props: AppProps) {
     const { Component, pageProps } = props;

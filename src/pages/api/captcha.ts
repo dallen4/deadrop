@@ -1,4 +1,4 @@
-import { verifyCaptcha } from '@lib/captcha';
+import { verifyCaptcha } from '~lib/captcha';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text, CopyButton, Button, useMantineTheme, Anchor } from '@mantine/core';
 import { Copy } from 'react-feather';
-import { QRCode } from 'atoms/QRCode';
+import { QRCode } from '~atoms/QRCode';
 
 export const SharePane = ({ link }: { link: string }) => {
     const theme = useMantineTheme();

@@ -1,6 +1,6 @@
 import randomColor from 'randomcolor';
 import { randomBytes } from 'crypto';
-import { GRAB_PATH } from '@config/paths';
+import { GRAB_PATH } from '~config/paths';
 import { UAParser } from 'ua-parser-js';
 
 export const bufferFromString = (input: string) => {

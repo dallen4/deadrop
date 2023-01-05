@@ -1,4 +1,4 @@
-import type { HCaptchaResponse } from 'types/captcha';
+import type { HCaptchaResponse } from '~types/captcha';
 
 const VERIFY_CAPTCHA_URL = 'https://hcaptcha.com/siteverify';
 

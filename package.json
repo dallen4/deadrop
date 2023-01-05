@@ -42,6 +42,8 @@
         "sharp": "^0.26.3",
         "ua-parser-js": "^1.0.32",
         "unique-names-generator": "^4.7.1",
+        "wrtc": "^0.4.7",
+        "ws": "^8.11.0",
         "xstate": "^4.33.4",
         "yup": "^0.29.3"
     },
@@ -61,5 +63,11 @@
         "prettier": "^2.1.2",
         "ts-node": "^10.7.0",
         "typescript": "^4.0.3"
+    },
+    "browser": {
+        "tls": false,
+        "net": false,
+        "bufferutil": false,
+        "utf-8-validate": false
     }
 }

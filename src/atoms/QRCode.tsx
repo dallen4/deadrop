@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Image } from '@mantine/core';
-import { generateQR } from '@lib/qrcode';
+import { generateQR } from '~lib/qrcode';
 
 export const QRCode = ({ link }: { link: string | undefined }) => {
     const [src, setSrc] = useState<string>();

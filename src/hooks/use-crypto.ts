@@ -1,21 +1,19 @@
 import { customAlphabet } from 'nanoid';
-import { bufferFromString, getIVBuffer } from '@lib/util';
-import { readFileAsBuffer } from '@lib/files';
-import { DropMessage } from 'types/messages';
+import { bufferFromString, getIVBuffer } from '~lib/util';
+import { readFileAsBuffer } from '~lib/files';
+import { DropMessage } from '~types/messages';
 import {
     KEY_PAIR_PARAMS,
     DERIVED_KEY_PARAMS,
     ENCRYPTION_ALGO,
     HASH_ALGO,
-} from '@config/crypto';
+} from '~config/crypto';
+import { getCrypto } from '@shared/lib/crypto';
 
 const { alphanumeric } = require('nanoid-dictionary');
 
 export const useCrypto = () => {
-    const tools =
-        typeof window !== 'undefined'
-            ? window.crypto.subtle || window.crypto.webkitSubtle
-            : undefined;
+    const tools = getCrypto().subtle;
 
     const encode = (input: Record<string, any>) => {
         const data = JSON.stringify(input);

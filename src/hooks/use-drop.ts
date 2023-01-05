@@ -1,26 +1,26 @@
 import { useRef } from 'react';
 import { useCrypto } from './use-crypto';
 import { useMachine } from '@xstate/react/lib/useMachine';
-import { dropMachine, initDropContext } from '@lib/machines/drop';
-import { DropEventType, DropState, MessageType } from '@lib/constants';
+import { dropMachine, initDropContext } from '~lib/machines/drop';
+import { DropEventType, DropState, MessageType } from '~lib/constants';
 import type {
     CompleteEvent,
     DropContext,
     HandshakeCompleteEvent,
     InitDropEvent,
-} from 'types/drop';
-import { generateGrabUrl } from '@lib/util';
-import { post } from '@lib/fetch';
-import type { InitDropResult } from 'types/common';
+} from '~types/drop';
+import { generateGrabUrl } from '~lib/util';
+import { post } from '~lib/fetch';
+import type { InitDropResult } from '~types/common';
 import type {
     BaseMessage,
     ConfirmIntegrityMessage,
     DropMessage,
     HandshakeMessage,
     VerifyMessage,
-} from 'types/messages';
+} from '~types/messages';
 import type { DataConnection } from 'peerjs';
-import { DROP_API_PATH } from '@config/paths';
+import { DROP_API_PATH } from '~config/paths';
 
 export const useDrop = () => {
     const {
@@ -115,7 +115,7 @@ export const useDrop = () => {
     };
 
     const init = async () => {
-        const { initPeer } = await import('@lib/peer');
+        const { initPeer } = await import('~lib/peer');
 
         const keyPair = await generateKeyPair();
 

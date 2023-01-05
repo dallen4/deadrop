@@ -1,8 +1,8 @@
-import { getRedis } from '@lib/redis';
-import { generateDropKey, generateIV } from '@lib/util';
+import { getRedis } from '~lib/redis';
+import { generateDropKey, generateIV } from '~lib/util';
 import { nanoid } from 'nanoid';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { DropDetails } from 'types/common';
+import { DropDetails } from '~types/common';
 
 const HOUR_IN_SECONDS = 60 * 60;
 const FIVE_MINS_IN_SEC = 5 * 60;

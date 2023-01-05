@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "baseUrl": "./src",
+        "baseUrl": "./",
         "target": "esnext",
         "lib": ["dom", "dom.iterable", "esnext"],
         "allowJs": true,
@@ -15,8 +15,8 @@
         "isolatedModules": true,
         "jsx": "preserve",
         "paths": {
-            "@lib/*": ["lib/*"],
-            "@config/*": ["config/*"]
+            "~*": ["src/*"],
+            "@shared/*": ["shared/*"]
         },
         "incremental": true
     },

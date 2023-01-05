@@ -1,4 +1,4 @@
-import { MessageType } from '@lib/constants';
+import { MessageType } from '~lib/constants';
 import { PayloadMode } from './common';
 
 export type BaseMessage = {

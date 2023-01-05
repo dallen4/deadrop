@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import { DropState } from '@lib/constants';
+import { DropState } from '~lib/constants';
 import { Box, Button, Text, Stepper, useMantineTheme, Title, Card } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { DropProvider, useDropContext } from 'contexts/DropContext';
-import DropLog from 'molecules/DropLog';
-import StepCard from 'molecules/steps/StepCard';
-import { SharePane } from 'molecules/SharePane';
-import { SecretInputCard } from 'molecules/steps/SecretInputCard';
+import { DropProvider, useDropContext } from '~contexts/DropContext';
+import DropLog from '~molecules/DropLog';
+import StepCard from '~molecules/steps/StepCard';
+import { SharePane } from '~molecules/SharePane';
+import { SecretInputCard } from '~molecules/steps/SecretInputCard';
 
 const DropFlow = () => {
     const theme = useMantineTheme();

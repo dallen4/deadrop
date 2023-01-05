@@ -1,7 +1,7 @@
 import { GrabEventType, GrabState } from '../constants';
 import { createMachine, TransitionsConfig } from 'xstate';
-import type { AnyGrabEvent } from 'types/grab';
-import type { GrabContext } from 'types/grab';
+import type { AnyGrabEvent } from '~types/grab';
+import type { GrabContext } from '~types/grab';
 import { raise as baseRaise } from 'xstate/lib/actions';
 
 export const initGrabContext = (): GrabContext => ({
