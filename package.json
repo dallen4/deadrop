@@ -6,16 +6,21 @@
     "author": "Nieky Allen <nieky.allen@gmail.com>",
     "license": "MIT",
     "private": true,
-    "workspaces": ["web", "cli", "shared"],
+    "workspaces": [
+        "web",
+        "cli",
+        "shared"
+    ],
     "scripts": {
-        "start": "next dev",
-        "build": "next build",
-        "start:prod": "next build && next start",
-        "test:e2e": "playwright test",
-        "cli:build": ""
+        "web": "yarn workspace web",
+        "cli": "yarn workspace cli",
+        "start": "yarn web start",
+        "build": "yarn web build",
+        "start:prod": "yarn web start:prod",
+        "test:e2e": "yarn web test:e2e",
+        "cli:build": "yarn cli build"
     },
     "dependencies": {
-        "commander": "^9.4.1",
         "nanoid": "^4.0.0",
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-// import { version } from './package.json';
-
+import { version } from '../package.json';
+import { nanoid } from 'nanoid';
+console.log(version);
 const program = new Command();
 
 program

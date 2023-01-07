@@ -21,7 +21,6 @@
         "@mantine/next": "^5.2.3",
         "@mantine/notifications": "^5.2.3",
         "@xstate/react": "^3.0.1",
-        "commander": "^9.4.1",
         "cookies-next": "^2.0.4",
         "ioredis": "^5.0.4",
         "js-cookie": "^3.0.1",
@@ -41,8 +40,6 @@
         "sharp": "^0.26.3",
         "ua-parser-js": "^1.0.32",
         "unique-names-generator": "^4.7.1",
-        "wrtc": "^0.4.7",
-        "ws": "^8.11.0",
         "xstate": "^4.33.4",
         "yup": "^0.29.3"
     },
@@ -51,7 +48,6 @@
         "@playwright/test": "^1.28.1",
         "@testing-library/react-hooks": "^8.0.1",
         "@types/js-cookie": "^3.0.2",
-        "@types/node": "^18",
         "@types/node-mailjet": "^3.3.8",
         "@types/qrcode": "^1.5.0",
         "@types/randomcolor": "^0.5.6",
@@ -59,10 +55,7 @@
         "@types/react-dom": "^17.0.11",
         "@types/ua-parser-js": "^0.7.36",
         "@types/yup": "^0.29.8",
-        "pkg": "^5.8.0",
-        "prettier": "^2.1.2",
-        "ts-node": "^10.7.0",
-        "typescript": "^4.0.3"
+        "next-transpile-modules": "^9"
     },
     "browser": {
         "tls": false,

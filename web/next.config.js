@@ -1,5 +1,6 @@
 const { randomBytes } = require('crypto');
 const nextSafe = require('next-safe');
+const withTM = require('next-transpile-modules')(['shared']);
 
 const nonce = randomBytes(8).toString('base64');
 
@@ -41,7 +42,7 @@ const headers = [
 /**
  * @type {import('next').NextConfig}
  */
-module.exports = {
+module.exports = withTM({
     swcMinify: true,
     poweredByHeader: false,
     headers() {
@@ -55,4 +56,4 @@ module.exports = {
     publicRuntimeConfig: {
         nonce,
     },
-};
+});
