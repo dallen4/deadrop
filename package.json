@@ -18,11 +18,9 @@
         "build": "yarn web build",
         "start:prod": "yarn web start:prod",
         "test:e2e": "yarn web test:e2e",
-        "cli:build": "yarn cli build",
-        "prepare": "husky install"
+        "cli:build": "yarn cli build"
     },
     "dependencies": {
-        "nanoid": "^4.0.0",
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",
         "qrcode": "^1.5.1",
@@ -33,8 +31,6 @@
     "devDependencies": {
         "@types/node": "^18",
         "eslint": "^8.31.0",
-        "husky": "^8.0.3",
-        "lint-staged": "^13.1.0",
         "pkg": "^5.8.0",
         "prettier": "^2.8.2",
         "ts-node": "^10.7.0",
