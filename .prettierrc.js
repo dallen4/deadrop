@@ -7,7 +7,7 @@
  */
 module.exports = {
     // Number of characters allowed before formatter wraps code.
-    printWidth: 90,
+    printWidth: 80,
 
     // Number of spaces in a tab.
     tabWidth: 4,
