@@ -1,4 +1,11 @@
-import Document, { DocumentContext, Head, Html, Main, NextScript } from 'next/document';
+import React from 'react';
+import Document, {
+    DocumentContext,
+    Head,
+    Html,
+    Main,
+    NextScript,
+} from 'next/document';
 import { ServerStyles, createStylesServer } from '@mantine/next';
 import getConfig from 'next/config';
 import { emotionCache } from 'lib/emotion';

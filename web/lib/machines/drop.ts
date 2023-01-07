@@ -16,12 +16,12 @@ export const initDropContext = (): DropContext => ({
     nonce: null,
 });
 
-export const raise = baseRaise<{}, AnyDropEvent>;
+export const raise = baseRaise<Record<string, never>, AnyDropEvent>;
 
 export const dropMachine = createMachine<
-    {},
+    Record<string, never>,
     AnyDropEvent,
-    { value: DropState; context: {} }
+    { value: DropState; context: Record<string, never> }
 >({
     id: 'drop',
     preserveActionOrder: true,
@@ -48,7 +48,7 @@ export const dropMachine = createMachine<
                     target: DropState.Connected,
                     actions: [raise(DropEventType.Handshake)],
                 },
-            } as TransitionsConfig<{}, AnyDropEvent>,
+            } as TransitionsConfig<Record<string, never>, AnyDropEvent>,
         },
         [DropState.Connected]: {
             on: {

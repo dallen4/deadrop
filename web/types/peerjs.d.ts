@@ -87,7 +87,7 @@ declare module 'peerjs' {
          * @param {Function} fn The listener that we need to find.
          * @param {Boolean} once Only remove once listeners.
          */
-        off(event: string, fn: Function, once?: boolean): void;
+        off(event: string, fn: () => void, once?: boolean): void;
         /**
          * Close the connection to the server, leaving all existing data and media connections intact.
          */
@@ -154,11 +154,11 @@ declare module 'peerjs' {
 
         interface CallOption {
             metadata?: any;
-            sdpTransform?: Function;
+            sdpTransform?: () => any;
         }
 
         interface AnswerOption {
-            sdpTransform?: Function;
+            sdpTransform?: () => any;
         }
 
         interface DataConnection {
@@ -169,7 +169,7 @@ declare module 'peerjs' {
             on(event: 'open', cb: () => void): void;
             on(event: 'close', cb: () => void): void;
             on(event: 'error', cb: (err: any) => void): void;
-            off(event: string, fn: Function, once?: boolean): void;
+            off(event: string, fn: () => void, once?: boolean): void;
             dataChannel: RTCDataChannel;
             label: string;
             metadata: any;
@@ -191,7 +191,7 @@ declare module 'peerjs' {
             on(event: 'stream', cb: (stream: MediaStream) => void): void;
             on(event: 'close', cb: () => void): void;
             on(event: 'error', cb: (err: any) => void): void;
-            off(event: string, fn: Function, once?: boolean): void;
+            off(event: string, fn: () => void, once?: boolean): void;
             open: boolean;
             metadata: any;
             peerConnection: RTCPeerConnection;

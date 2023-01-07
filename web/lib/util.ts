@@ -17,7 +17,7 @@ export const bufferFromString = (input: string) => {
 // ref: https://github.com/davidmerfield/randomColor#options
 const hues = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'monochrome'];
 
-export const generateColorSet = (amount: number = 2) => {
+export const generateColorSet = (amount = 2) => {
     const colors = new Array<string>(amount);
 
     for (let cIndex = 0; cIndex < amount; cIndex++) {

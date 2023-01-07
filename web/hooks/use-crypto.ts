@@ -10,6 +10,7 @@ import {
 } from 'config/crypto';
 import { getCrypto } from '@shared/lib/crypto';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { alphanumeric } = require('nanoid-dictionary');
 
 export const useCrypto = () => {

@@ -55,6 +55,10 @@
         "@types/react-dom": "^17.0.11",
         "@types/ua-parser-js": "^0.7.36",
         "@types/yup": "^0.29.8",
+        "@typescript-eslint/eslint-plugin": "^5.48.0",
+        "@typescript-eslint/parser": "^5.48.0",
+        "eslint": "^8.31.0",
+        "eslint-plugin-react": "^7.31.11",
         "next-transpile-modules": "^9"
     },
     "browser": {

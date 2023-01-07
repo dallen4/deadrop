@@ -1,4 +1,4 @@
-export const get = async <Data extends any>(
+export const get = async <Data>(
     path: string,
     params?: { [key: string]: any },
 ) => {
@@ -21,7 +21,7 @@ export const get = async <Data extends any>(
     return data;
 };
 
-export const post = async <Data extends any, Body extends any>(
+export const post = async <Data, Body>(
     path: string,
     body?: Body,
     headers: HeadersInit = {},

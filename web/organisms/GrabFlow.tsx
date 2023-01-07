@@ -1,5 +1,13 @@
 import React from 'react';
-import { Box, Button, Card, Code, Loader, Text, useMantineTheme } from '@mantine/core';
+import {
+    Box,
+    Button,
+    Card,
+    Code,
+    Loader,
+    Text,
+    useMantineTheme,
+} from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
 import DropLog from 'molecules/DropLog';
@@ -37,8 +45,14 @@ const GrabFlow = () => {
                         </Code>
                     ) : (
                         <>
-                            <Text>File received: {(getSecret() as File).name}</Text>
-                            <Button onClick={() => downloadFile(getSecret() as File)}>
+                            <Text>
+                                File received: {(getSecret() as File).name}
+                            </Text>
+                            <Button
+                                onClick={() =>
+                                    downloadFile(getSecret() as File)
+                                }
+                            >
                                 Download
                             </Button>
                         </>
