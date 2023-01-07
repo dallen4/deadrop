@@ -9,5 +9,9 @@ export const useGrabContext = () => useContext(GrabContext);
 export const GrabProvider = ({ children }: { children: React.ReactNode }) => {
     const grabTools = useGrab();
 
-    return <GrabContext.Provider value={grabTools}>{children}</GrabContext.Provider>;
+    return (
+        <GrabContext.Provider value={grabTools}>
+            {children}
+        </GrabContext.Provider>
+    );
 };

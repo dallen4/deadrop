@@ -10,7 +10,9 @@ test('should start the drop session successfully', async ({ playwright }) => {
 
     await page.click('text=Begin');
 
-    await expect(page.getByRole('heading', { name: 'waiting for secrets' })).toBeVisible({
+    await expect(
+        page.getByRole('heading', { name: 'waiting for secrets' }),
+    ).toBeVisible({
         timeout: 10_000,
     });
 

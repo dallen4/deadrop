@@ -9,7 +9,8 @@ export const verifyCaptcha = async (userResponse: string) => {
             'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: `response=${userResponse}&secret=${process.env
-            .HCAPTCHA_SECRET!}&sitekey=${process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}`,
+            .HCAPTCHA_SECRET!}&sitekey=${process.env
+            .NEXT_PUBLIC_HCAPTCHA_SITEKEY!}`,
     });
 
     const data: HCaptchaResponse = await res.json();

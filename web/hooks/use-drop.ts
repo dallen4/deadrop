@@ -130,9 +130,12 @@ export const useDrop = () => {
 
         peer.on('connection', onConnection);
 
-        const { id, nonce } = await post<InitDropResult, { id: string }>(DROP_API_PATH, {
-            id: peer.id,
-        });
+        const { id, nonce } = await post<InitDropResult, { id: string }>(
+            DROP_API_PATH,
+            {
+                id: peer.id,
+            },
+        );
 
         pushLog('Session is ready to begin drop...');
         console.log('DROP READY');
@@ -183,7 +186,9 @@ export const useDrop = () => {
 
     const dropLink = () => {
         const dropId = contextRef.current.id!;
-        return typeof window !== 'undefined' ? generateGrabUrl(dropId) : undefined;
+        return typeof window !== 'undefined'
+            ? generateGrabUrl(dropId)
+            : undefined;
     };
 
     const startHandshake = async () => {

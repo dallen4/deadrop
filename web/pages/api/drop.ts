@@ -9,7 +9,8 @@ const FIVE_MINS_IN_SEC = 5 * 60;
 const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24;
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
-    if (!['POST', 'GET'].includes(req.method!)) throw new Error('Method not allowed');
+    if (!['POST', 'GET'].includes(req.method!))
+        throw new Error('Method not allowed');
 
     const client = getRedis();
 

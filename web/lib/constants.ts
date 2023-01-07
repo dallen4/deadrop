@@ -1,4 +1,3 @@
-
 export enum ConfirmationEvent {
     KeyReceived = 'PUB_KEY_RECEIVED',
     SecretsReceived = 'SECRETS_RECEIVED',

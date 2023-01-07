@@ -17,7 +17,9 @@ import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from 'config/files';
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
     const [file, setFile] = useState<File | null>(null);
-    const [canConfirm, setCanConfirm] = useState(process.env.NODE_ENV === 'development');
+    const [canConfirm, setCanConfirm] = useState(
+        process.env.NODE_ENV === 'development',
+    );
 
     const textRef = useRef<HTMLInputElement>(null);
     const jsonRef = useRef<HTMLTextAreaElement>(null);
@@ -59,7 +61,11 @@ export const SecretInputCard = () => {
                 ]}
             />
             {mode === 'text' ? (
-                <PasswordInput ref={textRef} size={'md'} placeholder={'Your secret'} />
+                <PasswordInput
+                    ref={textRef}
+                    size={'md'}
+                    placeholder={'Your secret'}
+                />
             ) : mode === 'json' ? (
                 <JsonInput
                     ref={jsonRef}
@@ -72,8 +78,13 @@ export const SecretInputCard = () => {
                 />
             ) : mode === 'file' ? (
                 <Group position={'center'}>
-                    <FileButton onChange={setFile} accept={ACCEPTED_FILE_TYPES.join(',')}>
-                        {(props) => <Button {...props}>Upload Secrets File</Button>}
+                    <FileButton
+                        onChange={setFile}
+                        accept={ACCEPTED_FILE_TYPES.join(',')}
+                    >
+                        {(props) => (
+                            <Button {...props}>Upload Secrets File</Button>
+                        )}
                     </FileButton>
                     <Text size={'sm'}>
                         Allows extensions: {ACCEPTED_FILE_TYPES.join(', ')}

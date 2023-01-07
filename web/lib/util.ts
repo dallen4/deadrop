@@ -15,7 +15,16 @@ export const bufferFromString = (input: string) => {
 };
 
 // ref: https://github.com/davidmerfield/randomColor#options
-const hues = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'monochrome'];
+const hues = [
+    'red',
+    'orange',
+    'yellow',
+    'green',
+    'blue',
+    'purple',
+    'pink',
+    'monochrome',
+];
 
 export const generateColorSet = (amount = 2) => {
     const colors = new Array<string>(amount);
@@ -31,7 +40,10 @@ export const generateColorSet = (amount = 2) => {
 
 export const generateGrabUrl = (id: string) => {
     const params = new URLSearchParams({ drop: id });
-    const baseUrl = new URL(GRAB_PATH, window.location.protocol + window.location.host);
+    const baseUrl = new URL(
+        GRAB_PATH,
+        window.location.protocol + window.location.host,
+    );
 
     return `${baseUrl.toString()}?${params.toString()}`;
 };

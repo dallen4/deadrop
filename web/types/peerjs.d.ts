@@ -27,7 +27,10 @@ declare module 'peerjs' {
          * @param id The brokering ID of the remote peer (their peer.id).
          * @param options for specifying details about Peer Connection
          */
-        connect(id: string, options?: Peer.PeerConnectOption): Peer.DataConnection;
+        connect(
+            id: string,
+            options?: Peer.PeerConnectOption,
+        ): Peer.DataConnection;
         /**
          * Calls the remote peer specified by id and returns a media connection.
          * @param id The brokering ID of the remote peer (their peer.id).
@@ -56,13 +59,19 @@ declare module 'peerjs' {
          * @param event Event name
          * @param cb Callback Function
          */
-        on(event: 'connection', cb: (dataConnection: Peer.DataConnection) => void): void;
+        on(
+            event: 'connection',
+            cb: (dataConnection: Peer.DataConnection) => void,
+        ): void;
         /**
          * Emitted when a remote peer attempts to call you.
          * @param event Event name
          * @param cb Callback Function
          */
-        on(event: 'call', cb: (mediaConnection: Peer.MediaConnection) => void): void;
+        on(
+            event: 'call',
+            cb: (mediaConnection: Peer.MediaConnection) => void,
+        ): void;
         /**
          * Emitted when the peer is destroyed and can no longer accept or create any new connections.
          * @param event Event name

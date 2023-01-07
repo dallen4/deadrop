@@ -11,7 +11,9 @@ const webVitalsDomain = 'https://vitals.vercel-insights.com';
 
 const vercelLiveDomain = 'https://vercel.live';
 
-const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(' ');
+const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(
+    ' ',
+);
 
 const safeConfig = {
     isDev: process.env.NODE_ENV !== 'production',

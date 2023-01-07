@@ -51,7 +51,13 @@ export const useCrypto = () => {
         );
 
     const importKey = (input: string, usages: KeyUsage[]) =>
-        tools!.importKey('jwk', JSON.parse(input), KEY_PAIR_PARAMS, true, usages);
+        tools!.importKey(
+            'jwk',
+            JSON.parse(input),
+            KEY_PAIR_PARAMS,
+            true,
+            usages,
+        );
 
     const exportKey = (key: CryptoKey) =>
         tools!.exportKey('jwk', key).then(JSON.stringify);

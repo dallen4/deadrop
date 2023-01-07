@@ -4,7 +4,8 @@ export const readFileAsBuffer = async (file: FileWithPath) =>
     new Promise<ArrayBuffer>((resolve, reject) => {
         const reader = new FileReader();
 
-        reader.onloadend = (event) => resolve(event.target!.result! as ArrayBuffer);
+        reader.onloadend = (event) =>
+            resolve(event.target!.result! as ArrayBuffer);
         reader.onerror = reject;
 
         reader.readAsArrayBuffer(file);

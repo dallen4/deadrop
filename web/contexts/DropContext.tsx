@@ -9,5 +9,9 @@ export const useDropContext = () => useContext(DropContext);
 export const DropProvider = ({ children }: { children: React.ReactNode }) => {
     const dropTools = useDrop();
 
-    return <DropContext.Provider value={dropTools}>{children}</DropContext.Provider>;
+    return (
+        <DropContext.Provider value={dropTools}>
+            {children}
+        </DropContext.Provider>
+    );
 };

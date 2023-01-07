@@ -15,7 +15,7 @@ export interface DropMessage extends BaseMessage {
     type: MessageType.Payload;
     mode: PayloadMode;
     payload: string;
-    meta?: { type: string; name: string; };
+    meta?: { type: string; name: string };
 }
 
 export interface VerifyMessage extends BaseMessage {

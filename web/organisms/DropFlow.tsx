@@ -1,6 +1,14 @@
 import React, { useMemo } from 'react';
 import { DropState } from 'lib/constants';
-import { Box, Button, Text, Stepper, useMantineTheme, Title, Card } from '@mantine/core';
+import {
+    Box,
+    Button,
+    Text,
+    Stepper,
+    useMantineTheme,
+    Title,
+    Card,
+} from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { DropProvider, useDropContext } from 'contexts/DropContext';
 import DropLog from 'molecules/DropLog';
