@@ -2,15 +2,18 @@
     "name": "cli",
     "version": "0.1.0",
     "main": "build/index.js",
+    "bin": "./dist/index.js",
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "tsc && yarn run ncc build -o dist",
-        "package": "yarn build && pkg . -o dist/deaddrop"
+        "build": "rimraf dist/ && esbuild index.ts --bundle --platform=node --outfile=dist/index.js",
+        "package": "yarn build && pkg dist/index.js -o dist/deaddrop -t node16-macos,node16-linux,node16-win"
     },
-    "bin": "./build/index.js",
     "dependencies": {
+        "chalk": "^5.2.0",
         "commander": "^9.4.1",
+        "figlet": "^1.5.2",
+        "inquirer": "^9.1.4",
         "nanoid": "^3",
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",
@@ -20,17 +23,10 @@
         "xstate": "^4.33.4"
     },
     "devDependencies": {
-        "@vercel/ncc": "^0.36.0",
+        "@types/figlet": "^1.5.5",
+        "@types/inquirer": "^9.0.3",
+        "esbuild": "^0.16.15",
         "pkg": "^5.8.0",
-        "ts-loader": "^9.4.2",
-        "webpack": "^5.75.0",
-        "webpack-cli": "^5.0.1",
-        "webpack-node-externals": "^3.0.0"
-    },
-    "pkg": {
-        "scripts": "dist/index.js",
-        "targets": [
-            "node16-macos-x64"
-        ]
+        "rimraf": "^3.0.2"
     }
 }
