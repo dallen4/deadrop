@@ -1,4 +1,4 @@
-import { DISABLE_CAPTCHA_COOKIE } from 'config/cookies';
+import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
 import { BrowserType } from '@playwright/test';
 import { baseURL } from './config';
 

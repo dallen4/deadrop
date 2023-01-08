@@ -17,6 +17,7 @@
         "isolatedModules": true,
         "incremental": true,
         "paths": {
+            "@config/*": ["config/*"],
             "@shared/*": ["../shared/*"]
         }
     },
