@@ -1,0 +1,33 @@
+{
+    "name": "cli",
+    "version": "0.1.0",
+    "main": "build/index.js",
+    "bin": "./dist/index.js",
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "build": "rimraf dist/ && esbuild index.ts --bundle --platform=node --outfile=dist/index.js",
+        "package": "pkg dist/index.js -o dist/deaddrop -C Brotli -t node16-macos,node16-linux,node16-win",
+        "compile": "yarn build && yarn package"
+    },
+    "dependencies": {
+        "chalk": "^5.2.0",
+        "commander": "^9.4.1",
+        "figlet": "^1.5.2",
+        "inquirer": "^9.1.4",
+        "nanoid": "^3",
+        "nanoid-dictionary": "^4.3.0",
+        "peerjs": "^1.4.7",
+        "qrcode": "^1.5.1",
+        "wrtc": "^0.4.7",
+        "ws": "^8.11.0",
+        "xstate": "^4.33.4"
+    },
+    "devDependencies": {
+        "@types/figlet": "^1.5.5",
+        "@types/inquirer": "^9.0.3",
+        "esbuild": "^0.16.15",
+        "pkg": "^5.8.0",
+        "rimraf": "^3.0.2"
+    }
+}

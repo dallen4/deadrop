@@ -1,0 +1,23 @@
+name: Release CLI
+on:
+  push:
+    tags:
+      - "v*"
+jobs:
+  release-cli:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build CLI Source
+        run: yarn cli compile
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: true
+          prerelease: false
+          files: cli/dist/deaddrop-*

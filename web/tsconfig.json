@@ -1,17 +1,25 @@
 {
+    "extends": "../tsconfig.json",
     "compilerOptions": {
+        "baseUrl": "./",
+        "jsx": "preserve",
         "target": "esnext",
         "lib": ["dom", "dom.iterable", "esnext"],
         "allowJs": true,
         "skipLibCheck": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
+        "noEmit": true,
         "esModuleInterop": true,
         "module": "esnext",
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "isolatedModules": true
+        "isolatedModules": true,
+        "incremental": true,
+        "paths": {
+            "@shared/*": ["../shared/*"]
+        }
     },
-    "include": ["**/*.ts", "**/*.tsx", "**/*.mdx"],
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mdx"],
     "exclude": ["node_modules"]
 }
