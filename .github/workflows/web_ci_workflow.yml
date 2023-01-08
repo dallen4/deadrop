@@ -14,14 +14,14 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Install Playwright Browsers
-        run: yarn run playwright install --with-deps
+        run: yarn web playwright install --with-deps
       - name: Run Playwright Tests
         shell: bash
         env:
           STAGE: ${{ github.ref_name }}
         run: |
           if [[ $STAGE == "alpha" ]]; then BASE_URI="https://test.drop.nieky.dev"; else BASE_URI="https://drop.nieky.dev"; fi
-          CI=true TEST_URI=$BASE_URI yarn run playwright test --trace on
+          CI=true TEST_URI=$BASE_URI yarn web playwright test --trace on
       - uses: actions/upload-artifact@v3
         if: always()
         with:

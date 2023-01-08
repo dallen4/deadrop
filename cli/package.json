@@ -7,7 +7,8 @@
     "private": true,
     "scripts": {
         "build": "rimraf dist/ && esbuild index.ts --bundle --platform=node --outfile=dist/index.js",
-        "package": "yarn build && pkg dist/index.js -o dist/deaddrop -t node16-macos,node16-linux,node16-win"
+        "package": "pkg dist/index.js -o dist/deaddrop -t node16-macos,node16-linux,node16-win",
+        "compile": "yarn build && yarn package"
     },
     "dependencies": {
         "chalk": "^5.2.0",
