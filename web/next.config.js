@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { randomBytes } = require('crypto');
 const nextSafe = require('next-safe');
 const withTM = require('next-transpile-modules')(['shared']);
@@ -47,6 +49,18 @@ const headers = [
 module.exports = withTM({
     swcMinify: true,
     poweredByHeader: false,
+    webpack: (config, { dev, isServer }) => {
+        if (!dev && !isServer) {
+            Object.assign(config.resolve.alias, {
+                'react/jsx-runtime.js': 'preact/compat/jsx-runtime',
+                react: 'preact/compat',
+                'react-dom/test-utils': 'preact/test-utils',
+                'react-dom': 'preact/compat',
+            });
+        }
+
+        return config;
+    },
     headers() {
         return [
             {

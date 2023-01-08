@@ -16,7 +16,7 @@
     "plugins": ["react", "@typescript-eslint"],
     "rules": {
         "linebreak-style": ["error", "unix"],
-        "quotes": ["error", "single"],
+        "quotes": ["error", "single", { "allowTemplateLiterals": true }],
         "semi": ["error", "always"],
         "@typescript-eslint/no-explicit-any": "warn",
         "react/display-name": "off",

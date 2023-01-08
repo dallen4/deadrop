@@ -3561,6 +3561,11 @@ postcss@8.4.14:
     picocolors "^1.0.0"
     source-map-js "^1.0.2"
 
+preact@^10.11.3:
+  version "10.11.3"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-10.11.3.tgz#8a7e4ba19d3992c488b0785afcc0f8aa13c78d19"
+  integrity sha512-eY93IVpod/zG3uMF22Unl8h9KkrcKIRs2EGar8hwLZZDU1lkjph303V9HZBwufh2s736U6VXuhD109LYqPoffg==
+
 prebuild-install@6.1.4, prebuild-install@^6.0.0:
   version "6.1.4"
   resolved "https://registry.yarnpkg.com/prebuild-install/-/prebuild-install-6.1.4.tgz#ae3c0142ad611d58570b89af4986088a4937e00f"
