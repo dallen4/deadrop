@@ -51,6 +51,8 @@ module.exports = withTM({
     poweredByHeader: false,
     webpack: (config, { dev, isServer }) => {
         if (!dev && !isServer) {
+            console.log('Aliasing to Preact...');
+
             Object.assign(config.resolve.alias, {
                 'react/jsx-runtime.js': 'preact/compat/jsx-runtime',
                 react: 'preact/compat',
