@@ -49,20 +49,6 @@ const headers = [
 module.exports = withTM({
     swcMinify: true,
     poweredByHeader: false,
-    webpack: (config, { dev, isServer }) => {
-        if (!dev && !isServer) {
-            console.log('Aliasing to Preact...');
-
-            Object.assign(config.resolve.alias, {
-                'react/jsx-runtime.js': 'preact/compat/jsx-runtime',
-                react: 'preact/compat',
-                'react-dom/test-utils': 'preact/test-utils',
-                'react-dom': 'preact/compat',
-            });
-        }
-
-        return config;
-    },
     headers() {
         return [
             {

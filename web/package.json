@@ -32,7 +32,6 @@
         "next-seo": "^4.11.0",
         "node-mailjet": "^3.3.7",
         "peerjs": "^1.4.7",
-        "preact": "^10.11.3",
         "qrcode": "^1.5.1",
         "randomcolor": "^0.6.2",
         "react": "^18.2.0",
