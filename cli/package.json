@@ -7,7 +7,9 @@
     "private": true,
     "scripts": {
         "build": "rimraf dist/ && esbuild index.ts --bundle --platform=node --outfile=dist/index.js",
-        "package": "pkg dist/index.js -o dist/deaddrop -C Brotli -t node16-macos,node16-linux,node16-win",
+        "prepackage": "cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
+        "package": "pkg dist/index.js -o dist/deaddrop -C Brotli -c pkg.json -t node16-macos,node16-linux,node16-win",
+        "postpackage": "rimraf fonts/",
         "compile": "yarn build && yarn package"
     },
     "dependencies": {
@@ -26,6 +28,7 @@
     "devDependencies": {
         "@types/figlet": "^1.5.5",
         "@types/inquirer": "^9.0.3",
+        "cpx": "^1.5.0",
         "esbuild": "^0.16.15",
         "pkg": "^5.8.0",
         "rimraf": "^3.0.2"
