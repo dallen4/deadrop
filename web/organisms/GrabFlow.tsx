@@ -11,7 +11,7 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
 import DropLog from 'molecules/DropLog';
-import { GrabState } from 'lib/constants';
+import { GrabState } from '@shared/lib/constants';
 import { downloadFile } from 'lib/files';
 
 const GrabFlow = () => {

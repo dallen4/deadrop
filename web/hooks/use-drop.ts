@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useCrypto } from './use-crypto';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { dropMachine, initDropContext } from 'lib/machines/drop';
-import { DropEventType, DropState, MessageType } from 'lib/constants';
+import { DropEventType, DropState, MessageType } from '@shared/lib/constants';
 import type {
     CompleteEvent,
     DropContext,

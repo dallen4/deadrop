@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { DropState } from 'lib/constants';
+import { DropState } from '@shared/lib/constants';
 import {
     Box,
     Button,

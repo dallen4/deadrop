@@ -1,8 +1,8 @@
 import type { BaseContext } from './common';
-import { DropEventType } from 'lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
+import { DropEventType } from '@shared/lib/constants';
 import { useDrop } from 'hooks/use-drop';
 
 export type DropOptions = {

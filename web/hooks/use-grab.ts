@@ -3,11 +3,10 @@ import { useMachine } from '@xstate/react/lib/useMachine';
 import { useCrypto } from './use-crypto';
 import {
     AckHandshakeEvent,
-    ExecuteGrabEvent,
     GrabContext,
     InitGrabEvent,
 } from 'types/grab';
-import { GrabEventType, GrabState, MessageType } from 'lib/constants';
+import { GrabEventType, GrabState, MessageType } from '@shared/lib/constants';
 import { useRef } from 'react';
 import { get } from 'lib/fetch';
 import { useRouter } from 'next/router';
