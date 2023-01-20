@@ -1,5 +1,4 @@
 {
-    "assets": [
-        "fonts/Standard.flf"
-    ]
+    "assets": ["fonts/Standard.flf"],
+    "targets": ["node16-macos"]
 }
