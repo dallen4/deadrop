@@ -9,6 +9,7 @@
     "workspaces": [
         "web",
         "cli",
+        "vscode-extension",
         "shared"
     ],
     "scripts": {
