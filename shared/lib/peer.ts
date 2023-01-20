@@ -1,21 +1,6 @@
-const isServer = typeof window === 'undefined';
-
-if (isServer) {
-    global.navigator = {
-        ...(global.navigator || {}),
-        platform: 'system',
-    };
-
-    const wrtc = require('wrtc');
-
-    global.RTCPeerConnection = wrtc.RTCPeerConnection;
-    global.RTCSessionDescription = wrtc.RTCSessionDescription;
-    global.RTCIceCandidate = wrtc.RTCIceCandidate;
-
-    global.WebSocket = require('ws');
-}
-
 import Peer from 'peerjs';
+
+const isServer = typeof window === 'undefined';
 
 function createPeer(id: string, url: string) {
     const server = new URL(url);
