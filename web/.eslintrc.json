@@ -6,7 +6,8 @@
     "extends": [
         "eslint:recommended",
         "plugin:react/recommended",
-        "plugin:@typescript-eslint/recommended"
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@next/next/recommended"
     ],
     "overrides": [],
     "parser": "@typescript-eslint/parser",
@@ -16,7 +17,7 @@
     "plugins": ["react", "@typescript-eslint"],
     "rules": {
         "linebreak-style": ["error", "unix"],
-        "quotes": ["error", "single"],
+        "quotes": ["error", "single", { "allowTemplateLiterals": true }],
         "semi": ["error", "always"],
         "@typescript-eslint/no-explicit-any": "warn",
         "react/display-name": "off",
