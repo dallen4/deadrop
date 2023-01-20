@@ -2,8 +2,12 @@
     "name": "cli",
     "description": "deaddrop CLI",
     "version": "0.1.0",
-    "main": "build/index.js",
-    "bin": "./dist/index.js",
+    "main": "dist/index.js",
+    "bin": {
+        "deaddrop-macos": "./dist/deaddrop-macos",
+        "deaddrop-linux": "./dist/deaddrop-linux",
+        "deaddrop-win": "./dist/deaddrop-win.exe"
+    },
     "license": "MIT",
     "private": true,
     "scripts": {
