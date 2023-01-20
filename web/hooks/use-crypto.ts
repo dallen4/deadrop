@@ -7,7 +7,7 @@ import {
     DERIVED_KEY_PARAMS,
     ENCRYPTION_ALGO,
     HASH_ALGO,
-} from 'config/crypto';
+} from '@shared/config/crypto';
 import { getCrypto } from '@shared/lib/crypto';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
