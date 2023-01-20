@@ -1,5 +1,8 @@
 name: CLI Package Workflow
-on: push
+on:
+  push:
+    paths:
+      - "cli"
 jobs:
   cli-package:
     runs-on: macos-latest
@@ -12,6 +15,10 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+      - name: Create .env
+        run: |
+          echo ${{ secrets.PEER_SERVER_URL }}
+          echo "PEER_SERVER_URL=${{ secrets.PEER_SERVER_URL }}" >> ./cli/.env
       - name: Build CLI Source
         run: yarn cli build
       - name: Cache CLI Bundle
