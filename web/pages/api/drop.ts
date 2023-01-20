@@ -1,5 +1,6 @@
 import { getRedis } from 'lib/redis';
-import { generateDropKey, generateIV } from 'lib/util';
+import { generateIV } from '@shared/lib/util';
+import { generateDropKey } from 'lib/util';
 import { nanoid } from 'nanoid';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { DropDetails } from 'types/common';

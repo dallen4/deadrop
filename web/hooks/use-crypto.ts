@@ -1,5 +1,5 @@
 import { customAlphabet } from 'nanoid';
-import { bufferFromString, getIVBuffer } from 'lib/util';
+import { bufferFromString, getIVBuffer } from '@shared/lib/util';
 import { readFileAsBuffer } from 'lib/files';
 import { DropMessage } from 'types/messages';
 import {
