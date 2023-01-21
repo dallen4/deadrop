@@ -7,7 +7,7 @@ import {
     useMantineTheme,
     Anchor,
 } from '@mantine/core';
-import { Copy } from 'react-feather';
+import { IconCopy } from '@tabler/icons';
 import { QRCode } from 'atoms/QRCode';
 
 export const SharePane = ({ link }: { link: string }) => {
@@ -51,7 +51,7 @@ export const SharePane = ({ link }: { link: string }) => {
                         ) : (
                             <>
                                 Click to Copy{' '}
-                                <Copy
+                                <IconCopy
                                     size={18}
                                     style={{ marginLeft: theme.spacing.xs }}
                                 />

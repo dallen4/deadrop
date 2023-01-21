@@ -1,13 +1,13 @@
 import React from 'react';
-import GrabFlow from 'organisms/GrabFlow';
+import DropFlow from 'organisms/DropFlow';
 import { Container } from '@mantine/core';
 
-const Grab = () => {
+const Drop = () => {
     return (
         <Container style={{ maxWidth: '700px' }}>
-            <GrabFlow />
+            <DropFlow />
         </Container>
     );
 };
 
-export default Grab;
+export default Drop;
