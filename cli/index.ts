@@ -4,8 +4,9 @@ import { Command } from 'commander';
 import { description, version } from './package.json';
 import { nanoid } from 'nanoid';
 import inquirer from 'inquirer';
-import { displayWelcomeMessage, logError } from 'lib/log';
+import { displayWelcomeMessage, logError, logInfo } from 'lib/log';
 import { initPeer } from 'lib/peer';
+import { loader } from 'lib/loader';
 
 const program = new Command();
 
@@ -26,8 +27,14 @@ program
             return;
         }
 
+        loader.start('Initializing peer...');
+
         const peer = await initPeer(nanoid());
-console.log(peer);
+
+        loader.stop();
+
+        logInfo('Peer successfully connected!');
+
         const answer = await inquirer.prompt([
             {
                 name: 'testname',

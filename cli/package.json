@@ -26,6 +26,7 @@
         "inquirer": "^9.1.4",
         "nanoid": "^3",
         "nanoid-dictionary": "^4.3.0",
+        "ora": "^6.1.2",
         "peerjs": "^1.4.7",
         "qrcode": "^1.5.1",
         "wrtc": "^0.4.7",
