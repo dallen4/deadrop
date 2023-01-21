@@ -7,7 +7,11 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "incremental": true,
-        "typeRoots": ["./node_modules/@types/", "../node_modules/@types/", "./types/"]
+        "typeRoots": [
+            "./node_modules/@types/",
+            "../node_modules/@types/",
+            "./types/"
+        ]
     },
     "include": ["**/*.ts"],
     "exclude": ["node_modules"]

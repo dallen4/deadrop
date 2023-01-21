@@ -1,5 +1,5 @@
-import type { AnyDropEvent, DropContext } from 'types/drop';
-import { DropEventType, DropState } from 'lib/constants';
+import type { AnyDropEvent, DropContext } from '../../types/drop';
+import { DropEventType, DropState } from '../constants';
 import { createMachine, TransitionsConfig } from 'xstate';
 import { raise as baseRaise } from 'xstate/lib/actions';
 

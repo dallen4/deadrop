@@ -2,7 +2,7 @@ import type { BaseContext } from './common';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
-import { DropEventType } from 'lib/constants';
+import { DropEventType } from '../lib/constants';
 
 export type DropOptions = {
     decryptedAccess?: 'copy' | 'view' | 'both';
