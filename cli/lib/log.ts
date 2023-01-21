@@ -3,7 +3,7 @@ import figlet from 'figlet';
 
 export const displayWelcomeMessage = () => {
     console.log(
-        chalk.green(
+        chalk.cyan(
             figlet.textSync('deaddrop', {
                 font: 'Standard',
                 horizontalLayout: 'default',
@@ -13,9 +13,13 @@ export const displayWelcomeMessage = () => {
     );
 };
 
-export const logInfo = (msg: string) => {};
+export const logInfo = (msg: string) => {
+    console.log(chalk.cyan(msg));
+};
 
-export const logWarning = (msg: string) => {};
+export const logWarning = (msg: string) => {
+    console.log(chalk.bgYellow(msg));
+};
 
 export const logError = (msg: string) => {
     console.log(chalk.bgRedBright(msg));
