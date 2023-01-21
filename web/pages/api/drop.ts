@@ -1,9 +1,9 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
+import type { DropDetails } from '@shared/types/common';
 import { getRedis } from 'lib/redis';
 import { generateIV } from '@shared/lib/util';
 import { generateDropKey } from 'lib/util';
 import { nanoid } from 'nanoid';
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { DropDetails } from 'types/common';
 
 const HOUR_IN_SECONDS = 60 * 60;
 const FIVE_MINS_IN_SEC = 5 * 60;

@@ -1,7 +1,7 @@
 import { customAlphabet } from 'nanoid';
 import { bufferFromString, getIVBuffer } from '@shared/lib/util';
 import { readFileAsBuffer } from 'lib/files';
-import { DropMessage } from 'types/messages';
+import type { DropMessage } from '@shared/types/messages';
 import {
     KEY_PAIR_PARAMS,
     DERIVED_KEY_PARAMS,

@@ -1,24 +1,24 @@
 import { useRef } from 'react';
 import { useCrypto } from './use-crypto';
 import { useMachine } from '@xstate/react/lib/useMachine';
-import { dropMachine, initDropContext } from 'lib/machines/drop';
+import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
 import { DropEventType, DropState, MessageType } from '@shared/lib/constants';
 import type {
     CompleteEvent,
     DropContext,
     HandshakeCompleteEvent,
     InitDropEvent,
-} from 'types/drop';
+} from '@shared/types/drop';
 import { generateGrabUrl } from 'lib/util';
 import { post } from 'lib/fetch';
-import type { InitDropResult } from 'types/common';
+import type { InitDropResult } from '@shared/types/common';
 import type {
     BaseMessage,
     ConfirmIntegrityMessage,
     DropMessage,
     HandshakeMessage,
     VerifyMessage,
-} from 'types/messages';
+} from '@shared/types/messages';
 import type { DataConnection } from 'peerjs';
 import { DROP_API_PATH } from 'config/paths';
 

@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useGrab } from 'hooks/use-grab';
-import { GrabContextValues } from 'types/grab';
+import { GrabContextValues } from 'types/contexts';
 
 const GrabContext = createContext<GrabContextValues>({} as any);
 

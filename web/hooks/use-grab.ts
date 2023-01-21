@@ -1,23 +1,23 @@
-import { grabMachine, initGrabContext } from 'lib/machines/grab';
+import { grabMachine, initGrabContext } from '@shared/lib/machines/grab';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { useCrypto } from './use-crypto';
-import {
+import type {
     AckHandshakeEvent,
     GrabContext,
     InitGrabEvent,
-} from 'types/grab';
+} from '@shared/types/grab';
 import { GrabEventType, GrabState, MessageType } from '@shared/lib/constants';
 import { useRef } from 'react';
 import { get } from 'lib/fetch';
 import { useRouter } from 'next/router';
-import { DropDetails } from 'types/common';
-import {
+import type { DropDetails } from '@shared/types/common';
+import type {
     BaseMessage,
     ConfirmIntegrityMessage,
     DropMessage,
     HandshakeMessage,
     VerifyMessage,
-} from 'types/messages';
+} from '@shared/types/messages';
 import { DROP_API_PATH } from 'config/paths';
 
 export const useGrab = () => {

@@ -1,5 +1,5 @@
-import { Button, Code, Collapse, Text } from '@mantine/core';
 import React, { useState } from 'react';
+import { Button, Code, Collapse, Text } from '@mantine/core';
 
 const DropLog = ({ logs }: { logs: Array<string> }) => {
     const [open, setOpen] = useState(false);

@@ -1,8 +1,7 @@
 import type { BaseContext } from './common';
-import { GrabEventType } from '@shared/lib/constants';
+import { GrabEventType } from 'lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
-import { useGrab } from 'hooks/use-grab';
 
 export type GrabContext = BaseContext & {
     grabKey: CryptoKey | null;
@@ -35,5 +34,3 @@ export interface ExecuteGrabEvent extends GrabEvent {
     type: GrabEventType.Grab;
     payload: string;
 }
-
-export type GrabContextValues = ReturnType<typeof useGrab>;

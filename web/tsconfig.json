@@ -19,7 +19,8 @@
         "paths": {
             "@config/*": ["config/*"],
             "@shared/*": ["../shared/*"]
-        }
+        },
+        "typeRoots": ["./node_modules/@types/", "../node_modules/@types/", "./types/"]
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mdx"],
     "exclude": ["node_modules"]

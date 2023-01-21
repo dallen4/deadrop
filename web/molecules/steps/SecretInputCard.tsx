@@ -10,7 +10,7 @@ import {
 } from '@mantine/core';
 import StepCard from './StepCard';
 import { useDropContext } from 'contexts/DropContext';
-import type { PayloadInputMode } from 'types/common';
+import type { PayloadInputMode } from '@shared/types/common';
 import { Captcha } from 'atoms/Captcha';
 import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@shared/config/files';
 
