@@ -21,19 +21,16 @@ import type {
 } from '@shared/types/messages';
 import type { DataConnection } from 'peerjs';
 import { DROP_API_PATH } from 'config/paths';
+import { generateId } from '@shared/lib/util';
+import {
+    deriveKey,
+    exportKey,
+    generateKeyPair,
+    importKey,
+} from '@shared/lib/crypto/operations';
 
 export const useDrop = () => {
-    const {
-        generateKeyPair,
-        exportKey,
-        importKey,
-        deriveKey,
-        generateId,
-        encrypt,
-        encryptFile,
-        hash,
-        hashFile,
-    } = useCrypto();
+    const { encrypt, encryptFile, hash, hashFile } = useCrypto();
 
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<DropContext>(initDropContext());

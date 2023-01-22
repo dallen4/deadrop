@@ -1,4 +1,8 @@
 import { randomBytes } from 'crypto';
+import { customAlphabet } from 'nanoid';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { alphanumeric } = require('nanoid-dictionary');
 
 export const bufferFromString = (input: string) => {
     const size = input.length;
@@ -10,6 +14,8 @@ export const bufferFromString = (input: string) => {
 
     return viewArray;
 };
+
+export const generateId = () => customAlphabet(alphanumeric, 12)();
 
 export const generateIV = () => randomBytes(12).toString('binary');
 

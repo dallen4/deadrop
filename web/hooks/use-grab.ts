@@ -19,19 +19,17 @@ import type {
     VerifyMessage,
 } from '@shared/types/messages';
 import { DROP_API_PATH } from 'config/paths';
+import { generateId } from '@shared/lib/util';
+import {
+    deriveKey,
+    exportKey,
+    generateKeyPair,
+    importKey,
+} from '@shared/lib/crypto/operations';
 
 export const useGrab = () => {
     const router = useRouter();
-    const {
-        generateKeyPair,
-        importKey,
-        deriveKey,
-        exportKey,
-        generateId,
-        decrypt,
-        decryptFile,
-        hash,
-    } = useCrypto();
+    const { decrypt, decryptFile, hash } = useCrypto();
 
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<GrabContext>(initGrabContext());

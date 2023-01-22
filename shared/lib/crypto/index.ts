@@ -1,4 +1,6 @@
 
+type BaseCrypto = Omit<Crypto, 'webkitSubtle'>;
+
 export const getCrypto = () => {
     if (typeof window !== 'undefined') {
         if (window.crypto.webkitSubtle)
@@ -6,7 +8,9 @@ export const getCrypto = () => {
                 randomUUID: window.crypto.randomUUID,
                 getRandomValues: window.crypto.getRandomValues,
                 subtle: window.crypto.webkitSubtle!,
-            } as Crypto;
+            } as BaseCrypto;
         else return window.crypto;
-    } else return require('crypto').webcrypto as Crypto;
+    } else return require('crypto').webcrypto as BaseCrypto;
 };
+
+export const getSubtle = () => getCrypto().subtle;

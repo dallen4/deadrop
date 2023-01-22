@@ -2,6 +2,19 @@ import Peer from 'peerjs';
 
 const isServer = typeof window === 'undefined';
 
+const onUnload = (e: BeforeUnloadEvent) => {
+    const event = e || window.event;
+
+    if (event) event.returnValue = 'Are you sure you want to leave?';
+
+    return 'Are you sure you want to leave?';
+};
+
+const removeOnUnloadListener = () => {
+    window.onbeforeunload = null;
+    window.removeEventListener('beforeunload', onUnload);
+};
+
 function createPeer(id: string, url: string) {
     const server = new URL(url);
 
@@ -27,23 +40,16 @@ function createPeer(id: string, url: string) {
     });
 
     peer.on('disconnected', () => {
-        if (!isServer) window.onbeforeunload = null;
+        if (!isServer) removeOnUnloadListener();
     });
 
     peer.on('close', () => {
-        if (!isServer) window.onbeforeunload = null;
+        if (!isServer) removeOnUnloadListener();
     });
 
     return new Promise<Peer>((resolve) => {
         peer.on('open', (id: string) => {
-            if (!isServer)
-                window.onbeforeunload = (e) => {
-                    const event = e || window.event;
-
-                    if (event) event.returnValue = 'Are you sure you want to leave?';
-
-                    return 'Are you sure you want to leave?';
-                };
+            if (!isServer) window.onbeforeunload = onUnload;
 
             resolve(peer);
         });

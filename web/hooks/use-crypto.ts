@@ -1,69 +1,15 @@
-import { customAlphabet } from 'nanoid';
 import { bufferFromString, getIVBuffer } from '@shared/lib/util';
 import { readFileAsBuffer } from 'lib/files';
 import type { DropMessage } from '@shared/types/messages';
-import {
-    KEY_PAIR_PARAMS,
-    DERIVED_KEY_PARAMS,
-    ENCRYPTION_ALGO,
-    HASH_ALGO,
-} from '@shared/config/crypto';
-import { getCrypto } from '@shared/lib/crypto';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { alphanumeric } = require('nanoid-dictionary');
+import { ENCRYPTION_ALGO, HASH_ALGO } from '@shared/config/crypto';
+import { getSubtle } from '@shared/lib/crypto';
+import { encode, decode } from '@shared/lib/data';
 
 export const useCrypto = () => {
-    const tools = getCrypto().subtle;
-
-    const encode = (input: Record<string, any>) => {
-        const data = JSON.stringify(input);
-        return Buffer.from(data);
-    };
-
-    const decode = (input: ArrayBuffer) => new TextDecoder().decode(input);
-
-    const generateId = () => customAlphabet(alphanumeric, 12)();
-
-    const generateKey = () =>
-        tools!.generateKey({ name: 'AES-GCM', length: 256 }, true, [
-            'encrypt',
-            'decrypt',
-        ]);
-
-    const generateKeyPair = () =>
-        tools!.generateKey(KEY_PAIR_PARAMS, true, ['deriveKey']);
-
-    const deriveKey = (
-        privateKey: CryptoKey,
-        publicKey: CryptoKey,
-        usages: Array<KeyUsage> = ['encrypt', 'decrypt'],
-    ) =>
-        tools!.deriveKey(
-            {
-                name: 'ECDH',
-                public: publicKey,
-            },
-            privateKey,
-            DERIVED_KEY_PARAMS,
-            false,
-            usages,
-        );
-
-    const importKey = (input: string, usages: KeyUsage[]) =>
-        tools!.importKey(
-            'jwk',
-            JSON.parse(input),
-            KEY_PAIR_PARAMS,
-            true,
-            usages,
-        );
-
-    const exportKey = (key: CryptoKey) =>
-        tools!.exportKey('jwk', key).then(JSON.stringify);
+    const tools = getSubtle();
 
     const encrypt = (key: CryptoKey, iv: string, input: Record<string, any>) =>
-        tools!
+        tools
             .encrypt(
                 {
                     name: ENCRYPTION_ALGO,
@@ -77,7 +23,7 @@ export const useCrypto = () => {
     const encryptFile = async (key: CryptoKey, iv: string, input: File) => {
         const fileBuffer = await readFileAsBuffer(input);
 
-        const encryptedBuffer = await tools!.encrypt(
+        const encryptedBuffer = await tools.encrypt(
             {
                 name: ENCRYPTION_ALGO,
                 iv: getIVBuffer(iv),
@@ -94,7 +40,7 @@ export const useCrypto = () => {
         iv: string,
         data: string,
     ): Promise<Record<string, any>> =>
-        tools!
+        tools
             .decrypt(
                 {
                     name: ENCRYPTION_ALGO,
@@ -112,7 +58,7 @@ export const useCrypto = () => {
         data: string,
         meta: DropMessage['meta'],
     ) => {
-        const decryptedBuffer = await tools!.decrypt(
+        const decryptedBuffer = await tools.decrypt(
             {
                 name: ENCRYPTION_ALGO,
                 iv: getIVBuffer(iv),
@@ -129,7 +75,7 @@ export const useCrypto = () => {
     };
 
     const hashBase = async (buffer: BufferSource) => {
-        const digest = await tools!.digest!(HASH_ALGO, buffer);
+        const digest = await tools.digest!(HASH_ALGO, buffer);
 
         // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
         return Array.from(new Uint8Array(digest))
@@ -137,10 +83,7 @@ export const useCrypto = () => {
             .join('');
     };
 
-    const hash = async (input: Record<string, any>) => {
-        const stringified = JSON.stringify(input);
-        return hashBase(Buffer.from(stringified));
-    };
+    const hash = async (input: Record<string, any>) => hashBase(encode(input));
 
     const hashFile = async (file: File) => {
         const fileAsArrayBuffer = await readFileAsBuffer(file);
@@ -148,12 +91,6 @@ export const useCrypto = () => {
     };
 
     return {
-        generateId,
-        generateKey,
-        generateKeyPair,
-        deriveKey,
-        importKey,
-        exportKey,
         encrypt,
         encryptFile,
         decrypt,
