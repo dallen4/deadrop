@@ -14,7 +14,7 @@ export const readFileAsBuffer = async (file: FileWithPath) =>
 
 export const buildFileFromBuffer = async (
     fileBuffer: ArrayBuffer,
-    meta: DropMessage['meta'],
+    meta: NonNullable<DropMessage['meta']>,
 ) =>
     new File([fileBuffer], meta!.name, {
         type: meta!.type,
