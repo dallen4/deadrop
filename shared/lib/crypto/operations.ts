@@ -1,11 +1,13 @@
 import {
     DERIVED_KEY_PARAMS,
     ENCRYPTION_ALGO,
+    HASH_ALGO,
+    KEY_FMT,
     KEY_PAIR_PARAMS,
 } from '../../config/crypto';
 import { getSubtle } from '.';
 import { bufferFromString, getIVBuffer } from '../util';
-import { decode } from '../data';
+import { encode } from '../data';
 import { decodeJsonBuffer } from './util';
 
 export const generateKeyPair = () =>
@@ -18,7 +20,7 @@ export const deriveKey = (
 ) =>
     getSubtle().deriveKey(
         {
-            name: 'ECDH',
+            name: KEY_PAIR_PARAMS.name,
             public: publicKey,
         },
         privateKey,
@@ -29,7 +31,7 @@ export const deriveKey = (
 
 export const importKey = (input: string, usages: KeyUsage[]) =>
     getSubtle().importKey(
-        'jwk',
+        KEY_FMT,
         JSON.parse(input),
         KEY_PAIR_PARAMS,
         true,
@@ -37,7 +39,7 @@ export const importKey = (input: string, usages: KeyUsage[]) =>
     );
 
 export const exportKey = (key: CryptoKey) =>
-    getSubtle().exportKey('jwk', key).then(JSON.stringify);
+    getSubtle().exportKey(KEY_FMT, key).then(JSON.stringify);
 
 export const encrypt = (key: CryptoKey, iv: string, input: BufferSource) =>
     getSubtle()
@@ -50,6 +52,12 @@ export const encrypt = (key: CryptoKey, iv: string, input: BufferSource) =>
             input,
         )
         .then((buffer) => String.fromCharCode(...new Uint8Array(buffer)));
+
+export const encryptJson = (
+    key: CryptoKey,
+    iv: string,
+    data: Record<string, any>,
+) => encrypt(key, iv, encode(data));
 
 export const decrypt = <Result>(
     key: CryptoKey,
@@ -73,3 +81,14 @@ export const decryptJson = (
     iv: string,
     data: string,
 ): Promise<Record<string, any>> => decrypt(key, iv, data, decodeJsonBuffer);
+
+export const hash = async (buffer: BufferSource) => {
+    const digest = await getSubtle().digest!(HASH_ALGO, buffer);
+
+    // ref: https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#examples
+    return Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+};
+
+export const hashJson = (input: Record<string, any>) => hash(encode(input));

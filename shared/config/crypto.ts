@@ -1,3 +1,5 @@
+export const KEY_FMT = 'jwk';
+
 export const HASH_ALGO = 'SHA-256';
 
 export const ENCRYPTION_ALGO = 'AES-GCM';
