@@ -81,20 +81,18 @@ const features = [
     {
         icon: IconLock,
         title: 'End-to-end encryption',
-        description:
-            'As electricity builds up inside its body, it becomes more aggressive. One theory is that the electricity.',
+        description: `Your secrets are encrypted within your device's browser and can only decrypted when received.`,
     },
     {
         icon: IconKey,
         title: 'Ephemeral credentials',
         description:
-            'Slakoth’s heart beats just once a minute. Whatever happens, it is content to loaf around motionless.',
+            'None of the key pairs, nonces, or secret metadata are stored on-disk and are destroyed when drop is complete.',
     },
     {
         icon: IconUsers,
         title: 'Peer-to-peer handoff',
-        description:
-            'Thought to have gone extinct, Relicanth was given a name that is a variation of the name of the person who discovered.',
+        description: `Secrets are never handled by a server and are sent directly to the receiving user's device via WebRRTC.`,
     },
 ];
 
