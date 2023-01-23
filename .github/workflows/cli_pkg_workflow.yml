@@ -1,9 +1,11 @@
 name: CLI Package Workflow
 on:
   push:
+    branches:
+      - '*'
     paths:
-      - "cli"
-      - "shared"
+      - 'cli'
+      - 'shared'
 jobs:
   cli-package:
     runs-on: macos-latest

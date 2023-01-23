@@ -1,6 +1,6 @@
 # deadrop
 
-[![Playwright Tests](https://github.com/dallen4/deadrop/actions/workflows/ci_workflow.yml/badge.svg?branch=main)](https://github.com/dallen4/deadrop/actions/workflows/ci_workflow.yml) [![CLI Build](https://github.com/dallen4/deadrop/actions/workflows/cli_pkg_workflow.yml/badge.svg)](https://github.com/dallen4/deadrop/actions/workflows/cli_pkg_workflow.yml)
+[![Playwright Tests](https://github.com/dallen4/deadrop/actions/workflows/web_ci_workflow.yml/badge.svg?branch=main)](https://github.com/dallen4/deadrop/actions/workflows/web_ci_workflow.yml) [![CLI Build](https://github.com/dallen4/deadrop/actions/workflows/cli_pkg_workflow.yml/badge.svg)](https://github.com/dallen4/deadrop/actions/workflows/cli_pkg_workflow.yml)
 
 *deadrop* is an e2e enncrypted secret sharing platform that leverages the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
 
