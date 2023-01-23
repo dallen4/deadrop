@@ -1,10 +1,11 @@
+import { DROP_PATH } from '@config/paths';
 import { test, expect } from '@playwright/test';
 import { createPageForBrowser } from './util';
 
 test('should start the drop session successfully', async ({ playwright }) => {
     const page = await createPageForBrowser(playwright.webkit);
 
-    await page.goto('/');
+    await page.goto(DROP_PATH);
 
     const secretValue = 'super secret value';
 
