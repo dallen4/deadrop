@@ -73,7 +73,7 @@ const DropFlow = () => {
                     label={'Drop'}
                     description={isMobile && 'Drop your message'}
                 >
-                    <StepCard title={'finish your deaddrop'}>
+                    <StepCard title={'finish your deadrop'}>
                         <Button onClick={drop}>Drop</Button>
                     </StepCard>
                 </Stepper.Step>

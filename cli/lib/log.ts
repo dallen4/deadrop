@@ -4,7 +4,7 @@ import figlet from 'figlet';
 export const displayWelcomeMessage = () => {
     console.log(
         chalk.cyan(
-            figlet.textSync('deaddrop', {
+            figlet.textSync('deadrop', {
                 font: 'Standard',
                 horizontalLayout: 'default',
                 verticalLayout: 'default',

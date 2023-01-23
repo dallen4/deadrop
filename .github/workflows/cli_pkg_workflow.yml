@@ -1,9 +1,11 @@
 name: CLI Package Workflow
 on:
   push:
+    branches:
+      - '*'
     paths:
-      - "cli"
-      - "shared"
+      - 'cli'
+      - 'shared'
 jobs:
   cli-package:
     runs-on: macos-latest
@@ -35,5 +37,5 @@ jobs:
         if: steps.cache-bundle.outputs.cache-hit != 'true'
         with:
           name: cli-binaries-${{ hashFiles('cli/dist/index.js') }}
-          path: cli/dist/deaddrop-*
+          path: cli/dist/deadrop-*
           retention-days: 30
