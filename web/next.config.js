@@ -31,7 +31,7 @@ const safeConfig = {
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
         'script-src': `'self' 'unsafe-inline' ${vercelLiveDomain} ${webVitalsDomain} ${captchaDomains}`,
         'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
-        'img-src': `'self' https://assets.vercel.com`,
+        'img-src': `'self' data: https://assets.vercel.com`,
     },
 };
 

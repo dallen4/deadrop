@@ -1,16 +1,9 @@
-import { useRef } from 'react';
-import { useCrypto } from './use-crypto';
-import { useMachine } from '@xstate/react/lib/useMachine';
-import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
-import { DropEventType, DropState, MessageType } from '@shared/lib/constants';
 import type {
     CompleteEvent,
     DropContext,
     HandshakeCompleteEvent,
     InitDropEvent,
 } from '@shared/types/drop';
-import { generateGrabUrl } from 'lib/util';
-import { post } from 'lib/fetch';
 import type { InitDropResult } from '@shared/types/common';
 import type {
     BaseMessage,
@@ -20,21 +13,25 @@ import type {
     VerifyMessage,
 } from '@shared/types/messages';
 import type { DataConnection } from 'peerjs';
+import { useRef } from 'react';
+import { useMachine } from '@xstate/react/lib/useMachine';
+import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
+import { DropEventType, DropState, MessageType } from '@shared/lib/constants';
+import { generateGrabUrl } from 'lib/util';
+import { post } from 'lib/fetch';
 import { DROP_API_PATH } from 'config/paths';
+import { generateId } from '@shared/lib/util';
+import {
+    deriveKey,
+    encryptJson,
+    exportKey,
+    generateKeyPair,
+    hashJson,
+    importKey,
+} from '@shared/lib/crypto/operations';
+import { encryptFile, hashFile } from 'lib/crypto';
 
 export const useDrop = () => {
-    const {
-        generateKeyPair,
-        exportKey,
-        importKey,
-        deriveKey,
-        generateId,
-        encrypt,
-        encryptFile,
-        hash,
-        hashFile,
-    } = useCrypto();
-
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<DropContext>(initDropContext());
 
@@ -166,7 +163,7 @@ export const useDrop = () => {
                   payload: {
                       content,
                   },
-                  integrity: await hash({ content }),
+                  integrity: await hashJson({ content }),
               }
             : {
                   payload: content,
@@ -219,7 +216,7 @@ export const useDrop = () => {
                   contextRef.current.nonce!,
                   contextRef.current.message as File,
               )
-            : await encrypt(
+            : await encryptJson(
                   contextRef.current.dropKey!,
                   contextRef.current.nonce!,
                   contextRef.current.message!,

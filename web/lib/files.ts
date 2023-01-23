@@ -1,4 +1,5 @@
 import type { FileWithPath } from '@mantine/dropzone';
+import { DropMessage } from '@shared/types/messages';
 
 export const readFileAsBuffer = async (file: FileWithPath) =>
     new Promise<ArrayBuffer>((resolve, reject) => {
@@ -9,6 +10,14 @@ export const readFileAsBuffer = async (file: FileWithPath) =>
         reader.onerror = reject;
 
         reader.readAsArrayBuffer(file);
+    });
+
+export const buildFileFromBuffer = async (
+    fileBuffer: ArrayBuffer,
+    meta: NonNullable<DropMessage['meta']>,
+) =>
+    new File([fileBuffer], meta!.name, {
+        type: meta!.type,
     });
 
 export const downloadFile = (file: File) => {

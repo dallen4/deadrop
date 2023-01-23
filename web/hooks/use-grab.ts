@@ -1,6 +1,5 @@
 import { grabMachine, initGrabContext } from '@shared/lib/machines/grab';
 import { useMachine } from '@xstate/react/lib/useMachine';
-import { useCrypto } from './use-crypto';
 import type {
     AckHandshakeEvent,
     GrabContext,
@@ -19,19 +18,19 @@ import type {
     VerifyMessage,
 } from '@shared/types/messages';
 import { DROP_API_PATH } from 'config/paths';
+import { generateId } from '@shared/lib/util';
+import {
+    decryptJson,
+    deriveKey,
+    exportKey,
+    generateKeyPair,
+    hashJson,
+    importKey,
+} from '@shared/lib/crypto/operations';
+import { decryptFile, hashFile } from 'lib/crypto';
 
 export const useGrab = () => {
     const router = useRouter();
-    const {
-        generateKeyPair,
-        importKey,
-        deriveKey,
-        exportKey,
-        generateId,
-        decrypt,
-        decryptFile,
-        hash,
-    } = useCrypto();
 
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<GrabContext>(initGrabContext());
@@ -74,9 +73,9 @@ export const useGrab = () => {
 
             const { grabKey, nonce } = contextRef.current;
 
-            const decryptedMessage =
+            const decryptedMessage: Record<string, any> | File =
                 mode === 'raw'
-                    ? await decrypt(grabKey!, nonce!, payload)
+                    ? await decryptJson(grabKey!, nonce!, payload)
                     : await decryptFile(grabKey!, nonce!, payload, meta!);
 
             contextRef.current.mode = mode;
@@ -92,7 +91,10 @@ export const useGrab = () => {
 
             pushLog('Generating payload integrity hash...');
 
-            const integrity = await hash(decryptedMessage!);
+            const integrity =
+                mode === 'raw'
+                    ? await hashJson(decryptedMessage)
+                    : await hashFile(decryptedMessage as File);
 
             pushLog('Integrity hash computed, verifying...');
 
