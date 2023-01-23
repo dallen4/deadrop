@@ -1,12 +1,12 @@
 {
     "name": "cli",
-    "description": "deaddrop CLI",
+    "description": "deadrop CLI",
     "version": "0.1.0",
     "main": "dist/index.js",
     "bin": {
-        "deaddrop-macos": "./dist/deaddrop-macos",
-        "deaddrop-linux": "./dist/deaddrop-linux",
-        "deaddrop-win": "./dist/deaddrop-win.exe"
+        "deadrop-macos": "./dist/deadrop-macos",
+        "deadrop-linux": "./dist/deadrop-linux",
+        "deadrop-win": "./dist/deadrop-win.exe"
     },
     "license": "MIT",
     "private": true,
@@ -15,7 +15,7 @@
         "build": "esbuild index.ts --bundle --platform=node --loader:.node=file --inject:./scripts/inject.js --outfile=dist/index.js",
         "postbuild": "replace 'exports = \"./wrtc-3JHDWCD2.node\"' 'exports = require(\"./wrtc-3JHDWCD2.node\")' ./dist/index.js",
         "prepackage": "cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
-        "package": "pkg dist/index.js -o dist/deaddrop -C Brotli -c pkg.json",
+        "package": "pkg dist/index.js -o dist/deadrop -C Brotli -c pkg.json",
         "postpackage": "rimraf fonts/",
         "compile": "yarn build && yarn package"
     },

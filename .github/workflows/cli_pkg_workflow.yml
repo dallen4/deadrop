@@ -35,5 +35,5 @@ jobs:
         if: steps.cache-bundle.outputs.cache-hit != 'true'
         with:
           name: cli-binaries-${{ hashFiles('cli/dist/index.js') }}
-          path: cli/dist/deaddrop-*
+          path: cli/dist/deadrop-*
           retention-days: 30

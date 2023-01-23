@@ -34,7 +34,7 @@ const GrabFlow = () => {
         <Box>
             {status === GrabState.Initial ? (
                 <>
-                    <Text>You are about to begin a deaddrop.</Text>
+                    <Text>You are about to begin a deadrop.</Text>
                     <Button onClick={init}>Begin</Button>
                 </>
             ) : status === GrabState.Confirmed ? (

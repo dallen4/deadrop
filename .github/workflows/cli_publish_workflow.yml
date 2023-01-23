@@ -20,4 +20,4 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           draft: true
           prerelease: false
-          files: cli/dist/deaddrop-*
+          files: cli/dist/deadrop-*
