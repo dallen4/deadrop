@@ -12,7 +12,7 @@ export const readFileAsBuffer = async (file: FileWithPath) =>
         reader.readAsArrayBuffer(file);
     });
 
-export const buildFileFromBuffer = async (
+export const buildFileFromBuffer = (
     fileBuffer: ArrayBuffer,
     meta: NonNullable<DropMessage['meta']>,
 ) =>

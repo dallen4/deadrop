@@ -1,6 +1,6 @@
+import type { DropMessage } from '@shared/types/messages';
 import { decrypt, encrypt, hash } from '@shared/lib/crypto/operations';
 import { buildFileFromBuffer, readFileAsBuffer } from './files';
-import type { DropMessage } from '@shared/types/messages';
 
 export const encryptFile = async (key: CryptoKey, iv: string, input: File) => {
     const fileBuffer = await readFileAsBuffer(input);
@@ -8,7 +8,7 @@ export const encryptFile = async (key: CryptoKey, iv: string, input: File) => {
     return encrypt(key, iv, fileBuffer);
 };
 
-export const decryptFile = async (
+export const decryptFile = (
     key: CryptoKey,
     iv: string,
     data: string,
@@ -17,9 +17,7 @@ export const decryptFile = async (
     const bufferTransform = (buffer: ArrayBuffer) =>
         buildFileFromBuffer(buffer, meta);
 
-    const decryptedFile = await decrypt(key, iv, data, bufferTransform);
-
-    return decryptedFile;
+    return decrypt(key, iv, data, bufferTransform);
 };
 
 export const hashFile = async (file: File) => {
