@@ -1,0 +1,46 @@
+{
+    "name": "cli",
+    "description": "deaddrop CLI",
+    "version": "0.1.0",
+    "main": "dist/index.js",
+    "bin": {
+        "deaddrop-macos": "./dist/deaddrop-macos",
+        "deaddrop-linux": "./dist/deaddrop-linux",
+        "deaddrop-win": "./dist/deaddrop-win.exe"
+    },
+    "license": "MIT",
+    "private": true,
+    "scripts": {
+        "prebuild": "rimraf dist/",
+        "build": "esbuild index.ts --bundle --platform=node --loader:.node=file --inject:./scripts/inject.js --outfile=dist/index.js",
+        "postbuild": "replace 'exports = \"./wrtc-3JHDWCD2.node\"' 'exports = require(\"./wrtc-3JHDWCD2.node\")' ./dist/index.js",
+        "prepackage": "cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
+        "package": "pkg dist/index.js -o dist/deaddrop -C Brotli -c pkg.json",
+        "postpackage": "rimraf fonts/",
+        "compile": "yarn build && yarn package"
+    },
+    "dependencies": {
+        "chalk": "^5.2.0",
+        "commander": "^9.4.1",
+        "figlet": "^1.5.2",
+        "inquirer": "^9.1.4",
+        "nanoid": "^3",
+        "nanoid-dictionary": "^4.3.0",
+        "ora": "^6.1.2",
+        "peerjs": "^1.4.7",
+        "qrcode": "^1.5.1",
+        "wrtc": "^0.4.7",
+        "ws": "^8.11.0",
+        "xstate": "^4.33.4"
+    },
+    "devDependencies": {
+        "@types/figlet": "^1.5.5",
+        "@types/inquirer": "^9.0.3",
+        "cpx": "^1.5.0",
+        "dotenv": "^16.0.3",
+        "esbuild": "^0.16.15",
+        "pkg": "^5.8.0",
+        "replace": "^1.2.2",
+        "rimraf": "^3.0.2"
+    }
+}

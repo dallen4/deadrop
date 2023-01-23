@@ -1,0 +1,39 @@
+name: CLI Package Workflow
+on:
+  push:
+    paths:
+      - "cli"
+      - "shared"
+jobs:
+  cli-package:
+    runs-on: macos-latest
+    outputs:
+      files-changed: ${{ steps.output-change-flag.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Create .env
+        run: |
+          echo ${{ secrets.PEER_SERVER_URL }}
+          echo "PEER_SERVER_URL=${{ secrets.PEER_SERVER_URL }}" >> ./.env
+      - name: Build CLI Source
+        run: yarn cli build
+      - name: Cache CLI Bundle
+        id: cache-bundle
+        uses: actions/cache@v1
+        with:
+          path: cli/dist/index.js
+          key: cli-bundle-${{ hashFiles('cli/dist/index.js') }}
+      - name: Package CLI Binary
+        if: steps.cache-bundle.outputs.cache-hit != 'true'
+        run: yarn cli package
+      - uses: actions/upload-artifact@v3
+        if: steps.cache-bundle.outputs.cache-hit != 'true'
+        with:
+          name: cli-binaries-${{ hashFiles('cli/dist/index.js') }}
+          path: cli/dist/deaddrop-*
+          retention-days: 30
