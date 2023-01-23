@@ -87,8 +87,7 @@ export const useDrop = () => {
 
             send(event);
 
-            contextRef.current.connection!.close();
-            contextRef.current.peer!.disconnect();
+            cleanup();
         } else {
             console.error(`Invalid message received: ${msg.type}`);
         }
@@ -241,6 +240,13 @@ export const useDrop = () => {
         pushLog('Payload dropped, awaiting response...');
 
         send({ type: DropEventType.Drop });
+    };
+
+    const cleanup = () => {
+        contextRef.current.connection!.close();
+        contextRef.current.peer!.disconnect();
+        contextRef.current.peer!.destroy();
+        contextRef.current = initDropContext();
     };
 
     const getLogs = () => logsRef.current;

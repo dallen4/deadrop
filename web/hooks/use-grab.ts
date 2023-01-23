@@ -115,8 +115,7 @@ export const useGrab = () => {
                 type: verified ? GrabEventType.Confirm : GrabEventType.Failure,
             });
 
-            contextRef.current.connection!.close();
-            contextRef.current.peer!.disconnect();
+            cleanup();
         } else {
             console.error(`Invalid message received: ${msg.type}`);
         }
@@ -189,6 +188,15 @@ export const useGrab = () => {
         };
 
         connection!.send(message);
+    };
+
+    const cleanup = () => {
+        if (contextRef.current.connection!.open)
+            contextRef.current.connection!.close();
+
+        contextRef.current.peer!.disconnect();
+        contextRef.current.peer!.destroy();
+        contextRef.current = initGrabContext();
     };
 
     const getLogs = () => logsRef.current;
