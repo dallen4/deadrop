@@ -18,7 +18,7 @@ import { useMachine } from '@xstate/react/lib/useMachine';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
 import { DropEventType, DropState, MessageType } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
-import { post } from 'lib/fetch';
+import { deleteReq, post } from 'lib/fetch';
 import { DROP_API_PATH } from 'config/paths';
 import { generateId } from '@shared/lib/util';
 import {
@@ -246,6 +246,16 @@ export const useDrop = () => {
         contextRef.current.connection!.close();
         contextRef.current.peer!.disconnect();
         contextRef.current.peer!.destroy();
+
+        const dropId = contextRef.current.id!;
+
+        deleteReq(DROP_API_PATH, { id: dropId }).catch((err) =>
+            console.error(
+                `Failed to clear session data from cache (drop: ${dropId})`,
+                err,
+            ),
+        );
+
         contextRef.current = initDropContext();
     };
 

@@ -5,9 +5,7 @@ import { generateIV } from '@shared/lib/util';
 import { generateDropKey } from 'lib/util';
 import { nanoid } from 'nanoid';
 
-const HOUR_IN_SECONDS = 60 * 60;
-const FIVE_MINS_IN_SEC = 5 * 60;
-const DAY_IN_SECONDS = HOUR_IN_SECONDS * 24;
+const FIVE_MINS_IN_SEC = 10 * 60;
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     if (!['POST', 'GET'].includes(req.method!)) {
@@ -45,5 +43,12 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
             id: dropId,
             nonce,
         });
+    } else if (req.method === 'DELETE') {
+        const { id: dropId } = req.body as { id: string };
+
+        const key = generateDropKey(dropId);
+        await client.del(key);
+
+        res.status(200).json({ success: true });
     }
 }
