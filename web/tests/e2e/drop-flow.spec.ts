@@ -1,12 +1,17 @@
 import { DROP_PATH } from '@config/paths';
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { test } from './util';
 import { createPageForBrowser } from './util';
 
-test('should start the drop session successfully', async ({ playwright }) => {
+test('should start the drop session successfully', async ({
+    playwright,
+    dropBrowser,
+    grabBrowser,
+}) => {
     const secretValue = 'super secret value';
 
-    const dropperPage = await createPageForBrowser(playwright.webkit);
-    const grabberPage = await createPageForBrowser(playwright.chromium);
+    const dropperPage = await createPageForBrowser(playwright[dropBrowser]);
+    const grabberPage = await createPageForBrowser(playwright[grabBrowser]);
 
     const dropLink = await test.step('Setup drop', async () => {
         await dropperPage.goto(DROP_PATH);

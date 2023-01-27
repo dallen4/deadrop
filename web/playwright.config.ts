@@ -1,4 +1,4 @@
-import { PlaywrightTestConfig, devices } from '@playwright/test';
+import { PlaywrightTestConfig } from '@playwright/test';
 import path from 'path';
 
 const PORT = process.env.PORT || 3000;
@@ -13,8 +13,13 @@ const server = {
     timeout: 120_000,
 };
 
+type BrowserName = 'chromium' | 'firefox' | 'webkit';
+
 // ref: https://playwright.dev/docs/test-configuration
-const config: PlaywrightTestConfig = {
+const config: PlaywrightTestConfig<{
+    dropBrowser: BrowserName;
+    grabBrowser: BrowserName;
+}> = {
     timeout: 30_000,
     testDir: path.join(__dirname, 'tests', 'e2e'),
     retries: 2,
@@ -28,34 +33,26 @@ const config: PlaywrightTestConfig = {
     },
     projects: [
         {
-            name: 'Desktop Chrome',
+            name: 'Chrome to Chrome',
             use: {
-                ...devices['Desktop Chrome'],
+                dropBrowser: 'chromium',
+                grabBrowser: 'chromium',
             },
         },
         {
-            name: 'Desktop Firefox',
+            name: 'Firefox to Firefox',
             use: {
-                ...devices['Desktop Firefox'],
+                dropBrowser: 'firefox',
+                grabBrowser: 'firefox',
             },
         },
         {
-            name: 'Desktop Safari',
+            name: 'WebKit to WebKit',
             use: {
-                ...devices['Desktop Safari'],
+                dropBrowser: 'webkit',
+                grabBrowser: 'webkit',
             },
         },
-        // Test against mobile viewports.
-        // {
-        //     name: 'Mobile Chrome',
-        //     use: {
-        //         ...devices['Pixel 5'],
-        //     },
-        // },
-        // {
-        //     name: 'Mobile Safari',
-        //     use: devices['iPhone 12'],
-        // },
     ],
 };
 export default config;
