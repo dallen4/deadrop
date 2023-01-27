@@ -18,7 +18,7 @@ import { useMachine } from '@xstate/react/lib/useMachine';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
 import { DropEventType, DropState, MessageType } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
-import { post } from 'lib/fetch';
+import { deleteReq, post } from 'lib/fetch';
 import { DROP_API_PATH } from 'config/paths';
 import { generateId } from '@shared/lib/util';
 import {
@@ -87,8 +87,7 @@ export const useDrop = () => {
 
             send(event);
 
-            contextRef.current.connection!.close();
-            contextRef.current.peer!.disconnect();
+            cleanup();
         } else {
             console.error(`Invalid message received: ${msg.type}`);
         }
@@ -241,6 +240,23 @@ export const useDrop = () => {
         pushLog('Payload dropped, awaiting response...');
 
         send({ type: DropEventType.Drop });
+    };
+
+    const cleanup = () => {
+        contextRef.current.connection!.close();
+        contextRef.current.peer!.disconnect();
+        contextRef.current.peer!.destroy();
+
+        const dropId = contextRef.current.id!;
+
+        deleteReq(DROP_API_PATH, { id: dropId }).catch((err) =>
+            console.error(
+                `Failed to clear session data from cache (drop: ${dropId})`,
+                err,
+            ),
+        );
+
+        contextRef.current = initDropContext();
     };
 
     const getLogs = () => logsRef.current;

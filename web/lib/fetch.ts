@@ -39,3 +39,15 @@ export const post = async <Data, Body>(
 
     return data;
 };
+
+export const deleteReq = async <Data, Body>(path: string, body?: Body) => {
+    const res = await fetch(path, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: body ? JSON.stringify(body) : undefined,
+    });
+
+    return res.json() as Promise<Data>;
+};

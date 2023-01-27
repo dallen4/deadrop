@@ -21,6 +21,7 @@
         "@mantine/next": "^5.2.3",
         "@mantine/notifications": "^5.2.3",
         "@tabler/icons": "^1.119.0",
+        "@vercel/analytics": "^0.1.8",
         "@xstate/react": "^3.0.1",
         "cookies-next": "^2.0.4",
         "ioredis": "^5.0.4",
