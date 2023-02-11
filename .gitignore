@@ -47,5 +47,4 @@ test-results/
 # Sentry
 .sentryclirc
 
-# Sentry
-.vercel
+.vscode-test/
