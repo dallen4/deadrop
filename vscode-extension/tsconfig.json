@@ -1,17 +1,18 @@
 {
     "extends": "../tsconfig.json",
     "compilerOptions": {
+        "baseUrl": "./",
         "module": "commonjs",
         "target": "ES2020",
         "outDir": "out",
         "lib": ["ES2020"],
         "sourceMap": true,
-        "rootDir": "src",
         "strict": true,
         "forceConsistentCasingInFileNames": true,
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "incremental": true,
+        "noImplicitAny": false,
         "paths": {
             "@shared/*": ["../shared/*"]
         }

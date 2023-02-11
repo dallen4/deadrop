@@ -1,6 +1,6 @@
 {
     "name": "vscode-extension",
-    "displayName": "deaddrop",
+    "displayName": "deadrop",
     "description": "secret sharing tool",
     "version": "0.0.1",
     "main": "./out/extension.js",
@@ -8,13 +8,34 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:deaddrop.helloWorld"
+        "onCommand:deadrop.drop",
+        "onView:deadrop-sidebar"
     ],
     "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "deadrop-sidebar-view",
+                    "title": "deadrop",
+                    "icon": "media/handshake.svg"
+                }
+            ]
+        },
+        "views": {
+            "deadrop-sidebar-view": [
+                {
+                    "type": "webview",
+                    "id": "deadrop-sidebar",
+                    "name": "deadrop",
+                    "icon": "media/handshake.svg",
+                    "contextualTitle": "deadrop"
+                }
+            ]
+        },
         "commands": [
             {
-                "command": "deaddrop.helloWorld",
-                "title": "Hello World"
+                "command": "deadrop.drop",
+                "title": "Start deadrop"
             }
         ]
     },
