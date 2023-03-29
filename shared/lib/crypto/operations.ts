@@ -7,8 +7,7 @@ import {
 } from '../../config/crypto';
 import { getSubtle } from '.';
 import { bufferFromString, getIVBuffer } from '../util';
-import { encode } from '../data';
-import { decodeJsonBuffer } from './util';
+import { decode, encode, encodeJson } from '../data';
 
 export const generateKeyPair = () =>
     getSubtle().generateKey(KEY_PAIR_PARAMS, true, ['deriveKey']);
@@ -57,6 +56,12 @@ export const encryptJson = (
     key: CryptoKey,
     iv: string,
     data: Record<string, any>,
+) => encrypt(key, iv, encodeJson(data));
+
+export const encryptRaw = (
+    key: CryptoKey,
+    iv: string,
+    data: string,
 ) => encrypt(key, iv, encode(data));
 
 export const decrypt = <Result>(
@@ -76,11 +81,11 @@ export const decrypt = <Result>(
         )
         .then(transform);
 
-export const decryptJson = (
+export const decryptRaw = (
     key: CryptoKey,
     iv: string,
     data: string,
-): Promise<Record<string, any>> => decrypt(key, iv, data, decodeJsonBuffer);
+) => decrypt(key, iv, data, decode);
 
 export const hash = async (buffer: BufferSource) => {
     const digest = await getSubtle().digest!(HASH_ALGO, buffer);
@@ -91,4 +96,4 @@ export const hash = async (buffer: BufferSource) => {
         .join('');
 };
 
-export const hashJson = (input: Record<string, any>) => hash(encode(input));
+export const hashRaw = (input: string) => hash(encode(input));

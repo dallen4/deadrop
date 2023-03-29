@@ -23,10 +23,10 @@ import { DROP_API_PATH } from 'config/paths';
 import { generateId } from '@shared/lib/util';
 import {
     deriveKey,
-    encryptJson,
+    encryptRaw,
     exportKey,
     generateKeyPair,
-    hashJson,
+    hashRaw,
     importKey,
 } from '@shared/lib/crypto/operations';
 import { encryptFile, hashFile } from 'lib/crypto';
@@ -87,7 +87,7 @@ export const useDrop = () => {
 
             send(event);
 
-            cleanup();
+            setTimeout(() => cleanup(), 1000);
         } else {
             console.error(`Invalid message received: ${msg.type}`);
         }
@@ -159,15 +159,13 @@ export const useDrop = () => {
 
         const { payload, integrity } = isRaw
             ? {
-                  payload: {
-                      content,
-                  },
-                  integrity: await hashJson({ content }),
-              }
+                payload: content,
+                integrity: await hashRaw(content),
+            }
             : {
-                  payload: content,
-                  integrity: await hashFile(content),
-              };
+                payload: content,
+                integrity: await hashFile(content),
+            };
 
         contextRef.current.integrity = integrity;
         contextRef.current.message = payload;
@@ -211,15 +209,15 @@ export const useDrop = () => {
 
         const payload = isFile
             ? await encryptFile(
-                  contextRef.current.dropKey!,
-                  contextRef.current.nonce!,
-                  contextRef.current.message as File,
-              )
-            : await encryptJson(
-                  contextRef.current.dropKey!,
-                  contextRef.current.nonce!,
-                  contextRef.current.message!,
-              );
+                contextRef.current.dropKey!,
+                contextRef.current.nonce!,
+                contextRef.current.message as File,
+            )
+            : await encryptRaw(
+                contextRef.current.dropKey!,
+                contextRef.current.nonce!,
+                contextRef.current.message! as string,
+            );
 
         pushLog('Payload encrypted, dropping...');
 
@@ -229,9 +227,9 @@ export const useDrop = () => {
             payload,
             meta: isFile
                 ? {
-                      name: contextRef.current.message!.name,
-                      type: contextRef.current.message!.type,
-                  }
+                    name: (contextRef.current.message! as File).name,
+                    type: (contextRef.current.message! as File).type,
+                }
                 : undefined,
         };
 
