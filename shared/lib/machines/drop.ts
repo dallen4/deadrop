@@ -6,7 +6,7 @@ import { raise as baseRaise } from 'xstate/lib/actions';
 export const initDropContext = (): DropContext => ({
     id: null,
     mode: 'raw',
-    message: {},
+    message: '',
     integrity: null,
     peer: null,
     connection: null,
