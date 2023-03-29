@@ -1,7 +1,9 @@
 
-export const encode = (input: Record<string, any>) => {
+export const encode = (input: string) => Buffer.from(input);
+
+export const encodeJson = (input: Record<string, any>) => {
     const data = JSON.stringify(input);
-    return Buffer.from(data);
+    return encode(data);
 };
 
 export const decode = (input: ArrayBuffer) => new TextDecoder().decode(input);

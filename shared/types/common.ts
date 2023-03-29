@@ -8,7 +8,7 @@ export type BaseContext = {
     keyPair: CryptoKeyPair | null;
     nonce: string | null;
     mode: PayloadMode;
-    message: Record<string, any> | File | null;
+    message: string | File | null;
 };
 
 export type DropDetails = {

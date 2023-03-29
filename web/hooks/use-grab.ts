@@ -20,11 +20,11 @@ import type {
 import { DROP_API_PATH } from 'config/paths';
 import { generateId } from '@shared/lib/util';
 import {
-    decryptJson,
+    decryptRaw,
     deriveKey,
     exportKey,
     generateKeyPair,
-    hashJson,
+    hashRaw,
     importKey,
 } from '@shared/lib/crypto/operations';
 import { decryptFile, hashFile } from 'lib/crypto';
@@ -73,9 +73,9 @@ export const useGrab = () => {
 
             const { grabKey, nonce } = contextRef.current;
 
-            const decryptedMessage: Record<string, any> | File =
+            const decryptedMessage: string | File =
                 mode === 'raw'
-                    ? await decryptJson(grabKey!, nonce!, payload)
+                    ? await decryptRaw(grabKey!, nonce!, payload)
                     : await decryptFile(grabKey!, nonce!, payload, meta!);
 
             contextRef.current.mode = mode;
@@ -93,7 +93,7 @@ export const useGrab = () => {
 
             const integrity =
                 mode === 'raw'
-                    ? await hashJson(decryptedMessage)
+                    ? await hashRaw(decryptedMessage as string)
                     : await hashFile(decryptedMessage as File);
 
             pushLog('Integrity hash computed, verifying...');

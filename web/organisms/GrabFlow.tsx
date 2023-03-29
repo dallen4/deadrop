@@ -24,10 +24,10 @@ const GrabFlow = () => {
         return status === GrabState.Ready
             ? ''
             : status === GrabState.Connected
-            ? 'Exchanging secret identities...'
-            : GrabState.Waiting
-            ? 'Waiting for payload drop...'
-            : '';
+                ? 'Exchanging secret identities...'
+                : GrabState.Waiting
+                    ? 'Waiting for payload drop...'
+                    : '';
     };
 
     return (
@@ -41,7 +41,7 @@ const GrabFlow = () => {
                 <Box>
                     {getMode() === 'raw' ? (
                         <Code block>
-                            {JSON.stringify(getSecret() as Record<string, any>)}
+                            {getSecret()}
                         </Code>
                     ) : (
                         <>
