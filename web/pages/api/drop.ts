@@ -8,8 +8,8 @@ import { nanoid } from 'nanoid';
 const FIVE_MINS_IN_SEC = 10 * 60;
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
-    if (!['POST', 'GET'].includes(req.method!)) {
-        res.setHeader('Allow', 'POST,GET');
+    if (!['POST', 'GET', 'DELETE'].includes(req.method!)) {
+        res.setHeader('Allow', 'POST,GET,DELETE');
         res.status(405).end('Method Not Allowed');
         return;
     }
