@@ -8,7 +8,7 @@
         "deadrop-linux": "./dist/deadrop-linux",
         "deadrop-win": "./dist/deadrop-win.exe"
     },
-    "license": "MIT",
+    "license": "GPL-3.0-only",
     "private": true,
     "scripts": {
         "prebuild": "rimraf dist/",
@@ -29,7 +29,6 @@
         "ora": "^6.1.2",
         "peerjs": "^1.4.7",
         "qrcode": "^1.5.1",
-        "wrtc": "^0.4.7",
         "ws": "^8.11.0",
         "xstate": "^4.33.4"
     },
