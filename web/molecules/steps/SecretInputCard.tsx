@@ -16,6 +16,7 @@ import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@shared/config/files';
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
+    const [isValid, setIsValid] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [canConfirm, setCanConfirm] = useState(
         process.env.NODE_ENV === 'development',
@@ -25,6 +26,22 @@ export const SecretInputCard = () => {
     const jsonRef = useRef<HTMLTextAreaElement>(null);
 
     const { setPayload } = useDropContext();
+
+    const isValidJson = (input: string) => {
+        try {
+            JSON.parse(input);
+
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    const validateOnChange = (inputMode: PayloadInputMode, value: string | File | null) => {
+        if (inputMode === 'file') setIsValid(!!value);
+        else if (inputMode === 'json') setIsValid(isValidJson(value as string))
+        else setIsValid((value as string).length > 0);
+    };
 
     const confirmPayload = async () => {
         if (mode === 'text') setPayload(textRef.current!.value);
@@ -65,6 +82,7 @@ export const SecretInputCard = () => {
                     ref={textRef}
                     size={'md'}
                     placeholder={'Your secret'}
+                    onChange={(event) => validateOnChange('text', event.target.value)}
                 />
             ) : mode === 'json' ? (
                 <JsonInput
@@ -72,6 +90,7 @@ export const SecretInputCard = () => {
                     label={'Secret Configuration'}
                     placeholder={'Your secret config here...'}
                     validationError={'Invalid JSON'}
+                    onChange={(value) => validateOnChange('json', value)}
                     formatOnBlur
                     autosize
                     minRows={4}
@@ -79,7 +98,7 @@ export const SecretInputCard = () => {
             ) : mode === 'file' ? (
                 <Group position={'center'}>
                     <FileButton
-                        onChange={setFile}
+                        onChange={file => validateOnChange('file', file)}
                         accept={ACCEPTED_FILE_TYPES.join(',')}
                     >
                         {(props) => (
@@ -97,7 +116,7 @@ export const SecretInputCard = () => {
                 onSuccess={() => setCanConfirm(true)}
                 onExpire={() => setCanConfirm(false)}
             />
-            <Button onClick={confirmPayload} disabled={!canConfirm}>
+            <Button onClick={confirmPayload} disabled={!canConfirm || !isValid}>
                 Confirm Payload
             </Button>
         </StepCard>
