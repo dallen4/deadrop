@@ -24,7 +24,7 @@
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",
         "qrcode": "^1.5.1",
-        "wrtc": "^0.4.7",
+        "werift": "^0.18.2",
         "ws": "^8.11.0",
         "xstate": "^4.33.4"
     },

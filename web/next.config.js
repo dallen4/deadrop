@@ -9,6 +9,8 @@ const nonce = randomBytes(8).toString('base64');
 const peerHost = new URL(process.env.NEXT_PUBLIC_PEER_SERVER_URL).host;
 const peerDomain = `ws://${peerHost}`;
 
+const vercelCdnDomain = 'https://cdn.vercel-insights.com';
+
 const webVitalsDomain = 'https://vitals.vercel-insights.com';
 
 const vercelLiveDomain = 'https://vercel.live';
@@ -29,7 +31,7 @@ const safeConfig = {
         'default-src': `'self'`,
         'font-src': `'self' data:`,
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
-        'script-src': `'self' 'unsafe-inline' ${vercelLiveDomain} ${webVitalsDomain} ${captchaDomains}`,
+        'script-src': `'self' 'unsafe-inline' ${vercelLiveDomain} ${webVitalsDomain} ${vercelCdnDomain} ${captchaDomains}`,
         'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
         'img-src': `'self' data: https://assets.vercel.com`,
     },
