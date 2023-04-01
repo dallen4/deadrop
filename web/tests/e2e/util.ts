@@ -1,5 +1,5 @@
 import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
-import { BrowserType, test as base } from '@playwright/test';
+import { Browser, BrowserType, test as base } from '@playwright/test';
 import { baseURL } from './config';
 
 type BrowserName = 'chromium' | 'firefox' | 'webkit';
@@ -14,9 +14,8 @@ export const test = base.extend<TestOptions>({
     grabBrowser: ['chromium', { option: true }],
 });
 
-export const createPageForBrowser = async (browser: BrowserType) => {
-    const newBrowser = await browser.launch();
-    const context = await newBrowser.newContext();
+export const createContextForBrowser = async (browser: Browser) => {
+    const context = await browser.newContext();
 
     await context.addCookies([
         {
@@ -26,6 +25,13 @@ export const createPageForBrowser = async (browser: BrowserType) => {
             url: baseURL,
         },
     ]);
+
+    return context;
+};
+
+export const createPageForBrowser = async (browser: BrowserType) => {
+    const newBrowser = await browser.launch();
+    const context = await createContextForBrowser(newBrowser);
 
     return context.newPage();
 };
