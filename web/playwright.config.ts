@@ -1,4 +1,4 @@
-import { PlaywrightTestConfig } from '@playwright/test';
+import { PlaywrightTestConfig, devices } from '@playwright/test';
 import path from 'path';
 
 const PORT = process.env.PORT || 3000;
@@ -32,25 +32,68 @@ const config: PlaywrightTestConfig<{
         bypassCSP: true,
     },
     projects: [
+        /* Test against desktop browsers */
         {
-            name: 'Chrome to Chrome',
-            use: {
-                dropBrowser: 'chromium',
-                grabBrowser: 'chromium',
-            },
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
         },
         {
-            name: 'Firefox to Firefox',
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+        },
+        {
+            name: 'webkit',
+            use: { ...devices['Desktop Safari'] },
+        },
+        /* Test against mobile viewports. */
+        {
+            name: 'Mobile Chrome',
+            use: { ...devices['Pixel 5'] },
+        },
+        {
+            name: 'Mobile Safari',
+            use: { ...devices['iPhone 12'] },
+        },
+        {
+            name: 'Chrome to Firefox',
             use: {
-                dropBrowser: 'firefox',
+                dropBrowser: 'chromium',
                 grabBrowser: 'firefox',
             },
         },
         {
-            name: 'WebKit to WebKit',
+            name: 'Chrome to WebKit',
+            use: {
+                dropBrowser: 'chromium',
+                grabBrowser: 'webkit',
+            },
+        },
+        {
+            name: 'Firefox to Chrome',
+            use: {
+                dropBrowser: 'firefox',
+                grabBrowser: 'chromium',
+            },
+        },
+        {
+            name: 'Firefox to WebKit',
+            use: {
+                dropBrowser: 'firefox',
+                grabBrowser: 'webkit',
+            },
+        },
+        {
+            name: 'WebKit to Chrome',
             use: {
                 dropBrowser: 'webkit',
-                grabBrowser: 'webkit',
+                grabBrowser: 'chromium',
+            },
+        },
+        {
+            name: 'WebKit to Firefox',
+            use: {
+                dropBrowser: 'webkit',
+                grabBrowser: 'firefox',
             },
         },
     ],
