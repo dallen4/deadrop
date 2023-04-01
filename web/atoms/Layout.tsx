@@ -1,14 +1,17 @@
 import React from 'react';
 import {
+    Anchor,
     AppShell,
     Footer,
     Header,
     Text,
     createStyles,
+    useMantineTheme,
 } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { HOME_PATH } from '@config/paths';
 import Link from 'next/link';
+import { IconBrandGithub } from '@tabler/icons';
 
 const useStyles = createStyles((theme) => ({
     headerName: {
@@ -25,6 +28,7 @@ const useStyles = createStyles((theme) => ({
 const Layout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const { classes } = useStyles();
+    const theme = useMantineTheme();
 
     return (
         <AppShell
@@ -47,7 +51,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             }
             footer={
                 <Footer
-                    height={60}
+                    height={100}
                     withBorder={false}
                     styles={(theme) => ({
                         root: {
@@ -58,8 +62,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     })}
                     fixed={router.pathname !== HOME_PATH}
                 >
+                    <Anchor
+                        href={'https://github.com/dallen4/deadrop'}
+                        target={'_blank'}
+                    >
+                        <IconBrandGithub color={theme.colors.gray[5]} />
+                    </Anchor>
                     <Text size={'xs'}>
-                        Copyright &copy; Nieky Allen {new Date().getFullYear()}.
+                        Copyright &copy;{' '}
+                        <Anchor href={'https://nieky.info/'} target={'_blank'}>
+                            Nieky Allen
+                        </Anchor>{' '}
+                        {new Date().getFullYear()}.
                     </Text>
                 </Footer>
             }
