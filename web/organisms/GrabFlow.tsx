@@ -35,12 +35,12 @@ const GrabFlow = () => {
             {status === GrabState.Initial ? (
                 <>
                     <Text>You are about to begin a deadrop.</Text>
-                    <Button onClick={init}>Begin</Button>
+                    <Button id={'begin-grab-btn'} onClick={init}>Begin</Button>
                 </>
             ) : status === GrabState.Confirmed ? (
                 <Box>
                     {getMode() === 'raw' ? (
-                        <Code block>
+                        <Code block id={'drop-secret-value'}>
                             {getSecret()}
                         </Code>
                     ) : (

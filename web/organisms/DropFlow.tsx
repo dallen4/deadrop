@@ -74,7 +74,7 @@ const DropFlow = () => {
                     description={isMobile && 'Drop your message'}
                 >
                     <StepCard title={'finish your deadrop'}>
-                        <Button onClick={drop}>Drop</Button>
+                        <Button id={'drop-secret-btn'} onClick={drop}>Drop</Button>
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Completed>
