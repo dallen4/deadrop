@@ -12,7 +12,7 @@ export default function MyApp(props: AppProps) {
     return (
         <>
             <DefaultSeo
-                title={'Dead Drop'}
+                title={'deadrop'}
                 description={'e2e enncrypted secret sharing'}
                 openGraph={{}}
             />
