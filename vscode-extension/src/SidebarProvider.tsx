@@ -2,8 +2,10 @@ import type Peer from 'peerjs';
 import { readFileSync } from 'fs';
 import path from 'path';
 import * as vscode from 'vscode';
-import { initPeer } from './lib/peer';
+import * as ReactDOMServer from "react-dom/server";
+// import { initPeer } from './lib/peer';
 import { generateId } from '@shared/lib/util';
+import { Sidebar } from './Sidebar';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
@@ -11,7 +13,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     _peer?: Peer;
 
-    constructor(private readonly _extensionUri: vscode.Uri) {}
+    constructor(private readonly _extensionUri: vscode.Uri) { }
 
     public resolveWebviewView(webviewView: vscode.WebviewView) {
         this._view = webviewView;
@@ -30,7 +32,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             switch (data.type) {
                 case 'onPeerInit': {
                     const id = generateId();
-                    this._peer = await initPeer(id);
+                    // this._peer = await initPeer(id);
 
                     this._view!.webview.postMessage({
                         type: 'onSelectedText',
@@ -61,16 +63,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview) {
-        const bodyHtml = readFileSync(
-            path.resolve(process.cwd(), 'vscode-extension/src/sidebar.html'),
-            { encoding: 'utf-8' },
-        );
-
-        const scriptUri = webview.asWebviewUri(
+        const stylesUri = webview.asWebviewUri(
             vscode.Uri.joinPath(
                 this._extensionUri,
-                'out',
-                'compiled/sidebar.js',
+                'media',
+                'base.css',
             ),
         );
 
@@ -86,47 +83,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         -->
         <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <script nonce="${nonce}">
-                    const tsvscode = acquireVsCodeApi();
-                </script>
-			</head>
-            ${bodyHtml}
-			</html>`;
-
-        const styleResetUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'media', 'reset.css'),
-        );
-        const styleVSCodeUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'media', 'vscode.css'),
-        );
-        const styleMainUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(
-                this._extensionUri,
-                'out',
-                'compiled/sidebar.css',
-            ),
-        );
-
-        return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<!--
-					Use a content security policy to only allow loading images from https or from our extension directory,
-					and only allow scripts that have a specific nonce.
-        -->
-        <meta http-equiv="Content-Security-Policy" content="img-src https: data:; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<link href="${styleResetUri}" rel="stylesheet">
-				<link href="${styleVSCodeUri}" rel="stylesheet">
-                <link href="${styleMainUri}" rel="stylesheet">
+                <link href="${stylesUri}" rel="stylesheet">
                 <script nonce="${nonce}">
                     const tsvscode = acquireVsCodeApi();
                 </script>
 			</head>
             <body>
-				<script nonce="${nonce}" src="${scriptUri}"></script>
-			</body>
+                ${ReactDOMServer.renderToString(<Sidebar />)}
+            </body>
 			</html>`;
     }
 }
