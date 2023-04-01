@@ -20,6 +20,7 @@
         "@mantine/hooks": "^5.2.3",
         "@mantine/next": "^5.2.3",
         "@mantine/notifications": "^5.2.3",
+        "@sentry/nextjs": "^7.46.0",
         "@tabler/icons": "^1.119.0",
         "@vercel/analytics": "^0.1.8",
         "@xstate/react": "^3.0.1",
