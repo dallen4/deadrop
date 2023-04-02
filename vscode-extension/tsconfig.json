@@ -5,10 +5,7 @@
         "module": "commonjs",
         "target": "ES2020",
         "outDir": "out",
-        "lib": [
-            "ES2020",
-            "DOM"
-        ],
+        "lib": ["ES2020", "DOM"],
         "sourceMap": true,
         "strict": true,
         "forceConsistentCasingInFileNames": true,
@@ -18,9 +15,8 @@
         "incremental": true,
         "noImplicitAny": false,
         "paths": {
-            "@shared/*": [
-                "../shared/*"
-            ]
+            "@shared/*": ["../shared/*"],
+            "@web/*": ["../web/*"]
         },
         "typeRoots": [
             "./node_modules/@types/",
@@ -30,11 +26,10 @@
         ]
     },
     "include": [
+        "ext-src/**/*.ts",
         "src/**/*.ts",
         "src/**/*.tsx",
         "../shared/**/*.ts"
     ],
-    "exclude": [
-        "node_modules"
-    ]
+    "exclude": ["node_modules"]
 }
