@@ -1,3 +1,5 @@
+import { ErrorBody } from 'types/fetch';
+
 export const get = async <Data>(
     path: string,
     params?: { [key: string]: any },
@@ -35,9 +37,11 @@ export const post = async <Data, Body>(
         body: body ? JSON.stringify(body) : undefined,
     });
 
-    const data: Data = await res.json();
+    const data: Data | ErrorBody = await res.json();
 
-    return data;
+    if (res.status === 500) throw new Error((data as ErrorBody).message);
+
+    return data as Data;
 };
 
 export const deleteReq = async <Data, Body>(path: string, body?: Body) => {
