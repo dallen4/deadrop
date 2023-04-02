@@ -42,7 +42,7 @@ const GrabFlow = () => {
                 <Box>
                     {getMode() === 'raw' ? (
                         <Code block id={DROP_SECRET_VALUE_ID}>
-                            {getSecret()}
+                            {getSecret() as string}
                         </Code>
                     ) : (
                         <>
