@@ -1,6 +1,7 @@
 import { DROP_PATH } from '@config/paths';
 import { expect } from '@playwright/test';
 import { createContextForBrowser, createPageForBrowser, test } from './util';
+import { DROP_SECRET_BTN_ID, DROP_SECRET_VALUE_ID } from 'lib/constants';
 
 test('should drop a text secret from one page session to another', async ({
     playwright,
@@ -60,9 +61,9 @@ test('should drop a text secret from one page session to another', async ({
                 timeout: 10_000,
             });
 
-            await dropperPage.locator('#drop-secret-btn').click();
+            await dropperPage.locator(DROP_SECRET_BTN_ID).click();
 
-            return grabberPage.locator('#drop-secret-value').innerHTML();
+            return grabberPage.locator(DROP_SECRET_VALUE_ID).innerHTML();
         });
 
     expect(grabbedSecretValue).toBeDefined();
