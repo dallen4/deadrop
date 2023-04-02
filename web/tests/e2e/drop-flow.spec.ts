@@ -1,7 +1,7 @@
 import { DROP_PATH } from '@config/paths';
 import { expect } from '@playwright/test';
 import { createContextForBrowser, createPageForBrowser, test } from './util';
-import { DROP_SECRET_BTN_ID, DROP_SECRET_VALUE_ID } from 'lib/constants';
+import { DROP_SECRET_BTN_ID, DROP_SECRET_VALUE_ID } from '../../lib/constants';
 
 test('should drop a text secret from one page session to another', async ({
     playwright,
