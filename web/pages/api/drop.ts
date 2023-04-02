@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { DropDetails } from '@shared/types/common';
+import { getClientIp } from 'request-ip';
 import { getRedis } from 'lib/redis';
-import { generateIV } from '@shared/lib/util';
-import { generateDropKey } from 'lib/util';
-import { nanoid } from 'nanoid';
-
-const FIVE_MINS_IN_SEC = 10 * 60;
+import { formatDropKey } from 'lib/util';
+import { checkAndIncrementDropCount } from 'api/limiter';
+import { createDrop } from 'api/drops';
+import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     if (!['POST', 'GET', 'DELETE'].includes(req.method!)) {
@@ -21,7 +21,7 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'GET') {
         const { id: dropId } = req.query;
 
-        const data = await client.hgetall(generateDropKey(dropId as string));
+        const data = await client.hgetall(formatDropKey(dropId as string));
 
         if (!data || Object.keys(data).length === 0)
             return res.status(404).json({
@@ -30,14 +30,20 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
 
         return res.status(200).json(data as DropDetails);
     } else if (req.method === 'POST') {
+        const userIpAddr = getClientIp(req);
+
+        const canDrop = req.cookies[DISABLE_CAPTCHA_COOKIE]
+            ? true
+            : await checkAndIncrementDropCount(userIpAddr!);
+
+        if (canDrop)
+            return res
+                .status(500)
+                .json({ message: 'Daily drop limit reached' });
+
         const { id: peerId } = req.body as { id: string };
 
-        const dropId = nanoid();
-        const nonce = generateIV();
-
-        const key = generateDropKey(dropId);
-        await client.hset(key, { peerId, nonce });
-        await client.expire(key, FIVE_MINS_IN_SEC);
+        const { dropId, nonce } = await createDrop(peerId);
 
         res.status(200).json({
             id: dropId,
@@ -46,7 +52,7 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     } else if (req.method === 'DELETE') {
         const { id: dropId } = req.body as { id: string };
 
-        const key = generateDropKey(dropId);
+        const key = formatDropKey(dropId);
         await client.del(key);
 
         res.status(200).json({ success: true });
