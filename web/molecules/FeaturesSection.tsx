@@ -92,7 +92,7 @@ const features = [
     {
         icon: IconUsers,
         title: 'Peer-to-peer handoff',
-        description: `Secrets are never handled by a server and are sent directly to the receiving user's device via WebRRTC.`,
+        description: `Secrets are never handled by a server and are sent directly to the receiving user's device via WebRTC.`,
     },
 ];
 

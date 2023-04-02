@@ -1,8 +1,12 @@
 /* eslint-disable no-undef */
 /* eslint-disable @typescript-eslint/no-var-requires */
+
 const { randomBytes } = require('crypto');
 const nextSafe = require('next-safe');
 const withTM = require('next-transpile-modules')(['shared']);
+
+// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+const { withSentryConfig } = require('@sentry/nextjs');
 
 const nonce = randomBytes(8).toString('base64');
 
@@ -19,6 +23,8 @@ const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(
     ' ',
 );
 
+const sentryDomain = 'https://*.ingest.sentry.io';
+
 const safeConfig = {
     isDev: process.env.NODE_ENV !== 'production',
     contentTypeOptions: 'nosniff',
@@ -27,7 +33,7 @@ const safeConfig = {
     frameOptions: 'DENY',
     permissionsPolicy: false,
     contentSecurityPolicy: {
-        'connect-src': `'self' ${peerDomain} ${webVitalsDomain} ${captchaDomains}`,
+        'connect-src': `'self' ${peerDomain} ${webVitalsDomain} ${captchaDomains} ${sentryDomain}`,
         'default-src': `'self'`,
         'font-src': `'self' data:`,
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
@@ -48,7 +54,7 @@ const headers = [
 /**
  * @type {import('next').NextConfig}
  */
-module.exports = withTM({
+const configWithTranspiledModules = withTM({
     swcMinify: true,
     poweredByHeader: false,
     headers() {
@@ -63,3 +69,12 @@ module.exports = withTM({
         nonce,
     },
 });
+
+/**
+ * @type {import('next').NextConfig}
+ */
+module.exports = withSentryConfig(
+    configWithTranspiledModules,
+    { silent: true },
+    { hideSourcemaps: true },
+);

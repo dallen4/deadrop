@@ -36,3 +36,9 @@ yarn-error.log*
 
 # playwright
 test-results/
+
+# Sentry
+.sentryclirc
+
+# Sentry
+.vercel

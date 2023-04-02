@@ -1,17 +1,22 @@
 import { DROP_PATH } from '@config/paths';
 import { expect } from '@playwright/test';
-import { test } from './util';
-import { createPageForBrowser } from './util';
+import { createContextForBrowser, createPageForBrowser, test } from './util';
 
-test('should start the drop session successfully', async ({
+test('should drop a text secret from one page session to another', async ({
     playwright,
+    browser,
     dropBrowser,
     grabBrowser,
 }) => {
-    const secretValue = 'super secret value';
+    const context = await createContextForBrowser(browser);
+    const dropperPage = dropBrowser
+        ? await createPageForBrowser(playwright[dropBrowser])
+        : await context.newPage();
+    const grabberPage = grabBrowser
+        ? await createPageForBrowser(playwright[grabBrowser])
+        : await context.newPage();
 
-    const dropperPage = await createPageForBrowser(playwright[dropBrowser]);
-    const grabberPage = await createPageForBrowser(playwright[grabBrowser]);
+    const secretValue = 'super secret value';
 
     const dropLink = await test.step('Setup drop', async () => {
         await dropperPage.goto(DROP_PATH);
@@ -28,8 +33,38 @@ test('should start the drop session successfully', async ({
 
         await dropperPage.click('text="Confirm Payload"');
 
-        // const dropLink = await page.locator('#drop-link').getAttribute('href');
-        // console.log(dropLink);
-        return '';
+        const dropLink = await dropperPage
+            .locator('#drop-link')
+            .getAttribute('href');
+
+        return dropLink!;
     });
+
+    const grabbedSecretValue =
+        await test.step('Drop & grab secret', async () => {
+            await grabberPage.goto(dropLink);
+
+            await grabberPage.locator('#begin-grab-btn').click();
+
+            await expect(
+                grabberPage.getByText('Waiting for payload drop...'),
+            ).toBeVisible({
+                timeout: 10_000,
+            });
+
+            await expect(
+                dropperPage.getByRole('heading', {
+                    name: 'finish your deadrop',
+                }),
+            ).toBeVisible({
+                timeout: 10_000,
+            });
+
+            await dropperPage.locator('#drop-secret-btn').click();
+
+            return grabberPage.locator('#drop-secret-value').innerHTML();
+        });
+
+    expect(grabbedSecretValue).toBeDefined();
+    expect(grabbedSecretValue).toEqual(secretValue);
 });
