@@ -1,21 +1,35 @@
 import { useRef, useState } from 'react';
 import './base.css';
 import { DropDetails } from '@shared/types/common';
+import { generateId } from '@shared/lib/util';
 
 export function Sidebar() {
     const [mode, setMode] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [peerId, setPeerId] = useState<string>();
 
+    const connect = async () => {
+        const id = generateId();
+
+        const { initPeer } = await import('./lib/peer');
+
+        const peer = await initPeer(id);
+
+        console.log(peer);
+    };
+
     const startGrab = async () => {
         const dropId = inputRef.current!.value;
 
-        const res = await fetch('https://alpha.deadrop.io/api/drop?id=' + dropId, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
+        const res = await fetch(
+            `${process.env.REACT_APP_DEADDROP_API_URL!}?id=${dropId}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             },
-        });
+        );
 
         const data = await res.json();
 
@@ -26,12 +40,15 @@ export function Sidebar() {
         <div style={{ width: '100%' }}>
             <h1>deadrop: ${mode}</h1>
             {mode === 'drop' ? (
-                <p>dropping</p>
+                <>
+                    <p>dropping</p>
+                    <button onClick={connect}>connect</button>
+                </>
             ) : mode === 'grab' ? (
                 <>
                     <p>peerId: {peerId}</p>
                     <input ref={inputRef} />
-                    <button onClick={startGrab} >get data</button>
+                    <button onClick={startGrab}>get data</button>
                 </>
             ) : (
                 <>

@@ -1,4 +1,3 @@
-import path from 'path';
 import * as vscode from 'vscode';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
@@ -45,12 +44,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview) {
+        const peerHost = new URL(process.env.REACT_APP_PEER_SERVER_URL!).host;
+        const peerDomain = `ws://${peerHost}`;
+
         const manifest = require('../build/asset-manifest.json');
-        const mainScript = manifest['files']['main.js'];
         const mainStyle = manifest['files']['main.css'];
 
-        const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'build', mainScript),
+        const baseUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'build'),
         );
 
         const styleUri = webview.asWebviewUri(
@@ -58,6 +59,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         );
 
         const nonce = getNonce();
+
+        const scriptLinks = Object.values<string>(manifest['files'])
+            .filter((file: string) => file.endsWith('.js'))
+            .map(
+                (filePath) =>
+                    `<script nonce="${nonce}" src="${webview.asWebviewUri(
+                        vscode.Uri.joinPath(
+                            this._extensionUri,
+                            'build',
+                            filePath,
+                        ),
+                    )}"></script>`,
+            );
 
         return `<!DOCTYPE html>
         <html lang="en">
@@ -67,16 +81,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 Use a content security policy to only allow loading images from https or from our extension directory,
                 and only allow scripts that have a specific nonce.
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src https://alpha.deadrop.io; connect-src ${
-        webview.cspSource
-    } https://alpha.deadrop.io; img-src https: data:; style-src 'unsafe-inline' ${
-            webview.cspSource
-        }; script-src 'nonce-${nonce}';">
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="default-src https://alpha.deadrop.io; connect-src ${webview.cspSource} ${peerDomain} https://alpha.deadrop.io; img-src https: data:; style-src 'unsafe-inline' ${webview.cspSource}; script-src 'nonce-${nonce}';">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <link href="${styleUri}" rel="stylesheet">
-            <base href="${vscode.Uri.file(path.join(__dirname, 'build')).with({
-                scheme: 'vscode-resource',
-            })}/">
+            <base href="${baseUri}/">
             <script nonce="${nonce}">
                 const tsvscode = acquireVsCodeApi();
             </script>
@@ -84,7 +94,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         </head>
         <body>
             <div id="root"></div>
-            <script nonce="${nonce}" src="${scriptUri}"></script>
+            ${scriptLinks}
         </body>
         </html>`;
     }
