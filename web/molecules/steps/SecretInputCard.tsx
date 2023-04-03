@@ -13,6 +13,7 @@ import { useDropContext } from 'contexts/DropContext';
 import type { PayloadInputMode } from '@shared/types/common';
 import { Captcha } from 'atoms/Captcha';
 import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@shared/config/files';
+import { CONFIRM_PAYLOAD_BTN_ID } from 'lib/constants';
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
@@ -37,9 +38,12 @@ export const SecretInputCard = () => {
         }
     };
 
-    const validateOnChange = (inputMode: PayloadInputMode, value: string | File | null) => {
+    const validateOnChange = (
+        inputMode: PayloadInputMode,
+        value: string | File | null,
+    ) => {
         if (inputMode === 'file') setIsValid(!!value);
-        else if (inputMode === 'json') setIsValid(isValidJson(value as string))
+        else if (inputMode === 'json') setIsValid(isValidJson(value as string));
         else setIsValid((value as string).length > 0);
     };
 
@@ -82,7 +86,9 @@ export const SecretInputCard = () => {
                     ref={textRef}
                     size={'md'}
                     placeholder={'Your secret'}
-                    onChange={(event) => validateOnChange('text', event.target.value)}
+                    onChange={(event) =>
+                        validateOnChange('text', event.target.value)
+                    }
                 />
             ) : mode === 'json' ? (
                 <JsonInput
@@ -98,7 +104,7 @@ export const SecretInputCard = () => {
             ) : mode === 'file' ? (
                 <Group position={'center'}>
                     <FileButton
-                        onChange={file => validateOnChange('file', file)}
+                        onChange={(file) => validateOnChange('file', file)}
                         accept={ACCEPTED_FILE_TYPES.join(',')}
                     >
                         {(props) => (
@@ -116,7 +122,11 @@ export const SecretInputCard = () => {
                 onSuccess={() => setCanConfirm(true)}
                 onExpire={() => setCanConfirm(false)}
             />
-            <Button onClick={confirmPayload} disabled={!canConfirm || !isValid}>
+            <Button
+                id={CONFIRM_PAYLOAD_BTN_ID}
+                onClick={confirmPayload}
+                disabled={!canConfirm || !isValid}
+            >
                 Confirm Payload
             </Button>
         </StepCard>

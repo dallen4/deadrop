@@ -20,7 +20,7 @@ jobs:
         env:
           STAGE: ${{ github.ref_name }}
         run: |
-          if [[ $STAGE == "alpha" ]]; then BASE_URI="https://test.drop.nieky.dev"; else BASE_URI="https://drop.nieky.dev"; fi
+          if [[ $STAGE == "alpha" ]]; then BASE_URI="https://alpha.deadrop.io"; else BASE_URI="https://deadrop.io"; fi
           CI=true TEST_URI=$BASE_URI yarn web playwright test --trace on
       - uses: actions/upload-artifact@v3
         if: always()

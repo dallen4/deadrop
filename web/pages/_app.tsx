@@ -5,6 +5,7 @@ import { MantineProvider } from '@mantine/core';
 import { Analytics } from '@vercel/analytics/react';
 import Layout from 'atoms/Layout';
 import { emotionCache } from 'lib/emotion';
+import { NotificationsProvider } from '@mantine/notifications';
 
 export default function MyApp(props: AppProps) {
     const { Component, pageProps } = props;
@@ -24,9 +25,11 @@ export default function MyApp(props: AppProps) {
                 }}
                 emotionCache={emotionCache}
             >
-                <Layout>
-                    <Component {...pageProps} />
-                </Layout>
+                <NotificationsProvider>
+                    <Layout>
+                        <Component {...pageProps} />
+                    </Layout>
+                </NotificationsProvider>
             </MantineProvider>
             <Analytics />
         </>

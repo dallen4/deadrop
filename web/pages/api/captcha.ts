@@ -1,7 +1,11 @@
-import { verifyCaptcha } from 'lib/captcha';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { runMiddleware } from 'api/middleware';
+import { cors } from 'api/middleware/cors';
+import { verifyCaptcha } from 'lib/captcha';
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
+    await runMiddleware(req, res, cors);
+
     if (req.method !== 'POST') {
         res.setHeader('Allow', 'POST');
         res.status(405).end('Method Not Allowed');

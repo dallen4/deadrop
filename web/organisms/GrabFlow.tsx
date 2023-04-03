@@ -13,6 +13,7 @@ import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
 import DropLog from 'molecules/DropLog';
 import { GrabState } from '@shared/lib/constants';
 import { downloadFile } from 'lib/files';
+import { DROP_SECRET_VALUE_ID } from 'lib/constants';
 
 const GrabFlow = () => {
     const theme = useMantineTheme();
@@ -40,8 +41,8 @@ const GrabFlow = () => {
             ) : status === GrabState.Confirmed ? (
                 <Box>
                     {getMode() === 'raw' ? (
-                        <Code block id={'drop-secret-value'}>
-                            {getSecret()}
+                        <Code block id={DROP_SECRET_VALUE_ID}>
+                            {getSecret() as string}
                         </Code>
                     ) : (
                         <>

@@ -30,14 +30,14 @@ import {
     importKey,
 } from '@shared/lib/crypto/operations';
 import { encryptFile, hashFile } from 'lib/crypto';
+import { showNotification } from '@mantine/notifications';
+import { IconX } from '@tabler/icons';
 
 export const useDrop = () => {
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<DropContext>(initDropContext());
 
     const [{ value: state }, send] = useMachine(dropMachine);
-
-    console.log('GRAB STATE: ', state);
 
     const pushLog = (message: string) => logsRef.current.push(message);
 
@@ -116,40 +116,47 @@ export const useDrop = () => {
         const keyPair = await generateKeyPair();
 
         pushLog('Key pair generated...');
-        console.log('Key pair generated');
 
         const peerId = generateId();
         const peer = await initPeer(peerId);
 
         pushLog('Peer instance created successfully...');
-        console.log(`Peer initialized: ${peerId}`);
 
         peer.on('connection', onConnection);
 
-        const { id, nonce } = await post<InitDropResult, { id: string }>(
-            DROP_API_PATH,
-            {
-                id: peer.id,
-            },
-        );
+        try {
+            const { id, nonce } = await post<InitDropResult, { id: string }>(
+                DROP_API_PATH,
+                {
+                    id: peer.id,
+                },
+            );
 
-        pushLog('Session is ready to begin drop...');
-        console.log('DROP READY');
+            pushLog('Session is ready to begin drop...');
 
-        contextRef.current.id = id;
-        contextRef.current.peer = peer;
-        contextRef.current.keyPair = keyPair;
-        contextRef.current.nonce = nonce;
+            contextRef.current.id = id;
+            contextRef.current.peer = peer;
+            contextRef.current.keyPair = keyPair;
+            contextRef.current.nonce = nonce;
 
-        const event: InitDropEvent = {
-            type: DropEventType.Init,
-            id,
-            peer,
-            keyPair,
-            nonce,
-        };
+            const event: InitDropEvent = {
+                type: DropEventType.Init,
+                id,
+                peer,
+                keyPair,
+                nonce,
+            };
 
-        send(event);
+            send(event);
+        } catch (err) {
+            console.error(err);
+            showNotification({
+                message: (err as Error).message,
+                color: 'red',
+                icon: <IconX />,
+                autoClose: 2000,
+            });
+        }
     };
 
     const setPayload = async (content: string | File) => {
@@ -159,13 +166,13 @@ export const useDrop = () => {
 
         const { payload, integrity } = isRaw
             ? {
-                payload: content,
-                integrity: await hashRaw(content),
-            }
+                  payload: content,
+                  integrity: await hashRaw(content),
+              }
             : {
-                payload: content,
-                integrity: await hashFile(content),
-            };
+                  payload: content,
+                  integrity: await hashFile(content),
+              };
 
         contextRef.current.integrity = integrity;
         contextRef.current.message = payload;
@@ -209,15 +216,15 @@ export const useDrop = () => {
 
         const payload = isFile
             ? await encryptFile(
-                contextRef.current.dropKey!,
-                contextRef.current.nonce!,
-                contextRef.current.message as File,
-            )
+                  contextRef.current.dropKey!,
+                  contextRef.current.nonce!,
+                  contextRef.current.message as File,
+              )
             : await encryptRaw(
-                contextRef.current.dropKey!,
-                contextRef.current.nonce!,
-                contextRef.current.message! as string,
-            );
+                  contextRef.current.dropKey!,
+                  contextRef.current.nonce!,
+                  contextRef.current.message! as string,
+              );
 
         pushLog('Payload encrypted, dropping...');
 
@@ -227,9 +234,9 @@ export const useDrop = () => {
             payload,
             meta: isFile
                 ? {
-                    name: (contextRef.current.message! as File).name,
-                    type: (contextRef.current.message! as File).type,
-                }
+                      name: (contextRef.current.message! as File).name,
+                      type: (contextRef.current.message! as File).type,
+                  }
                 : undefined,
         };
 

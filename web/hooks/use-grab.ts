@@ -127,13 +127,11 @@ export const useGrab = () => {
         const keyPair = await generateKeyPair();
 
         pushLog('Key pair generated...');
-        console.log('Key pair generated');
 
         const peerId = generateId();
         const peer = await initPeer(peerId);
 
         pushLog('Peer instance created successfully...');
-        console.log(`Peer initialized: ${peerId}`);
 
         const dropId = router.query.drop as string;
 
@@ -165,7 +163,6 @@ export const useGrab = () => {
         connection.on('error', console.error);
         connection.on('open', () => {
             pushLog('Drop connection successful...');
-            console.log('Connection established');
 
             send({ type: GrabEventType.Connect });
         });
