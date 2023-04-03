@@ -1,6 +1,11 @@
 import { DROP_PATH } from '@config/paths';
 import { expect } from '@playwright/test';
 import { test, createContextForBrowser } from './util';
+import {
+    BEGIN_DROP_BTN_ID,
+    CONFIRM_PAYLOAD_BTN_ID,
+    DROP_LINK_ID,
+} from '../../lib/constants';
 
 test('should start the drop session successfully', async ({ browser }) => {
     const context = await createContextForBrowser(browser);
@@ -10,7 +15,7 @@ test('should start the drop session successfully', async ({ browser }) => {
 
     const secretValue = 'super secret value';
 
-    await page.click('text=Begin');
+    await page.locator(`#${BEGIN_DROP_BTN_ID}`).click();
 
     await expect(
         page.getByRole('heading', { name: 'waiting for secrets' }),
@@ -20,9 +25,11 @@ test('should start the drop session successfully', async ({ browser }) => {
 
     await page.getByPlaceholder('Your secret').fill(secretValue);
 
-    await page.click('text=Confirm Payload');
+    await page.locator(`#${CONFIRM_PAYLOAD_BTN_ID}`).click();
 
-    const dropLink = await page.locator('#drop-link').getAttribute('href');
+    const dropLink = await page
+        .locator(`#${DROP_LINK_ID}`)
+        .getAttribute('href');
 
     expect(dropLink).toBeDefined();
 });

@@ -3,11 +3,11 @@ import { getRedis } from 'lib/redis';
 import { formatDropKey } from 'lib/util';
 import { nanoid } from 'nanoid';
 
-const client = getRedis();
-
 const FIVE_MINS_IN_SEC = 10 * 60;
 
 export const createDrop = async (peerId: string) => {
+    const client = getRedis();
+
     const dropId = nanoid();
     const nonce = generateIV();
 

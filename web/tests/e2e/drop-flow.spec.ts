@@ -1,7 +1,13 @@
 import { DROP_PATH } from '@config/paths';
 import { expect } from '@playwright/test';
 import { createContextForBrowser, createPageForBrowser, test } from './util';
-import { DROP_SECRET_BTN_ID, DROP_SECRET_VALUE_ID } from '../../lib/constants';
+import {
+    BEGIN_DROP_BTN_ID,
+    CONFIRM_PAYLOAD_BTN_ID,
+    DROP_LINK_ID,
+    DROP_SECRET_BTN_ID,
+    DROP_SECRET_VALUE_ID,
+} from '../../lib/constants';
 
 test('should drop a text secret from one page session to another', async ({
     playwright,
@@ -22,7 +28,7 @@ test('should drop a text secret from one page session to another', async ({
     const dropLink = await test.step('Setup drop', async () => {
         await dropperPage.goto(DROP_PATH);
 
-        await dropperPage.click('text=Begin');
+        await dropperPage.locator(`#${BEGIN_DROP_BTN_ID}`).click();
 
         await expect(
             dropperPage.getByRole('heading', { name: 'waiting for secrets' }),
@@ -32,10 +38,10 @@ test('should drop a text secret from one page session to another', async ({
 
         await dropperPage.getByPlaceholder('Your secret').fill(secretValue);
 
-        await dropperPage.click('text="Confirm Payload"');
+        await dropperPage.locator(`#${CONFIRM_PAYLOAD_BTN_ID}`).click();
 
         const dropLink = await dropperPage
-            .locator('#drop-link')
+            .locator(`#${DROP_LINK_ID}`)
             .getAttribute('href');
 
         return dropLink!;
@@ -61,9 +67,9 @@ test('should drop a text secret from one page session to another', async ({
                 timeout: 10_000,
             });
 
-            await dropperPage.locator(DROP_SECRET_BTN_ID).click();
+            await dropperPage.locator(`#${DROP_SECRET_BTN_ID}`).click();
 
-            return grabberPage.locator(DROP_SECRET_VALUE_ID).innerHTML();
+            return grabberPage.locator(`#${DROP_SECRET_VALUE_ID}`).innerHTML();
         });
 
     expect(grabbedSecretValue).toBeDefined();

@@ -15,7 +15,7 @@ import DropLog from 'molecules/DropLog';
 import StepCard from 'molecules/steps/StepCard';
 import { SharePane } from 'molecules/SharePane';
 import { SecretInputCard } from 'molecules/steps/SecretInputCard';
-import { DROP_SECRET_BTN_ID } from 'lib/constants';
+import { BEGIN_DROP_BTN_ID, DROP_SECRET_BTN_ID } from 'lib/constants';
 
 const DropFlow = () => {
     const theme = useMantineTheme();
@@ -53,7 +53,9 @@ const DropFlow = () => {
                 >
                     <StepCard title={'starting a session'}>
                         <Text>ready to start a drop?</Text>
-                        <Button onClick={init}>Begin</Button>
+                        <Button id={BEGIN_DROP_BTN_ID} onClick={init}>
+                            Begin
+                        </Button>
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Step
@@ -75,7 +77,9 @@ const DropFlow = () => {
                     description={isMobile && 'Drop your message'}
                 >
                     <StepCard title={'finish your deadrop'}>
-                        <Button id={DROP_SECRET_BTN_ID} onClick={drop}>Drop</Button>
+                        <Button id={DROP_SECRET_BTN_ID} onClick={drop}>
+                            Drop
+                        </Button>
                     </StepCard>
                 </Stepper.Step>
                 <Stepper.Completed>
