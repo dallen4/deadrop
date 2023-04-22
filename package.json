@@ -18,7 +18,8 @@
         "build": "yarn web build",
         "start:prod": "yarn web start:prod",
         "test:e2e": "yarn web test:e2e",
-        "cli:build": "yarn cli build"
+        "cli:build": "yarn cli build",
+        "prepare": "husky install"
     },
     "dependencies": {
         "nanoid-dictionary": "^4.3.0",
@@ -31,6 +32,8 @@
     "devDependencies": {
         "@types/node": "^18",
         "eslint": "^8.31.0",
+        "husky": "^8.0.0",
+        "lint-staged": "^13.2.1",
         "pkg": "^5.8.0",
         "prettier": "^2.8.2",
         "ts-node": "^10.7.0",
@@ -41,5 +44,12 @@
         "net": false,
         "bufferutil": false,
         "utf-8-validate": false
-    }
+    },
+    "lint-staged": {
+        "*.{js,jsx,ts,tsx}": [
+          "prettier --write",
+          "eslint --fix",
+          "git add"
+        ]
+      }
 }

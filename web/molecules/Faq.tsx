@@ -65,7 +65,11 @@ export function Faq() {
     const { classes } = useStyles();
     return (
         <Container size={'sm'} className={classes.wrapper}>
-            <Title id={'faq-section'} align={'center'} className={classes.title}>
+            <Title
+                id={'faq-section'}
+                align={'center'}
+                className={classes.title}
+            >
                 FAQs
             </Title>
 

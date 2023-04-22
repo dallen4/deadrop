@@ -25,10 +25,10 @@ const GrabFlow = () => {
         return status === GrabState.Ready
             ? ''
             : status === GrabState.Connected
-                ? 'Exchanging secret identities...'
-                : GrabState.Waiting
-                    ? 'Waiting for payload drop...'
-                    : '';
+            ? 'Exchanging secret identities...'
+            : GrabState.Waiting
+            ? 'Waiting for payload drop...'
+            : '';
     };
 
     return (
@@ -36,7 +36,9 @@ const GrabFlow = () => {
             {status === GrabState.Initial ? (
                 <>
                     <Text>You are about to begin a deadrop.</Text>
-                    <Button id={'begin-grab-btn'} onClick={init}>Begin</Button>
+                    <Button id={'begin-grab-btn'} onClick={init}>
+                        Begin
+                    </Button>
                 </>
             ) : status === GrabState.Confirmed ? (
                 <Box>

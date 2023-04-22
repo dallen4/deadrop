@@ -13,7 +13,7 @@ import type {
     VerifyMessage,
 } from '@shared/types/messages';
 import type { DataConnection } from 'peerjs';
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
 import { DropEventType, DropState, MessageType } from '@shared/lib/constants';

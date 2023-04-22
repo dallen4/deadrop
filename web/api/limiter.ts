@@ -13,8 +13,7 @@ export const checkAndIncrementDropCount = async (ipAddress: string) => {
     if (!userDropCount) {
         await client.setex(userIpHash, DAY_IN_SEC, 1);
     } else {
-        if (parseInt(userDropCount) >= 5)
-            return false;
+        if (parseInt(userDropCount) >= 5) return false;
         else await client.incr(userIpHash);
     }
 
