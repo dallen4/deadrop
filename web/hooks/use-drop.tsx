@@ -32,7 +32,7 @@ import {
 import { encryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
-import { MessageMutex } from 'lib/MessageMutex';
+import { MessageMutex, withMessageLock } from 'lib/MessageMutex';
 
 export const useDrop = () => {
     const logsRef = useRef<Array<string>>([]);
@@ -44,68 +44,54 @@ export const useDrop = () => {
     const pushLog = (message: string) => logsRef.current.push(message);
 
     const onMessage = async (msg: BaseMessage) => {
-        const lockAcquired = messageMutex.current.lock(msg.type);
+        if (msg.type === MessageType.Handshake) {
+            const { input } = msg as HandshakeMessage;
 
-        if (!lockAcquired) {
-            console.info(`${msg.type} received & ignored...`);
-            return;
-        }
+            pushLog('Handshake acknowledged, deriving drop key...');
 
-        try {
-            if (msg.type === MessageType.Handshake) {
-                const { input } = msg as HandshakeMessage;
+            const pubKey = await importKey(input, []);
+            const dropKey = await deriveKey(
+                contextRef.current.keyPair!.privateKey,
+                pubKey,
+            );
 
-                pushLog('Handshake acknowledged, deriving drop key...');
+            pushLog('Drop key derived successfully...');
 
-                const pubKey = await importKey(input, []);
-                const dropKey = await deriveKey(
-                    contextRef.current.keyPair!.privateKey,
-                    pubKey,
-                );
+            contextRef.current.dropKey = dropKey;
 
-                pushLog('Drop key derived successfully...');
+            const event: HandshakeCompleteEvent = {
+                type: DropEventType.HandshakeComplete,
+                dropKey,
+            };
 
-                contextRef.current.dropKey = dropKey;
+            send(event);
+        } else if (msg.type === MessageType.Verify) {
+            const { integrity } = msg as VerifyMessage;
 
-                const event: HandshakeCompleteEvent = {
-                    type: DropEventType.HandshakeComplete,
-                    dropKey,
-                };
+            pushLog('Integrity verification request received...');
 
-                send(event);
-            } else if (msg.type === MessageType.Verify) {
-                const { integrity } = msg as VerifyMessage;
+            const verified = integrity === contextRef.current.integrity!;
 
-                pushLog('Integrity verification request received...');
+            pushLog(`Integrity checked ${verified ? 'PASSED' : 'FAILED'}`);
 
-                const verified = integrity === contextRef.current.integrity!;
+            const message: ConfirmIntegrityMessage = {
+                type: MessageType.ConfirmVerification,
+                verified,
+            };
 
-                pushLog(`Integrity checked ${verified ? 'PASSED' : 'FAILED'}`);
+            contextRef.current.connection!.send(message);
 
-                const message: ConfirmIntegrityMessage = {
-                    type: MessageType.ConfirmVerification,
-                    verified,
-                };
+            pushLog('Integrity confirmation sent, completing drop...');
 
-                contextRef.current.connection!.send(message);
+            const event: CompleteEvent = {
+                type: DropEventType.Confirm,
+            };
 
-                pushLog('Integrity confirmation sent, completing drop...');
+            send(event);
 
-                const event: CompleteEvent = {
-                    type: DropEventType.Confirm,
-                };
-
-                send(event);
-
-                setTimeout(() => cleanup(), 1000);
-            } else {
-                console.error(`Invalid message received: ${msg.type}`);
-            }
-        } catch (err) {
-            pushLog('Potentially fatal error occurred');
-            console.error(err);
-        } finally {
-            messageMutex.current.unlock();
+            setTimeout(() => cleanup(), 1000);
+        } else {
+            console.error(`Invalid message received: ${msg.type}`);
         }
     };
 
@@ -118,7 +104,12 @@ export const useDrop = () => {
 
         contextRef.current.connection = connection;
 
-        connection.on('data', onMessage);
+        const handlerWithLock = withMessageLock(
+            messageMutex.current,
+            onMessage,
+            pushLog,
+        );
+        connection.on('data', handlerWithLock);
 
         send({ type: DropEventType.Connect, connection });
 
