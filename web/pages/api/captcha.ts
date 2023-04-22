@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { runMiddleware } from 'api/middleware';
 import { cors } from 'api/middleware/cors';
-import { verifyCaptcha } from 'lib/captcha';
+import { verifyCaptcha } from 'api/captcha';
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     await runMiddleware(req, res, cors);

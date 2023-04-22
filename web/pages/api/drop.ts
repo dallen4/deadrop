@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { DropDetails } from '@shared/types/common';
 import { getClientIp } from 'request-ip';
-import { getRedis } from 'lib/redis';
+import { getRedis } from 'api/redis';
 import { formatDropKey } from 'lib/util';
 import { checkAndIncrementDropCount } from 'api/limiter';
 import { createDrop } from 'api/drops';
