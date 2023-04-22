@@ -1,5 +1,5 @@
 import { hashRaw } from '@shared/lib/crypto/operations';
-import { getRedis } from '../lib/redis';
+import { getRedis } from './redis';
 
 const DAY_IN_SEC = 60 * 60 * 24;
 
