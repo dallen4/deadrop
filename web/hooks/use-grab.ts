@@ -28,96 +28,114 @@ import {
     importKey,
 } from '@shared/lib/crypto/operations';
 import { decryptFile, hashFile } from 'lib/crypto';
+import { MessageMutex } from 'lib/MessageMutex';
 
 export const useGrab = () => {
     const router = useRouter();
 
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<GrabContext>(initGrabContext());
+    const messageMutex = useRef(new MessageMutex());
 
     const [{ value: state }, send] = useMachine(grabMachine);
 
     const pushLog = (message: string) => logsRef.current.push(message);
 
     const onMessage = async (msg: BaseMessage) => {
-        if (msg.type === MessageType.Handshake) {
-            const { input } = msg as HandshakeMessage;
+        const lockAcquired = messageMutex.current.lock(msg.type);
 
-            pushLog('Handshake request received...');
+        if (!lockAcquired) {
+            console.info(`${msg.type} received & ignored...`);
+            return;
+        }
 
-            const peerPubKey = await importKey(input, []);
+        try {
+            if (msg.type === MessageType.Handshake) {
+                const { input } = msg as HandshakeMessage;
 
-            const privateKey = contextRef.current.keyPair!.privateKey;
-            const grabKey = await deriveKey(privateKey, peerPubKey);
+                pushLog('Handshake request received...');
 
-            pushLog('Grab key derived successfully...');
+                const peerPubKey = await importKey(input, []);
 
-            contextRef.current.grabKey = grabKey;
+                const privateKey = contextRef.current.keyPair!.privateKey;
+                const grabKey = await deriveKey(privateKey, peerPubKey);
 
-            const event: AckHandshakeEvent = {
-                type: GrabEventType.Handshake,
-                grabKey,
-            };
+                pushLog('Grab key derived successfully...');
 
-            send(event);
+                contextRef.current.grabKey = grabKey;
 
-            pushLog('Acknowledging handshhake, sending public key...');
+                const event: AckHandshakeEvent = {
+                    type: GrabEventType.Handshake,
+                    grabKey,
+                };
 
-            sendPublicKey();
-        } else if (msg.type === MessageType.Payload) {
-            const { payload, mode, meta } = msg as DropMessage;
+                send(event);
 
-            pushLog('Drop payload received...');
+                pushLog('Acknowledging handshhake, sending public key...');
 
-            logsRef.current.push('Decrypting payload...');
+                sendPublicKey();
+            } else if (msg.type === MessageType.Payload) {
+                const { payload, mode, meta } = msg as DropMessage;
 
-            const { grabKey, nonce } = contextRef.current;
+                pushLog('Drop payload received...');
 
-            const decryptedMessage: string | File =
-                mode === 'raw'
-                    ? await decryptRaw(grabKey!, nonce!, payload)
-                    : await decryptFile(grabKey!, nonce!, payload, meta!);
+                logsRef.current.push('Decrypting payload...');
 
-            contextRef.current.mode = mode;
-            contextRef.current.message = decryptedMessage;
+                const { grabKey, nonce } = contextRef.current;
 
-            pushLog('Payload decrypted successfully...');
+                const decryptedMessage: string | File =
+                    mode === 'raw'
+                        ? await decryptRaw(grabKey!, nonce!, payload)
+                        : await decryptFile(grabKey!, nonce!, payload, meta!);
 
-            const event = {
-                type: GrabEventType.Grab,
-            };
+                contextRef.current.mode = mode;
+                contextRef.current.message = decryptedMessage;
 
-            send(event);
+                pushLog('Payload decrypted successfully...');
 
-            pushLog('Generating payload integrity hash...');
+                const event = {
+                    type: GrabEventType.Grab,
+                };
 
-            const integrity =
-                mode === 'raw'
-                    ? await hashRaw(decryptedMessage as string)
-                    : await hashFile(decryptedMessage as File);
+                send(event);
 
-            pushLog('Integrity hash computed, verifying...');
+                pushLog('Generating payload integrity hash...');
 
-            const verificationMessage: VerifyMessage = {
-                type: MessageType.Verify,
-                integrity,
-            };
+                const integrity =
+                    mode === 'raw'
+                        ? await hashRaw(decryptedMessage as string)
+                        : await hashFile(decryptedMessage as File);
 
-            contextRef.current.connection!.send(verificationMessage);
+                pushLog('Integrity hash computed, verifying...');
 
-            pushLog('Verification request sent...');
+                const verificationMessage: VerifyMessage = {
+                    type: MessageType.Verify,
+                    integrity,
+                };
 
-            send({ type: GrabEventType.Verify });
-        } else if (msg.type === MessageType.ConfirmVerification) {
-            const { verified } = msg as ConfirmIntegrityMessage;
+                contextRef.current.connection!.send(verificationMessage);
 
-            send({
-                type: verified ? GrabEventType.Confirm : GrabEventType.Failure,
-            });
+                pushLog('Verification request sent...');
 
-            cleanup();
-        } else {
-            console.error(`Invalid message received: ${msg.type}`);
+                send({ type: GrabEventType.Verify });
+            } else if (msg.type === MessageType.ConfirmVerification) {
+                const { verified } = msg as ConfirmIntegrityMessage;
+
+                send({
+                    type: verified
+                        ? GrabEventType.Confirm
+                        : GrabEventType.Failure,
+                });
+
+                cleanup();
+            } else {
+                console.error(`Invalid message received: ${msg.type}`);
+            }
+        } catch (err) {
+            pushLog('Potentially fatal error occurred');
+            console.error(err);
+        } finally {
+            messageMutex.current.unlock();
         }
     };
 
