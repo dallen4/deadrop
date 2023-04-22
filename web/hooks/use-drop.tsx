@@ -32,64 +32,80 @@ import {
 import { encryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
+import { MessageMutex } from 'lib/MessageMutex';
 
 export const useDrop = () => {
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<DropContext>(initDropContext());
+    const messageMutex = useRef(new MessageMutex());
 
-    const [{ value: state }, send] = useMachine(dropMachine);
+    const [{ value: state, ...rest }, send] = useMachine(dropMachine);
 
     const pushLog = (message: string) => logsRef.current.push(message);
 
     const onMessage = async (msg: BaseMessage) => {
-        if (msg.type === MessageType.Handshake) {
-            const { input } = msg as HandshakeMessage;
+        const lockAcquired = messageMutex.current.lock(msg.type);
 
-            pushLog('Handshake acknowledged, deriving drop key...');
+        if (!lockAcquired) {
+            console.info(`${msg.type} received & ignored...`);
+            return;
+        }
 
-            const pubKey = await importKey(input, []);
-            const dropKey = await deriveKey(
-                contextRef.current.keyPair!.privateKey,
-                pubKey,
-            );
+        try {
+            if (msg.type === MessageType.Handshake) {
+                const { input } = msg as HandshakeMessage;
 
-            pushLog('Drop key derived successfully...');
+                pushLog('Handshake acknowledged, deriving drop key...');
 
-            contextRef.current.dropKey = dropKey;
+                const pubKey = await importKey(input, []);
+                const dropKey = await deriveKey(
+                    contextRef.current.keyPair!.privateKey,
+                    pubKey,
+                );
 
-            const event: HandshakeCompleteEvent = {
-                type: DropEventType.HandshakeComplete,
-                dropKey,
-            };
+                pushLog('Drop key derived successfully...');
 
-            send(event);
-        } else if (msg.type === MessageType.Verify) {
-            const { integrity } = msg as VerifyMessage;
+                contextRef.current.dropKey = dropKey;
 
-            pushLog('Integrity verification request received...');
+                const event: HandshakeCompleteEvent = {
+                    type: DropEventType.HandshakeComplete,
+                    dropKey,
+                };
 
-            const verified = integrity === contextRef.current.integrity!;
+                send(event);
+            } else if (msg.type === MessageType.Verify) {
+                const { integrity } = msg as VerifyMessage;
 
-            pushLog(`Integrity checked ${verified ? 'PASSED' : 'FAILED'}`);
+                pushLog('Integrity verification request received...');
 
-            const message: ConfirmIntegrityMessage = {
-                type: MessageType.ConfirmVerification,
-                verified,
-            };
+                const verified = integrity === contextRef.current.integrity!;
 
-            contextRef.current.connection!.send(message);
+                pushLog(`Integrity checked ${verified ? 'PASSED' : 'FAILED'}`);
 
-            pushLog('Integrity confirmation sent, completing drop...');
+                const message: ConfirmIntegrityMessage = {
+                    type: MessageType.ConfirmVerification,
+                    verified,
+                };
 
-            const event: CompleteEvent = {
-                type: DropEventType.Confirm,
-            };
+                contextRef.current.connection!.send(message);
 
-            send(event);
+                pushLog('Integrity confirmation sent, completing drop...');
 
-            setTimeout(() => cleanup(), 1000);
-        } else {
-            console.error(`Invalid message received: ${msg.type}`);
+                const event: CompleteEvent = {
+                    type: DropEventType.Confirm,
+                };
+
+                send(event);
+
+                setTimeout(() => cleanup(), 1000);
+            } else {
+                console.error(`Invalid message received: ${msg.type}`);
+            }
+        } catch (err) {
+            pushLog('Potentially fatal error occurred');
+            console.error(err);
+        } finally {
+            messageMutex.current.unlock();
         }
     };
 
