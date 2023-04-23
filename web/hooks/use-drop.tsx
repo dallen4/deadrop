@@ -16,7 +16,12 @@ import type { DataConnection } from 'peerjs';
 import { useRef } from 'react';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
-import { DropEventType, DropState, MessageType } from '@shared/lib/constants';
+import {
+    DropEventType,
+    DropMessageOrderMap,
+    DropState,
+    MessageType,
+} from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
 import { deleteReq, post } from 'lib/fetch';
 import { DROP_API_PATH } from 'config/paths';
@@ -32,18 +37,54 @@ import {
 import { encryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
-import { MessageMutex, withMessageLock } from 'lib/MessageMutex';
+import { withMessageLock } from 'lib/messages';
 
 export const useDrop = () => {
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<DropContext>(initDropContext());
-    const messageMutex = useRef(new MessageMutex());
+    const timersRef = useRef(new Map<MessageType, NodeJS.Timeout>());
 
-    const [{ value: state, ...rest }, send] = useMachine(dropMachine);
+    const [{ value: state }, send] = useMachine(dropMachine);
 
     const pushLog = (message: string) => logsRef.current.push(message);
 
+    const clearTimer = (msgType: MessageType) => {
+        const timerId = timersRef.current.get(msgType);
+
+        if (timerId) {
+            clearTimeout(timerId);
+            timersRef.current.delete(msgType);
+        }
+    };
+
+    const sendMessage = async (msg: BaseMessage, retryCount: number = 0) => {
+        if (!contextRef.current.connection) return;
+
+        const expectedType = DropMessageOrderMap.get(msg.type)!;
+
+        clearTimer(expectedType);
+
+        if (retryCount >= 3) {
+            showNotification({
+                message:
+                    'Connection may be unstable, please try your drop again',
+                color: 'red',
+                icon: <IconX />,
+                autoClose: 4500,
+            });
+            console.error(`Attempt limit exceeded for type: ${msg.type}`);
+            return;
+        }
+
+        contextRef.current.connection.send(msg);
+
+        const timer = setTimeout(() => sendMessage(msg, retryCount + 1), 1000);
+        timersRef.current.set(expectedType, timer);
+    };
+
     const onMessage = async (msg: BaseMessage) => {
+        clearTimer(msg.type);
+
         if (msg.type === MessageType.Handshake) {
             const { input } = msg as HandshakeMessage;
 
@@ -79,7 +120,7 @@ export const useDrop = () => {
                 verified,
             };
 
-            contextRef.current.connection!.send(message);
+            sendMessage(message);
 
             pushLog('Integrity confirmation sent, completing drop...');
 
@@ -104,11 +145,7 @@ export const useDrop = () => {
 
         contextRef.current.connection = connection;
 
-        const handlerWithLock = withMessageLock(
-            messageMutex.current,
-            onMessage,
-            pushLog,
-        );
+        const handlerWithLock = withMessageLock(onMessage, pushLog);
         connection.on('data', handlerWithLock);
 
         send({ type: DropEventType.Connect, connection });
@@ -247,7 +284,7 @@ export const useDrop = () => {
                 : undefined,
         };
 
-        contextRef.current.connection!.send(message);
+        sendMessage(message);
 
         pushLog('Payload dropped, awaiting response...');
 
