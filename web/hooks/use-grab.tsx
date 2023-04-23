@@ -184,6 +184,19 @@ export const useGrab = () => {
             id: dropId,
         });
 
+        if (!resp) {
+            pushLog(`Drop instance ${dropId} not found, closing connection...`);
+            showNotification({
+                message: 'Drop not found, check your link',
+                color: 'red',
+                icon: <IconX />,
+                autoClose: 3000,
+            });
+
+            cleanup();
+            return;
+        }
+
         const { peerId: dropperId, nonce } = resp;
 
         contextRef.current.id = dropId;
@@ -233,12 +246,17 @@ export const useGrab = () => {
         connection!.send(message);
     };
 
-    const cleanup = () => {
-        if (contextRef.current.connection!.open)
+    const cleanup = async () => {
+        const { removeOnUnloadListener } = await import('shared/lib/peer');
+
+        if (contextRef.current.connection?.open)
             contextRef.current.connection!.close();
 
-        contextRef.current.peer!.disconnect();
-        contextRef.current.peer!.destroy();
+        contextRef.current.peer?.disconnect();
+        contextRef.current.peer?.destroy();
+
+        removeOnUnloadListener();
+
         contextRef.current = initGrabContext();
     };
 

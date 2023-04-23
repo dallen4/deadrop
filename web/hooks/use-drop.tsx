@@ -291,7 +291,9 @@ export const useDrop = () => {
         send({ type: DropEventType.Drop });
     };
 
-    const cleanup = () => {
+    const cleanup = async () => {
+        const { removeOnUnloadListener } = await import('shared/lib/peer');
+
         contextRef.current.connection!.close();
         contextRef.current.peer!.disconnect();
         contextRef.current.peer!.destroy();
@@ -304,6 +306,8 @@ export const useDrop = () => {
                 err,
             ),
         );
+
+        removeOnUnloadListener();
 
         contextRef.current = initDropContext();
     };
