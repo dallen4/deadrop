@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/react';
 import Layout from 'atoms/Layout';
 import { emotionCache } from 'lib/emotion';
 import { NotificationsProvider } from '@mantine/notifications';
+import { UserProvider } from '@auth0/nextjs-auth0/client';
 
 export default function MyApp(props: AppProps) {
     const { Component, pageProps } = props;
@@ -26,9 +27,11 @@ export default function MyApp(props: AppProps) {
                 emotionCache={emotionCache}
             >
                 <NotificationsProvider>
-                    <Layout>
-                        <Component {...pageProps} />
-                    </Layout>
+                    <UserProvider>
+                        <Layout>
+                            <Component {...pageProps} />
+                        </Layout>
+                    </UserProvider>
                 </NotificationsProvider>
             </MantineProvider>
             <Analytics />
