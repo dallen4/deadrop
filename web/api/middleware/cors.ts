@@ -6,6 +6,7 @@ export const cors = Cors({
         if (
             !origin ||
             origin.endsWith('deadrop.io') ||
+            origin.endsWith('dallen4.vercel.app') ||
             origin.includes('vscode-webview:')
         )
             callback(null, true);
