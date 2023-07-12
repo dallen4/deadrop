@@ -1,7 +1,8 @@
 name: Playwright Tests
+
 on:
-  push:
-    branches: [main, alpha]
+  deployment_status:
+
 jobs:
   test:
     timeout-minutes: 20
@@ -19,12 +20,11 @@ jobs:
         shell: bash
         env:
           STAGE: ${{ github.ref_name }}
-        run: |
-          if [[ $STAGE == "alpha" ]]; then BASE_URI="https://alpha.deadrop.io"; else BASE_URI="https://deadrop.io"; fi
-          CI=true TEST_URI=$BASE_URI yarn web playwright test --trace on
+          BASE_URL: ${{ github.event.deployment_status.target_url }}
+        run: CI=true TEST_URI=$BASE_URL yarn web playwright test --trace on
       - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: playwright-report
-          path: test-results/
+          path: web/test-results/
           retention-days: 30
