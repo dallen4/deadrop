@@ -2,8 +2,14 @@ import React from 'react';
 import {
     Anchor,
     AppShell,
+    Avatar,
+    Box,
+    Button,
+    Flex,
     Footer,
     Header,
+    NavLink,
+    Popover,
     Text,
     createStyles,
     useMantineTheme,
@@ -12,6 +18,7 @@ import { useRouter } from 'next/router';
 import { HOME_PATH } from '@config/paths';
 import Link from 'next/link';
 import { IconBrandGithub } from '@tabler/icons';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 const useStyles = createStyles((theme) => ({
     headerName: {
@@ -29,6 +36,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
     const { classes } = useStyles();
     const theme = useMantineTheme();
+    const { user, error, isLoading } = useUser();
 
     return (
         <AppShell
@@ -44,9 +52,48 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                         },
                     })}
                 >
-                    <Link href={HOME_PATH}>
-                        <Text className={classes.headerName}>deadrop</Text>
-                    </Link>
+                    <Flex direction="row">
+                        <Box style={{ flex: 1, justifyContent: 'flex-start' }}>
+                            <Link href={HOME_PATH}>
+                                <Text className={classes.headerName}>
+                                    deadrop
+                                </Text>
+                            </Link>
+                        </Box>
+                        <Box
+                            style={{
+                                flex: 1,
+                                justifyContent: 'flex-end',
+                                padding: theme.spacing.md,
+                            }}
+                        >
+                            {!user && !isLoading ? (
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        router.push('/api/auth/login')
+                                    }
+                                    style={{ float: 'right' }}
+                                >
+                                    Login
+                                </Button>
+                            ) : (
+                                <Popover position="bottom-end">
+                                    <Popover.Target>
+                                        <Avatar
+                                            src={user?.picture!}
+                                            style={{ float: 'right' }}
+                                        >
+                                            {user?.name![0]}
+                                        </Avatar>
+                                    </Popover.Target>
+                                    <Popover.Dropdown>
+                                        <a href={'/api/auth/logout'}>Logout</a>
+                                    </Popover.Dropdown>
+                                </Popover>
+                            )}
+                        </Box>
+                    </Flex>
                 </Header>
             }
             footer={
