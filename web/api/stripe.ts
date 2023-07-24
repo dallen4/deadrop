@@ -16,3 +16,13 @@ export function buildEvent(request: NextApiRequest) {
 
     return event;
 }
+
+export async function getEmailForCheckout(id: string) {
+    const session = await client.checkout.sessions.retrieve(id, {
+        expand: ['line_items'],
+    });
+
+    // session.line_items!.data[0]
+
+    return session.customer_email!;
+}
