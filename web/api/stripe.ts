@@ -18,11 +18,13 @@ export function buildEvent(request: NextApiRequest) {
 }
 
 export async function getEmailForCheckout(id: string) {
-    const session = await client.checkout.sessions.retrieve(id, {
-        expand: ['line_items'],
-    });
-
-    // session.line_items!.data[0]
+    const session = await client.checkout.sessions.retrieve(id);
 
     return session.customer_email!;
+}
+
+export async function validateCheckoutSession(id: string) {
+    const session = await client.checkout.sessions.retrieve(id);
+
+    return session.payment_status === 'paid';
 }
