@@ -16,6 +16,8 @@ import { GRAB_PATH } from '@config/paths';
 import { Faq } from 'molecules/Faq';
 import { useMediaQuery } from '@mantine/hooks';
 
+const paymentLink = process.env.NEXT_PUBLIC_STRIPE_LIFETIME_LICENSE_LINK!;
+
 const Home = () => {
     const router = useRouter();
     const theme = useMantineTheme();
@@ -88,6 +90,18 @@ const Home = () => {
                 </Card>
             </Center>
             <Faq />
+            <Center
+                style={{
+                    minHeight: '230px',
+                    paddingTop: theme.spacing.xl,
+                    paddingBottom: theme.spacing.md,
+                }}
+            >
+                <Button
+                    onClick={() => (window.location.href = paymentLink)}
+                    type={'button'}
+                >Get Premium</Button>
+            </Center>
         </>
     );
 };
