@@ -1,6 +1,6 @@
 export const title = 'deadrop';
 
-export const description = 'e2e enncrypted secret sharing';
+export const description = 'e2e encrypted secret sharing';
 
 export const themeColors = {
     primary: '#1971c2',

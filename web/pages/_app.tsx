@@ -26,6 +26,9 @@ export default function MyApp(props: AppProps) {
                     url: 'https://deadrop.io',
                     images: [],
                 }}
+                twitter={{
+                    cardType: 'app',
+                }}
             />
             <Head>
                 <meta
