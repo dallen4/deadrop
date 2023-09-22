@@ -6,7 +6,8 @@ const { host } = new URL(process.env.AUTH0_ISSUER_BASE_URL!);
 export const auth0 = new ManagementClient<{ [key: string]: any }, UserMetadata>(
     {
         domain: host,
-        token: process.env.AUTH0_TOKEN!,
+        clientId: process.env.AUTH0_CLIENT_ID!,
+        clientSecret: process.env.AUTH0_CLIENT_SECRET!,
     },
 );
 
