@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import { HeroBanner } from 'molecules/HeroBanner';
-import { FeaturesSection } from 'molecules/FeaturesSection';
 import {
     Title,
     Text,
@@ -11,12 +10,10 @@ import {
     Button,
     Group,
 } from '@mantine/core';
+import { Features, Faq } from 'molecules/sections';
 import { useRouter } from 'next/router';
 import { GRAB_PATH } from '@config/paths';
-import { Faq } from 'molecules/Faq';
 import { useMediaQuery } from '@mantine/hooks';
-
-const paymentLink = process.env.NEXT_PUBLIC_STRIPE_LIFETIME_LICENSE_LINK!;
 
 const Home = () => {
     const router = useRouter();
@@ -43,7 +40,7 @@ const Home = () => {
     return (
         <>
             <HeroBanner />
-            <FeaturesSection />
+            <Features />
             <Center
                 style={{
                     minHeight: '230px',
@@ -90,40 +87,7 @@ const Home = () => {
                 </Card>
             </Center>
             <Faq />
-            <Center
-                style={{
-                    minHeight: '200px',
-                    paddingTop: theme.spacing.xl,
-                    paddingBottom: theme.spacing.md,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-evenly',
-                    alignItems: 'center',
-                }}
-            >
-                <Title size={'h4'}>
-                    Get unlimited daily drops and upcoming features by support
-                    deadrop!
-                </Title>
-                <Center
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Button
-                        onClick={() => (window.location.href = paymentLink)}
-                        type={'button'}
-                    >
-                        Get Premium
-                    </Button>
-                    <Text size={'xs'}>
-                        All licenses are attached to your email.
-                    </Text>
-                </Center>
-            </Center>
+            {/* <Premium /> */}
         </>
     );
 };

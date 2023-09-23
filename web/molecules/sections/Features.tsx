@@ -96,7 +96,7 @@ const features = [
     },
 ];
 
-export function FeaturesSection() {
+export function Features() {
     const items = features.map((item) => (
         <Feature {...item} key={item.title} />
     ));
