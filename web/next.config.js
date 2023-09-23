@@ -27,10 +27,12 @@ const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(
 
 const sentryDomain = 'https://*.ingest.sentry.io';
 
+const githubAssetsDomain = 'https://avatars.githubusercontent.com';
+
 const imgDomains = [
     'https://assets.vercel.com',
     'https://lh3.googleusercontent.com',
-    'https://avatars.githubusercontent.com',
+    githubAssetsDomain,
 ].join(' ');
 
 const safeConfig = {
@@ -41,7 +43,7 @@ const safeConfig = {
     frameOptions: 'DENY',
     permissionsPolicy: false,
     contentSecurityPolicy: {
-        'connect-src': `'self' ${peerDomain} ${webVitalsDomain} ${captchaDomains} ${sentryDomain}`,
+        'connect-src': `'self' ${peerDomain} ${webVitalsDomain} ${captchaDomains} ${sentryDomain} ${githubAssetsDomain}`,
         'default-src': `'self'`,
         'font-src': `'self' data:`,
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
