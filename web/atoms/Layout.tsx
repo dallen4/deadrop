@@ -37,7 +37,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const { classes } = useStyles();
     const theme = useMantineTheme();
     const { user, error, isLoading } = useUser();
-console.log(user);
+    console.log(user);
     return (
         <AppShell
             padding={'md'}
@@ -53,7 +53,13 @@ console.log(user);
                     })}
                 >
                     <Flex direction="row">
-                        <Box style={{ flex: 1, justifyContent: 'flex-start' }}>
+                        <Box
+                            style={{
+                                flex: 1,
+                                justifyContent: 'flex-start',
+                                padding: theme.spacing.md,
+                            }}
+                        >
                             <Link href={HOME_PATH}>
                                 <Text className={classes.headerName}>
                                     deadrop
@@ -73,7 +79,11 @@ console.log(user);
                                     <Popover.Target>
                                         <Avatar
                                             src={user?.picture!}
-                                            style={{ float: 'right' }}
+                                            style={{
+                                                float: 'right',
+                                                cursor: 'pointer',
+                                            }}
+                                            size={'lg'}
                                         >
                                             {user?.name![0]}
                                         </Avatar>
