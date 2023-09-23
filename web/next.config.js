@@ -25,6 +25,12 @@ const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(
 
 const sentryDomain = 'https://*.ingest.sentry.io';
 
+const imgDomains = [
+    'https://assets.vercel.com',
+    'https://lh3.googleusercontent.com',
+    'https://avatars.githubusercontent.com',
+].join(' ');
+
 const safeConfig = {
     isDev: process.env.NODE_ENV !== 'production',
     contentTypeOptions: 'nosniff',
@@ -39,7 +45,7 @@ const safeConfig = {
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
         'script-src': `'self' 'unsafe-inline' ${vercelLiveDomain} ${webVitalsDomain} ${vercelCdnDomain} ${captchaDomains}`,
         'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
-        'img-src': `'self' data: https://assets.vercel.com https://lh3.googleusercontent.com`,
+        'img-src': `'self' data: ${imgDomains}`,
     },
 };
 
