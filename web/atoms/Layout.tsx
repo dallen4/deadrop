@@ -37,7 +37,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const { classes } = useStyles();
     const theme = useMantineTheme();
     const { user, error, isLoading } = useUser();
-
+console.log(user)
     return (
         <AppShell
             padding={'md'}

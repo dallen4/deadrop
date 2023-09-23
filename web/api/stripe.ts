@@ -6,6 +6,7 @@ const client = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export function buildEvent(request: NextApiRequest) {
+    console.log(request.body);
     const sig = request.headers['stripe-signature']!;
 
     const event = client.webhooks.constructEvent(
@@ -20,7 +21,7 @@ export function buildEvent(request: NextApiRequest) {
 export async function getEmailForCheckout(id: string) {
     const session = await client.checkout.sessions.retrieve(id);
 
-    return session.customer_email!;
+    return session.customer_details!.email!;
 }
 
 export async function validateCheckoutSession(id: string) {
