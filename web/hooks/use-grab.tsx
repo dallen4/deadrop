@@ -106,7 +106,7 @@ export const useGrab = () => {
 
             send(event);
 
-            pushLog('Acknowledging handshhake, sending public key...');
+            pushLog('Acknowledging handshake, sending public key...');
 
             sendPublicKey();
         } else if (msg.type === MessageType.Payload) {
