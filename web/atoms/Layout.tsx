@@ -8,7 +8,7 @@ import {
     Flex,
     Footer,
     Header,
-    NavLink,
+    Loader,
     Popover,
     Text,
     createStyles,
@@ -37,7 +37,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     const { classes } = useStyles();
     const theme = useMantineTheme();
     const { user, error, isLoading } = useUser();
-console.log(user)
+console.log(user);
     return (
         <AppShell
             padding={'md'}
@@ -63,22 +63,13 @@ console.log(user)
                         <Box
                             style={{
                                 flex: 1,
+                                display: 'flex',
                                 justifyContent: 'flex-end',
                                 padding: theme.spacing.md,
                             }}
                         >
-                            {!user && !isLoading ? (
-                                <Button
-                                    variant="outline"
-                                    onClick={() =>
-                                        router.push('/api/auth/login')
-                                    }
-                                    style={{ float: 'right' }}
-                                >
-                                    Login
-                                </Button>
-                            ) : (
-                                <Popover position="bottom-end">
+                            {user ? (
+                                <Popover position={'bottom-end'}>
                                     <Popover.Target>
                                         <Avatar
                                             src={user?.picture!}
@@ -91,6 +82,21 @@ console.log(user)
                                         <a href={'/api/auth/logout'}>Logout</a>
                                     </Popover.Dropdown>
                                 </Popover>
+                            ) : (
+                                <Button
+                                    variant={'outline'}
+                                    onClick={() =>
+                                        router.push('/api/auth/login')
+                                    }
+                                    style={{ minWidth: '75px' }}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <Loader color={'blue'} size={'sm'} />
+                                    ) : (
+                                        'Login'
+                                    )}
+                                </Button>
                             )}
                         </Box>
                     </Flex>

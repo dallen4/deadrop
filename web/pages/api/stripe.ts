@@ -3,7 +3,7 @@ import { runMiddleware } from 'api/middleware';
 import { cors } from 'api/middleware/cors';
 import { getEmailForCheckout } from 'api/stripe';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 
 export default async function stripeWebhook(
     req: NextApiRequest,
@@ -18,10 +18,8 @@ export default async function stripeWebhook(
 
         const email = await getEmailForCheckout(sessionId);
 
-        console.log(email);
-
         const usersToUpdate = await getUserIdsByEmail(email);
-        console.log(usersToUpdate);
+
         const userUpdates = usersToUpdate.map((id) =>
             updateUser(id, { premium: true }),
         );
