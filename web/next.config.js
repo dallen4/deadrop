@@ -8,6 +8,8 @@ const withTM = require('next-transpile-modules')(['shared']);
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 const { withSentryConfig } = require('@sentry/nextjs');
 
+const withPWA = require('next-pwa')({ dest: '/public' });
+
 const nonce = randomBytes(8).toString('base64');
 
 const peerHost = new URL(process.env.NEXT_PUBLIC_PEER_SERVER_URL).host;
@@ -79,8 +81,13 @@ const configWithTranspiledModules = withTM({
 /**
  * @type {import('next').NextConfig}
  */
-module.exports = withSentryConfig(
+const configWithSentry = withSentryConfig(
     configWithTranspiledModules,
     { silent: true },
     { hideSourcemaps: true },
 );
+
+/**
+ * @type {import('next').NextConfig}
+ */
+module.exports = withPWA(configWithSentry);

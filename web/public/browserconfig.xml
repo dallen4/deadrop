@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+    <!-- Square 70x70 Logo -->
+    <msapplication>
+        <tile>
+            <square70x70logo src="icons/mstile-70x70.png"/>
+        </tile>
+    </msapplication>
+    
+    <!-- Square 150x150 Logo -->
+    <msapplication>
+        <tile>
+            <square150x150logo src="icons/mstile-150x150.png"/>
+        </tile>
+    </msapplication>
+    
+    <!-- TODO Wide 310x150 Logo -->
+    <!-- <msapplication>
+        <tile>
+            <wide310x150logo src="icons/mstile-310x150.png"/>
+        </tile>
+    </msapplication> -->
+    
+    <!-- Square 310x310 Logo -->
+    <msapplication>
+        <tile>
+            <square310x310logo src="icons/mstile-310x310.png"/>
+        </tile>
+    </msapplication>
+    
+    <!-- Tile Background Color -->
+    <msapplication>
+        <tile>
+            <TileColor>#1A1B1E</TileColor>
+        </tile>
+    </msapplication>
+</browserconfig>

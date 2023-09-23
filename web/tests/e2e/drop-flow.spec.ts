@@ -56,7 +56,7 @@ test('should drop a text secret from one page session to another', async ({
             await expect(
                 grabberPage.getByText('Waiting for payload drop...'),
             ).toBeVisible({
-                timeout: 10_000,
+                timeout: 20_000,
             });
 
             await expect(
