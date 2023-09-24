@@ -3,7 +3,7 @@ import { AppProps } from 'next/app';
 import { DefaultSeo } from 'next-seo';
 import { MantineProvider } from '@mantine/core';
 import { Analytics } from '@vercel/analytics/react';
-import Layout from 'atoms/Layout';
+import Layout from 'molecules/Layout';
 import { emotionCache } from 'lib/emotion';
 import { NotificationsProvider } from '@mantine/notifications';
 import { UserProvider } from '@auth0/nextjs-auth0/client';
