@@ -17,9 +17,12 @@ const peerDomain = `ws://${peerHost}`;
 
 const vercelCdnDomain = 'https://cdn.vercel-insights.com';
 
-const webVitalsDomain = 'https://vitals.vercel-insights.com';
-
 const vercelLiveDomain = 'https://vercel.live';
+
+const vercelMetricsDomains = [
+    'https://vitals.vercel-insights.com',
+    vercelLiveDomain,
+].join(' ');
 
 const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(
     ' ',
@@ -28,10 +31,13 @@ const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(
 const sentryDomain = 'https://*.ingest.sentry.io';
 
 const githubAssetsDomain = 'https://avatars.githubusercontent.com';
+const googleAssetsDomain = 'https://lh3.googleusercontent.com';
+const googleFontsDomain = 'https://fonts.gstatic.com'
+const vercelAssetsDomain = 'https://assets.vercel.com';
 
-const imgDomains = [
-    'https://assets.vercel.com',
-    'https://lh3.googleusercontent.com',
+const assetsDomains = [
+    vercelAssetsDomain,
+    googleAssetsDomain,
     githubAssetsDomain,
 ].join(' ');
 
@@ -43,13 +49,13 @@ const safeConfig = {
     frameOptions: 'DENY',
     permissionsPolicy: false,
     contentSecurityPolicy: {
-        'connect-src': `'self' ${peerDomain} ${webVitalsDomain} ${captchaDomains} ${sentryDomain} ${githubAssetsDomain}`,
+        'connect-src': `'self' ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains}`,
         'default-src': `'self'`,
-        'font-src': `'self' data:`,
+        'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
-        'script-src': `'self' 'unsafe-inline' ${vercelLiveDomain} ${webVitalsDomain} ${vercelCdnDomain} ${captchaDomains}`,
+        'script-src': `'self' 'unsafe-inline' ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
         'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
-        'img-src': `'self' data: ${imgDomains}`,
+        'img-src': `'self' data: ${assetsDomains}`,
     },
 };
 
