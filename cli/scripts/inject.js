@@ -3,8 +3,8 @@ global.navigator = {
     platform: 'system',
 };
 
-global.RTCPeerConnection = require('wrtc').RTCPeerConnection;
-global.RTCSessionDescription = require('wrtc').RTCSessionDescription;
-global.RTCIceCandidate = require('wrtc').RTCIceCandidate;
+global.RTCPeerConnection = require('@koush/wrtc').RTCPeerConnection;
+global.RTCSessionDescription = require('@koush/wrtc').RTCSessionDescription;
+global.RTCIceCandidate = require('@koush/wrtc').RTCIceCandidate;
 
 global.WebSocket = require('ws');
