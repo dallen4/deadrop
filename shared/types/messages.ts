@@ -27,3 +27,5 @@ export interface ConfirmIntegrityMessage extends BaseMessage {
     type: MessageType.ConfirmVerification;
     verified: boolean;
 }
+
+export type MessageHandler = (msg: BaseMessage) => Promise<void>;

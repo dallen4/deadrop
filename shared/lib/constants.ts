@@ -54,3 +54,13 @@ export enum MessageType {
     Verify = 'verify',
     ConfirmVerification = 'confirm',
 }
+
+export const DropMessageOrderMap = new Map([
+    [MessageType.Handshake, MessageType.Handshake],
+    [MessageType.Payload, MessageType.Verify],
+]);
+
+export const GrabMessageOrderMap = new Map([
+    [MessageType.Handshake, MessageType.Payload],
+    [MessageType.Verify, MessageType.ConfirmVerification],
+]);

@@ -10,12 +10,14 @@ const onUnload = (e: BeforeUnloadEvent) => {
     return 'Are you sure you want to leave?';
 };
 
-const removeOnUnloadListener = () => {
-    window.onbeforeunload = null;
-    window.removeEventListener('beforeunload', onUnload);
+export const removeOnUnloadListener = () => {
+    if (!isServer) {
+        window.onbeforeunload = null;
+        window.removeEventListener('beforeunload', onUnload);
+    }
 };
 
-function createPeer(id: string, url: string) {
+export function createPeer(id: string, url: string) {
     const server = new URL(url);
 
     const peer = new Peer(id, {
@@ -39,13 +41,9 @@ function createPeer(id: string, url: string) {
         }
     });
 
-    peer.on('disconnected', () => {
-        if (!isServer) removeOnUnloadListener();
-    });
+    peer.on('disconnected', removeOnUnloadListener);
 
-    peer.on('close', () => {
-        if (!isServer) removeOnUnloadListener();
-    });
+    peer.on('close', removeOnUnloadListener);
 
     return new Promise<Peer>((resolve) => {
         peer.on('open', (id: string) => {
@@ -55,5 +53,3 @@ function createPeer(id: string, url: string) {
         });
     });
 }
-
-export { createPeer };

@@ -8,6 +8,8 @@ const withTM = require('next-transpile-modules')(['shared']);
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 const { withSentryConfig } = require('@sentry/nextjs');
 
+const withPWA = require('next-pwa')({ dest: '/public' });
+
 const nonce = randomBytes(8).toString('base64');
 
 const peerHost = new URL(process.env.NEXT_PUBLIC_PEER_SERVER_URL).host;
@@ -15,15 +17,29 @@ const peerDomain = `ws://${peerHost}`;
 
 const vercelCdnDomain = 'https://cdn.vercel-insights.com';
 
-const webVitalsDomain = 'https://vitals.vercel-insights.com';
-
 const vercelLiveDomain = 'https://vercel.live';
+
+const vercelMetricsDomains = [
+    'https://vitals.vercel-insights.com',
+    vercelLiveDomain,
+].join(' ');
 
 const captchaDomains = ['https://hcaptcha.com', 'https://*.hcaptcha.com'].join(
     ' ',
 );
 
 const sentryDomain = 'https://*.ingest.sentry.io';
+
+const githubAssetsDomain = 'https://avatars.githubusercontent.com';
+const googleAssetsDomain = 'https://lh3.googleusercontent.com';
+const googleFontsDomain = 'https://fonts.gstatic.com'
+const vercelAssetsDomain = 'https://assets.vercel.com';
+
+const assetsDomains = [
+    vercelAssetsDomain,
+    googleAssetsDomain,
+    githubAssetsDomain,
+].join(' ');
 
 const safeConfig = {
     isDev: process.env.NODE_ENV !== 'production',
@@ -33,13 +49,13 @@ const safeConfig = {
     frameOptions: 'DENY',
     permissionsPolicy: false,
     contentSecurityPolicy: {
-        'connect-src': `'self' ${peerDomain} ${webVitalsDomain} ${captchaDomains} ${sentryDomain}`,
+        'connect-src': `'self' ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains}`,
         'default-src': `'self'`,
-        'font-src': `'self' data:`,
+        'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
         'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
-        'script-src': `'self' 'unsafe-inline' ${vercelLiveDomain} ${webVitalsDomain} ${vercelCdnDomain} ${captchaDomains}`,
+        'script-src': `'self' 'unsafe-inline' ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
         'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
-        'img-src': `'self' data: https://assets.vercel.com`,
+        'img-src': `'self' data: ${assetsDomains}`,
     },
 };
 
@@ -73,8 +89,13 @@ const configWithTranspiledModules = withTM({
 /**
  * @type {import('next').NextConfig}
  */
-module.exports = withSentryConfig(
+const configWithSentry = withSentryConfig(
     configWithTranspiledModules,
     { silent: true },
     { hideSourcemaps: true },
 );
+
+/**
+ * @type {import('next').NextConfig}
+ */
+module.exports = withPWA(configWithSentry);

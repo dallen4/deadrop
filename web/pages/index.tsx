@@ -1,6 +1,5 @@
 import React, { useRef } from 'react';
 import { HeroBanner } from 'molecules/HeroBanner';
-import { FeaturesSection } from 'molecules/FeaturesSection';
 import {
     Title,
     Text,
@@ -11,9 +10,9 @@ import {
     Button,
     Group,
 } from '@mantine/core';
+import { Features, Faq } from 'molecules/sections';
 import { useRouter } from 'next/router';
 import { GRAB_PATH } from '@config/paths';
-import { Faq } from 'molecules/Faq';
 import { useMediaQuery } from '@mantine/hooks';
 
 const Home = () => {
@@ -41,7 +40,7 @@ const Home = () => {
     return (
         <>
             <HeroBanner />
-            <FeaturesSection />
+            <Features />
             <Center
                 style={{
                     minHeight: '230px',
@@ -88,6 +87,7 @@ const Home = () => {
                 </Card>
             </Center>
             <Faq />
+            {/* <Premium /> */}
         </>
     );
 };

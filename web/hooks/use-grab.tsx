@@ -5,7 +5,12 @@ import type {
     GrabContext,
     InitGrabEvent,
 } from '@shared/types/grab';
-import { GrabEventType, GrabState, MessageType } from '@shared/lib/constants';
+import {
+    GrabEventType,
+    GrabMessageOrderMap,
+    GrabState,
+    MessageType,
+} from '@shared/lib/constants';
 import { useRef } from 'react';
 import { get } from 'lib/fetch';
 import { useRouter } from 'next/router';
@@ -28,18 +33,58 @@ import {
     importKey,
 } from '@shared/lib/crypto/operations';
 import { decryptFile, hashFile } from 'lib/crypto';
+import { withMessageLock } from 'lib/messages';
+import { showNotification } from '@mantine/notifications';
+import { IconX } from '@tabler/icons';
 
 export const useGrab = () => {
     const router = useRouter();
 
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<GrabContext>(initGrabContext());
+    const timersRef = useRef(new Map<MessageType, NodeJS.Timeout>());
 
     const [{ value: state }, send] = useMachine(grabMachine);
 
     const pushLog = (message: string) => logsRef.current.push(message);
 
+    const clearTimer = (msgType: MessageType) => {
+        const timerId = timersRef.current.get(msgType);
+
+        if (timerId) {
+            clearTimeout(timerId);
+            timersRef.current.delete(msgType);
+        }
+    };
+
+    const sendMessage = async (msg: BaseMessage, retryCount: number = 0) => {
+        if (!contextRef.current.connection) return;
+
+        const expectedType = GrabMessageOrderMap.get(msg.type)!;
+
+        clearTimer(expectedType);
+
+        if (retryCount >= 3) {
+            showNotification({
+                message:
+                    'Connection may be unstable, please try your drop again',
+                color: 'red',
+                icon: <IconX />,
+                autoClose: 4500,
+            });
+            console.error(`Attempt limit exceeded for type: ${msg.type}`);
+            return;
+        }
+
+        contextRef.current.connection.send(msg);
+
+        const timer = setTimeout(() => sendMessage(msg, retryCount + 1), 1000);
+        timersRef.current.set(expectedType, timer);
+    };
+
     const onMessage = async (msg: BaseMessage) => {
+        clearTimer(msg.type);
+
         if (msg.type === MessageType.Handshake) {
             const { input } = msg as HandshakeMessage;
 
@@ -61,7 +106,7 @@ export const useGrab = () => {
 
             send(event);
 
-            pushLog('Acknowledging handshhake, sending public key...');
+            pushLog('Acknowledging handshake, sending public key...');
 
             sendPublicKey();
         } else if (msg.type === MessageType.Payload) {
@@ -139,6 +184,19 @@ export const useGrab = () => {
             id: dropId,
         });
 
+        if (!resp) {
+            pushLog(`Drop instance ${dropId} not found, closing connection...`);
+            showNotification({
+                message: 'Drop not found, check your link',
+                color: 'red',
+                icon: <IconX />,
+                autoClose: 3000,
+            });
+
+            cleanup();
+            return;
+        }
+
         const { peerId: dropperId, nonce } = resp;
 
         contextRef.current.id = dropId;
@@ -167,7 +225,8 @@ export const useGrab = () => {
             send({ type: GrabEventType.Connect });
         });
 
-        connection.on('data', onMessage);
+        const handlerWithLock = withMessageLock(onMessage, pushLog);
+        connection.on('data', handlerWithLock);
 
         contextRef.current.connection = connection;
     };
@@ -187,12 +246,17 @@ export const useGrab = () => {
         connection!.send(message);
     };
 
-    const cleanup = () => {
-        if (contextRef.current.connection!.open)
+    const cleanup = async () => {
+        const { removeOnUnloadListener } = await import('shared/lib/peer');
+
+        if (contextRef.current.connection?.open)
             contextRef.current.connection!.close();
 
-        contextRef.current.peer!.disconnect();
-        contextRef.current.peer!.destroy();
+        contextRef.current.peer?.disconnect();
+        contextRef.current.peer?.destroy();
+
+        removeOnUnloadListener();
+
         contextRef.current = initGrabContext();
     };
 

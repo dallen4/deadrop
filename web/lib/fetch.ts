@@ -18,6 +18,8 @@ export const get = async <Data>(
         },
     });
 
+    if (res.status === 404) return null;
+
     const data: Data = await res.json();
 
     return data;

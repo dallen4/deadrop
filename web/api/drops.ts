@@ -1,5 +1,5 @@
 import { generateIV } from '@shared/lib/util';
-import { getRedis } from 'lib/redis';
+import { getRedis } from 'api/redis';
 import { formatDropKey } from 'lib/util';
 import { nanoid } from 'nanoid';
 
