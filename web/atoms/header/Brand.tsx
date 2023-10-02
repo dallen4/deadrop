@@ -11,11 +11,13 @@ const useStyles = createStyles((theme) => ({
         justifyContent: 'flex-start',
         alignItems: 'center',
     },
+    logoSpacing: {
+        marginLeft: '7px',
+    },
     headerName: {
         ...theme.headings.sizes.h1,
         fontWeight: 'bold',
         float: 'left',
-        marginLeft: '7px',
         ':hover': {
             color: theme.colors[theme.primaryColor][4],
         },
@@ -43,7 +45,11 @@ const Brand = () => {
                     />
                 )}
                 <Text
-                    className={clsx(classes.headerName, classes.hoverPointer)}
+                    className={clsx(
+                        classes.headerName,
+                        classes.hoverPointer,
+                        renderLogo && classes.logoSpacing,
+                    )}
                 >
                     deadrop
                 </Text>
