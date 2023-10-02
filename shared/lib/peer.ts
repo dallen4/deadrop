@@ -1,4 +1,5 @@
 import Peer from 'peerjs';
+import { generateId } from './util';
 
 const isServer = typeof window === 'undefined';
 
@@ -17,7 +18,8 @@ export const removeOnUnloadListener = () => {
     }
 };
 
-export function createPeer(id: string, url: string) {
+export function createPeer(url: string) {
+    const id = generateId();
     const server = new URL(url);
 
     const peer = new Peer(id, {
