@@ -1,5 +1,5 @@
 import randomColor from 'randomcolor';
-import { GRAB_PATH } from 'config/paths';
+import { GRAB_PATH } from '@shared/config/paths';
 import { UAParser } from 'ua-parser-js';
 
 // ref: https://github.com/davidmerfield/randomColor#options

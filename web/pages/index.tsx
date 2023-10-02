@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { Features, Faq } from 'molecules/sections';
 import { useRouter } from 'next/router';
-import { GRAB_PATH } from '@config/paths';
+import { GRAB_PATH } from '@shared/config/paths';
 import { useMediaQuery } from '@mantine/hooks';
 
 const Home = () => {

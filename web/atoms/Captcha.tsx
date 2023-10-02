@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
-import { post } from 'lib/fetch';
+import { post } from '@shared/lib/fetch';
 import { CAPTCHA_API_PATCH } from 'config/paths';
 import Cookies from 'js-cookie';
 import { DISABLE_CAPTCHA_COOKIE } from 'config/cookies';

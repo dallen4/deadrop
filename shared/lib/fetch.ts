@@ -1,10 +1,10 @@
-import { ErrorBody } from 'types/fetch';
+import { ErrorBody } from '../types/fetch';
 
 export const get = async <Data>(
-    path: string,
+    uri: string,
     params?: { [key: string]: any },
 ) => {
-    let url = path;
+    let url = uri;
 
     if (params) {
         const query = new URLSearchParams(params);
@@ -26,11 +26,11 @@ export const get = async <Data>(
 };
 
 export const post = async <Data, Body>(
-    path: string,
+    uri: string,
     body?: Body,
     headers: HeadersInit = {},
 ) => {
-    const res = await fetch(path, {
+    const res = await fetch(uri, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -46,8 +46,8 @@ export const post = async <Data, Body>(
     return data as Data;
 };
 
-export const deleteReq = async <Data, Body>(path: string, body?: Body) => {
-    const res = await fetch(path, {
+export const deleteReq = async <Data, Body>(uri: string, body?: Body) => {
+    const res = await fetch(uri, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
