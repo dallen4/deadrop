@@ -12,7 +12,7 @@ import {
     MessageType,
 } from '@shared/lib/constants';
 import { useRef } from 'react';
-import { get } from 'lib/fetch';
+import { get } from '@shared/lib/fetch';
 import { useRouter } from 'next/router';
 import type { DropDetails } from '@shared/types/common';
 import type {
@@ -22,8 +22,7 @@ import type {
     HandshakeMessage,
     VerifyMessage,
 } from '@shared/types/messages';
-import { DROP_API_PATH } from 'config/paths';
-import { generateId } from '@shared/lib/util';
+import { DROP_API_PATH } from '@shared/config/paths';
 import {
     decryptRaw,
     deriveKey,
@@ -173,8 +172,7 @@ export const useGrab = () => {
 
         pushLog('Key pair generated...');
 
-        const peerId = generateId();
-        const peer = await initPeer(peerId);
+        const peer = await initPeer();
 
         pushLog('Peer instance created successfully...');
 

@@ -23,9 +23,8 @@ import {
     MessageType,
 } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
-import { deleteReq, post } from 'lib/fetch';
-import { DROP_API_PATH } from 'config/paths';
-import { generateId } from '@shared/lib/util';
+import { deleteReq, post } from '@shared/lib/fetch';
+import { DROP_API_PATH } from '@shared/config/paths';
 import {
     deriveKey,
     encryptRaw,
@@ -161,8 +160,7 @@ export const useDrop = () => {
 
         pushLog('Key pair generated...');
 
-        const peerId = generateId();
-        const peer = await initPeer(peerId);
+        const peer = await initPeer();
 
         pushLog('Peer instance created successfully...');
 
