@@ -36,7 +36,7 @@ import {
 import { encryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
-import { withMessageLock } from 'lib/messages';
+import { withMessageLock } from '@shared/lib/messages';
 
 export const useDrop = () => {
     const logsRef = useRef<Array<string>>([]);

@@ -32,7 +32,7 @@ import {
     importKey,
 } from '@shared/lib/crypto/operations';
 import { decryptFile, hashFile } from 'lib/crypto';
-import { withMessageLock } from 'lib/messages';
+import { withMessageLock } from '@shared/lib/messages';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
 
