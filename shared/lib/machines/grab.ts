@@ -17,7 +17,11 @@ export const initGrabContext = (): GrabContext => ({
 
 export const raise = baseRaise<Record<string, never>, AnyGrabEvent>;
 
-export const grabMachine = createMachine<Record<string, never>, AnyGrabEvent>({
+export const grabMachine = createMachine<
+    Record<string, never>,
+    AnyGrabEvent,
+    { value: GrabState; context: {} }
+>({
     id: 'grab',
     preserveActionOrder: true,
     predictableActionArguments: true,
