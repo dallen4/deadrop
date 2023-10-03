@@ -2,14 +2,15 @@ import type { InitDropResult, PayloadInputMode } from '@shared/types/common';
 import inquirer from 'inquirer';
 import { loader } from 'lib/loader';
 import { displayWelcomeMessage, logError, logInfo } from 'lib/log';
-import { cleanupPeer, initPeer } from 'lib/peer';
+import { initPeer } from 'lib/peer';
 import { DataConnection } from 'peerjs';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
-import { DropEventType, DropState } from '@shared/lib/constants';
+import { DropEventType } from '@shared/lib/constants';
 import { generateKeyPair } from '@shared/lib/crypto/operations';
 import { post } from '@shared/lib/fetch';
-import { InitDropEvent } from '@shared/types/drop';
+import { AnyDropEvent, InitDropEvent } from '@shared/types/drop';
 import { DROP_API_PATH } from '@shared/config/paths';
+import { cleanup } from 'lib/session';
 
 type DropOptions = {
     input?: string;
@@ -18,7 +19,12 @@ type DropOptions = {
 
 export const drop = async (input: string | undefined, options: DropOptions) => {
     const ctx = initDropContext();
-    let currState = null;
+    let currState = dropMachine.initialState;
+
+    const sendEvent = (event: AnyDropEvent) => {
+        currState = dropMachine.transition(currState, event);
+        return currState;
+    };
 
     ctx.message = input || options.input || null;
 
@@ -59,7 +65,7 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
 
         ctx.connection = newConnection;
 
-        currState = dropMachine.transition(DropState.Initial, {
+        sendEvent({
             type: DropEventType.Connect,
             connection: ctx.connection,
         });
@@ -87,7 +93,7 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
         nonce,
     };
 
-    dropMachine.transition(currState!, initEvent);
+    sendEvent(initEvent);
 
-    cleanupPeer(ctx.peer);
+    cleanup(ctx);
 };
