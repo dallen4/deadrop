@@ -1,5 +1,5 @@
-import { MessageType } from '@shared/lib/constants';
-import { BaseMessage, MessageHandler } from '@shared/types/messages';
+import { MessageType } from './constants';
+import { BaseMessage, MessageHandler } from '../types/messages';
 
 function createMessageMutex() {
     let currentMessageType: MessageType | null = null;
