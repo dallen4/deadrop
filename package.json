@@ -21,12 +21,13 @@
         "cli:build": "yarn cli build"
     },
     "dependencies": {
+        "nanoid": "^5.0.1",
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",
-        "qrcode": "^1.5.1",
+        "qrcode": "^1.5.3",
         "werift": "^0.18.2",
         "ws": "^8.11.0",
-        "xstate": "^4.33.4"
+        "xstate": "^4.38.2"
     },
     "devDependencies": {
         "@types/node": "^18",
