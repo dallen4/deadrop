@@ -8,9 +8,12 @@ import { createDrop } from 'api/drops';
 import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
 import { cors } from 'api/middleware/cors';
 import { runMiddleware } from 'api/middleware';
+import { getSession } from '@auth0/nextjs-auth0';
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     await runMiddleware(req, res, cors);
+
+    const session = await getSession(req, res);
 
     if (!['POST', 'GET', 'DELETE'].includes(req.method!)) {
         res.setHeader('Allow', 'POST,GET,DELETE');
@@ -36,7 +39,7 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     } else if (req.method === 'POST') {
         const userIpAddr = getClientIp(req);
 
-        const canDrop = req.cookies[DISABLE_CAPTCHA_COOKIE]
+        const canDrop = req.cookies[DISABLE_CAPTCHA_COOKIE] || !!session
             ? true
             : await checkAndIncrementDropCount(userIpAddr!);
 

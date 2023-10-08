@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Text,
     PasswordInput,
@@ -7,6 +7,8 @@ import {
     JsonInput,
     SegmentedControl,
     Group,
+    useMantineTheme,
+    Box,
 } from '@mantine/core';
 import StepCard from './StepCard';
 import { useDropContext } from 'contexts/DropContext';
@@ -14,6 +16,7 @@ import type { PayloadInputMode } from '@shared/types/common';
 import { Captcha } from 'atoms/Captcha';
 import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@shared/config/files';
 import { CONFIRM_PAYLOAD_BTN_ID } from 'lib/constants';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
@@ -22,11 +25,19 @@ export const SecretInputCard = () => {
     const [canConfirm, setCanConfirm] = useState(
         process.env.NODE_ENV === 'development',
     );
+    const { user } = useUser();
 
     const textRef = useRef<HTMLInputElement>(null);
     const jsonRef = useRef<HTMLTextAreaElement>(null);
 
+    const theme = useMantineTheme();
+
     const { setPayload } = useDropContext();
+
+    useEffect(() => {
+        if (user) setCanConfirm(true);
+        else setCanConfirm(false);
+    }, [user]);
 
     const isValidJson = (input: string) => {
         try {
@@ -62,7 +73,7 @@ export const SecretInputCard = () => {
     };
 
     return (
-        <StepCard title={'waiting for secrets'}>
+        <StepCard title={'add your secret'}>
             <SegmentedControl
                 value={mode}
                 onChange={(newMode) => setMode(newMode as PayloadInputMode)}
@@ -80,6 +91,7 @@ export const SecretInputCard = () => {
                         value: 'file',
                     },
                 ]}
+                style={{ marginTop: theme.spacing.sm, marginBottom: theme.spacing.sm }}
             />
             {mode === 'text' ? (
                 <PasswordInput
@@ -118,14 +130,19 @@ export const SecretInputCard = () => {
             ) : (
                 <Text>Invalid Payload Mode</Text>
             )}
-            <Captcha
-                onSuccess={() => setCanConfirm(true)}
-                onExpire={() => setCanConfirm(false)}
-            />
+            {!user && (
+                <Box style={{ marginTop: theme.spacing.lg }}>
+                    <Captcha
+                        onSuccess={() => setCanConfirm(true)}
+                        onExpire={() => setCanConfirm(false)}
+                    />
+                </Box>
+            )}
             <Button
                 id={CONFIRM_PAYLOAD_BTN_ID}
                 onClick={confirmPayload}
                 disabled={!canConfirm || !isValid}
+                style={{ marginTop: theme.spacing.md }}
             >
                 Confirm Payload
             </Button>
