@@ -18,7 +18,7 @@ import {
     AnyGrabEvent,
     InitGrabEvent,
 } from '@shared/types/grab';
-import { cleanup } from 'lib/session';
+import { cleanupSession } from 'lib/session';
 import {
     GrabEventType,
     GrabMessageOrderMap,
@@ -75,7 +75,7 @@ export const grab = async (id: string) => {
             logError(
                 `Drop instance ${ctx.id} not found, closing connection...`,
             );
-            cleanup(ctx);
+            cleanupSession(ctx);
 
             return;
         }
@@ -244,7 +244,7 @@ export const grab = async (id: string) => {
                 type: verified ? GrabEventType.Confirm : GrabEventType.Failure,
             });
 
-            cleanup(ctx);
+            cleanupSession(ctx);
         } else {
             console.error(`Invalid message received: ${msg.type}`);
         }
