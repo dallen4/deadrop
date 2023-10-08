@@ -44,6 +44,7 @@ export const Assets = () => {
             <link rel="shortcut icon" href="/favicon.ico" />
 
             {/* SPLASH SCREENS */}
+            {/* ref: https://progressier.com/pwa-icons-and-ios-splash-screen-generator */}
 
             <link
                 rel="apple-touch-startup-image"
