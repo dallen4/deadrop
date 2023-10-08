@@ -10,6 +10,7 @@ import { ServerStyles, createStylesServer } from '@mantine/next';
 import getConfig from 'next/config';
 import { emotionCache } from 'lib/emotion';
 import { description, themeColors, title } from '@config/app';
+import { Assets } from 'atoms/Assets';
 
 const { publicRuntimeConfig } = getConfig();
 
@@ -64,45 +65,7 @@ export default class _Document extends Document {
                     <meta name="msapplication-tap-highlight" content="no" />
                     <meta name="theme-color" content={themeColors.primary} />
 
-                    <link
-                        rel="apple-touch-icon"
-                        href="/icons/apple-touch-icon.png"
-                    />
-                    <link
-                        rel="apple-touch-icon"
-                        sizes="152x152"
-                        href="/icons/touch-icon-ipad.png"
-                    />
-                    <link
-                        rel="apple-touch-icon"
-                        sizes="180x180"
-                        href="/icons/touch-icon-iphone-retina.png"
-                    />
-                    <link
-                        rel="apple-touch-icon"
-                        sizes="167x167"
-                        href="/icons/touch-icon-ipad-retina.png"
-                    />
-
-                    <link
-                        rel="icon"
-                        type="image/png"
-                        sizes="32x32"
-                        href="/icons/favicon-32x32.png"
-                    />
-                    <link
-                        rel="icon"
-                        type="image/png"
-                        sizes="16x16"
-                        href="/icons/favicon-16x16.png"
-                    />
-                    <link rel="manifest" href="/manifest.json" />
-                    <link
-                        rel="mask-icon"
-                        href="/icons/handshake.svg"
-                        color={themeColors.primary}
-                    />
-                    <link rel="shortcut icon" href="/favicon.ico" />
+                    <Assets />
                 </Head>
                 <body>
                     <Main />

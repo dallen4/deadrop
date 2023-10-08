@@ -1,6 +1,13 @@
 {
     "name": "deadrop",
+    "description": "e2e encrypted secret sharing",
+    "categories": ["development"],
     "short_name": "deadrop",
+    "theme_color": "#1971C2",
+    "background_color": "#1A1B1E",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait",
     "icons": [
         {
             "src": "/icons/android-chrome-192x192.png",
@@ -19,9 +26,28 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#1971C2",
-    "background_color": "#1A1B1E",
-    "start_url": "/",
-    "display": "standalone",
-    "orientation": "portrait"
+    "screenshots": [
+        {
+            "src": "screenshots/1280x800-screenshot.png",
+            "sizes": "1280x800",
+            "type": "image/png"
+        },
+        {
+            "src": "screenshots/750x1334-screenshot.png",
+            "sizes": "750x1334",
+            "type": "image/png"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Drop",
+            "url": "/drop",
+            "description": "Drop a secret to a friend"
+        },
+        {
+            "name": "Grab",
+            "url": "/grab",
+            "description": "Grab a secret from a friend"
+        }
+    ]
 }
