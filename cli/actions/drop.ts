@@ -1,4 +1,4 @@
-import type { InitDropResult, PayloadInputMode, PayloadMode } from '@shared/types/common';
+import type { InitDropResult, PayloadMode } from '@shared/types/common';
 import inquirer from 'inquirer';
 import { loader } from 'lib/loader';
 import { displayWelcomeMessage, logError, logInfo } from 'lib/log';
@@ -38,6 +38,7 @@ import { withMessageLock } from '@shared/lib/messages';
 import { generateGrabUrl } from 'lib/util';
 import chalk from 'chalk';
 import { cleanupSession } from 'lib/session';
+import QRCode from 'qrcode';
 
 type DropOptions = {
     input?: string;
@@ -305,7 +306,16 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
     ctx.id = id;
     ctx.nonce = nonce;
 
-    logInfo(`Grab Link: ${chalk.bold(generateGrabUrl(ctx.id))}`);
+    const grabLink = generateGrabUrl(ctx.id);
+
+    logInfo(`Use grab link: ${chalk.bold(grabLink)}`);
+
+    const grabQR = await QRCode.toString(grabLink, {
+        type: 'terminal',
+        small: true,
+    });
+
+    logInfo(`Or scan the QR code:\n${grabQR}`);
 
     loader.start('Waiting for grab request...');
 
