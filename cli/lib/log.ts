@@ -14,7 +14,7 @@ export const displayWelcomeMessage = () => {
 };
 
 export const logInfo = (msg: string) => {
-    console.log(chalk.cyan(msg));
+    console.log(chalk.cyan(msg) + '\n');
 };
 
 export const logWarning = (msg: string) => {
