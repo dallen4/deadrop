@@ -2,9 +2,9 @@ name: Release CLI
 on:
   push:
     tags:
-      - "v*"
+      - "cli-v*"
 jobs:
-  release-cli:
+  cli-package:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -13,9 +13,22 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: yarn install --frozen-lockfile
-      - name: Build CLI Source
+      - name: Create .env
+        run: |
+          echo ${{ secrets.PEER_SERVER_URL }}
+          echo "PEER_SERVER_URL=${{ secrets.PEER_SERVER_URL }}" >> ./.env
+          echo ${{ secrets.DEADDROP_API_URL }}
+          echo "DEADDROP_API_URL=${{ secrets.DEADDROP_API_URL }}" >> ./.env
+      - name: Build CLI Executables
         run: yarn cli compile
+      - name: Cache CLI Bundle
+        id: cache-bundle
+        uses: actions/cache@v1
+        with:
+          path: cli/dist/index.js
+          key: cli-bundle-${{ hashFiles('cli/dist/index.js') }}
       - uses: marvinpinto/action-automatic-releases@latest
+        if: steps.cache-bundle.outputs.cache-hit != 'true'
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           draft: true

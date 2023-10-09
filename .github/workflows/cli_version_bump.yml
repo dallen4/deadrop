@@ -1,0 +1,24 @@
+name: CLI Version Bump
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        description: Type of Release
+        options: 
+        - patch
+        - minor
+        - major
+
+jobs:
+  cli-version-bump:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Version Bump
+        run: |
+          yarn config set version-tag-prefix "cli-v"
+          yarn cli version --${{ github.event.inputs.release_type }}
