@@ -1,7 +1,7 @@
 {
     "name": "deadrop",
     "version": "0.1.0",
-    "description": "e2e enncrypted secret sharing",
+    "description": "e2e encrypted secret sharing",
     "main": "index.js",
     "author": "Nieky Allen <nieky.allen@gmail.com>",
     "license": "GPL-3.0-only",
