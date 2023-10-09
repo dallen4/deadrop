@@ -16,7 +16,8 @@
         "postbuild": "replace 'exports = \"./wrtc-ZMU7ITF3.node\"' 'exports = require(\"./wrtc-ZMU7ITF3.node\")' ./dist/index.js",
         "package": "pkg dist/index.js -o dist/deadrop -C Brotli -c pkg.json",
         "postpackage": "rimraf fonts/",
-        "compile": "yarn build && yarn package"
+        "compile": "yarn build && yarn package",
+        "postversion": "git push --tags && git add ./package.json && git commit -m \"release $npm_package_version\" && git push"
     },
     "dependencies": {
         "@koush/wrtc": "^0.5.3",
