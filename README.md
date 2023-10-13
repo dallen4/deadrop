@@ -10,10 +10,6 @@ Utilizing public key infrastructure patterns, deadrop uses AES (with GCM) and El
 
 ![deadrop diagram](assets/deadrop.jpeg)
 
-## Running Locally
-
-<!-- TODO -->
-
 ## Features
 
 - [x] raw text secret sharing
@@ -21,5 +17,26 @@ Utilizing public key infrastructure patterns, deadrop uses AES (with GCM) and El
 - [x] secret file sharing
 - [x] basic captcha protection via [hcaptcha](https://www.hcaptcha.com/)
 - [ ] CLI implementation (in-progress)
+  - [x] text
+  - [ ] files
 - [ ] multi-user sharing
 - [ ] drop passcode protection
+
+## Using the Web Application
+
+To use the web application, visit https://deadrop.io. It is a PWA so you can also save it to your home screen on your mobile devices.
+
+## Using the CLI
+
+If you want to drop or grab a secret using the CLI implementation, you can install it by running:
+
+```bash
+npm install deadrop
+npm run deadrop ...
+```
+
+Or if you want to run it without installing it within your project:
+
+```bash
+npx deadrop ...
+```
