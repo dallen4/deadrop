@@ -12,9 +12,9 @@
     "private": true,
     "scripts": {
         "prebuild": "rimraf dist/ && cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
-        "build": "esbuild index.ts --bundle --platform=node --loader:.node=file --inject:./scripts/inject.js --outfile=dist/index.js",
-        "postbuild": "replace 'exports = \"./wrtc-ZMU7ITF3.node\"' 'exports = require(\"./wrtc-ZMU7ITF3.node\")' ./dist/index.js",
-        "package": "pkg dist/index.js -o dist/deadrop -C Brotli -c pkg.json",
+        "build": "node ./scripts/esbuild.js",
+        "postbuild": "replace 'exports = \"./wrtc-ZMU7ITF3.node\"' 'exports = require(\"./wrtc-ZMU7ITF3.node\")' ./dist/deadrop.js",
+        "package": "pkg dist/deadrop.js -o dist/deadrop -C Brotli -c pkg.json",
         "postpackage": "rimraf fonts/",
         "compile": "yarn build && yarn package",
         "postversion": "git push --tags && git add ./package.json && git commit -m \"release $npm_package_version\" && git push"
@@ -34,6 +34,7 @@
         "cpx": "^1.5.0",
         "dotenv": "^16.0.3",
         "esbuild": "^0.16.15",
+        "esbuild-plugin-environment": "^0.2.4",
         "pkg": "^5.8.0",
         "replace": "^1.2.2",
         "rimraf": "^3.0.2"
