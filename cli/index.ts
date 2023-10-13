@@ -8,7 +8,7 @@ import { grab } from 'actions/grab';
 
 const program = new Command();
 
-program.name('deadrop-cli').description(description).version(version);
+program.name('deadrop').description(description).version(version);
 
 program
     .command('drop')
