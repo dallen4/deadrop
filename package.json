@@ -26,7 +26,7 @@
         "start:prod": "yarn web start:prod",
         "test:e2e": "yarn web test:e2e",
         "cli:build": "yarn cli build",
-        "prepublishOnly": "yarn cli:build && replace '\"private\": true' '\"private\": false' ./package.json",
+        "prepublishOnly": "replace '\"private\": true' '\"private\": false' ./package.json",
         "postpublish": "replace '\"private\": false' '\"private\": true' ./package.json"
     },
     "dependencies": {
