@@ -2,7 +2,7 @@
     "name": "cli",
     "description": "deadrop CLI",
     "version": "0.1.0",
-    "main": "dist/index.js",
+    "main": "dist/deadrop.js",
     "bin": {
         "deadrop-macos": "./dist/deadrop-macos",
         "deadrop-linux": "./dist/deadrop-linux",
@@ -26,6 +26,7 @@
         "figlet": "^1.5.2",
         "inquirer": "^9.1.4",
         "ora": "^6.1.2",
+        "semver": "^7.5.4",
         "ws": "^8.11.0"
     },
     "devDependencies": {

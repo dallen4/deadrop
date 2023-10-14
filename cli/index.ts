@@ -5,6 +5,9 @@ import { description, version } from './package.json';
 import { drop } from 'actions/drop';
 import { PayloadInputMode } from '@shared/types/common';
 import { grab } from 'actions/grab';
+import { checkNodeVersion } from 'lib/util';
+
+checkNodeVersion();
 
 const program = new Command();
 

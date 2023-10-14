@@ -1,6 +1,6 @@
 {
     "name": "deadrop",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "e2e encrypted secret sharing",
     "main": "index.js",
     "author": "Nieky Allen <nieky.allen@gmail.com>",
@@ -14,7 +14,9 @@
     "bin": {
         "deadrop": "./cli/dist/deadrop.js"
     },
-    "files": ["./cli/dist/deadrop.js"],
+    "files": [
+        "./cli/dist/deadrop.js"
+    ],
     "scripts": {
         "web": "yarn workspace web",
         "cli": "yarn workspace cli",
@@ -22,7 +24,6 @@
         "build": "yarn web build",
         "start:prod": "yarn web start:prod",
         "test:e2e": "yarn web test:e2e",
-        "preinstall": "node scripts/checkNodeVersion.js",
         "cli:build": "yarn cli build"
     },
     "dependencies": {
@@ -30,7 +31,6 @@
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",
         "qrcode": "^1.5.3",
-        "semver": "^7.5.4",
         "ws": "^8.11.0",
         "xstate": "^4.38.2"
     },
