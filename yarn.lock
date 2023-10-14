@@ -7108,7 +7108,7 @@ repeat-string@^1.5.2, repeat-string@^1.6.1:
 
 replace@^1.2.2:
   version "1.2.2"
-  resolved "https://registry.npmjs.org/replace/-/replace-1.2.2.tgz"
+  resolved "https://registry.yarnpkg.com/replace/-/replace-1.2.2.tgz#880247113a950afa749a297e6d10d4d7bcd27acf"
   integrity sha512-C4EDifm22XZM2b2JOYe6Mhn+lBsLBAvLbK8drfUQLTfD1KYl/n3VaW/CDju0Ny4w3xTtegBpg8YNSpFJPUDSjA==
   dependencies:
     chalk "2.4.2"

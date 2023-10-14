@@ -13,7 +13,7 @@
     "scripts": {
         "prebuild": "rimraf dist/ && cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
         "build": "node ./scripts/esbuild.js",
-        "postbuild": "replace 'exports = \"./wrtc-ZMU7ITF3.node\"' 'exports = require(\"./wrtc-ZMU7ITF3.node\")' ./dist/deadrop.js",
+        "postbuild": "replace 'exports = \"./wrtc-(\\w+).node\"' 'exports = require(\"../../node_modules/@koush/wrtc/build/Release/wrtc.node\")' ./dist/deadrop.js",
         "package": "pkg dist/deadrop.js -o dist/deadrop -C Brotli -c pkg.json",
         "postpackage": "rimraf fonts/",
         "compile": "yarn build && yarn package",
@@ -37,7 +37,6 @@
         "esbuild": "^0.16.15",
         "esbuild-plugin-environment": "^0.2.4",
         "pkg": "^5.8.0",
-        "replace": "^1.2.2",
         "rimraf": "^3.0.2"
     }
 }
