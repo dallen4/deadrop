@@ -1,6 +1,6 @@
 {
     "name": "deadrop",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "e2e encrypted secret sharing",
     "main": "index.js",
     "author": "Nieky Allen <nieky.allen@gmail.com>",
@@ -15,7 +15,8 @@
         "deadrop": "./cli/dist/deadrop.js"
     },
     "files": [
-        "./cli/dist/deadrop.js"
+        "./cli/dist/*",
+        "./cli/fonts/Standard.flf"
     ],
     "scripts": {
         "web": "yarn workspace web",
@@ -24,7 +25,9 @@
         "build": "yarn web build",
         "start:prod": "yarn web start:prod",
         "test:e2e": "yarn web test:e2e",
-        "cli:build": "yarn cli build"
+        "cli:build": "yarn cli build",
+        "prepublishOnly": "yarn cli:build && replace '\"private\": true' '\"private\": false' ./package.json",
+        "postpublish": "replace '\"private\": false' '\"private\": true' ./package.json"
     },
     "dependencies": {
         "nanoid": "^5.0.1",
@@ -39,6 +42,7 @@
         "eslint": "^8.31.0",
         "pkg": "^5.8.0",
         "prettier": "^2.8.2",
+        "replace": "^1.2.2",
         "ts-node": "^10.7.0",
         "typescript": "^4.0.3"
     },
