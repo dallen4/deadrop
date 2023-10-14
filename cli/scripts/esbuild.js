@@ -3,6 +3,11 @@ require('dotenv').config();
 const { build } = require('esbuild');
 const { environmentPlugin } = require('esbuild-plugin-environment');
 
+if (!process.env.DEADDROP_API_URL || !process.env.PEER_SERVER_URL) {
+    console.error('Invalid environment configuration provided');
+    process.exit(1);
+}
+
 (async () => {
     await build({
         entryPoints: ['index.ts'],
