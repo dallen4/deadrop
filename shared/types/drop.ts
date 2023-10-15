@@ -2,7 +2,7 @@ import type { BaseContext } from './common';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
-import { DropEventType } from '../lib/constants';
+import { DropEventType, MessageType } from '../lib/constants';
 
 export type DropOptions = {
     decryptedAccess?: 'copy' | 'view' | 'both';
@@ -57,3 +57,25 @@ export interface HandshakeCompleteEvent extends DropEvent {
 export interface CompleteEvent extends DropEvent {
     type: DropEventType.Confirm;
 }
+
+export type DropHandlerInputs = {
+    ctx: DropContext;
+    timers: Map<MessageType, NodeJS.Timeout>;
+    sendEvent: (event: AnyDropEvent) => unknown;
+    logger: {
+        info: (message: string) => void;
+        error: (message: string) => void;
+        debug: (message: string) => void;
+    };
+    file: {
+        encrypt: (
+            key: CryptoKey,
+            iv: string,
+            pathOrInput: any,
+        ) => Promise<string>;
+        hash: (pathOrInput: any) => Promise<string>;
+    };
+    initPeer: () => Promise<Peer>;
+    cleanupSession: (ctx: DropContext) => void;
+    apiUri: string;
+};
