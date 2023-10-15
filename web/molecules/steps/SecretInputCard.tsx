@@ -6,7 +6,6 @@ import {
     FileButton,
     JsonInput,
     SegmentedControl,
-    Group,
     useMantineTheme,
     Box,
 } from '@mantine/core';
@@ -53,23 +52,29 @@ export const SecretInputCard = () => {
         inputMode: PayloadInputMode,
         value: string | File | null,
     ) => {
-        if (inputMode === 'file') setIsValid(!!value);
-        else if (inputMode === 'json') setIsValid(isValidJson(value as string));
+        if (inputMode === 'file') {
+            const file = value as File | null;
+
+            if (!file || file.size > MAX_PAYLOAD_SIZE) {
+                setIsValid(false);
+                setFile(null);
+
+                alert('This file is too big');
+                return;
+            }
+
+            setIsValid(true);
+            setFile(value as File);
+        } else if (inputMode === 'json')
+            setIsValid(isValidJson(value as string));
         else setIsValid((value as string).length > 0);
     };
 
     const confirmPayload = async () => {
         if (mode === 'text') setPayload(textRef.current!.value);
         else if (mode === 'json') setPayload(jsonRef.current!.value);
-        else if (mode === 'file') {
-            if (file!.size > MAX_PAYLOAD_SIZE) {
-                setFile(null);
-                alert('This file is too big');
-                return;
-            }
-
-            setPayload(file!);
-        } else console.warn('Cannot confirm payload');
+        else if (mode === 'file') setPayload(file!);
+        else console.warn('Cannot confirm payload');
     };
 
     return (
@@ -91,7 +96,10 @@ export const SecretInputCard = () => {
                         value: 'file',
                     },
                 ]}
-                style={{ marginTop: theme.spacing.sm, marginBottom: theme.spacing.sm }}
+                style={{
+                    marginTop: theme.spacing.sm,
+                    marginBottom: theme.spacing.sm,
+                }}
             />
             {mode === 'text' ? (
                 <PasswordInput
@@ -114,23 +122,49 @@ export const SecretInputCard = () => {
                     minRows={4}
                 />
             ) : mode === 'file' ? (
-                <Group position={'center'}>
-                    <FileButton
-                        onChange={(file) => validateOnChange('file', file)}
-                        accept={ACCEPTED_FILE_TYPES.join(',')}
+                <Box
+                    display={'flex'}
+                    style={{
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
+                        alignItems: 'flex-start',
+                    }}
+                >
+                    <Box
+                        display={'flex'}
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-end',
+                        }}
                     >
-                        {(props) => (
-                            <Button {...props}>Upload Secrets File</Button>
+                        <FileButton
+                            onChange={(file) => validateOnChange('file', file)}
+                            accept={ACCEPTED_FILE_TYPES.join(',')}
+                        >
+                            {(props) => (
+                                <Button disabled={!!file} {...props}>
+                                    Upload Secrets File
+                                </Button>
+                            )}
+                        </FileButton>
+                        {file && (
+                            <Text
+                                weight={'bold'}
+                                style={{ marginLeft: theme.spacing.sm }}
+                            >
+                                {file.name}
+                            </Text>
                         )}
-                    </FileButton>
+                    </Box>
                     <Text size={'sm'}>
                         Allows extensions: {ACCEPTED_FILE_TYPES.join(', ')}
                     </Text>
-                </Group>
+                </Box>
             ) : (
                 <Text>Invalid Payload Mode</Text>
             )}
-            {!user && (
+            {typeof user === 'undefined' && (
                 <Box style={{ marginTop: theme.spacing.lg }}>
                     <Captcha
                         onSuccess={() => setCanConfirm(true)}
