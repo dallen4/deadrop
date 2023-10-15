@@ -95,7 +95,7 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
         sendEvent(event);
     };
 
-    await stagePayload(ctx.message as string, 'raw');
+    await stagePayload(ctx.message as string, ctx.mode);
 
     ctx.keyPair = await generateKeyPair();
 

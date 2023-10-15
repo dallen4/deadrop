@@ -17,11 +17,7 @@ program
     .command('drop')
     .argument('[input]', 'secret to drop')
     .option('-i, --input [input]', 'secret to drop')
-    .option(
-        '-t, --type [dropType]',
-        'type of secret being dropped',
-        'text' as PayloadInputMode,
-    )
+    .option('-f, --file', 'secre to drop is a file')
     .action(drop);
 
 program.command('grab').argument('<id>', 'drop session ID').action(grab);
