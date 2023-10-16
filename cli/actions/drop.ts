@@ -148,13 +148,14 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
         const message: DropMessage = {
             type: MessageType.Payload,
             mode: ctx.mode,
-            payload,
-            meta: isFile
-                ? {
-                      name: (ctx.message! as File).name,
-                      type: (ctx.message! as File).type,
-                  }
-                : undefined,
+            payload: typeof payload === 'string' ? payload : payload.data,
+            meta:
+                typeof payload !== 'string' && isFile
+                    ? {
+                          name: payload.name,
+                          type: payload.type,
+                      }
+                    : undefined,
         };
 
         sendMessage(message);

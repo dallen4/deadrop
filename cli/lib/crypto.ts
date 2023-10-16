@@ -1,11 +1,20 @@
 import type { DropMessage } from '@shared/types/messages';
 import { decrypt, encrypt, hash } from '@shared/lib/crypto/operations';
 import { writeFileFromBuffer, readFileAsBuffer } from './files';
+import Mime from 'mime-type';
 
 export const encryptFile = async (key: CryptoKey, iv: string, path: string) => {
     const fileBuffer = await readFileAsBuffer(path);
 
-    return encrypt(key, iv, fileBuffer);
+    const name = path.split('/').pop()!;
+    const type = new Mime({}, 0).lookup(path);
+    const encryptedFile = await encrypt(key, iv, fileBuffer);
+
+    return {
+        data: encryptedFile,
+        name,
+        type: type as string,
+    }
 };
 
 export const decryptFile = async (
