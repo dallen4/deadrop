@@ -21,7 +21,7 @@ export const buildFileFromBuffer = (
     });
 
 export const downloadFile = (file: File) => {
-    const objectUrl = window.URL.createObjectURL(file);
+    const objectUrl = (window.URL || window.webkitURL).createObjectURL(file);
 
     const link = document.createElement('a');
     link.href = objectUrl;

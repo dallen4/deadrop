@@ -1,34 +1,31 @@
-import React from 'react';
-import {
-    Box,
-    Button,
-    Card,
-    Code,
-    Loader,
-    Text,
-    useMantineTheme,
-} from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import React, { useEffect, useState } from 'react';
+import { Box, Button, Card, Code, Loader, Text } from '@mantine/core';
 import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
 import DropLog from 'molecules/DropLog';
 import { GrabState } from '@shared/lib/constants';
-import { downloadFile } from 'lib/files';
 import { DROP_SECRET_VALUE_ID } from 'lib/constants';
+import { downloadFile } from 'lib/files';
 
 const GrabFlow = () => {
-    const theme = useMantineTheme();
-    const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
-
     const { init, status, getLogs, getMode, getSecret } = useGrabContext();
+    const [secretFile, setSecretFile] = useState<File | null>(null);
 
+    useEffect(() => {
+        if (getMode() === 'file' && getSecret())
+            setSecretFile(getSecret() as File);
+    }, [getSecret()]);
+
+    const downloadSecret = () => {
+        downloadFile(secretFile!);
+    };
     const getLoaderText = () => {
         return status === GrabState.Ready
             ? ''
             : status === GrabState.Connected
-                ? 'Exchanging secret identities...'
-                : GrabState.Waiting
-                    ? 'Waiting for payload drop...'
-                    : '';
+            ? 'Exchanging secret identities...'
+            : GrabState.Waiting
+            ? 'Waiting for payload drop...'
+            : '';
     };
 
     return (
@@ -36,7 +33,9 @@ const GrabFlow = () => {
             {status === GrabState.Initial ? (
                 <>
                     <Text>You are about to begin a deadrop.</Text>
-                    <Button id={'begin-grab-btn'} onClick={init}>Begin</Button>
+                    <Button id={'begin-grab-btn'} onClick={init}>
+                        Begin
+                    </Button>
                 </>
             ) : status === GrabState.Confirmed ? (
                 <Box>
@@ -49,13 +48,7 @@ const GrabFlow = () => {
                             <Text>
                                 File received: {(getSecret() as File).name}
                             </Text>
-                            <Button
-                                onClick={() =>
-                                    downloadFile(getSecret() as File)
-                                }
-                            >
-                                Download
-                            </Button>
+                            <Button onClick={downloadSecret}>Download</Button>
                         </>
                     )}
                 </Box>
