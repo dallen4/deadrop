@@ -1,7 +1,6 @@
 import inquirer from 'inquirer';
 import { loader } from 'lib/loader';
 import { displayWelcomeMessage, logDebug, logError, logInfo } from 'lib/log';
-import { initPeer } from 'lib/peer';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
 import { DropEventType, MessageType } from '@shared/lib/constants';
 import { AnyDropEvent, InitDropEvent } from '@shared/types/drop';
@@ -40,12 +39,13 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
             debug: logDebug,
         },
         file: {
-            encrypt: encryptFile,
+            encrypt: (...args) =>
+                encryptFile(args[0], args[1], args[2]).then((res) => res.data),
             hash: hashFile,
         },
-        initPeer,
         cleanupSession,
         apiUri: process.env.DEADDROP_API_URL!,
+        peerServerUri: process.env.PEER_SERVER_URL!,
     });
 
     ctx.message = input || options.input || null;
@@ -65,7 +65,7 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
         ctx.message = answer.input;
     }
 
-    await stagePayload(ctx.message as string, 'raw');
+    await stagePayload(ctx.message as string, ctx.mode);
 
     loader.start('Initializing drop session...');
 

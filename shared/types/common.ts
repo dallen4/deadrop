@@ -1,5 +1,6 @@
 import type { DataConnection } from 'peerjs';
 import type Peer from 'peerjs';
+import { DropMessageMeta } from './messages';
 
 export type BaseContext = {
     id: string | null;
@@ -35,3 +36,20 @@ export type DropPayload =
           content: string;
           type: string;
       };
+
+export type EncryptFile<InputType = string> = (
+    key: CryptoKey,
+    iv: string,
+    pathOrInput: InputType,
+) => Promise<string>;
+
+export type DecryptFile<InputType = string> = (
+    key: CryptoKey,
+    iv: string,
+    pathOrInput: InputType,
+    meta: DropMessageMeta,
+) => Promise<string>;
+
+export type HashFile<InputType = string> = (
+    pathOrInput: InputType,
+) => Promise<string>;

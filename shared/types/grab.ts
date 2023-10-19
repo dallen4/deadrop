@@ -1,4 +1,4 @@
-import type { BaseContext } from './common';
+import type { BaseContext, DecryptFile, HashFile } from './common';
 import { GrabEventType, MessageType } from '../lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
@@ -45,13 +45,8 @@ export type GrabHandlerInputs = {
         debug: (message: string) => void;
     };
     file: {
-        decrypt: (
-            key: CryptoKey,
-            iv: string,
-            pathOrInput: any,
-            meta?: any,
-        ) => Promise<string>;
-        hash: (pathOrInput: any) => Promise<string>;
+        decrypt: DecryptFile;
+        hash: HashFile;
     };
     initPeer: () => Promise<Peer>;
     cleanupSession: (ctx: GrabContext) => void;

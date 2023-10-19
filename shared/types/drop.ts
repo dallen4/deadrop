@@ -1,4 +1,4 @@
-import type { BaseContext } from './common';
+import type { BaseContext, EncryptFile, HashFile } from './common';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
@@ -68,14 +68,10 @@ export type DropHandlerInputs = {
         debug: (message: string) => void;
     };
     file: {
-        encrypt: (
-            key: CryptoKey,
-            iv: string,
-            pathOrInput: any,
-        ) => Promise<string>;
-        hash: (pathOrInput: any) => Promise<string>;
+        encrypt: EncryptFile;
+        hash: HashFile;
     };
-    initPeer: () => Promise<Peer>;
     cleanupSession: (ctx: DropContext) => void;
     apiUri: string;
+    peerServerUri: string;
 };
