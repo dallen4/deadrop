@@ -113,14 +113,13 @@ export const useGrab = () => {
 
             pushLog('Drop payload received...');
 
-            logsRef.current.push('Decrypting payload...');
-
             const { grabKey, nonce } = contextRef.current;
 
-            const decryptedMessage: string | File =
-                mode === 'raw'
-                    ? await decryptRaw(grabKey!, nonce!, payload)
-                    : await decryptFile(grabKey!, nonce!, payload, meta!);
+            const isFile = mode === 'file';
+
+            const decryptedMessage: string | File = isFile
+                ? await decryptFile(grabKey!, nonce!, payload, meta!)
+                : await decryptRaw(grabKey!, nonce!, payload);
 
             contextRef.current.mode = mode;
             contextRef.current.message = decryptedMessage;
@@ -147,7 +146,7 @@ export const useGrab = () => {
                 integrity,
             };
 
-            contextRef.current.connection!.send(verificationMessage);
+            sendMessage(verificationMessage);
 
             pushLog('Verification request sent...');
 
@@ -264,5 +263,12 @@ export const useGrab = () => {
 
     const getSecret = () => contextRef.current.message;
 
-    return { init, status: state as GrabState, getLogs, getMode, getSecret };
+
+    return {
+        init,
+        status: state as GrabState,
+        getLogs,
+        getMode,
+        getSecret,
+    };
 };
