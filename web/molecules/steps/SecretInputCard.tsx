@@ -16,6 +16,8 @@ import { Captcha } from 'atoms/Captcha';
 import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@shared/config/files';
 import { CONFIRM_PAYLOAD_BTN_ID } from 'lib/constants';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import Cookies from 'js-cookie';
+import { DISABLE_CAPTCHA_COOKIE } from 'config/cookies';
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
@@ -37,6 +39,15 @@ export const SecretInputCard = () => {
         if (user) setCanConfirm(true);
         else setCanConfirm(false);
     }, [user]);
+
+    useEffect(() => {
+        const disableCaptcha = Cookies.get(DISABLE_CAPTCHA_COOKIE);
+
+        if (disableCaptcha) {
+            setCanConfirm(true);
+            setIsValid(true);
+        }
+    }, []);
 
     const isValidJson = (input: string) => {
         try {
