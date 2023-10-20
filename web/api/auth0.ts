@@ -1,4 +1,6 @@
+import { getSession } from '@auth0/nextjs-auth0';
 import { ManagementClient } from 'auth0';
+import { NextApiRequest, NextApiResponse } from 'next';
 import { UserMetadata } from 'types/users';
 
 const { host } = new URL(process.env.AUTH0_ISSUER_BASE_URL!);
@@ -36,3 +38,12 @@ export const updateUser = async (id: string, data: UserMetadata) => {
         metadata: updatedUser.user_metadata,
     };
 };
+
+export const getAuthSession = async (
+    req: NextApiRequest,
+    res: NextApiResponse,
+) =>
+    getSession(req, res).catch((err) => {
+        console.error(err);
+        return null;
+    });

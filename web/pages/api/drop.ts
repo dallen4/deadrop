@@ -8,12 +8,12 @@ import { createDrop } from 'api/drops';
 import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
 import { cors } from 'api/middleware/cors';
 import { runMiddleware } from 'api/middleware';
-import { getSession } from '@auth0/nextjs-auth0';
+import { getAuthSession } from 'api/auth0';
 
 export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     await runMiddleware(req, res, cors);
 
-    const session = await getSession(req, res);
+    const session = await getAuthSession(req, res);
 
     if (!['POST', 'GET', 'DELETE'].includes(req.method!)) {
         res.setHeader('Allow', 'POST,GET,DELETE');
