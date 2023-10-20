@@ -11,13 +11,6 @@
         "cli",
         "shared"
     ],
-    "bin": {
-        "deadrop": "./cli/dist/deadrop.js"
-    },
-    "files": [
-        "./cli/dist/*",
-        "./cli/fonts/Standard.flf"
-    ],
     "scripts": {
         "web": "yarn workspace web",
         "cli": "yarn workspace cli",
@@ -26,8 +19,7 @@
         "start:prod": "yarn web start:prod",
         "test:e2e": "yarn web test:e2e",
         "cli:build": "yarn cli build",
-        "prepublishOnly": "replace '\"private\": true' '\"private\": false' ./package.json",
-        "postpublish": "replace '\"private\": false' '\"private\": true' ./package.json"
+        "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release"
     },
     "dependencies": {
         "nanoid": "^5.0.1",

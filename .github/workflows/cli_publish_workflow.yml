@@ -11,35 +11,23 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
       - name: Build CLI
         shell: bash
         env:
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
           DEADDROP_API_URL: ${{ secrets.DEADDROP_API_URL }}
-        run: |
-          echo $DEADDROP_API_URL
-          echo $PEER_SERVER_URL
-          DEADDROP_API_URL=$DEADDROP_API_URL PEER_SERVER_URL=$PEER_SERVER_URL yarn cli:build
-      - name: Cache CLI Bundle
-        id: cache-bundle
-        uses: actions/cache@v1
-        with:
-          path: cli/dist/index.js
-          key: cli-bundle-${{ hashFiles('cli/dist/deadrop.js') }}
-      - name: Publish CLI to NPM
-        if: steps.cache-bundle.outputs.cache-hit != 'true'
-        shell: bash
-        env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
+          cd cli
+          yarn install --frozen-lockfile
+          echo $DEADDROP_API_URL
+          echo $PEER_SERVER_URL
           echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" >> ./.npmrc
-          npm publish
-      - uses: marvinpinto/action-automatic-releases@latest
-        if: steps.cache-bundle.outputs.cache-hit != 'true'
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          draft: true
-          prerelease: false
-          files: cli/dist/deadrop-*
+          DEADDROP_API_URL=$DEADDROP_API_URL PEER_SERVER_URL=$PEER_SERVER_URL yarn release
+      # - uses: marvinpinto/action-automatic-releases@latest
+      #   if: steps.cache-bundle.outputs.cache-hit != 'true'
+      #   with:
+      #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
+      #     draft: true
+      #     prerelease: false
+      #     files: cli/dist/deadrop-*
