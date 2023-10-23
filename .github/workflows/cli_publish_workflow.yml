@@ -22,8 +22,9 @@ jobs:
           yarn install --frozen-lockfile
           echo $DEADDROP_API_URL
           echo $PEER_SERVER_URL
+          DEADDROP_API_URL=$DEADDROP_API_URL PEER_SERVER_URL=$PEER_SERVER_URL yarn build
           echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" >> ./.npmrc
-          DEADDROP_API_URL=$DEADDROP_API_URL PEER_SERVER_URL=$PEER_SERVER_URL yarn release
+          npm publish
       # - uses: marvinpinto/action-automatic-releases@latest
       #   if: steps.cache-bundle.outputs.cache-hit != 'true'
       #   with:
