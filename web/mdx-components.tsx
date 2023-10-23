@@ -9,6 +9,7 @@ import {
     Box,
     Center,
     useMantineTheme,
+    Anchor,
 } from '@mantine/core';
 import type { MDXComponents } from 'mdx/types';
 
@@ -16,6 +17,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     const theme = useMantineTheme();
 
     const customComponents: MDXComponents = {
+        a:  ({ href, children }) => <Anchor href={href} target={'_blank'}>{children}</Anchor>,
         blockquote: ({ children }) => <Blockquote>{children}</Blockquote>,
         code: ({ children }) => (
             <Code style={{ padding: theme.spacing.xs * 0.7 }}>{children}</Code>
@@ -98,7 +100,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             </List>
         ),
         p: ({ children }) => <Text pb={theme.spacing.xs}>{children}</Text>,
-        strong: ({ children }) => <Text fw={700}>{children}</Text>,
+        strong: ({ children }) => <Text component={'span'} fw={700}>{children}</Text>,
         ul: ({ children }) => (
             <List mb={theme.spacing.xs} type={'unordered'}>
                 {children}
