@@ -6,12 +6,12 @@ import Header from './Header';
 const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
         <AppShell
-            padding={'md'}
+            padding={'sm'}
             fixed={false}
             header={<Header />}
             footer={<Footer />}
         >
-            <main>{children}</main>
+            {children}
         </AppShell>
     );
 };

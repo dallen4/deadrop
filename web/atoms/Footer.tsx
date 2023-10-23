@@ -6,8 +6,8 @@ import {
     Text,
 } from '@mantine/core';
 import { useRouter } from 'next/router';
-import { HOME_PATH } from '@config/paths';
 import { IconBrandGithub } from '@tabler/icons';
+import { DROP_PATH, GRAB_PATH } from '@shared/config/paths';
 
 const Footer = () => {
     const router = useRouter();
@@ -24,7 +24,7 @@ const Footer = () => {
                     bottom: 0,
                 },
             })}
-            fixed={router.pathname !== HOME_PATH}
+            fixed={[DROP_PATH, GRAB_PATH].includes(router.pathname)}
         >
             <Anchor
                 href={'https://github.com/dallen4/deadrop'}
