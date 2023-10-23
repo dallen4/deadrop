@@ -1,7 +1,7 @@
 import React from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { post } from '@shared/lib/fetch';
-import { CAPTCHA_API_PATCH } from 'config/paths';
+import { CAPTCHA_API_PATCH } from '@shared/config/paths';
 
 export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
     const onVerify = async (token: string, _ekey: string) => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Title, Text, Container, Button, createStyles, Anchor } from '@mantine/core';
 import { useRouter } from 'next/router';
-import { DROP_PATH } from '@config/paths';
+import { DROP_PATH } from '@shared/config/paths';
 
 // based off of: https://ui.mantine.dev/category/hero
 

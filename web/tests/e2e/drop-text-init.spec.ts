@@ -1,4 +1,4 @@
-import { DROP_PATH } from '@config/paths';
+import { DROP_PATH } from '@shared/config/paths';
 import { expect } from '@playwright/test';
 import { test, createContextForBrowser } from './util';
 import {

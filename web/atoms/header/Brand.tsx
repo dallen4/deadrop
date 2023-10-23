@@ -1,5 +1,5 @@
 import React from 'react';
-import { HOME_PATH } from '@config/paths';
+import { HOME_PATH } from '@shared/config/paths';
 import { Box, Text, clsx, createStyles } from '@mantine/core';
 import Link from 'next/link';
 import Image from 'next/image';
