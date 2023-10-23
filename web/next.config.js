@@ -3,6 +3,7 @@
 
 const { randomBytes } = require('crypto');
 const nextSafe = require('next-safe');
+const withMdx = require('@next/mdx')();
 const withTM = require('next-transpile-modules')(['shared']);
 
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
@@ -32,7 +33,7 @@ const sentryDomain = 'https://*.ingest.sentry.io';
 
 const githubAssetsDomain = 'https://avatars.githubusercontent.com';
 const googleAssetsDomain = 'https://lh3.googleusercontent.com';
-const googleFontsDomain = 'https://fonts.gstatic.com'
+const googleFontsDomain = 'https://fonts.gstatic.com';
 const vercelAssetsDomain = 'https://assets.vercel.com';
 
 const assetsDomains = [
@@ -70,7 +71,7 @@ const headers = [
 /**
  * @type {import('next').NextConfig}
  */
-const configWithTranspiledModules = withTM({
+const baseConfig = {
     swcMinify: true,
     poweredByHeader: false,
     headers() {
@@ -84,7 +85,15 @@ const configWithTranspiledModules = withTM({
     publicRuntimeConfig: {
         nonce,
     },
-});
+    pageExtensions: ['tsx', 'ts', 'md', 'mdx'],
+};
+
+const configWithMdx = withMdx(baseConfig);
+
+/**
+ * @type {import('next').NextConfig}
+ */
+const configWithTranspiledModules = withTM(configWithMdx);
 
 /**
  * @type {import('next').NextConfig}
