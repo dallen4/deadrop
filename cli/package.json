@@ -22,8 +22,8 @@
         "package": "pkg dist/deadrop.js -o dist/deadrop -C Brotli -c pkg.json",
         "postpackage": "rimraf fonts/",
         "compile": "yarn build && yarn package",
-        "prepublishOnly": "replace '\"private\": true' '\"private\": false' ./package.json && cpx \"../README.md\" ./",
-        "postpublish": "replace '\"private\": false' '\"private\": true' ./package.json && rimraf ./README.md",
+        "prepublishOnly": "replace '\"private\": true' '\"private\": false' ./package.json",
+        "postpublish": "replace '\"private\": false' '\"private\": true' ./package.json",
         "release": "yarn build && npm publish"
     },
     "dependencies": {
