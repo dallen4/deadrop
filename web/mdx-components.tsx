@@ -12,17 +12,50 @@ import {
     Anchor,
 } from '@mantine/core';
 import type { MDXComponents } from 'mdx/types';
+import Link from 'next/link';
+import { AnchorHTMLAttributes, DetailedHTMLProps } from 'react';
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
     const theme = useMantineTheme();
 
+    const LargeText = (props: any) => (
+        <Text size={theme.fontSizes.lg} {...props} />
+    );
+
+    const DynamicLink = ({
+        href,
+        children,
+    }: DetailedHTMLProps<
+        AnchorHTMLAttributes<HTMLAnchorElement>,
+        HTMLAnchorElement
+    >) => {
+        const props: any = {};
+
+        if (href!.startsWith('/')) props.component = Link;
+        else props.target = '_blank';
+
+        return (
+            <Anchor href={href!} {...props}>
+                {children}
+            </Anchor>
+        );
+    };
+
     const customComponents: MDXComponents = {
-        a:  ({ href, children }) => <Anchor href={href} target={'_blank'}>{children}</Anchor>,
+        a: ({ href, children }) => (
+            <DynamicLink href={href}>
+                {children}
+            </DynamicLink>
+        ),
         blockquote: ({ children }) => <Blockquote>{children}</Blockquote>,
         code: ({ children }) => (
             <Code style={{ padding: theme.spacing.xs * 0.7 }}>{children}</Code>
         ),
-        em: ({ children }) => <Text component={'span'} fs={'italic'}>{children}</Text>,
+        em: ({ children }) => (
+            <LargeText component={'span'} fs={'italic'}>
+                {children}
+            </LargeText>
+        ),
         h1: ({ children }) => (
             <Title
                 order={1}
@@ -99,8 +132,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
                 {children}
             </List>
         ),
-        p: ({ children }) => <Text pb={theme.spacing.xs}>{children}</Text>,
-        strong: ({ children }) => <Text component={'span'} fw={700}>{children}</Text>,
+        p: ({ children }) => (
+            <LargeText pb={theme.spacing.xs}>{children}</LargeText>
+        ),
+        strong: ({ children }) => (
+            <LargeText component={'span'} fw={700}>
+                {children}
+            </LargeText>
+        ),
         ul: ({ children }) => (
             <List mb={theme.spacing.xs} type={'unordered'}>
                 {children}
