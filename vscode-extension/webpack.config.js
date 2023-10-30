@@ -1,7 +1,7 @@
 'use strict';
-
 const path = require('path');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const DotenvWebpackPlugin = require('dotenv-webpack');
 
 /**@type {import('webpack').Configuration}*/
 const config = {
@@ -19,9 +19,7 @@ const config = {
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js'],
-        plugins: [
-            new TsconfigPathsPlugin({ configFile: './tsconfig.json' }),
-        ],
+        plugins: [new TsconfigPathsPlugin({ configFile: './tsconfig.json' })],
     },
     module: {
         rules: [
@@ -41,6 +39,7 @@ const config = {
             },
         ],
     },
+    plugins: [new DotenvWebpackPlugin()],
 };
 
 module.exports = config;

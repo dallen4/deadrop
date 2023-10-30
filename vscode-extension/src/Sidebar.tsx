@@ -1,39 +1,50 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import './base.css';
-import { DropDetails } from '@shared/types/common';
-import { generateId } from '@shared/lib/util';
+import { useMachine } from '@xstate/react/lib/useMachine';
+import { GrabContext } from '@shared/types/grab';
+import { grabMachine, initGrabContext } from '@shared/lib/machines/grab';
+import { MessageType } from '@shared/lib/constants';
+import { createGrabHandlers } from '@shared/handlers/grab';
+import { initPeer } from './lib/peer';
+import { decryptFile, hashFile } from '@shared/lib/crypto/browser';
 
 export function Sidebar() {
     const [mode, setMode] = useState<string | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [peerId, setPeerId] = useState<string>();
+    const contextRef = useRef<GrabContext>(initGrabContext());
+    const timersRef = useRef(new Map<MessageType, NodeJS.Timeout>());
 
-    const connect = async () => {
-        const id = generateId();
+    const [{ value: state }, send] = useMachine(grabMachine);
 
-        const { initPeer } = await import('./lib/peer');
-
-        const peer = await initPeer(id);
-
-        console.log(peer);
-    };
+    const { init } = useMemo(
+        () =>
+            createGrabHandlers({
+                ctx: contextRef.current,
+                timers: timersRef.current,
+                sendEvent: send,
+                logger: {
+                    info: console.info,
+                    error: console.error,
+                    debug: console.debug,
+                },
+                file: {
+                    decrypt: decryptFile,
+                    hash: hashFile,
+                },
+                initPeer,
+                cleanupSession: () => {},
+                apiUri: process.env.REACT_APP_DEADDROP_API_URL!,
+            }),
+        [],
+    );
 
     const startGrab = async () => {
         const dropId = inputRef.current!.value;
 
-        const res = await fetch(
-            `${process.env.REACT_APP_DEADDROP_API_URL!}?id=${dropId}`,
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            },
-        );
+        contextRef.current.id = dropId;
 
-        const data = await res.json();
-
-        setPeerId(data.peerId);
+        await init();
     };
 
     return (
@@ -42,7 +53,9 @@ export function Sidebar() {
             {mode === 'drop' ? (
                 <>
                     <p>dropping</p>
-                    <button onClick={connect}>connect</button>
+                    <button onClick={() => console.log('CONNECT')}>
+                        connect
+                    </button>
                 </>
             ) : mode === 'grab' ? (
                 <>
