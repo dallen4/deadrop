@@ -1,6 +1,6 @@
-import type { DropMessage } from '@shared/types/messages';
-import { decrypt, encrypt, hash } from '@shared/lib/crypto/operations';
-import { buildFileFromBuffer, readFileAsBuffer } from './files';
+import type { DropMessage } from '../../types/messages';
+import { decrypt, encrypt, hash } from '../../lib/crypto/operations';
+import { buildFileFromBuffer, readFileAsBuffer } from '../../lib/browser';
 
 export const encryptFile = async (key: CryptoKey, iv: string, input: File) => {
     const fileBuffer = await readFileAsBuffer(input);

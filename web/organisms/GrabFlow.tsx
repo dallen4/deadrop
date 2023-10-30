@@ -4,7 +4,7 @@ import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
 import DropLog from 'molecules/DropLog';
 import { GrabState } from '@shared/lib/constants';
 import { DROP_SECRET_VALUE_ID } from 'lib/constants';
-import { downloadFile } from 'lib/files';
+import { downloadFile } from '@shared/lib/browser';
 
 const GrabFlow = () => {
     const { init, status, getLogs, getMode, getSecret } = useGrabContext();

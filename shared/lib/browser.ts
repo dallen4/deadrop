@@ -1,7 +1,6 @@
-import type { FileWithPath } from '@mantine/dropzone';
-import { DropMessage } from '@shared/types/messages';
+import type { DropMessage } from '../types/messages';
 
-export const readFileAsBuffer = async (file: FileWithPath) =>
+export const readFileAsBuffer = async (file: File) =>
     new Promise<ArrayBuffer>((resolve, reject) => {
         const reader = new FileReader();
 
@@ -20,6 +19,7 @@ export const buildFileFromBuffer = (
         type: meta!.type,
     });
 
+// TODO: consider moving back to web if VS Code Extension never needs this
 export const downloadFile = (file: File) => {
     const objectUrl = (window.URL || window.webkitURL).createObjectURL(file);
 
