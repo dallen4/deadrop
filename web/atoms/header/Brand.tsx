@@ -36,19 +36,17 @@ const Brand = () => {
     return (
         <Link href={HOME_PATH}>
             <Box className={classes.linkContainer}>
-                {renderLogo && (
-                    <Image
-                        src={'/icons/android-chrome-192x192.png'}
-                        height={54}
-                        width={54}
-                        className={classes.hoverPointer}
-                    />
-                )}
+                <Image
+                    src={'/icons/apple-touch-icon.png'}
+                    height={60}
+                    width={60}
+                    className={classes.hoverPointer}
+                />
                 <Text
                     className={clsx(
                         classes.headerName,
                         classes.hoverPointer,
-                        renderLogo && classes.logoSpacing,
+                        classes.logoSpacing,
                     )}
                 >
                     deadrop
