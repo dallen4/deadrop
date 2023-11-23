@@ -1,5 +1,6 @@
 import Peer from 'peerjs';
 import { generateId } from './util';
+import { IceServerCredentials } from '../types/peer';
 
 const isServer = typeof window === 'undefined';
 
@@ -18,15 +19,42 @@ export const removeOnUnloadListener = () => {
     }
 };
 
-export function createPeer(url: string) {
+export function createPeer(
+    url: string,
+    { username, credential }: IceServerCredentials,
+) {
     const id = generateId();
     const server = new URL(url);
+
+    const iceConfig = {
+        iceServers: [
+            {
+                urls: 'stun:stun.relay.metered.ca:80',
+            },
+            {
+                urls: 'turn:a.relay.metered.ca:80',
+                username,
+                credential,
+            },
+            {
+                urls: 'turn:a.relay.metered.ca:443',
+                username,
+                credential,
+            },
+            {
+                urls: 'turn:a.relay.metered.ca:443?transport=tcp',
+                username,
+                credential,
+            },
+        ],
+    };
 
     const peer = new Peer(id, {
         host: server.host,
         path: server.pathname,
         secure: true,
         port: 443,
+        config: iceConfig,
     });
 
     peer.on('call', (call) => {
