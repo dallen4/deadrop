@@ -33,11 +33,11 @@ const Footer = () => {
                 <IconBrandGithub color={theme.colors.gray[5]} />
             </Anchor>
             <Text size={'xs'}>
-                Copyright &copy;{' '}
+                &copy; {new Date().getFullYear()} deadrop by{' '}
                 <Anchor href={'https://nieky.info/'} target={'_blank'}>
-                    Nieky Allen
-                </Anchor>{' '}
-                {new Date().getFullYear()}.
+                    Nieky
+                </Anchor>
+                .
             </Text>
         </BaseFooter>
     );
