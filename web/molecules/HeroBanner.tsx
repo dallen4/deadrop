@@ -1,5 +1,12 @@
 import React from 'react';
-import { Title, Text, Container, Button, createStyles, Anchor } from '@mantine/core';
+import {
+    Title,
+    Text,
+    Container,
+    Button,
+    createStyles,
+    Anchor,
+} from '@mantine/core';
 import { useRouter } from 'next/router';
 import { DROP_PATH } from '@shared/config/paths';
 
@@ -12,7 +19,7 @@ const useStyles = createStyles((theme) => ({
         paddingBottom: 105,
 
         '@media (max-width: 520px)': {
-            paddingTop: 80,
+            paddingTop: 65,
             paddingBottom: 50,
         },
     },
@@ -20,6 +27,23 @@ const useStyles = createStyles((theme) => ({
     inner: {
         position: 'relative',
         zIndex: 1,
+    },
+
+    brandName: {
+        display: 'none',
+        paddingLeft: theme.spacing.md,
+        paddingRight: theme.spacing.md,
+        paddingBottom: theme.spacing.xs,
+        color: theme.white,
+        fontSize: (theme.headings.sizes.h1.fontSize! as number) * 1.4,
+
+        '@media (max-width: 504px)': {
+            display: 'block',
+        },
+    },
+
+    brandNameDrop: {
+        color: theme.colors.blue['4'],
     },
 
     title: {
@@ -88,6 +112,9 @@ export function HeroBanner() {
     return (
         <div className={classes.wrapper}>
             <div className={classes.inner}>
+                <Title className={classes.brandName}>
+                    dea<span className={classes.brandNameDrop}>drop</span>
+                </Title>
                 <Title className={classes.title}>
                     Quickly and securely share{' '}
                     <Text
