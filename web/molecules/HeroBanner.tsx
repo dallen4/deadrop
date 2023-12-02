@@ -111,7 +111,8 @@ export function HeroBanner() {
                     dea<span className={classes.brandNameDrop}>drop</span>
                 </Title>
                 <Title className={classes.title}>
-                    Quickly and securely share{' '}
+                    Quickly and securely share
+                    <br />
                     <TypeAnimation
                         sequence={[
                             'passwords',
@@ -132,8 +133,8 @@ export function HeroBanner() {
 
                 <Container size={640} p={0}>
                     <Text size={'lg'} className={classes.description}>
-                        Avoid messy and unsafe methods of sharing configuration
-                        files, keys, and credentials.
+                        Avoid messy and unsafe methods of sharing sensitive
+                        information.
                     </Text>
                 </Container>
 
