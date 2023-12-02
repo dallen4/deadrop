@@ -9,6 +9,7 @@ import {
 } from '@mantine/core';
 import { useRouter } from 'next/router';
 import { DROP_PATH } from '@shared/config/paths';
+import { TypeAnimation } from 'react-type-animation';
 
 // based off of: https://ui.mantine.dev/category/hero
 
@@ -111,13 +112,22 @@ export function HeroBanner() {
                 </Title>
                 <Title className={classes.title}>
                     Quickly and securely share{' '}
-                    <Text
-                        component="span"
-                        inherit
+                    <TypeAnimation
+                        sequence={[
+                            'passwords',
+                            2500,
+                            'API keys',
+                            2500,
+                            '.env files',
+                            2500,
+                            'secrets',
+                            2500,
+                        ]}
+                        wrapper={'span'}
                         className={classes.highlight}
-                    >
-                        secrets
-                    </Text>
+                        speed={15}
+                        repeat={Infinity}
+                    />
                 </Title>
 
                 <Container size={640} p={0}>
