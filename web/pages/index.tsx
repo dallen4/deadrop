@@ -15,6 +15,7 @@ import { Features, Faq } from 'molecules/sections';
 import { useRouter } from 'next/router';
 import { GRAB_PATH, OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import { useMediaQuery } from '@mantine/hooks';
+import { Tools } from 'molecules/sections/Tools';
 
 const useStyles = createStyles((theme) => ({
     control: {
@@ -107,6 +108,7 @@ const Home = () => {
                 </Card>
             </Center>
             <Faq />
+            <Tools/>
             <Center>
                 <Button
                     className={classes.control}
