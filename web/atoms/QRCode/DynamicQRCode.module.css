@@ -1,0 +1,27 @@
+.container {
+    background-color: white;
+    height: 200px;
+    width: 200px;
+    border-radius: 4px;
+}
+
+.fade {
+    opacity: 0;
+    animation: fade-in 0.5s ease-in forwards, fade-out 0.5s 10s ease-out forwards;
+}
+
+@keyframes fade-in {
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
