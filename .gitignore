@@ -8,6 +8,9 @@ node_modules
 # testing
 /coverage
 
+# NPM
+.npmrc
+
 # next.js
 .next/
 out/

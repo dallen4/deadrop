@@ -11,7 +11,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             header={<Header />}
             footer={<Footer />}
         >
-            <main>{children}</main>
+            {children}
         </AppShell>
     );
 };

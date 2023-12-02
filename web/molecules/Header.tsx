@@ -5,28 +5,44 @@ import {
     Box,
     Button,
     Flex,
+    Group,
     Loader,
     Popover,
-    useMantineTheme,
+    createStyles,
 } from '@mantine/core';
 import Brand from 'atoms/header/Brand';
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { useRouter } from 'next/router';
+import {
+    LOGIN_PATH,
+    LOGOUT_PATH,
+    OVERVIEW_DOCS_PATH,
+} from '@shared/config/paths';
+import { useMediaQuery } from '@mantine/hooks';
+
+const useStyles = createStyles((theme) => ({
+    navButton: {
+        fontWeight: 'bold',
+    },
+}));
 
 const Header = () => {
     const router = useRouter();
-    const theme = useMantineTheme();
-    const { user, error, isLoading } = useUser();
+    const { user, isLoading } = useUser();
+    const { classes, theme } = useStyles();
+    const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
 
-    const onLogin = () => router.push('/api/auth/login');
+    const onLogin = () => router.push(LOGIN_PATH);
+
+    const onDocsClick = () => router.push(OVERVIEW_DOCS_PATH);
 
     return (
         <BaseHeader
-            height={90}
+            height={102}
             withBorder={false}
             styles={(theme) => ({
                 root: {
-                    padding: theme.spacing.lg,
+                    padding: isMobile ? theme.spacing.md : theme.spacing.xl,
                 },
             })}
         >
@@ -35,19 +51,19 @@ const Header = () => {
                     style={{
                         flex: 1,
                         justifyContent: 'flex-start',
-                        padding: theme.spacing.md,
+                        alignItems: 'center',
                     }}
                 >
                     <Brand />
                 </Box>
-                <Box
-                    style={{
-                        flex: 1,
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        padding: theme.spacing.md,
-                    }}
-                >
+                <Group ml={50}>
+                    <Button
+                        variant={'subtle'}
+                        className={classes.navButton}
+                        onClick={onDocsClick}
+                    >
+                        Docs
+                    </Button>
                     {user ? (
                         <Popover position={'bottom-end'}>
                             <Popover.Target>
@@ -63,7 +79,7 @@ const Header = () => {
                                 </Avatar>
                             </Popover.Target>
                             <Popover.Dropdown>
-                                <a href={'/api/auth/logout'}>Logout</a>
+                                <a href={LOGOUT_PATH}>Logout</a>
                             </Popover.Dropdown>
                         </Popover>
                     ) : (
@@ -80,7 +96,7 @@ const Header = () => {
                             )}
                         </Button>
                     )}
-                </Box>
+                </Group>
             </Flex>
         </BaseHeader>
     );

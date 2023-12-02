@@ -1,4 +1,4 @@
-import { DROP_PATH } from '@config/paths';
+import { DROP_PATH } from '@shared/config/paths';
 import { expect } from '@playwright/test';
 import { createContextForBrowser, createPageForBrowser, test } from './util';
 import {
@@ -31,7 +31,7 @@ test('should drop a text secret from one page session to another', async ({
         await dropperPage.locator(`#${BEGIN_DROP_BTN_ID}`).click();
 
         await expect(
-            dropperPage.getByRole('heading', { name: 'waiting for secrets' }),
+            dropperPage.getByRole('heading', { name: 'add your secret' }),
         ).toBeVisible({
             timeout: 10_000,
         });

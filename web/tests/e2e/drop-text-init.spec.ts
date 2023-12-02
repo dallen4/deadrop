@@ -1,4 +1,4 @@
-import { DROP_PATH } from '@config/paths';
+import { DROP_PATH } from '@shared/config/paths';
 import { expect } from '@playwright/test';
 import { test, createContextForBrowser } from './util';
 import {
@@ -18,7 +18,7 @@ test('should start the drop session successfully', async ({ browser }) => {
     await page.locator(`#${BEGIN_DROP_BTN_ID}`).click();
 
     await expect(
-        page.getByRole('heading', { name: 'waiting for secrets' }),
+        page.getByRole('heading', { name: 'add your secret' }),
     ).toBeVisible({
         timeout: 10_000,
     });

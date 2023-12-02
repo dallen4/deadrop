@@ -12,7 +12,7 @@ import {
     MessageType,
 } from '@shared/lib/constants';
 import { useRef } from 'react';
-import { get } from 'lib/fetch';
+import { get } from '@shared/lib/fetch';
 import { useRouter } from 'next/router';
 import type { DropDetails } from '@shared/types/common';
 import type {
@@ -22,8 +22,7 @@ import type {
     HandshakeMessage,
     VerifyMessage,
 } from '@shared/types/messages';
-import { DROP_API_PATH } from 'config/paths';
-import { generateId } from '@shared/lib/util';
+import { DROP_API_PATH } from '@shared/config/paths';
 import {
     decryptRaw,
     deriveKey,
@@ -33,7 +32,7 @@ import {
     importKey,
 } from '@shared/lib/crypto/operations';
 import { decryptFile, hashFile } from 'lib/crypto';
-import { withMessageLock } from 'lib/messages';
+import { withMessageLock } from '@shared/lib/messages';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
 
@@ -114,14 +113,13 @@ export const useGrab = () => {
 
             pushLog('Drop payload received...');
 
-            logsRef.current.push('Decrypting payload...');
-
             const { grabKey, nonce } = contextRef.current;
 
-            const decryptedMessage: string | File =
-                mode === 'raw'
-                    ? await decryptRaw(grabKey!, nonce!, payload)
-                    : await decryptFile(grabKey!, nonce!, payload, meta!);
+            const isFile = mode === 'file';
+
+            const decryptedMessage: string | File = isFile
+                ? await decryptFile(grabKey!, nonce!, payload, meta!)
+                : await decryptRaw(grabKey!, nonce!, payload);
 
             contextRef.current.mode = mode;
             contextRef.current.message = decryptedMessage;
@@ -148,7 +146,7 @@ export const useGrab = () => {
                 integrity,
             };
 
-            contextRef.current.connection!.send(verificationMessage);
+            sendMessage(verificationMessage);
 
             pushLog('Verification request sent...');
 
@@ -173,8 +171,7 @@ export const useGrab = () => {
 
         pushLog('Key pair generated...');
 
-        const peerId = generateId();
-        const peer = await initPeer(peerId);
+        const peer = await initPeer();
 
         pushLog('Peer instance created successfully...');
 
@@ -266,5 +263,12 @@ export const useGrab = () => {
 
     const getSecret = () => contextRef.current.message;
 
-    return { init, status: state as GrabState, getLogs, getMode, getSecret };
+
+    return {
+        init,
+        status: state as GrabState,
+        getLogs,
+        getMode,
+        getSecret,
+    };
 };

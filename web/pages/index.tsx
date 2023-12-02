@@ -9,17 +9,38 @@ import {
     useMantineTheme,
     Button,
     Group,
+    createStyles,
 } from '@mantine/core';
 import { Features, Faq } from 'molecules/sections';
 import { useRouter } from 'next/router';
-import { GRAB_PATH } from '@config/paths';
+import { GRAB_PATH, OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import { useMediaQuery } from '@mantine/hooks';
+import { Tools } from 'molecules/sections/Tools';
+
+const useStyles = createStyles((theme) => ({
+    control: {
+        height: 42,
+        fontSize: theme.fontSizes.md,
+
+        '&:not(:first-child)': {
+            marginLeft: theme.spacing.md,
+        },
+
+        '@media (max-width: 520px)': {
+            '&:not(:first-child)': {
+                marginTop: theme.spacing.md,
+                marginLeft: 0,
+            },
+        },
+    },
+}));
 
 const Home = () => {
     const router = useRouter();
     const theme = useMantineTheme();
     const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
     const inputRef = useRef<HTMLInputElement>();
+    const { classes } = useStyles();
 
     const submitGrab = () => {
         const inputVal = inputRef.current!.value;
@@ -74,7 +95,7 @@ const Home = () => {
                             }}
                             size={'md'}
                             variant={'filled'}
-                            placeholder={'abcdef12345'}
+                            placeholder={'sUp3Rs3c3R+'}
                         />
                         <Button
                             size={'md'}
@@ -87,6 +108,16 @@ const Home = () => {
                 </Card>
             </Center>
             <Faq />
+            <Tools/>
+            <Center>
+                <Button
+                    className={classes.control}
+                    size={'lg'}
+                    onClick={() => router.push(OVERVIEW_DOCS_PATH)}
+                >
+                    Check out the Docs
+                </Button>
+            </Center>
             {/* <Premium /> */}
         </>
     );

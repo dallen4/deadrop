@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { cors } from 'api/middleware/cors';
 import { runMiddleware } from 'api/middleware';
-import { getUserById } from 'api/auth0';
-import { getSession } from '@auth0/nextjs-auth0';
+import { getAuthSession, getUserById } from 'api/auth0';
 
 export default async function me(req: NextApiRequest, res: NextApiResponse) {
     await runMiddleware(req, res, cors);
@@ -13,7 +12,7 @@ export default async function me(req: NextApiRequest, res: NextApiResponse) {
         return;
     }
 
-    const session = await getSession(req, res);
+    const session = await getAuthSession(req, res);
 
     if (session) {
         const user = await getUserById(session!.user.sub);

@@ -5,20 +5,19 @@ import { description, version } from './package.json';
 import { drop } from 'actions/drop';
 import { PayloadInputMode } from '@shared/types/common';
 import { grab } from 'actions/grab';
+import { checkNodeVersion } from 'lib/util';
+
+checkNodeVersion();
 
 const program = new Command();
 
-program.name('deadrop-cli').description(description).version(version);
+program.name('deadrop').description(description).version(version);
 
 program
     .command('drop')
     .argument('[input]', 'secret to drop')
     .option('-i, --input [input]', 'secret to drop')
-    .option(
-        '-t, --type [dropType]',
-        'type of secret being dropped',
-        'text' as PayloadInputMode,
-    )
+    .option('-f, --file', 'secre to drop is a file')
     .action(drop);
 
 program.command('grab').argument('<id>', 'drop session ID').action(grab);

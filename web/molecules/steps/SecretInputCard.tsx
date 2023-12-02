@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Text,
     PasswordInput,
@@ -6,7 +6,8 @@ import {
     FileButton,
     JsonInput,
     SegmentedControl,
-    Group,
+    useMantineTheme,
+    Box,
 } from '@mantine/core';
 import StepCard from './StepCard';
 import { useDropContext } from 'contexts/DropContext';
@@ -14,6 +15,9 @@ import type { PayloadInputMode } from '@shared/types/common';
 import { Captcha } from 'atoms/Captcha';
 import { ACCEPTED_FILE_TYPES, MAX_PAYLOAD_SIZE } from '@shared/config/files';
 import { CONFIRM_PAYLOAD_BTN_ID } from 'lib/constants';
+import { useUser } from '@auth0/nextjs-auth0/client';
+import Cookies from 'js-cookie';
+import { DISABLE_CAPTCHA_COOKIE } from 'config/cookies';
 
 export const SecretInputCard = () => {
     const [mode, setMode] = useState<PayloadInputMode>('text');
@@ -22,11 +26,28 @@ export const SecretInputCard = () => {
     const [canConfirm, setCanConfirm] = useState(
         process.env.NODE_ENV === 'development',
     );
+    const { user } = useUser();
 
     const textRef = useRef<HTMLInputElement>(null);
     const jsonRef = useRef<HTMLTextAreaElement>(null);
 
+    const theme = useMantineTheme();
+
     const { setPayload } = useDropContext();
+
+    useEffect(() => {
+        if (user) setCanConfirm(true);
+        else setCanConfirm(false);
+    }, [user]);
+
+    useEffect(() => {
+        const disableCaptcha = Cookies.get(DISABLE_CAPTCHA_COOKIE);
+
+        if (disableCaptcha) {
+            setCanConfirm(true);
+            setIsValid(true);
+        }
+    }, []);
 
     const isValidJson = (input: string) => {
         try {
@@ -42,27 +63,33 @@ export const SecretInputCard = () => {
         inputMode: PayloadInputMode,
         value: string | File | null,
     ) => {
-        if (inputMode === 'file') setIsValid(!!value);
-        else if (inputMode === 'json') setIsValid(isValidJson(value as string));
+        if (inputMode === 'file') {
+            const file = value as File | null;
+
+            if (!file || file.size > MAX_PAYLOAD_SIZE) {
+                setIsValid(false);
+                setFile(null);
+
+                alert('This file is too big');
+                return;
+            }
+
+            setIsValid(true);
+            setFile(value as File);
+        } else if (inputMode === 'json')
+            setIsValid(isValidJson(value as string));
         else setIsValid((value as string).length > 0);
     };
 
     const confirmPayload = async () => {
         if (mode === 'text') setPayload(textRef.current!.value);
         else if (mode === 'json') setPayload(jsonRef.current!.value);
-        else if (mode === 'file') {
-            if (file!.size > MAX_PAYLOAD_SIZE) {
-                setFile(null);
-                alert('This file is too big');
-                return;
-            }
-
-            setPayload(file!);
-        } else console.warn('Cannot confirm payload');
+        else if (mode === 'file') setPayload(file!);
+        else console.warn('Cannot confirm payload');
     };
 
     return (
-        <StepCard title={'waiting for secrets'}>
+        <StepCard title={'add your secret'}>
             <SegmentedControl
                 value={mode}
                 onChange={(newMode) => setMode(newMode as PayloadInputMode)}
@@ -80,6 +107,10 @@ export const SecretInputCard = () => {
                         value: 'file',
                     },
                 ]}
+                style={{
+                    marginTop: theme.spacing.sm,
+                    marginBottom: theme.spacing.sm,
+                }}
             />
             {mode === 'text' ? (
                 <PasswordInput
@@ -102,30 +133,61 @@ export const SecretInputCard = () => {
                     minRows={4}
                 />
             ) : mode === 'file' ? (
-                <Group position={'center'}>
-                    <FileButton
-                        onChange={(file) => validateOnChange('file', file)}
-                        accept={ACCEPTED_FILE_TYPES.join(',')}
+                <Box
+                    display={'flex'}
+                    style={{
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
+                        alignItems: 'flex-start',
+                    }}
+                >
+                    <Box
+                        display={'flex'}
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-end',
+                        }}
                     >
-                        {(props) => (
-                            <Button {...props}>Upload Secrets File</Button>
+                        <FileButton
+                            onChange={(file) => validateOnChange('file', file)}
+                            accept={ACCEPTED_FILE_TYPES.join(',')}
+                        >
+                            {(props) => (
+                                <Button disabled={!!file} {...props}>
+                                    Upload Secrets File
+                                </Button>
+                            )}
+                        </FileButton>
+                        {file && (
+                            <Text
+                                weight={'bold'}
+                                style={{ marginLeft: theme.spacing.sm }}
+                            >
+                                {file.name}
+                            </Text>
                         )}
-                    </FileButton>
+                    </Box>
                     <Text size={'sm'}>
                         Allows extensions: {ACCEPTED_FILE_TYPES.join(', ')}
                     </Text>
-                </Group>
+                </Box>
             ) : (
                 <Text>Invalid Payload Mode</Text>
             )}
-            <Captcha
-                onSuccess={() => setCanConfirm(true)}
-                onExpire={() => setCanConfirm(false)}
-            />
+            {typeof user === 'undefined' && (
+                <Box style={{ marginTop: theme.spacing.lg }}>
+                    <Captcha
+                        onSuccess={() => setCanConfirm(true)}
+                        onExpire={() => setCanConfirm(false)}
+                    />
+                </Box>
+            )}
             <Button
                 id={CONFIRM_PAYLOAD_BTN_ID}
                 onClick={confirmPayload}
                 disabled={!canConfirm || !isValid}
+                style={{ marginTop: theme.spacing.md }}
             >
                 Confirm Payload
             </Button>
