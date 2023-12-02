@@ -8,6 +8,11 @@ const useStyles = createStyles((theme) => ({
         paddingTop: theme.spacing.xl * 2,
         paddingBottom: theme.spacing.xl * 2,
         minHeight: 580,
+
+        '@media (max-width: 520px)': {
+            paddingLeft: 0,
+            paddingRight: 0,
+        },
     },
 
     title: {

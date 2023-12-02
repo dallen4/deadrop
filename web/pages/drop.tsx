@@ -4,7 +4,7 @@ import { Container } from '@mantine/core';
 
 const Drop = () => {
     return (
-        <Container style={{ maxWidth: '700px' }}>
+        <Container style={{ maxWidth: '700px' }} p={0}>
             <DropFlow />
         </Container>
     );

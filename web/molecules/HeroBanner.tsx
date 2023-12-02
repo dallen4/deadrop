@@ -31,8 +31,6 @@ const useStyles = createStyles((theme) => ({
 
     brandName: {
         display: 'none',
-        paddingLeft: theme.spacing.md,
-        paddingRight: theme.spacing.md,
         paddingBottom: theme.spacing.xs,
         color: theme.white,
         fontSize: (theme.headings.sizes.h1.fontSize! as number) * 1.4,
@@ -50,8 +48,6 @@ const useStyles = createStyles((theme) => ({
         fontWeight: 800,
         fontSize: 40,
         letterSpacing: -1,
-        paddingLeft: theme.spacing.md,
-        paddingRight: theme.spacing.md,
         color: theme.white,
         marginBottom: theme.spacing.xs,
         textAlign: 'center',
@@ -80,8 +76,6 @@ const useStyles = createStyles((theme) => ({
         marginTop: theme.spacing.xl * 1.5,
         display: 'flex',
         justifyContent: 'center',
-        paddingLeft: theme.spacing.md,
-        paddingRight: theme.spacing.md,
 
         '@media (max-width: 520px)': {
             flexDirection: 'column',
@@ -126,7 +120,7 @@ export function HeroBanner() {
                     </Text>
                 </Title>
 
-                <Container size={640}>
+                <Container size={640} p={0}>
                     <Text size={'lg'} className={classes.description}>
                         Avoid messy and unsafe methods of sharing configuration
                         files, keys, and credentials.

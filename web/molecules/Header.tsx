@@ -18,6 +18,7 @@ import {
     LOGOUT_PATH,
     OVERVIEW_DOCS_PATH,
 } from '@shared/config/paths';
+import { useMediaQuery } from '@mantine/hooks';
 
 const useStyles = createStyles((theme) => ({
     navButton: {
@@ -28,7 +29,8 @@ const useStyles = createStyles((theme) => ({
 const Header = () => {
     const router = useRouter();
     const { user, isLoading } = useUser();
-    const { classes } = useStyles();
+    const { classes, theme } = useStyles();
+    const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
 
     const onLogin = () => router.push(LOGIN_PATH);
 
@@ -40,7 +42,7 @@ const Header = () => {
             withBorder={false}
             styles={(theme) => ({
                 root: {
-                    padding: theme.spacing.xl,
+                    padding: isMobile ? theme.spacing.md : theme.spacing.xl,
                 },
             })}
         >
