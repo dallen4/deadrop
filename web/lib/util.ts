@@ -1,6 +1,6 @@
 import randomColor from 'randomcolor';
-import { GRAB_PATH } from '@shared/config/paths';
 import { UAParser } from 'ua-parser-js';
+import { generateGrabUrl as baseGenerateGrabUrl } from '@shared/lib/util';
 
 // ref: https://github.com/davidmerfield/randomColor#options
 const hues = [
@@ -27,13 +27,9 @@ export const generateColorSet = (amount = 2) => {
 };
 
 export const generateGrabUrl = (id: string) => {
-    const params = new URLSearchParams({ drop: id });
-    const baseUrl = new URL(
-        GRAB_PATH,
-        window.location.protocol + window.location.host,
-    );
+    const url = window.location.protocol + window.location.host;
 
-    return `${baseUrl.toString()}?${params.toString()}`;
+    return baseGenerateGrabUrl(url, id);
 };
 
 export const formatDropKey = (id: string) => `drop:${id}`;

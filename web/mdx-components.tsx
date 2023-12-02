@@ -49,7 +49,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         ),
         blockquote: ({ children }) => <Blockquote>{children}</Blockquote>,
         code: ({ children }) => (
-            <Code style={{ padding: theme.spacing.xs * 0.7 }}>{children}</Code>
+            <Code block style={{ padding: theme.spacing.sm }}>{children}</Code>
         ),
         em: ({ children }) => (
             <LargeText component={'span'} fs={'italic'}>

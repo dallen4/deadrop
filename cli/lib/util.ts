@@ -1,13 +1,9 @@
-import { GRAB_PATH } from '@shared/config/paths';
 import { satisfies as isValidVersion } from 'semver';
 import { engines } from '../../package.json';
+import { generateGrabUrl as baseGenerateGrabUrl } from '@shared/lib/util';
 
-export const generateGrabUrl = (id: string) => {
-    const params = new URLSearchParams({ drop: id });
-    const baseUrl = new URL(GRAB_PATH, process.env.DEADDROP_API_URL!);
-
-    return `${baseUrl.toString()}?${params.toString()}`;
-};
+export const generateGrabUrl = (id: string) =>
+    baseGenerateGrabUrl(process.env.DEADDROP_API_URL!, id);
 
 export const checkNodeVersion = () => {
     const neededVersion = engines.node;

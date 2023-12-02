@@ -1,13 +1,18 @@
 import React from 'react';
-import { Container, Title, Accordion, createStyles } from '@mantine/core';
+import { Container, Accordion, createStyles } from '@mantine/core';
+import { SectionTitle } from './SectionTitle';
 
 // based off of: https://ui.mantine.dev/category/faq
 
 const useStyles = createStyles((theme) => ({
     wrapper: {
         paddingTop: theme.spacing.xl * 2,
-        paddingBottom: theme.spacing.xl * 2,
         minHeight: 580,
+
+        '@media (max-width: 520px)': {
+            paddingLeft: 0,
+            paddingRight: 0,
+        },
     },
 
     title: {
@@ -63,11 +68,10 @@ const questions = [
 
 export function Faq() {
     const { classes } = useStyles();
+
     return (
         <Container size={'sm'} className={classes.wrapper}>
-            <Title id={'faq-section'} align={'center'} className={classes.title}>
-                FAQs
-            </Title>
+            <SectionTitle label={'FAQs'} id={'faq-section'} />
 
             <Accordion variant={'separated'} defaultValue={questions[0].id}>
                 {questions.map(({ id, question, answer }, index) => (
