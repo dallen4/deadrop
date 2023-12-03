@@ -10,6 +10,7 @@ import chalk from 'chalk';
 import { cleanupSession } from 'lib/session';
 import QRCode from 'qrcode';
 import { createDropHandlers } from '@shared/handlers/drop';
+import { initPeer } from 'lib/peer';
 
 type DropOptions = {
     input?: string;
@@ -45,7 +46,7 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
         },
         cleanupSession,
         apiUri: process.env.DEADDROP_API_URL!,
-        peerServerUri: process.env.PEER_SERVER_URL!,
+        initPeer,
     });
 
     ctx.message = input || options.input || null;

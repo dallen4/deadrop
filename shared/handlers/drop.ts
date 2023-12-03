@@ -28,7 +28,6 @@ import { DataConnection } from 'peerjs';
 import { withMessageLock } from '../lib/messages';
 import { deleteReq, post } from '../lib/fetch';
 import { DROP_API_PATH } from '../config/paths';
-import { createPeer } from '../lib/peer';
 
 export const createDropHandlers = ({
     ctx,
@@ -38,7 +37,7 @@ export const createDropHandlers = ({
     file,
     cleanupSession,
     apiUri,
-    peerServerUri,
+    initPeer,
 }: DropHandlerInputs) => {
     const dropApiUrl = apiUri + DROP_API_PATH;
 
@@ -250,7 +249,7 @@ export const createDropHandlers = ({
     const init = async () => {
         ctx.keyPair = await generateKeyPair();
 
-        ctx.peer = await createPeer(peerServerUri);
+        ctx.peer = await initPeer();
 
         ctx.peer.on('connection', onConnection);
 

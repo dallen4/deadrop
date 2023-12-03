@@ -73,5 +73,5 @@ export type DropHandlerInputs = {
     };
     cleanupSession: (ctx: DropContext) => void;
     apiUri: string;
-    peerServerUri: string;
+    initPeer: () => Promise<Peer>;
 };
