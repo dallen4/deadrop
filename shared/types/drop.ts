@@ -1,4 +1,9 @@
-import type { BaseContext, EncryptFile, HashFile } from './common';
+import type {
+    BaseContext,
+    BaseHandlerInputs,
+    EncryptFile,
+    HashFile,
+} from './common';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
@@ -58,20 +63,12 @@ export interface CompleteEvent extends DropEvent {
     type: DropEventType.Confirm;
 }
 
-export type DropHandlerInputs = {
-    ctx: DropContext;
-    timers: Map<MessageType, NodeJS.Timeout>;
-    sendEvent: (event: AnyDropEvent) => unknown;
-    logger: {
-        info: (message: string) => void;
-        error: (message: string) => void;
-        debug: (message: string) => void;
-    };
+export type DropHandlerInputs<FileType = string> = BaseHandlerInputs<
+    DropContext,
+    AnyDropEvent
+> & {
     file: {
-        encrypt: EncryptFile;
-        hash: HashFile;
+        encrypt: EncryptFile<FileType>;
+        hash: HashFile<FileType>;
     };
-    cleanupSession: (ctx: DropContext) => void;
-    apiUri: string;
-    initPeer: () => Promise<Peer>;
 };

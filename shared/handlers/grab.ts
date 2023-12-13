@@ -26,9 +26,9 @@ import {
 } from '../lib/crypto/operations';
 import { get } from '../lib/fetch';
 import { DropDetails } from '../types/common';
-import { withMessageLock } from 'lib/messages';
+import { withMessageLock } from '../lib/messages';
 
-export const createGrabHandlers = ({
+export const createGrabHandlers = <FileType extends string | File = string>({
     ctx,
     timers,
     sendEvent,
@@ -36,8 +36,9 @@ export const createGrabHandlers = ({
     file,
     initPeer,
     cleanupSession,
-    apiUri,
-}: GrabHandlerInputs) => {
+    apiUri = '',
+    onRetryExceeded,
+}: GrabHandlerInputs<FileType>) => {
     const dropApiUrl = apiUri + DROP_API_PATH;
 
     const clearTimer = (msgType: MessageType) => {
@@ -58,6 +59,7 @@ export const createGrabHandlers = ({
 
         if (retryCount >= 3) {
             logger.error(`Attempt limit exceeded for type: ${msg.type}`);
+            onRetryExceeded && onRetryExceeded(msg.type);
             return;
         }
 
@@ -116,7 +118,7 @@ export const createGrabHandlers = ({
 
             const { grabKey, nonce } = ctx;
 
-            const decryptedMessage: string | File =
+            const decryptedMessage: string | FileType =
                 mode === 'raw'
                     ? await decryptRaw(grabKey!, nonce!, payload)
                     : await file.decrypt(grabKey!, nonce!, payload, meta!);
@@ -137,7 +139,7 @@ export const createGrabHandlers = ({
             const integrity =
                 mode === 'raw'
                     ? await hashRaw(decryptedMessage as string)
-                    : await file.hash(decryptedMessage as string);
+                    : await file.hash(decryptedMessage as FileType);
 
             logger.info('Integrity hash computed, verifying...');
 
@@ -199,9 +201,8 @@ export const createGrabHandlers = ({
                 logger.error(
                     `Drop instance ${ctx.id} not found, closing connection...`,
                 );
-                cleanupSession(ctx);
 
-                process.exit(1);
+                throw new Error('Invalid drop ID provided');
             }
 
             logger.info(`Drop ${ctx.id} found!`);
@@ -211,16 +212,14 @@ export const createGrabHandlers = ({
         } catch (err) {
             console.error(err);
 
-            cleanupSession(ctx);
-
-            process.exit(1);
+            return cleanupSession(ctx);
         }
 
         const event: InitGrabEvent = {
             type: GrabEventType.Init,
             id: ctx.id!,
             dropperId: ctx.dropperId,
-            peer: ctx.peer,
+            peer: ctx.peer!,
             keyPair: ctx.keyPair,
             nonce: ctx.nonce,
         };

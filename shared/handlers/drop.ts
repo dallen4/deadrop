@@ -16,6 +16,7 @@ import {
     CompleteEvent,
     DropHandlerInputs,
     HandshakeCompleteEvent,
+    InitDropEvent,
 } from '../types/drop';
 import {
     BaseMessage,
@@ -29,16 +30,17 @@ import { withMessageLock } from '../lib/messages';
 import { deleteReq, post } from '../lib/fetch';
 import { DROP_API_PATH } from '../config/paths';
 
-export const createDropHandlers = ({
+export const createDropHandlers = <FileType extends string | File = string>({
     ctx,
     timers,
     sendEvent,
     logger,
     file,
+    onRetryExceeded,
     cleanupSession,
     apiUri,
     initPeer,
-}: DropHandlerInputs) => {
+}: DropHandlerInputs<FileType>) => {
     const dropApiUrl = apiUri + DROP_API_PATH;
 
     const clearTimer = (msgType: MessageType) => {
@@ -76,13 +78,19 @@ export const createDropHandlers = ({
 
         if (retryCount >= 3) {
             logger.error(`Attempt limit exceeded for type: ${msg.type}`);
+            onRetryExceeded && onRetryExceeded(msg.type);
             return;
         }
 
         ctx.connection.send(msg);
 
-        const timer = setTimeout(() => sendMessage(msg, retryCount + 1), 1000);
-        timers.set(expectedType, timer);
+        if (msg.type !== MessageType.ConfirmVerification) {
+            const timer = setTimeout(
+                () => sendMessage(msg, retryCount + 1),
+                1000,
+            );
+            timers.set(expectedType, timer);
+        }
     };
 
     const startHandshake = async () => {
@@ -102,14 +110,17 @@ export const createDropHandlers = ({
         logger.info('Public key sent...');
     };
 
-    const stagePayload = async (content: string, mode: PayloadMode) => {
+    const stagePayload = async (
+        content: FileType | string,
+        mode: PayloadMode,
+    ) => {
         logger.info('Staging & hashing payload for integrity checks...');
 
         const isRaw = mode === 'raw';
 
         const integrity = isRaw
-            ? await hashRaw(content)
-            : await file.hash(content);
+            ? await hashRaw(content as string)
+            : await file.hash(content as FileType);
 
         ctx.integrity = integrity;
         ctx.message = content;
@@ -131,7 +142,7 @@ export const createDropHandlers = ({
             ? await file.encrypt(
                   ctx.dropKey!,
                   ctx.nonce!,
-                  ctx.message! as string,
+                  ctx.message! as FileType,
               )
             : await encryptRaw(
                   ctx.dropKey!,
@@ -262,6 +273,16 @@ export const createDropHandlers = ({
 
         ctx.id = id;
         ctx.nonce = nonce;
+
+        const initEvent: InitDropEvent = {
+            type: DropEventType.Init,
+            id: ctx.id!,
+            peer: ctx.peer!,
+            keyPair: ctx.keyPair!,
+            nonce: ctx.nonce!,
+        };
+
+        sendEvent(initEvent);
     };
 
     return { init, stagePayload, startHandshake, drop, cleanup };

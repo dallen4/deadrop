@@ -1,6 +1,7 @@
 import type { DataConnection } from 'peerjs';
 import type Peer from 'peerjs';
 import { DropMessageMeta } from './messages';
+import { MessageType } from '../lib/constants';
 
 export type BaseContext = {
     id: string | null;
@@ -43,13 +44,30 @@ export type EncryptFile<InputType = string> = (
     pathOrInput: InputType,
 ) => Promise<string>;
 
-export type DecryptFile<InputType = string> = (
+export type DecryptFile<Result = string> = (
     key: CryptoKey,
     iv: string,
-    pathOrInput: InputType,
+    pathOrInput: string,
     meta: DropMessageMeta,
-) => Promise<string>;
+) => Promise<Result>;
 
 export type HashFile<InputType = string> = (
     pathOrInput: InputType,
 ) => Promise<string>;
+
+export type BaseHandlerInputs<Context, Event> = {
+    ctx: Context;
+    timers: Map<MessageType, NodeJS.Timeout>;
+    sendEvent: (event: Event) => unknown;
+    logger: {
+        info: (message: string) => void;
+        error: (message: string) => void;
+        debug: (message: string) => void;
+    };
+    initPeer: () => Promise<Peer>;
+    cleanupSession: (ctx: Context) => void;
+    apiUri?: string;
+
+    // events
+    onRetryExceeded?: (msgType: MessageType) => void;
+};

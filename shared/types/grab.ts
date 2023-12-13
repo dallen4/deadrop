@@ -1,4 +1,9 @@
-import type { BaseContext, DecryptFile, HashFile } from './common';
+import type {
+    BaseContext,
+    BaseHandlerInputs,
+    DecryptFile,
+    HashFile,
+} from './common';
 import { GrabEventType, MessageType } from '../lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
@@ -35,20 +40,12 @@ export interface ExecuteGrabEvent extends GrabEvent {
     payload: string;
 }
 
-export type GrabHandlerInputs = {
-    ctx: GrabContext;
-    timers: Map<MessageType, NodeJS.Timeout>;
-    sendEvent: (event: AnyGrabEvent) => unknown;
-    logger: {
-        info: (message: string) => void;
-        error: (message: string) => void;
-        debug: (message: string) => void;
-    };
+export type GrabHandlerInputs<FileType = string> = BaseHandlerInputs<
+    GrabContext,
+    AnyGrabEvent
+> & {
     file: {
-        decrypt: DecryptFile;
-        hash: HashFile;
+        decrypt: DecryptFile<FileType>;
+        hash: HashFile<FileType>;
     };
-    initPeer: () => Promise<Peer>;
-    cleanupSession: (ctx: GrabContext) => void;
-    apiUri: string;
 };

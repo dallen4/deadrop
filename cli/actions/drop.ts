@@ -40,8 +40,7 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
             debug: logDebug,
         },
         file: {
-            encrypt: (...args) =>
-                encryptFile(args[0], args[1], args[2]).then((res) => res.data),
+            encrypt: (...args) => encryptFile(...args).then((res) => res.data),
             hash: hashFile,
         },
         cleanupSession,
@@ -88,14 +87,4 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
     logInfo(`Or scan the QR code:\n${grabQR}`);
 
     loader.text = 'Waiting for grab request...';
-
-    const initEvent: InitDropEvent = {
-        type: DropEventType.Init,
-        id: ctx.id!,
-        peer: ctx.peer!,
-        keyPair: ctx.keyPair!,
-        nonce: ctx.nonce!,
-    };
-
-    sendEvent(initEvent);
 };
