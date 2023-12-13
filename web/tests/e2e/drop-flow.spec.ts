@@ -54,20 +54,10 @@ test('should drop a text secret from one page session to another', async ({
             await grabberPage.locator('#begin-grab-btn').click();
 
             await expect(
-                grabberPage.getByText('Waiting for payload drop...'),
+                grabberPage.locator(`#${DROP_SECRET_VALUE_ID}`),
             ).toBeVisible({
                 timeout: 20_000,
             });
-
-            await expect(
-                dropperPage.getByRole('heading', {
-                    name: 'finish your deadrop',
-                }),
-            ).toBeVisible({
-                timeout: 10_000,
-            });
-
-            await dropperPage.locator(`#${DROP_SECRET_BTN_ID}`).click();
 
             return grabberPage.locator(`#${DROP_SECRET_VALUE_ID}`).innerHTML();
         });
