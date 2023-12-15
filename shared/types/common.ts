@@ -57,7 +57,6 @@ export type HashFile<InputType = string> = (
 
 export type BaseHandlerInputs<Context, Event> = {
     ctx: Context;
-    timers: Map<MessageType, NodeJS.Timeout>;
     sendEvent: (event: Event) => unknown;
     logger: {
         info: (message: string) => void;

@@ -16,7 +16,6 @@ export const useGrab = () => {
 
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<GrabContext>(initGrabContext());
-    const timersRef = useRef(new Map<MessageType, NodeJS.Timeout>());
 
     const [{ value: state }, send] = useMachine(grabMachine);
 
@@ -35,7 +34,6 @@ export const useGrab = () => {
         () =>
             createGrabHandlers<File>({
                 ctx: contextRef.current,
-                timers: timersRef.current,
                 sendEvent: send,
                 logger: {
                     info: pushLog,

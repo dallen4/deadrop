@@ -32,7 +32,6 @@ import { DROP_API_PATH } from '../config/paths';
 
 export const createDropHandlers = <FileType extends string | File = string>({
     ctx,
-    timers,
     sendEvent,
     logger,
     file,
@@ -42,6 +41,7 @@ export const createDropHandlers = <FileType extends string | File = string>({
     initPeer,
 }: DropHandlerInputs<FileType>) => {
     const dropApiUrl = apiUri + DROP_API_PATH;
+    const timers = new Map<MessageType, NodeJS.Timeout>();
 
     const clearTimer = (msgType: MessageType) => {
         const timerId = timers.get(msgType);

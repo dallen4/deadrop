@@ -30,7 +30,6 @@ import { withMessageLock } from '../lib/messages';
 
 export const createGrabHandlers = <FileType extends string | File = string>({
     ctx,
-    timers,
     sendEvent,
     logger,
     file,
@@ -40,6 +39,7 @@ export const createGrabHandlers = <FileType extends string | File = string>({
     onRetryExceeded,
 }: GrabHandlerInputs<FileType>) => {
     const dropApiUrl = apiUri + DROP_API_PATH;
+    const timers = new Map<MessageType, NodeJS.Timeout>();
 
     const clearTimer = (msgType: MessageType) => {
         const timerId = timers.get(msgType);

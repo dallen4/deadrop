@@ -14,7 +14,6 @@ import { cleanupSession } from 'lib/session';
 export const useDrop = () => {
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<DropContext>(initDropContext());
-    const timersRef = useRef(new Map<MessageType, NodeJS.Timeout>());
 
     const [{ value: state }, send] = useMachine(dropMachine);
 
@@ -38,7 +37,6 @@ export const useDrop = () => {
         () =>
             createDropHandlers({
                 ctx: contextRef.current,
-                timers: timersRef.current,
                 sendEvent: send,
                 logger: {
                     info: pushLog,

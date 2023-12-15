@@ -10,7 +10,6 @@ import { DropContext } from '@shared/types/drop';
 
 export const grab = async (id: string) => {
     const ctx = initGrabContext();
-    const timers = new Map<MessageType, NodeJS.Timeout>();
 
     let currState = grabMachine.initialState;
 
@@ -30,7 +29,6 @@ export const grab = async (id: string) => {
 
     const { init } = createGrabHandlers({
         ctx,
-        timers,
         sendEvent,
         logger: {
             info: logInfo,

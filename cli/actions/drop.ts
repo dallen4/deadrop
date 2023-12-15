@@ -19,7 +19,6 @@ type DropOptions = {
 
 export const drop = async (input: string | undefined, options: DropOptions) => {
     const ctx = initDropContext();
-    const timers = new Map<MessageType, NodeJS.Timeout>();
 
     let currState = dropMachine.initialState;
 
@@ -32,7 +31,6 @@ export const drop = async (input: string | undefined, options: DropOptions) => {
 
     const { init, stagePayload } = createDropHandlers({
         ctx,
-        timers,
         sendEvent,
         logger: {
             info: logInfo,
