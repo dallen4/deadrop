@@ -1,10 +1,10 @@
 import { grabMachine, initGrabContext } from '@shared/lib/machines/grab';
 import { useMachine } from '@xstate/react/lib/useMachine';
 import type { GrabContext } from '@shared/types/grab';
-import { GrabState, MessageType } from '@shared/lib/constants';
+import { GrabState } from '@shared/lib/constants';
 import { useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { decryptFile, hashFile } from 'lib/crypto';
+import { decryptFile, hashFile } from '@shared/lib/crypto/browser';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
 import { createGrabHandlers } from '@shared/handlers/grab';
