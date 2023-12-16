@@ -1,5 +1,10 @@
-import type { BaseContext } from './common';
-import { GrabEventType } from '../lib/constants';
+import type {
+    BaseContext,
+    BaseHandlerInputs,
+    DecryptFile,
+    HashFile,
+} from './common';
+import { GrabEventType, MessageType } from '../lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 
@@ -34,3 +39,13 @@ export interface ExecuteGrabEvent extends GrabEvent {
     type: GrabEventType.Grab;
     payload: string;
 }
+
+export type GrabHandlerInputs<FileType = string> = BaseHandlerInputs<
+    GrabContext,
+    AnyGrabEvent
+> & {
+    file: {
+        decrypt: DecryptFile<FileType>;
+        hash: HashFile<FileType>;
+    };
+};

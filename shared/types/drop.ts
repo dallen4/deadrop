@@ -1,8 +1,13 @@
-import type { BaseContext } from './common';
+import type {
+    BaseContext,
+    BaseHandlerInputs,
+    EncryptFile,
+    HashFile,
+} from './common';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
-import { DropEventType } from '../lib/constants';
+import { DropEventType, MessageType } from '../lib/constants';
 
 export type DropOptions = {
     decryptedAccess?: 'copy' | 'view' | 'both';
@@ -57,3 +62,13 @@ export interface HandshakeCompleteEvent extends DropEvent {
 export interface CompleteEvent extends DropEvent {
     type: DropEventType.Confirm;
 }
+
+export type DropHandlerInputs<FileType = string> = BaseHandlerInputs<
+    DropContext,
+    AnyDropEvent
+> & {
+    file: {
+        encrypt: EncryptFile<FileType>;
+        hash: HashFile<FileType>;
+    };
+};

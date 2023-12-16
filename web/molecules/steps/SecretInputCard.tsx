@@ -82,9 +82,9 @@ export const SecretInputCard = () => {
     };
 
     const confirmPayload = async () => {
-        if (mode === 'text') setPayload(textRef.current!.value);
-        else if (mode === 'json') setPayload(jsonRef.current!.value);
-        else if (mode === 'file') setPayload(file!);
+        if (mode === 'text') setPayload(textRef.current!.value, 'raw');
+        else if (mode === 'json') setPayload(jsonRef.current!.value, 'raw');
+        else if (mode === 'file') setPayload(file!, mode);
         else console.warn('Cannot confirm payload');
     };
 
