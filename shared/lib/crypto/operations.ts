@@ -6,7 +6,7 @@ import {
     KEY_PAIR_PARAMS,
 } from '../../config/crypto';
 import { getSubtle } from '.';
-import { bufferFromString, getIVBuffer } from '../util';
+import { bufferFromString } from '../util';
 import { decode, encode, encodeJson } from '../data';
 
 export const generateKeyPair = () =>
@@ -45,7 +45,7 @@ export const encrypt = (key: CryptoKey, iv: string, input: BufferSource) =>
         .encrypt(
             {
                 name: ENCRYPTION_ALGO,
-                iv: getIVBuffer(iv),
+                iv: bufferFromString(iv),
             },
             key,
             input,
@@ -74,7 +74,7 @@ export const decrypt = <Result>(
         .decrypt(
             {
                 name: ENCRYPTION_ALGO,
-                iv: getIVBuffer(iv),
+                iv: bufferFromString(iv),
             },
             key,
             bufferFromString(data),
