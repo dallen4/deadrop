@@ -40,12 +40,12 @@ img {
 }
 
 body {
-    padding: 0 var(--container-paddding);
+    padding: 10px 12px;
     color: var(--vscode-foreground);
     font-size: var(--vscode-font-size);
     font-weight: var(--vscode-font-weight);
     font-family: var(--vscode-font-family);
-    background-color: var(--vscode-editor-background);
+    background-color: var(--vscode-panel-background);
 }
 
 ol,
@@ -86,6 +86,7 @@ button {
     outline-offset: 2px !important;
     color: var(--vscode-button-foreground);
     background: var(--vscode-button-background);
+    border-radius: 2px;;
 }
 
 button:hover {
@@ -106,7 +107,6 @@ button.secondary:hover {
     background: var(--vscode-button-secondaryHoverBackground);
 }
 
-input:not([type='checkbox']),
 textarea {
     display: block;
     width: 100%;
@@ -121,4 +121,15 @@ textarea {
 input::placeholder,
 textarea::placeholder {
     color: var(--vscode-input-placeholderForeground);
+}
+
+input {
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, transparent);
+    outline-color: var(--vscode-input-border);
+    font-family: var(--vscode-font-family);
+    padding: var(--input-padding-vertical) var(--input-padding-horizontal);
 }

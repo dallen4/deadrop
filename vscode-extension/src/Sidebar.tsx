@@ -21,7 +21,6 @@ export function Sidebar() {
         () =>
             createGrabHandlers({
                 ctx: contextRef.current,
-                timers: timersRef.current,
                 sendEvent: send,
                 logger: {
                     info: console.info,
@@ -48,11 +47,13 @@ export function Sidebar() {
     };
 
     return (
-        <div style={{ width: '100%' }}>
-            <h1>deadrop: ${mode}</h1>
+        <div style={{ width: '100%', padding: '0.5em' }}>
             {mode === 'drop' ? (
                 <>
                     <p>dropping</p>
+                    <div>
+                    <input ref={inputRef} />
+                    </div>
                     <button onClick={() => console.log('CONNECT')}>
                         connect
                     </button>
@@ -60,15 +61,16 @@ export function Sidebar() {
             ) : mode === 'grab' ? (
                 <>
                     <p>peerId: {peerId}</p>
-                    <input ref={inputRef} />
-                    <button onClick={startGrab}>get data</button>
+                    <input ref={inputRef} placeholder={'drop ID here'} />
+                    <button onClick={startGrab}>Grab Secret</button>
                 </>
             ) : (
                 <>
+                    <p>Start a drop to share a secret!</p>
                     <button onClick={() => setMode('drop')}>Start Drop</button>
-                    <h4>or enter your drop ID</h4>
+                    <h4>or enter your drop ID:</h4>
+                    <input ref={inputRef} placeholder={'drop ID here'} />
                     <button onClick={() => setMode('grab')}>Start Grab</button>
-                    <input />
                 </>
             )}
         </div>
