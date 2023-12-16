@@ -9,6 +9,8 @@
   ],
   "activationEvents": [
     "onCommand:deadrop.drop",
+    "onCommand:deadrop.dropFile",
+    "onCommand:deadrop.grab",
     "onView:deadrop-sidebar"
   ],
   "contributes": {
@@ -35,9 +37,33 @@
     "commands": [
       {
         "command": "deadrop.drop",
-        "title": "Start deadrop"
+        "title": "Start drop"
+      },
+      {
+        "command": "deadrop.dropFile",
+        "title": "Start file drop"
+      },
+      {
+        "command": "deadrop.grab",
+        "title": "Start grab"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceScheme == file && resourceExtname",
+          "command": "deadrop.dropFile",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "deadrop.drop",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "build:react": "node ./scripts/build-non-chunk.js",

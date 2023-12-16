@@ -98,6 +98,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         </body>
         </html>`;
     }
+
+    public sendMessage(message: Record<string, any>) {
+        return this._view!.webview.postMessage(message);
+    }
 }
 
 function getNonce() {
