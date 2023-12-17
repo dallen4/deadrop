@@ -8,3 +8,8 @@ export const encodeJson = (input: Record<string, any>) => {
 };
 
 export const decode = (input: ArrayBuffer) => new TextDecoder().decode(input);
+
+export const decodeJson = (value: ArrayBuffer) => {
+  const stringifiedJson = decode(value);
+  return JSON.parse(stringifiedJson);
+};
