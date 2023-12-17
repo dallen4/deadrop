@@ -2242,6 +2242,11 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.33.tgz#80bf1da64b15f21fd8c1dc387c31929317d99ee9"
   integrity sha512-AuHIyzR5Hea7ij0P9q7vx7xu4z0C28ucwjAZC0ja7JhINyCnOw8/DnvAPQQ9TfOlCtZAmCERKQX9+o1mgQhuOQ==
 
+"@types/nanoid-dictionary@^4.2.3":
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/@types/nanoid-dictionary/-/nanoid-dictionary-4.2.3.tgz#4fb3043cfa56ea0f9046b1cbe7abc611c75fbf6c"
+  integrity sha512-T98Halw1f2aJ802GtCNMHZgqX2q1LX85eMP+K7N+OXSLagdmAzooAEhB565FQXTiCxdF4wNijOBroAQJat4uig==
+
 "@types/node-mailjet@^3.3.8":
   version "3.3.9"
   resolved "https://registry.npmjs.org/@types/node-mailjet/-/node-mailjet-3.3.9.tgz"

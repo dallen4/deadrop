@@ -1,9 +1,7 @@
 import { GRAB_PATH } from '../config/paths';
 import { randomBytes } from 'crypto';
 import { customAlphabet } from 'nanoid';
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { alphanumeric } = require('nanoid-dictionary');
+import { alphanumeric } from 'nanoid-dictionary';
 
 export const bufferFromString = (input: string) => {
     const size = input.length;
