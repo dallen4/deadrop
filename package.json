@@ -28,11 +28,17 @@
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",
         "qrcode": "^1.5.3",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
         "ws": "^8.11.0",
         "xstate": "^4.38.2"
     },
     "devDependencies": {
         "@types/node": "^18",
+        "@types/qrcode": "^1.5.5",
+        "@types/react": "^18.2.45",
+        "@types/react-dom": "^18.2.18",
+        "dotenv": "^16.3.1",
         "eslint": "^8.31.0",
         "pkg": "^5.8.0",
         "prettier": "^2.8.2",
