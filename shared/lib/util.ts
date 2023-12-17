@@ -1,6 +1,8 @@
 import { GRAB_PATH } from '../config/paths';
 import { randomBytes } from 'crypto';
 import { customAlphabet } from 'nanoid';
+import { DropContext } from '../types/drop';
+import { GrabContext } from '../types/grab';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { alphanumeric } = require('nanoid-dictionary');
@@ -25,4 +27,11 @@ export const generateGrabUrl = (url: string, id: string) => {
   const baseUrl = new URL(GRAB_PATH, url);
 
   return `${baseUrl.toString()}?${params.toString()}`;
+};
+
+export const cleanupSession = (ctx: DropContext | GrabContext) => {
+  if (ctx.connection?.open) ctx.connection!.close();
+
+  ctx.peer?.disconnect();
+  ctx.peer?.destroy();
 };
