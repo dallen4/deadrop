@@ -22,7 +22,7 @@
         "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release"
     },
     "dependencies": {
-        "@xstate/react": "^4.0.1",
+        "@xstate/react": "^3.0.1",
         "nanoid": "^5.0.1",
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",

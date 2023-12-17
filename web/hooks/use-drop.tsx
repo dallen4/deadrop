@@ -1,6 +1,6 @@
 import type { DropContext } from '@shared/types/drop';
 import { useMemo, useRef } from 'react';
-import { useMachine } from '@xstate/react/lib/useMachine';
+import { useMachine } from '@xstate/react';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
 import { DropState, MessageType } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';

@@ -1,5 +1,5 @@
 import { grabMachine, initGrabContext } from '@shared/lib/machines/grab';
-import { useMachine } from '@xstate/react/lib/useMachine';
+import { useMachine } from '@xstate/react';
 import type { GrabContext } from '@shared/types/grab';
 import { GrabState, MessageType } from '@shared/lib/constants';
 import { useMemo, useRef } from 'react';
