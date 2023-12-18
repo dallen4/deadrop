@@ -1,10 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import type { DropDetails } from '@shared/types/common';
 import { getClientIp } from 'request-ip';
-import { getRedis } from 'api/redis';
-import { formatDropKey } from 'lib/util';
 import { checkAndIncrementDropCount } from 'api/limiter';
-import { createDrop } from 'api/drops';
+import { createDrop, deleteDrop, getDrop } from 'api/drops';
 import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
 import { cors } from 'api/middleware/cors';
 import { runMiddleware } from 'api/middleware';
@@ -21,14 +19,10 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
         return;
     }
 
-    const client = getRedis();
-
-    const close = () => client.quit();
-
     if (req.method === 'GET') {
-        const { id: dropId } = req.query;
+        const dropId = req.query.id as string;
 
-        const data = await client.hgetall(formatDropKey(dropId as string));
+        const data = await getDrop(dropId);
 
         if (!data || Object.keys(data).length === 0)
             return res.status(404).json({
@@ -39,9 +33,10 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     } else if (req.method === 'POST') {
         const userIpAddr = getClientIp(req);
 
-        const canDrop = req.cookies[DISABLE_CAPTCHA_COOKIE] || !!session
-            ? true
-            : await checkAndIncrementDropCount(userIpAddr!);
+        const canDrop =
+            req.cookies[DISABLE_CAPTCHA_COOKIE] || !!session
+                ? true
+                : await checkAndIncrementDropCount(userIpAddr!);
 
         if (!canDrop)
             return res
@@ -59,8 +54,7 @@ export default async function drop(req: NextApiRequest, res: NextApiResponse) {
     } else if (req.method === 'DELETE') {
         const { id: dropId } = req.body as { id: string };
 
-        const key = formatDropKey(dropId);
-        await client.del(key);
+        await deleteDrop(dropId);
 
         res.status(200).json({ success: true });
     }
