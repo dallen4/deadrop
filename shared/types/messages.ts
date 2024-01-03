@@ -11,11 +11,13 @@ export interface HandshakeMessage extends BaseMessage {
     input: string;
 }
 
+export type DropMessageMeta = { type: string; name: string };
+
 export interface DropMessage extends BaseMessage {
     type: MessageType.Payload;
     mode: PayloadMode;
     payload: string;
-    meta?: { type: string; name: string };
+    meta?: DropMessageMeta;
 }
 
 export interface VerifyMessage extends BaseMessage {

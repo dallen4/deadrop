@@ -85,7 +85,7 @@ const baseConfig = {
     publicRuntimeConfig: {
         nonce,
     },
-    pageExtensions: ['tsx', 'ts', 'md', 'mdx'],
+    pageExtensions: ['tsx', 'ts', 'js', 'md', 'mdx'],
 };
 
 const configWithMdx = withMdx(baseConfig);

@@ -3,6 +3,7 @@ import { getRedis } from 'api/redis';
 import { formatDropKey } from 'lib/util';
 import { nanoid } from 'nanoid';
 import { generateDateTotalId } from './util';
+import { DropDetails } from '@shared/types/common';
 
 export const getDailyDropCount = async (target: Date) => {
     const client = getRedis();
@@ -43,4 +44,19 @@ export const createDrop = async (peerId: string) => {
     await incrementDailyDropCount();
 
     return { dropId, nonce };
+};
+
+export const getDrop = async (id: string): Promise<DropDetails> => {
+    const client = getRedis();
+    const dropItem = await client.hgetall(formatDropKey(id));
+
+    return dropItem as DropDetails;
+};
+
+export const deleteDrop = async (id: string): Promise<boolean> => {
+    const client = getRedis();
+    const key = formatDropKey(id);
+    await client.del(key);
+
+    return true;
 };

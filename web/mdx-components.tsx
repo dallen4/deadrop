@@ -11,6 +11,7 @@ import {
     useMantineTheme,
     Anchor,
 } from '@mantine/core';
+import { InlineCode } from 'atoms/Code';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
 import { AnchorHTMLAttributes, DetailedHTMLProps } from 'react';
@@ -43,14 +44,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
 
     const customComponents: MDXComponents = {
         a: ({ href, children }) => (
-            <DynamicLink href={href}>
-                {children}
-            </DynamicLink>
+            <DynamicLink href={href}>{children}</DynamicLink>
         ),
         blockquote: ({ children }) => <Blockquote>{children}</Blockquote>,
-        code: ({ children }) => (
-            <Code block style={{ padding: theme.spacing.sm }}>{children}</Code>
-        ),
+        code: ({ children }) => <InlineCode>{children}</InlineCode>,
         em: ({ children }) => (
             <LargeText component={'span'} fs={'italic'}>
                 {children}
