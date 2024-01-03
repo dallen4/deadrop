@@ -1,0 +1,19 @@
+meta {
+  name: Get Drop
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/drop?id=1234567
+  body: none
+  auth: none
+}
+
+query {
+  id: 1234567
+}
+
+headers {
+  Content-Type: application/json
+}
