@@ -5,6 +5,9 @@
     "main": "index.js",
     "author": "Nieky Allen <nieky.allen@gmail.com>",
     "license": "GPL-3.0-only",
+    "repository": {
+        "url": "https://github.com/dallen4/deadrop.git"
+    },
     "private": true,
     "workspaces": [
         "web",
