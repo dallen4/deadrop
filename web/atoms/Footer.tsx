@@ -35,9 +35,12 @@ const Footer = () => {
             <Text size={'xs'}>
                 &copy; {new Date().getFullYear()} deadrop by{' '}
                 <Anchor href={'https://nieky.info/'} target={'_blank'}>
-                    Nieky
+                    nieky
                 </Anchor>
                 .
+            </Text>
+            <Text size={'xs'} c={'dimmed'} fw={500}>
+                v{require('../package.json').version}
             </Text>
         </BaseFooter>
     );
