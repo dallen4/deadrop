@@ -7,7 +7,7 @@ import type {
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
-import { DropEventType, MessageType } from '../lib/constants';
+import { DropEventType } from '../lib/constants';
 
 export type DropOptions = {
     decryptedAccess?: 'copy' | 'view' | 'both';
@@ -23,11 +23,11 @@ export type DropContext = BaseContext & {
     dropKey: CryptoKey | null;
 };
 
-export type DropEvent = EventObject & {
-    type: DropEventType;
+export type DropEvent<EventType extends DropEventType> = EventObject & {
+    type: EventType;
 };
 
-export type AnyDropEvent = DropEvent & {
+export type AnyDropEvent = DropEvent<DropEventType> & {
     [key: string]: any;
 };
 
@@ -39,29 +39,23 @@ export interface InitDropEvent extends AnyDropEvent {
     nonce: string;
 }
 
-export interface ConnectEvent extends DropEvent {
-    type: DropEventType.Connect;
+export interface ConnectEvent extends DropEvent<DropEventType.Connect> {
     connection: DataConnection;
 }
 
-export interface WrapEvent extends DropEvent {
-    type: DropEventType.Wrap;
+export interface WrapEvent extends DropEvent<DropEventType.Wrap> {
     payload: Record<string, any>;
     integrity: string;
 }
 
-export interface HandshakeEvent extends DropEvent {
-    type: DropEventType.Handshake;
-}
+export interface HandshakeEvent extends DropEvent<DropEventType.Handshake> {}
 
-export interface HandshakeCompleteEvent extends DropEvent {
-    type: DropEventType.HandshakeComplete;
+export interface HandshakeCompleteEvent
+    extends DropEvent<DropEventType.HandshakeComplete> {
     dropKey: CryptoKey;
 }
 
-export interface CompleteEvent extends DropEvent {
-    type: DropEventType.Confirm;
-}
+export interface CompleteEvent extends DropEvent<DropEventType.Confirm> {}
 
 export type DropHandlerInputs<FileType = string> = BaseHandlerInputs<
     DropContext,

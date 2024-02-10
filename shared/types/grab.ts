@@ -4,7 +4,7 @@ import type {
     DecryptFile,
     HashFile,
 } from './common';
-import { GrabEventType, MessageType } from '../lib/constants';
+import { GrabEventType } from '../lib/constants';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 
@@ -13,16 +13,15 @@ export type GrabContext = BaseContext & {
     dropperId: string | null;
 };
 
-export type GrabEvent = EventObject & {
-    type: GrabEventType;
+export type GrabEvent<EventType extends GrabEventType> = EventObject & {
+    type: EventType;
 };
 
-export type AnyGrabEvent = GrabEvent & {
+export type AnyGrabEvent = GrabEvent<GrabEventType> & {
     [key: string]: any;
 };
 
-export interface InitGrabEvent extends GrabEvent {
-    type: GrabEventType.Init;
+export interface InitGrabEvent extends GrabEvent<GrabEventType.Init> {
     id: string;
     dropperId: string;
     peer: Peer;
@@ -30,13 +29,11 @@ export interface InitGrabEvent extends GrabEvent {
     nonce: string;
 }
 
-export interface AckHandshakeEvent extends GrabEvent {
-    type: GrabEventType.Handshake;
+export interface AckHandshakeEvent extends GrabEvent<GrabEventType.Handshake> {
     grabKey: CryptoKey;
 }
 
-export interface ExecuteGrabEvent extends GrabEvent {
-    type: GrabEventType.Grab;
+export interface ExecuteGrabEvent extends GrabEvent<GrabEventType.Grab> {
     payload: string;
 }
 

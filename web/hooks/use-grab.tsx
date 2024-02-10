@@ -1,8 +1,8 @@
 import { grabMachine, initGrabContext } from '@shared/lib/machines/grab';
 import { useMachine } from '@xstate/react';
 import type { GrabContext } from '@shared/types/grab';
-import { GrabState, MessageType } from '@shared/lib/constants';
-import { useMemo, useRef } from 'react';
+import { GrabState } from '@shared/lib/constants';
+import { useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { decryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
@@ -18,6 +18,24 @@ export const useGrab = () => {
     const contextRef = useRef<GrabContext>(initGrabContext());
 
     const [{ value: state }, send] = useMachine(grabMachine);
+
+    useEffect(() => {
+        const onLeaveAttempt = () => {
+            throw 'Cannot navigate away, peer active';
+        };
+
+        if (state === GrabState.Ready) {
+            router.events.on('routeChangeStart', onLeaveAttempt);
+        } else if (
+            [GrabState.Completed, GrabState.Error].includes(state as GrabState)
+        ) {
+            router.events.off('routeChangeStart', onLeaveAttempt);
+        }
+
+        return () => {
+            router.events.off('routeChangeStart', onLeaveAttempt);
+        };
+    }, [state]);
 
     const pushLog = (message: string) => logsRef.current.push(message);
 
