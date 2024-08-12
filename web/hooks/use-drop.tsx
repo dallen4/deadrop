@@ -1,8 +1,8 @@
 import type { DropContext } from '@shared/types/drop';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useMachine } from '@xstate/react';
 import { dropMachine, initDropContext } from '@shared/lib/machines/drop';
-import { DropState, MessageType } from '@shared/lib/constants';
+import { DropState } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
 import { encryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
@@ -10,14 +10,35 @@ import { IconX } from '@tabler/icons';
 import { initPeer } from 'lib/peer';
 import { createDropHandlers } from '@shared/handlers/drop';
 import { cleanupSession } from 'lib/session';
+import { useRouter } from 'next/router';
 
 export const useDrop = () => {
+    const router = useRouter();
+
     const logsRef = useRef<Array<string>>([]);
     const contextRef = useRef<DropContext>(initDropContext());
 
     const [{ value: state }, send] = useMachine(dropMachine);
 
     const pushLog = (message: string) => logsRef.current.push(message);
+
+    useEffect(() => {
+        const onLeaveAttempt = () => {
+            throw 'Cannot navigate away, peer active';
+        };
+
+        if (state === DropState.Ready) {
+            router.events.on('routeChangeStart', onLeaveAttempt);
+        } else if (
+            [DropState.Completed, DropState.Error].includes(state as DropState)
+        ) {
+            router.events.off('routeChangeStart', onLeaveAttempt);
+        }
+
+        return () => {
+            router.events.off('routeChangeStart', onLeaveAttempt);
+        };
+    }, [state]);
 
     const onRetryExceeded = () => {
         showNotification({

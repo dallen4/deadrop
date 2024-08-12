@@ -1,0 +1,21 @@
+meta {
+  name: Create Drop
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/drop
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": "12333"
+  }
+}

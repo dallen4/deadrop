@@ -1,0 +1,21 @@
+meta {
+  name: Delete Drop
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/drop
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "id": "1234567"
+  }
+}
