@@ -1,61 +1,62 @@
 {
-    "name": "deadrop",
-    "version": "0.1.2",
-    "description": "e2e encrypted secret sharing",
-    "main": "index.js",
-    "author": "Nieky Allen <nieky.allen@gmail.com>",
-    "license": "GPL-3.0-only",
-    "repository": {
-        "url": "https://github.com/dallen4/deadrop.git"
-    },
-    "private": true,
-    "workspaces": [
-        "web",
-        "cli",
-        "shared"
-    ],
-    "scripts": {
-        "web": "yarn workspace web",
-        "cli": "yarn workspace cli",
-        "shared": "yarn workspace shared",
-        "start": "yarn web start",
-        "build": "yarn web build",
-        "start:prod": "yarn web start:prod",
-        "test:e2e": "yarn web test:e2e",
-        "cli:build": "yarn cli build",
-        "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
-        "analyze:dup": "npx jscpd shared cli web --format \"typescript\""
-    },
-    "dependencies": {
-        "@libsql/client": "^0.9.0",
-        "@xstate/react": "^3.0.1",
-        "drizzle-kit": "^0.24.0",
-        "drizzle-orm": "^0.33.0",
-        "nanoid": "^5.0.1",
-        "nanoid-dictionary": "^4.3.0",
-        "peerjs": "^1.4.7",
-        "qrcode": "^1.5.3",
-        "ws": "^8.11.0",
-        "xstate": "^4.38.2"
-    },
-    "devDependencies": {
-        "@types/nanoid-dictionary": "^4.2.3",
-        "@types/node": "^18",
-        "eslint": "^8.31.0",
-        "pkg": "^5.8.0",
-        "prettier": "^2.8.2",
-        "replace": "^1.2.2",
-        "ts-node": "^10.7.0",
-        "typescript": "^4.0.3"
-    },
-    "browser": {
-        "tls": false,
-        "net": false,
-        "bufferutil": false,
-        "utf-8-validate": false
-    },
-    "engines": {
-        "node": ">=18",
-        "yarn": "1"
-    }
+  "name": "deadrop",
+  "version": "0.1.2",
+  "description": "e2e encrypted secret sharing",
+  "main": "index.js",
+  "author": "Nieky Allen <nieky.allen@gmail.com>",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "url": "https://github.com/dallen4/deadrop.git"
+  },
+  "private": true,
+  "workspaces": [
+    "web",
+    "cli",
+    "shared"
+  ],
+  "scripts": {
+    "web": "yarn workspace web",
+    "cli": "yarn workspace cli",
+    "shared": "yarn workspace shared",
+    "start": "yarn web start",
+    "build": "yarn web build",
+    "start:prod": "yarn web start:prod",
+    "test:e2e": "yarn web test:e2e",
+    "cli:build": "yarn cli build",
+    "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
+    "analyze:dup": "npx jscpd shared cli web --format \"typescript\"",
+    "postversion": "git push --tags"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.9.0",
+    "@xstate/react": "^3.0.1",
+    "drizzle-kit": "^0.24.0",
+    "drizzle-orm": "^0.33.0",
+    "nanoid": "^5.0.1",
+    "nanoid-dictionary": "^4.3.0",
+    "peerjs": "^1.4.7",
+    "qrcode": "^1.5.3",
+    "ws": "^8.11.0",
+    "xstate": "^4.38.2"
+  },
+  "devDependencies": {
+    "@types/nanoid-dictionary": "^4.2.3",
+    "@types/node": "^18",
+    "eslint": "^8.31.0",
+    "pkg": "^5.8.0",
+    "prettier": "^2.8.2",
+    "replace": "^1.2.2",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.0.3"
+  },
+  "browser": {
+    "tls": false,
+    "net": false,
+    "bufferutil": false,
+    "utf-8-validate": false
+  },
+  "engines": {
+    "node": ">=18",
+    "yarn": "1"
+  }
 }

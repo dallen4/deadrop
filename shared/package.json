@@ -1,12 +1,12 @@
 {
-    "name": "shared",
-    "version": "0.1.0",
-    "main": "build/index.js",
-    "license": "GPL-3.0-only",
-    "private": true,
-    "peerDependencies": {
-        "peerjs": "^1",
-        "typescript": "^4",
-        "ws": "*"
-    }
+  "name": "shared",
+  "version": "0.1.0",
+  "main": "build/index.js",
+  "license": "GPL-3.0-only",
+  "private": true,
+  "peerDependencies": {
+    "peerjs": "^1",
+    "typescript": "^4",
+    "ws": "*"
+  }
 }
