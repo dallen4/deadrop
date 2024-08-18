@@ -7,10 +7,10 @@
  */
 module.exports = {
     // Number of characters allowed before formatter wraps code.
-    printWidth: 80,
+    printWidth: 70,
 
     // Number of spaces in a tab.
-    tabWidth: 4,
+    tabWidth: 2,
 
     // Add Semicolons at the end of all statements.
     semi: true,

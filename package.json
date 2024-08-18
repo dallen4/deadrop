@@ -27,7 +27,10 @@
         "analyze:dup": "npx jscpd shared cli web --format \"typescript\""
     },
     "dependencies": {
+        "@libsql/client": "^0.9.0",
         "@xstate/react": "^3.0.1",
+        "drizzle-kit": "^0.24.0",
+        "drizzle-orm": "^0.33.0",
         "nanoid": "^5.0.1",
         "nanoid-dictionary": "^4.3.0",
         "peerjs": "^1.4.7",
