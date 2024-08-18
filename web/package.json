@@ -9,7 +9,7 @@
     "build": "next build",
     "start:prod": "next build && next start",
     "test:e2e": "playwright test",
-    "postversion": "git push --tags"
+    "postversion": "git add ./package.json && git push --follow-tags"
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^2.6.3",
