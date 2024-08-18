@@ -49,3 +49,7 @@ test-results/
 
 # Sentry
 .vercel
+
+# deadrop config & vaults
+.deadroprc
+.deadrop/
