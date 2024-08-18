@@ -22,6 +22,7 @@
     "package": "pkg dist/deadrop.js -o dist/deadrop -C Brotli -c pkg.json",
     "postpackage": "rimraf fonts/",
     "compile": "yarn build && yarn package",
+    "postversion": "git push --tags",
     "prepublishOnly": "replace '\"private\": true' '\"private\": false' ./package.json",
     "postpublish": "replace '\"private\": false' '\"private\": true' ./package.json",
     "release": "yarn build && npm publish"
