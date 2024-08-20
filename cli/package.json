@@ -4,10 +4,7 @@
   "version": "0.2.0",
   "main": "dist/deadrop.js",
   "bin": {
-    "deadrop": "./dist/deadrop.js",
-    "deadrop-macos": "./dist/deadrop-macos",
-    "deadrop-linux": "./dist/deadrop-linux",
-    "deadrop-win": "./dist/deadrop-win.exe"
+    "deadrop": "./dist/deadrop.js"
   },
   "files": [
     "./dist/*",
@@ -16,15 +13,15 @@
   "license": "GPL-3.0-only",
   "private": true,
   "scripts": {
-    "prebuild": "rimraf dist/ && cpx \"../../node_modules/figlet/fonts/*.flf\" ./fonts",
+    "prebuild": "rimraf dist/",
     "build": "node ./scripts/esbuild.js",
-    "postbuild": "replace 'exports = \"./wrtc-(\\w+).node\"' 'exports = require(\"@roamhq/wrtc/build/Release/wrtc.node\")' ./dist/deadrop.js",
-    "package": "pkg dist/deadrop.js -o dist/deadrop -C Brotli -c pkg.json",
+    "prepackage": "cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
+    "package": "nexe ./dist/deadrop.js --output \"./dist/deadrop\" --resource \"./fonts/Standard.flf\" --build",
     "postpackage": "rimraf fonts/",
     "compile": "yarn build && yarn package",
-    "postversion": "git add ./package.json && git push --follow-tags",
-    "prepublishOnly": "replace '\"private\": true' '\"private\": false' ./package.json",
-    "postpublish": "replace '\"private\": false' '\"private\": true' ./package.json",
+    "postversion": "bash ./scripts/postversion.sh",
+    "prepublishOnly": "bash ./scripts/prepublish.sh",
+    "postpublish": "bash ./scripts/postpublish.sh",
     "release": "yarn build && npm publish"
   },
   "dependencies": {
@@ -47,7 +44,8 @@
     "dotenv": "^16.0.3",
     "esbuild": "^0.16.15",
     "esbuild-plugin-environment": "^0.2.4",
-    "pkg": "^5.8.0",
+    "nexe": "^4.0.0-rc.6",
+    "replace": "^1.2.2",
     "rimraf": "^6.0.1"
   }
 }
