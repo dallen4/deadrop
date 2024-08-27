@@ -18,6 +18,7 @@
   "scripts": {
     "web": "yarn workspace web",
     "cli": "yarn workspace cli",
+	  "worker": "yarn workspace worker",
     "shared": "yarn workspace shared",
     "start": "yarn web start",
     "build": "yarn web build",
@@ -25,6 +26,7 @@
     "test:e2e": "yarn web test:e2e",
     "cli:build": "yarn cli build",
     "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
+    "worker:deploy": "yarn worker deploy",
     "analyze:dup": "npx jscpd shared cli web --format \"typescript\"",
     "postversion": "git push --tags"
   },
