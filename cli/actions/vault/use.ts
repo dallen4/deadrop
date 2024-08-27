@@ -1,8 +1,8 @@
 import { vaultExists } from 'db/vaults';
-import { existsSync } from 'fs';
 import { loadConfig, saveConfig } from 'lib/config';
 import { logError, logInfo } from 'lib/log';
 import { cwd, exit } from 'process';
+import { DeadropConfig } from 'types/config';
 
 export async function vaultUse(vaultNameInput: string) {
   const { config } = await loadConfig();
@@ -24,7 +24,8 @@ export async function vaultUse(vaultNameInput: string) {
     return exit(0);
   }
 
-  const updatedConfig = {
+  const updatedConfig: DeadropConfig = {
+    ...config,
     active_vault: vaultNameInput,
     vaults,
   };
