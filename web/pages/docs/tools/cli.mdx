@@ -4,7 +4,7 @@
 
 In order to run the CLI, you need the following: 
 
-- `node`: `>=18`
+- `node`: `>=20`
 - `npm`: `>=9` OR `yarn`: `^1`
 
 ## Installation
