@@ -2,24 +2,22 @@ import { VaultDBConfig } from 'types/config';
 import { initDB } from './init';
 import { eq } from 'drizzle-orm/expressions';
 import { migrate } from 'drizzle-orm/libsql/migrator';
-import { secretsTable } from './schema';
+import { SecretsInput, secretsTable } from './schema';
 
 export function createSecretsHelpers({
   location,
   key,
 }: VaultDBConfig) {
+  console.log(location);
   const db = initDB(location, key);
 
   const runMigrations = () =>
     migrate(db, { migrationsFolder: './db/migrations' });
 
-  const createSecret = async (name: string, value: string) => {
+  const addSecrets = async (inputs: SecretsInput[]) => {
     const [newSecret] = await db
       .insert(secretsTable)
-      .values({
-        name,
-        value,
-      })
+      .values(inputs)
       .returning();
 
     return newSecret;
@@ -42,7 +40,7 @@ export function createSecretsHelpers({
 
   return {
     runMigrations,
-    createSecret,
+    addSecrets,
     getSecret,
     removeSecret,
     getAllSecrets,

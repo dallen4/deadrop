@@ -12,6 +12,7 @@
   "workspaces": [
     "web",
     "cli",
+    "worker",
     "shared"
   ],
   "scripts": {
@@ -54,7 +55,7 @@
     "utf-8-validate": false
   },
   "engines": {
-    "node": ">=18",
+    "node": ">=20",
     "yarn": "1"
   }
 }

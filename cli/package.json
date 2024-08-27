@@ -1,7 +1,7 @@
 {
   "name": "cli",
   "description": "deadrop CLI",
-  "version": "0.2.0",
+  "version": "0.2.4",
   "main": "dist/deadrop.js",
   "bin": {
     "deadrop": "./dist/deadrop.js"
@@ -13,24 +13,26 @@
   "license": "GPL-3.0-only",
   "private": true,
   "scripts": {
-    "prebuild": "rimraf dist/",
+    "prebuild": "sh ./scripts/prebuild.sh",
     "build": "node ./scripts/esbuild.js",
     "prepackage": "cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
     "package": "nexe ./dist/deadrop.js --output \"./dist/deadrop\" --resource \"./fonts/Standard.flf\" --build",
     "postpackage": "rimraf fonts/",
     "compile": "yarn build && yarn package",
-    "postversion": "bash ./scripts/postversion.sh",
-    "prepublishOnly": "bash ./scripts/prepublish.sh",
-    "postpublish": "bash ./scripts/postpublish.sh",
+    "postversion": "sh ./scripts/postversion.sh",
+    "prepublishOnly": "sh ./scripts/prepublish.sh",
+    "postpublish": "sh ./scripts/postpublish.sh",
     "release": "yarn build && npm publish"
   },
   "dependencies": {
     "@inquirer/prompts": "^5.3.8",
+    "@libsql/client": "^0.9.0",
     "@roamhq/wrtc": "^0.8.0",
     "chalk": "^5.2.0",
     "change-case": "^5.4.4",
     "commander": "^9.4.1",
     "cosmiconfig": "^9.0.0",
+    "envfile": "^7.1.0",
     "figlet": "^1.5.2",
     "mime-type": "^4.0.0",
     "ora": "^6.1.2",

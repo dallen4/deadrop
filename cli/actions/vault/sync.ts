@@ -5,8 +5,7 @@ import { logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd } from 'process';
 
-// TODO format support (.env, JSON files)
-export async function vaultExport(
+export async function vaultSync(
   vaultNameInput: string,
   envDestinationPath: string,
 ) {
@@ -23,14 +22,15 @@ export async function vaultExport(
 
   const secrets = await getAllSecrets();
   const secretsMap = secrets.reduce(
-    (prev, { name, value }) => (prev += `${name}="${value}"\n`),
-    ``,
+    (prev, { name, value }) => ({
+      ...prev,
+      [name]: value,
+    }),
+    {},
   );
 
-  logInfo(`Secrets retrieved for '${vaultNameInput}' vault!`);
+  logInfo(`Secrets synced to ./.env for '${active_vault}' vault!`);
   console.log(secretsMap);
 
-  const fullEnvPath = resolve(cwd(), envDestinationPath);
-
-  console.log(fullEnvPath);
+  await syncEnv('./.env', secretsMap);
 }

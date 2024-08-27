@@ -11,7 +11,7 @@ import { generateGrabUrl } from 'lib/util';
 import QRCode from 'qrcode';
 
 export async function dropSecret(ctx: DropContext) {
-    let currState = dropMachine.initialState;
+  let currState = dropMachine.initialState;
 
   const sendEvent = (event: AnyDropEvent) => {
     currState = dropMachine.transition(currState, event);
