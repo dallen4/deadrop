@@ -1,3 +1,3 @@
 export type ErrorBody = {
-    message: string;
+  message: string;
 };

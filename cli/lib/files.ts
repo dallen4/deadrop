@@ -3,17 +3,17 @@ import path from 'path';
 import { readFileSync, writeFileSync } from 'fs';
 
 export const writeFileFromBuffer = async (
-    fileBuffer: Buffer,
-    meta: NonNullable<DropMessage['meta']>,
+  fileBuffer: Buffer,
+  meta: NonNullable<DropMessage['meta']>,
 ) => {
-    const filePath = path.resolve(process.cwd(), meta.name);
+  const filePath = path.resolve(process.cwd(), meta.name);
 
-    writeFileSync(filePath, fileBuffer);
+  writeFileSync(filePath, fileBuffer);
 
-    return filePath;
+  return filePath;
 };
 
 export const readFileAsBuffer = async (shortPath: string) => {
-    const filePath = path.resolve(process.cwd(), shortPath);
-    return readFileSync(filePath);
+  const filePath = path.resolve(process.cwd(), shortPath);
+  return readFileSync(filePath);
 };

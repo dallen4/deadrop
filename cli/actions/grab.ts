@@ -1,16 +1,16 @@
 import { createGrabHandlers } from '@shared/handlers/grab';
 import {
-    grabMachine,
-    initGrabContext,
+  grabMachine,
+  initGrabContext,
 } from '@shared/lib/machines/grab';
 import { DropContext } from '@shared/types/drop';
 import { AnyGrabEvent, GrabContext } from '@shared/types/grab';
 import { decryptFile, hashFile } from 'lib/crypto';
 import {
-    displayWelcomeMessage,
-    logDebug,
-    logError,
-    logInfo,
+  displayWelcomeMessage,
+  logDebug,
+  logError,
+  logInfo,
 } from 'lib/log';
 import { initPeer } from 'lib/peer';
 import { cleanupSession } from 'lib/session';
