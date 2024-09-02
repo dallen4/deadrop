@@ -6337,6 +6337,11 @@ hoist-non-react-statics@^3.3.1, hoist-non-react-statics@^3.3.2:
   dependencies:
     react-is "^16.7.0"
 
+hono@^4.5.9:
+  version "4.5.9"
+  resolved "https://registry.yarnpkg.com/hono/-/hono-4.5.9.tgz#2627c55c4c97ae826973dddac857ba4476fde6c6"
+  integrity sha512-zz8ktqMDRrZETjxBrv8C5PQRFbrTRCLNVAjD1SNQyOzv4VjmX68Uxw83xQ6oxdAB60HiWnGEatiKA8V3SZLDkQ==
+
 html-dom-parser@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/html-dom-parser/-/html-dom-parser-1.2.0.tgz#8f689b835982ffbf245eda99730e92b8462c111e"

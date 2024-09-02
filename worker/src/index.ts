@@ -1,82 +1,35 @@
-const WELCOME_TEXT =
-  '{"name":"PeerJS Server","description":"A server side element to broker connections between PeerJS clients.","website":"https://peerjs.com/"}';
-const HEARTBEAT = '{"type":"HEARTBEAT"}';
-const OPEN = '{"type":"OPEN"}';
-const ID_TAKEN =
-  '{"type":"ID-TAKEN","payload":{"msg":"ID is taken"}}';
+import { PeerServerDO } from './lib/durable_objects';
+import { cors, tracing } from './lib/middleware';
+import { hono } from './lib/http/core';
+import { PeerJsRoutes } from './constants';
 
-export class PeerServerDO implements DurableObject {
-  constructor(private state: DurableObjectState, private env: Env) {
-    this.state.setWebSocketAutoResponse(
-      new WebSocketRequestResponsePair(HEARTBEAT, HEARTBEAT),
-    );
-  }
+const WELCOME_TEXT = JSON.stringify({
+  name: 'PeerJS Server',
+  description:
+    'A server side element to broker connections between PeerJS clients.',
+  website: 'https://peerjs.com/',
+});
 
-  async fetch(request: Request) {
-    const url = new URL(request.url);
+const app = hono();
 
-    const id = url.searchParams.get('id');
-    const token = url.searchParams.get('token');
+app.use(cors());
+app.use(tracing());
 
-    if (!id || !token) return new Response(null, { status: 400 });
+app.get(PeerJsRoutes.Index, (c) => c.text(WELCOME_TEXT));
 
-    const [wsclient, wsserver] = Object.values(new WebSocketPair());
+app.get(PeerJsRoutes.PeerJs, (c) => {
+  const url = new URL(c.req.url);
 
-    const existingWss = this.state.getWebSockets(id);
+  const objId = c.env.PEER_SERVER.idFromName(url.host);
+  const stub = c.env.PEER_SERVER.get(objId);
 
-    if (
-      existingWss.length > 0 &&
-      existingWss[0].deserializeAttachment().token !== token
-    ) {
-      wsserver.accept();
-      wsserver.send(ID_TAKEN);
-      wsserver.close(1008, 'ID is taken');
-      return new Response(null, { webSocket: wsclient, status: 101 });
-    } else {
-      existingWss.forEach((ws) => ws.close(1000));
-    }
+  return stub.fetch(c.req.raw);
+});
 
-    this.state.acceptWebSocket(wsserver, [id]);
-    wsserver.serializeAttachment({ id, token });
-    wsserver.send(OPEN);
-
-    return new Response(null, { webSocket: wsclient, status: 101 });
-  }
-
-  webSocketMessage(
-    ws: WebSocket,
-    message: string,
-  ): void | Promise<void> {
-    const msg = JSON.parse(message);
-    const dstWs = this.state.getWebSockets(msg.dst)[0];
-
-    msg.src = ws.deserializeAttachment().id;
-
-    dstWs.send(JSON.stringify(msg));
-  }
-}
+app.get(PeerJsRoutes.GenerateId, (c) => c.text(crypto.randomUUID()));
 
 export default {
-  async fetch(request: Request, env: Env) {
-    const url = new URL(request.url);
-
-    switch (url.pathname) {
-      case '/':
-        return new Response(WELCOME_TEXT);
-      case '/peerjs':
-        let objId = env.PEER_SERVER.idFromName(url.host);
-        let stub = env.PEER_SERVER.get(objId);
-        return stub.fetch(request);
-      case '/peerjs/id':
-        return new Response(crypto.randomUUID(), {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/plain',
-            'Access-Control-Allow-Origin': '*',
-          },
-        });
-      default:
-        return new Response(null, { status: 404 });
-    }
-  },
+  fetch: app.fetch,
 };
+
+export { PeerServerDO };
