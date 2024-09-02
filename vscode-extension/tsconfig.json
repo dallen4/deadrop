@@ -1,0 +1,37 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "module": "commonjs",
+    "moduleResolution": "Node",
+    "target": "ES2020",
+    "outDir": "out",
+    "lib": ["ES2020", "DOM"],
+    "sourceMap": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "noImplicitAny": false,
+    "paths": {
+      "@shared/*": ["../shared/*"],
+      "@web/*": ["../web/*"]
+    },
+    "typeRoots": [
+      "./node_modules/@types/",
+      "../node_modules/@types/",
+      "./types/",
+      "../shared/types/",
+      "./env.d.ts"
+    ]
+  },
+  "include": [
+    "ext-src/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../shared/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

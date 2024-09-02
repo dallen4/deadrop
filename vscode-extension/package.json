@@ -1,0 +1,118 @@
+{
+  "name": "vscode-extension",
+  "displayName": "deadrop",
+  "description": "p2p encrypted secret sharing",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "main": "./dist/extension.js",
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:deadrop.drop",
+    "onCommand:deadrop.dropFile",
+    "onCommand:deadrop.grab",
+    "onView:deadrop-sidebar"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "deadrop-sidebar-view",
+          "title": "deadrop",
+          "icon": "media/handshake.svg"
+        }
+      ]
+    },
+    "views": {
+      "deadrop-sidebar-view": [
+        {
+          "type": "webview",
+          "id": "deadrop-sidebar",
+          "name": "deadrop",
+          "icon": "media/handshake.svg",
+          "contextualTitle": "deadrop"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "deadrop.drop",
+        "title": "Start drop"
+      },
+      {
+        "command": "deadrop.dropFile",
+        "title": "Start file drop"
+      },
+      {
+        "command": "deadrop.grab",
+        "title": "Start grab"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceScheme == file && resourceExtname",
+          "command": "deadrop.dropFile",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "deadrop.drop",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run package",
+    "views:dev": "cd views && vite",
+    "views:build": "tsc -b && cd views && vite build",
+    "views:preview": "cd views && vite preview",
+    "compile": "yarn run check-types && yarn run lint && node esbuild.js",
+    "dev": "yarn run compile && code --extensionDevelopmentPath=$PWD",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "yarn run check-types && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "npx eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@tomjs/vite-plugin-vscode": "^2.5.5",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@types/vscode": "^1.92.0",
+    "@types/vscode-webview": "^1.57.5",
+    "@typescript-eslint/eslint-plugin": "^7.14.1",
+    "@typescript-eslint/parser": "^7.11.0",
+    "@vitejs/plugin-react-swc": "^3.7.0",
+    "@vscode/test-cli": "^0.0.9",
+    "@vscode/test-electron": "^2.4.0",
+    "esbuild": "^0.21.5",
+    "eslint": "^9.9.1",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "globals": "^15.9.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.3.0",
+    "vite": "^5.4.2"
+  },
+  "dependencies": {
+    "@tomjs/vscode-extension-webview": "^1.3.3",
+    "@tomjs/vscode-webview": "^1.0.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
