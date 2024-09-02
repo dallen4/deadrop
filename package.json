@@ -50,14 +50,9 @@
     "ts-node": "^10.7.0",
     "typescript": "^4.0.3"
   },
-  "browser": {
-    "tls": false,
-    "net": false,
-    "bufferutil": false,
-    "utf-8-validate": false
-  },
   "engines": {
     "node": ">=20",
-    "yarn": "1"
+    "yarn": "1",
+    "vscode": "^1.80.0"
   }
 }
