@@ -18,8 +18,6 @@ export const generateId = () => customAlphabet(alphanumeric, 12)();
 
 export const generateIV = () => randomBytes(12).toString('binary');
 
-export const getIVBuffer = (iv: string) => Buffer.from(iv, 'binary');
-
 export const generateGrabUrl = (url: string, id: string) => {
   const params = new URLSearchParams({ drop: id });
   const baseUrl = new URL(GRAB_PATH, url);

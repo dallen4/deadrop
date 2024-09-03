@@ -4,9 +4,7 @@ import { stringify, parse } from 'envfile';
 import { appendFile, readFile, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 import { cwd } from 'process';
-import { VaultDBConfig } from 'types/config';
-
-type Env = Record<string, string>;
+import { Env, VaultDBConfig } from 'types/config';
 
 const encoding: BufferEncoding = 'utf-8';
 
