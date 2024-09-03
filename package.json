@@ -18,7 +18,7 @@
   "scripts": {
     "web": "yarn workspace web",
     "cli": "yarn workspace cli",
-	  "worker": "yarn workspace worker",
+    "worker": "yarn workspace worker",
     "shared": "yarn workspace shared",
     "start": "yarn web start",
     "build": "yarn web build",
@@ -28,7 +28,10 @@
     "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
     "worker:deploy": "yarn worker deploy",
     "analyze:dup": "npx jscpd shared cli web --format \"typescript\"",
-    "postversion": "git push --tags"
+    "postversion": "git push --tags",
+    "postinstall": "husky",
+    "prepack": "pinst --disable",
+    "postpack": "pinst --enable"
   },
   "dependencies": {
     "@libsql/client": "^0.9.0",
@@ -46,6 +49,9 @@
     "@types/nanoid-dictionary": "^4.2.3",
     "@types/node": "^20",
     "eslint": "^8.31.0",
+    "husky": "^9.1.5",
+    "lint-staged": "^15.2.10",
+    "pinst": "^3.0.0",
     "prettier": "^2.8.2",
     "ts-node": "^10.7.0",
     "typescript": "^4.0.3"
@@ -59,5 +65,12 @@
   "engines": {
     "node": ">=20",
     "yarn": "1"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix",
+      "git add"
+    ]
   }
 }
