@@ -3,19 +3,19 @@ import { cors, tracing } from './lib/middleware';
 import { hono } from './lib/http/core';
 import { PeerJsRoutes } from './constants';
 
-const WELCOME_TEXT = JSON.stringify({
-  name: 'PeerJS Server',
-  description:
-    'A server side element to broker connections between PeerJS clients.',
-  website: 'https://peerjs.com/',
-});
-
 const app = hono();
 
 app.use(cors());
 app.use(tracing());
 
-app.get(PeerJsRoutes.Index, (c) => c.text(WELCOME_TEXT));
+app.get(PeerJsRoutes.Index, (c) =>
+  c.json({
+    name: 'PeerJS Worker for deadrop',
+    description:
+      'A server side element to broker connections between PeerJS clients for the deadrop platform.',
+    website: 'https://deadrop.io',
+  }),
+);
 
 app.get(PeerJsRoutes.PeerJs, (c) => {
   const url = new URL(c.req.url);
