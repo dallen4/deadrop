@@ -13,6 +13,7 @@
     "wrangler": "^3.0.0"
   },
   "dependencies": {
+    "@hono/clerk-auth": "^2.0.0",
     "hono": "^4.5.9"
   }
 }
