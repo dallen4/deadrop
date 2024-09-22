@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@auth0/nextjs-auth0": "^2.6.3",
+    "@clerk/nextjs": "^5.6.0",
     "@emotion/react": "^11.10.0",
     "@emotion/server": "^11.10.0",
     "@hcaptcha/react-hcaptcha": "^1.4.4",

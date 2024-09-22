@@ -18,7 +18,7 @@
   "scripts": {
     "web": "yarn workspace web",
     "cli": "yarn workspace cli",
-	  "worker": "yarn workspace worker",
+    "worker": "yarn workspace worker",
     "shared": "yarn workspace shared",
     "start": "yarn web start",
     "build": "yarn web build",
@@ -31,6 +31,8 @@
     "postversion": "git push --tags"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^5.22.3",
+    "@clerk/clerk-sdk-node": "^5.0.42",
     "@libsql/client": "^0.9.0",
     "@xstate/react": "^3.0.1",
     "drizzle-kit": "^0.24.0",
