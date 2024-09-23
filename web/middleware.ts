@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest, NextMiddleware } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
 import {
   DISABLE_CAPTCHA_COOKIE,
