@@ -37,6 +37,7 @@
     "@xstate/react": "^3.0.1",
     "drizzle-kit": "^0.24.0",
     "drizzle-orm": "^0.33.0",
+    "hono": "^4.6.2",
     "nanoid": "^5.0.1",
     "nanoid-dictionary": "^4.3.0",
     "peerjs": "^1.4.7",
