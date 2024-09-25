@@ -1,6 +1,6 @@
 import { createSecretsHelpers } from 'db/secrets';
+import { stringify } from 'envfile';
 import { loadConfig } from 'lib/config';
-import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd } from 'process';
@@ -15,7 +15,7 @@ export async function vaultExport(
 
   const { vaults, active_vault } = config;
 
-  const { location, key } = vaults[active_vault];
+  const { location, key } = vaults[active_vault.name];
 
   const { getAllSecrets } = createSecretsHelpers({
     location,
