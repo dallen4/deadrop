@@ -9,9 +9,9 @@ export async function vaultImport(envPath: string) {
 
   const { vaults, active_vault } = config;
 
-  const { key } = vaults[active_vault];
+  const { key } = vaults[active_vault.name];
 
-  const location = vaultExists(vaults, active_vault);
+  const location = vaultExists(vaults, active_vault.name);
 
   if (!location) {
     logError('Default vault could not be found!');

@@ -1,6 +1,6 @@
 import { createSecretsHelpers } from 'db/secrets';
+import { stringify } from 'envfile';
 import { loadConfig } from 'lib/config';
-import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd } from 'process';
@@ -14,7 +14,7 @@ export async function vaultExport(
 
   const { vaults, active_vault } = config;
 
-  const { location, key } = vaults[active_vault];
+  const { location, key } = vaults[active_vault.name];
 
   const { getAllSecrets } = createSecretsHelpers({
     location,
@@ -22,13 +22,10 @@ export async function vaultExport(
   });
 
   const secrets = await getAllSecrets();
-  const secretsMap = secrets.reduce(
-    (prev, { name, value }) => (prev += `${name}="${value}"\n`),
-    ``,
-  );
+  const envSource = stringify(secrets);
 
   logInfo(`Secrets retrieved for '${vaultNameInput}' vault!`);
-  console.log(secretsMap);
+  console.log(envSource);
 
   const fullEnvPath = resolve(cwd(), envDestinationPath);
 
