@@ -1,3 +1,5 @@
+import { BlockCode } from 'atoms/Code';
+
 # deadrop CLI
 
 ## Prerequisites
@@ -16,6 +18,21 @@ To install the CLI in a project:
 To install the CLI globally:
 
 `npm install -g deadrop`
+
+## Configuration
+
+To configure the CLI, simply run:
+
+`deadrop init`
+
+<BlockCode data={`active_vault:
+  name: default
+  environment: dev
+vaults:
+  default:
+    location: /<path-to-project-using-vault>/.deadrop/default.db
+    key: SVgZsSZgtMQbUz4kC83Lo6RqiCqLIYBIA3A1r3u+4s4=
+`}/>
 
 ## Usage
 

@@ -35,8 +35,17 @@ export function createSecretsHelpers({
   const removeSecret = async (name: string) =>
     db.delete(secretsTable).where(eq(secretsTable.name, name));
 
-  const getAllSecrets = async () =>
-    db.select().from(secretsTable).all();
+  const getAllSecrets = async (): Promise<Record<string, string>> => {
+    const secretItems = await db.select().from(secretsTable).all();
+
+    return secretItems.reduce(
+      (prev, { name, value }) => ({
+        ...prev,
+        [name]: value,
+      }),
+      {},
+    );
+  };
 
   return {
     runMigrations,

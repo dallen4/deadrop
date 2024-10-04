@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest, NextMiddleware } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { nanoid } from 'nanoid';
 import {
   DISABLE_CAPTCHA_COOKIE,
@@ -29,12 +29,16 @@ export async function middleware(request: NextRequest) {
   if (!limitCookie) {
     const dailyDropLimit = await get<number>(DAILY_DROP_LIMIT_COOKIE);
 
-    response.cookies.set(DAILY_DROP_LIMIT_COOKIE, dailyDropLimit, {
-      path: '/',
-      secure: process.env.NODE_ENV !== 'development',
-      httpOnly: true,
-      sameSite: true,
-    });
+    response.cookies.set(
+      DAILY_DROP_LIMIT_COOKIE,
+      dailyDropLimit!.toString(),
+      {
+        path: '/',
+        secure: process.env.NODE_ENV !== 'development',
+        httpOnly: true,
+        sameSite: true,
+      },
+    );
 
     console.log('Drop limit set');
   }
@@ -45,7 +49,9 @@ export async function middleware(request: NextRequest) {
     !request.cookies.get(DISABLE_CAPTCHA_COOKIE)
   ) {
     console.log('Disabling captcha');
-    response.cookies.set(DISABLE_CAPTCHA_COOKIE, true, { sameSite: true });
+    response.cookies.set(DISABLE_CAPTCHA_COOKIE, 'true', {
+      sameSite: true,
+    });
   }
 
   return response;

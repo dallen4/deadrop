@@ -14,7 +14,7 @@ export default async function stripeWebhook(
     const event = req.body as Stripe.Event;
 
     if (event.type === 'checkout.session.completed') {
-        const sessionId = (event.data.object as any).id;
+        const sessionId = (event.data.object as Record<string, string>).id;
 
         const email = await getEmailForCheckout(sessionId);
 
