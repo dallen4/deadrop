@@ -1,4 +1,4 @@
-name: Web Version Bump
+name: Version Bump
 on:
   workflow_dispatch:
     inputs:
