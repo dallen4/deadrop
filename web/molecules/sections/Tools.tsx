@@ -54,16 +54,16 @@ const useStyles = createStyles((theme) => ({
     },
 }));
 
-const mockdata = [
+const toolData = [
     {
         title: 'Web Application',
         status: 'stable',
-        description: `Use the deadrop web application and even save it to your phone's home screen as a PWA!`,
+        description: `Use the deadrop web application and even save it to your device's home screen as a PWA!`,
         icon: IconBrowser,
     },
     {
         title: 'CLI',
-        status: 'experimental',
+        status: 'stable',
         description: `Use NPM's npx to use deadrop directly in your terminal!`,
         icon: IconTerminal2,
     },
@@ -85,7 +85,7 @@ export function Tools() {
     const theme = useMantineTheme();
     const { classes } = useStyles();
 
-    const features = mockdata.map((feature) => (
+    const features = toolData.map((feature) => (
         <Card
             key={feature.title}
             shadow={'md'}
