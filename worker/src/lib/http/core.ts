@@ -9,6 +9,6 @@ export type HonoCtx = {
   };
 };
 
-export type Middleware = MiddlewareHandler<HonoCtx>;
+export type Middleware = MiddlewareHandler<HonoCtx, string, {}>;
 
 export const hono = () => new Hono<HonoCtx>();

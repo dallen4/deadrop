@@ -8,6 +8,7 @@ on:
         options: 
         - web
         - cli
+        - worker
         - shared
       rel_type:
         type: choice
