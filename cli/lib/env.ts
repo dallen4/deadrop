@@ -37,6 +37,7 @@ export async function loadEnvFromFile(filePath: string) {
 
 export async function addEnvToVault(
   envPath: string,
+  environment: string,
   vault: VaultDBConfig,
 ) {
   const envVars = await loadEnvFromFile(envPath);
@@ -46,6 +47,7 @@ export async function addEnvToVault(
   const secretsToAdd = Object.entries(envVars).map(
     ([key, value]) => ({
       name: key,
+      environment,
       value,
     }),
   );

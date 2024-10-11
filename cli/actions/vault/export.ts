@@ -1,10 +1,9 @@
 import { createSecretsHelpers } from 'db/secrets';
-import { stringify } from 'envfile';
 import { loadConfig } from 'lib/config';
+import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd } from 'process';
-import { Env } from 'types/config';
 
 // TODO format support (.env, JSON files)
 export async function vaultExport(
@@ -28,15 +27,7 @@ export async function vaultExport(
 
   const fullEnvPath = resolve(cwd(), envDestinationPath);
 
-  const secretsMap: Env = secrets.reduce(
-    (prev, { name, value }) => ({
-      ...prev,
-      [name]: value,
-    }),
-    {},
-  );
-
-  await syncEnv(fullEnvPath, secretsMap);
+  await syncEnv(fullEnvPath, secrets);
 
   logInfo(
     `Secrets successfully exported to '${envDestinationPath}'!`,

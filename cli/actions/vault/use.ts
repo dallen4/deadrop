@@ -31,7 +31,7 @@ export async function vaultUse(vaultNameInput: string) {
     ...config,
     active_vault: {
       name: vaultNameInput,
-      environment: 'dev',
+      environment: 'development',
     },
     vaults,
   };

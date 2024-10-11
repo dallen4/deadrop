@@ -18,7 +18,11 @@ export async function vaultImport(envPath: string) {
     return exit(1);
   }
 
-  const newSecrets = await addEnvToVault(envPath, { key, location });
+  const newSecrets = await addEnvToVault(
+    envPath,
+    active_vault.environment,
+    { key, location },
+  );
 
   logInfo(
     `${newSecrets.rowsAffected} secrets added to vault from '${envPath}'!`,

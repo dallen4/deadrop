@@ -40,7 +40,7 @@ export const initConfig = (
 ): DeadropConfig => ({
   active_vault: {
     name: 'default',
-    environment: 'dev',
+    environment: 'development',
   },
   vaults: {
     default: vault(defaultVaultPath),
