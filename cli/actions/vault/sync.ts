@@ -21,7 +21,6 @@ export async function vaultSync(
   const secrets = await getAllSecrets();
 
   logInfo(`Secrets synced to ./.env for '${active_vault}' vault!`);
-  console.log(secrets);
 
   await syncEnv('./.env', secrets);
 }
