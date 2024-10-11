@@ -175,7 +175,7 @@ export const SecretInputCard = () => {
             ) : (
                 <Text>Invalid Payload Mode</Text>
             )}
-            {typeof user === 'undefined' && (
+            {!!user && (
                 <Box style={{ marginTop: theme.spacing.lg }}>
                     <Captcha
                         onSuccess={() => setCanConfirm(true)}
