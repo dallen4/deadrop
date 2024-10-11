@@ -48,7 +48,10 @@ const assetsDomains = [
   githubAssetsDomain,
 ].join(' ');
 
-const clerkDomain = 'https://clerk.deadrop.io';
+const clerkDomains = [
+  'https://clerk.deadrop.io',
+  'https://*.clerk.accounts.dev',
+].join(' ');
 
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',
@@ -58,11 +61,11 @@ const safeConfig = {
   frameOptions: 'DENY',
   permissionsPolicy: false,
   contentSecurityPolicy: {
-    'connect-src': `'self' ${clerkDomain} ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains}`,
+    'connect-src': `'self' ${clerkDomains} ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains}`,
     'default-src': `'self'`,
     'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
     'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
-    'script-src': `'self' 'unsafe-inline' ${clerkDomain} ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
+    'script-src': `'self' 'unsafe-inline' ${clerkDomains} ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
     'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
     'img-src': `'self' data: ${assetsDomains}`,
     'worker-src': `'self' blob:`,
