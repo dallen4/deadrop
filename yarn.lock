@@ -6922,6 +6922,11 @@ hono@^4.6.2:
   resolved "https://registry.yarnpkg.com/hono/-/hono-4.6.2.tgz#bdb2d3d33aedcdb8aaa0f12b67b738edf2b1ab37"
   integrity sha512-v+39817TgAhetmHUEli8O0uHDmxp2Up3DnhS4oUZXOl5IQ9np9tYtldd42e5zgdLVS0wsOoXQNZ6mx+BGmEvCA==
 
+hono@^4.6.3:
+  version "4.6.3"
+  resolved "https://registry.yarnpkg.com/hono/-/hono-4.6.3.tgz#78a58a24ea79e00071cff59596486e91e1c1a9d0"
+  integrity sha512-0LeEuBNFeSHGqZ9sNVVgZjB1V5fmhkBSB0hZrpqStSMLOWgfLy0dHOvrjbJh0H2khsjet6rbHfWTHY0kpYThKQ==
+
 html-dom-parser@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/html-dom-parser/-/html-dom-parser-1.2.0.tgz#8f689b835982ffbf245eda99730e92b8462c111e"

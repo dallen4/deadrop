@@ -26,6 +26,7 @@ const vercelLiveDomain = 'https://vercel.live';
 
 const vercelMetricsDomains = [
   'https://vitals.vercel-insights.com',
+  'https://va.vercel-scripts.com',
   vercelLiveDomain,
 ].join(' ');
 
@@ -47,6 +48,8 @@ const assetsDomains = [
   githubAssetsDomain,
 ].join(' ');
 
+const clerkDomain = 'https://clerk.deadrop.io';
+
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',
   contentTypeOptions: 'nosniff',
@@ -55,13 +58,14 @@ const safeConfig = {
   frameOptions: 'DENY',
   permissionsPolicy: false,
   contentSecurityPolicy: {
-    'connect-src': `'self' ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains}`,
+    'connect-src': `'self' ${clerkDomain} ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains}`,
     'default-src': `'self'`,
     'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
     'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
-    'script-src': `'self' 'unsafe-inline' ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
+    'script-src': `'self' 'unsafe-inline' ${clerkDomain} ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
     'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
     'img-src': `'self' data: ${assetsDomains}`,
+    'worker-src': `'self' blob:`,
   },
 };
 
