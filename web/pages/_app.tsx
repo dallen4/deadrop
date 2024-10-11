@@ -7,6 +7,7 @@ import Layout from 'molecules/Layout';
 import { emotionCache } from 'lib/emotion';
 import { NotificationsProvider } from '@mantine/notifications';
 import { ClerkProvider } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
 import Head from 'next/head';
 import { description, title } from '@config/app';
 
@@ -38,6 +39,9 @@ export default function MyApp(props: AppProps) {
       </Head>
       <ClerkProvider
         publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+        appearance={{
+          baseTheme: dark,
+        }}
         {...pageProps}
       >
         <MantineProvider
