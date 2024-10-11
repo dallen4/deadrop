@@ -13,3 +13,5 @@ export type DeadropConfig = {
   active_vault: string;
   vaults: VaultStore;
 };
+
+export type Env = Record<string, string>;
