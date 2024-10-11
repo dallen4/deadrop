@@ -66,8 +66,6 @@ const Header = () => {
           >
             Docs
           </Button>
-          <SignInButton />
-          <SignedOut></SignedOut>
           <SignedIn>
             <UserButton />
           </SignedIn>
