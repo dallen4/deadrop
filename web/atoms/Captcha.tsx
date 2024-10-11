@@ -20,7 +20,6 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
   return (
     <HCaptcha
       sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
-      theme={'dark'}
       size={'compact'}
       onVerify={onVerify}
       onError={onError}
