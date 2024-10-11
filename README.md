@@ -1,6 +1,6 @@
 # deadrop
 
-[![Playwright Tests](https://github.com/dallen4/deadrop/actions/workflows/web_ci_workflow.yml/badge.svg?branch=main)](https://github.com/dallen4/deadrop/actions/workflows/web_ci_workflow.yml) [![CLI Build](https://github.com/dallen4/deadrop/actions/workflows/cli_pkg_workflow.yml/badge.svg)](https://github.com/dallen4/deadrop/actions/workflows/cli_pkg_workflow.yml)
+[![Playwright Tests](https://github.com/dallen4/deadrop/actions/workflows/web_ci_workflow.yml/badge.svg?branch=main)](https://github.com/dallen4/deadrop/actions/workflows/web_ci_workflow.yml) [![CLI Build](https://github.com/dallen4/deadrop/actions/workflows/cli_publish_workflow.yml/badge.svg)](https://github.com/dallen4/deadrop/actions/workflows/cli_publish_workflow.yml)
 
 *deadrop* is an e2e encrypted secret sharing platform that leverages the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
 
@@ -16,9 +16,9 @@ Utilizing public key infrastructure patterns, deadrop uses AES (with GCM) and El
 - [x] JSON string secret sharing
 - [x] secret file sharing
 - [x] basic captcha protection via [hcaptcha](https://www.hcaptcha.com/)
-- [ ] CLI implementation (in-progress)
+- [x] CLI MVP
   - [x] text
-  - [ ] files
+  - [x] files
 - [ ] multi-user sharing
 - [ ] drop passcode protection
 
