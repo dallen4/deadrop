@@ -28,9 +28,11 @@ const DropFlow = () => {
             case DropState.Initial:
                 return 0;
             case DropState.Ready:
+                // TODO start 5 min timer
                 return 1;
             case DropState.Waiting:
             case DropState.AwaitingHandshake:
+                // TODO clear timer
                 return 2;
             case DropState.Acknowledged:
                 return 3;
