@@ -9,12 +9,12 @@ export enum ContentType {
   Json = 'application/json',
 }
 
-export enum PeerJsRoutes {
-  Index = '/',
-  PeerJs = '/peerjs',
-  GenerateId = '/peerjs/id',
-}
-
-export enum DeadropRoutes {
+export enum AppRoutes {
+  Root = '/',
   Drop = '/drop',
+
+  // peerjs paths
+  PeerJsRoot = '/peerjs',
+  PeerJsGenerateId = '/peerjs/id',
+  GenerateId = '/id',
 }
