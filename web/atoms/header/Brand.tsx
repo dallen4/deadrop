@@ -38,6 +38,7 @@ const Brand = () => {
             <Box className={classes.linkContainer}>
                 <Image
                     src={'/icons/apple-touch-icon.png'}
+                    alt={'deadrop icon'}
                     height={60}
                     width={60}
                     className={classes.hoverPointer}

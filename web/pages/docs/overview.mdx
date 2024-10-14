@@ -2,7 +2,7 @@ import { InlineCode, BlockCode } from 'atoms/Code';
 
 # What is deadrop?
 
-**deadrop** is an e2e encrypted secret sharing platform that leverages the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API).
+**deadrop** is an e2e encrypted secret sharing platform with a goal to provide platform and device agnostic secret sharing in a steamlined and easy-to-use fashion. Behind the scenes leverages the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) and WebRTC.
 
 ## How it Works
 
@@ -17,7 +17,9 @@ All keys are exchanged through peer-to-peer connections over WebRTC allowing all
 - ✅ secret file sharing
 - ✅ basic captcha protection via [hcaptcha](https://www.hcaptcha.com/)
 - ✅ authentication
-- ✅ CLI implementation
+- ✅ CLI MVP implementation (basic drop & grab)
+- ⬜️ local vaults
+- ⬜️ cloud-synced, collaborative vaults
 - ⬜️ VS Code Extension
 - ⬜️ CLI authentication
 - ⬜️ multi-user sharing
@@ -41,3 +43,4 @@ Or if you want to run it without installing it within your project:
 
 <BlockCode data={`npx deadrop ...`} />
 
+The CLI is designed for quick and easy usage and can be leveraged with zero configuration.

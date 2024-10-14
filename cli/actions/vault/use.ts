@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { vaultExists } from 'db/vaults';
 import { loadConfig, saveConfig } from 'lib/config';
 import { logError, logInfo } from 'lib/log';
@@ -19,19 +20,24 @@ export async function vaultUse(vaultNameInput: string) {
     return exit(1);
   }
 
-  if (vaultNameInput === active_vault) {
-    logInfo(`Vault '${vaultNameInput}' is already active...`);
+  if (vaultNameInput === active_vault.name) {
+    logInfo(
+      `Vault '${chalk.bold(vaultNameInput)}' is already active...`,
+    );
     return exit(0);
   }
 
   const updatedConfig: DeadropConfig = {
     ...config,
-    active_vault: vaultNameInput,
+    active_vault: {
+      name: vaultNameInput,
+      environment: 'development',
+    },
     vaults,
   };
 
   await saveConfig(cwd(), updatedConfig, true);
 
-  logInfo(`Vault '${vaultNameInput}' is now active...`);
+  logInfo(`Vault '${chalk.bold(vaultNameInput)}' is now active...`);
   exit(0);
 }

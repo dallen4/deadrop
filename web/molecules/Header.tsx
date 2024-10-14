@@ -1,9 +1,19 @@
 import {
+  SignedIn,
+  SignedOut,
+  SignInButton,
+  UserButton,
+  useUser,
+} from '@clerk/nextjs';
+import {
+  Avatar,
   Header as BaseHeader,
   Box,
   Button,
   Flex,
   Group,
+  Loader,
+  Popover,
   createStyles,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
@@ -19,12 +29,12 @@ const useStyles = createStyles((theme) => ({
 
 const Header = () => {
   const router = useRouter();
-  // const { user, isLoading } = useUser();
+  const { user, isLoaded } = useUser();
   const { classes, theme } = useStyles();
   const isMobile = useMediaQuery(
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
-
+  console.log(user);
   // const onLogin = () => router.push(LOGIN_PATH);
 
   const onDocsClick = () => router.push(OVERVIEW_DOCS_PATH);
@@ -39,10 +49,9 @@ const Header = () => {
         },
       })}
     >
-      <Flex direction="row">
+      <Flex direction={'row'} justify={'space-between'}>
         <Box
           style={{
-            flex: 1,
             justifyContent: 'flex-start',
             alignItems: 'center',
           }}
@@ -57,38 +66,41 @@ const Header = () => {
           >
             Docs
           </Button>
-          {/* {user ? (
-                        <Popover position={'bottom-end'}>
-                            <Popover.Target>
-                                <Avatar
-                                    src={user!.picture!}
-                                    style={{
-                                        float: 'right',
-                                        cursor: 'pointer',
-                                    }}
-                                    size={'lg'}
-                                >
-                                    {user!.name![0]}
-                                </Avatar>
-                            </Popover.Target>
-                            <Popover.Dropdown>
-                                <a href={LOGOUT_PATH}>Logout</a>
-                            </Popover.Dropdown>
-                        </Popover>
-                    ) : (
-                        <Button
-                            variant={'outline'}
-                            onClick={onLogin}
-                            style={{ minWidth: '75px' }}
-                            disabled={isLoading}
-                        >
-                            {isLoading ? (
-                                <Loader color={'blue'} size={'sm'} />
-                            ) : (
-                                'Login'
-                            )}
-                        </Button>
-                    )} */}
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+          {user ? (
+            <Popover position={'bottom-end'}>
+              <Popover.Target>
+                <Avatar
+                  src={user!.imageUrl}
+                  style={{
+                    float: 'right',
+                    cursor: 'pointer',
+                  }}
+                  size={'lg'}
+                >
+                  {user!.firstName![0]}
+                </Avatar>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <UserButton />
+              </Popover.Dropdown>
+            </Popover>
+          ) : (
+            <Button
+              variant={'outline'}
+              style={{ minWidth: '75px' }}
+              disabled={!isLoaded}
+              component={SignInButton}
+            >
+              {!isLoaded ? (
+                <Loader color={'blue'} size={'sm'} />
+              ) : (
+                'Login'
+              )}
+            </Button>
+          )}
         </Group>
       </Flex>
     </BaseHeader>
