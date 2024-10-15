@@ -18,7 +18,7 @@
   "scripts": {
     "web": "yarn workspace web",
     "cli": "yarn workspace cli",
-	  "worker": "yarn workspace worker",
+    "worker": "yarn workspace worker",
     "shared": "yarn workspace shared",
     "start": "yarn web start",
     "build": "yarn web build",
@@ -28,19 +28,25 @@
     "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
     "worker:deploy": "yarn worker deploy",
     "analyze:dup": "npx jscpd shared cli web --format \"typescript\"",
+    "analyze:unused": "ts-prune",
     "postversion": "git push --tags"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^5.22.3",
+    "@clerk/clerk-sdk-node": "^5.0.42",
     "@libsql/client": "^0.9.0",
     "@xstate/react": "^3.0.1",
     "drizzle-kit": "^0.24.0",
     "drizzle-orm": "^0.33.0",
+    "drizzle-zod": "^0.5.1",
+    "hono": "^4.6.2",
     "nanoid": "^5.0.1",
     "nanoid-dictionary": "^4.3.0",
     "peerjs": "^1.4.7",
     "qrcode": "^1.5.3",
     "ws": "^8.11.0",
-    "xstate": "^4.38.2"
+    "xstate": "^4.38.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/nanoid-dictionary": "^4.2.3",
@@ -48,6 +54,7 @@
     "eslint": "^8.31.0",
     "prettier": "^2.8.2",
     "ts-node": "^10.7.0",
+    "ts-prune": "^0.10.3",
     "typescript": "^4.0.3"
   },
   "browser": {

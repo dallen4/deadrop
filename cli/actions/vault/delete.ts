@@ -24,7 +24,7 @@ export async function vaultDelete(vaultNameInput: string) {
   });
 
   if (shouldDelete) {
-    if (vaultName === active_vault) {
+    if (active_vault.name === vaultName) {
       logInfo(
         `User vault to be deleted cannot be selected as active. Switch to a different vault and try again.`,
       );

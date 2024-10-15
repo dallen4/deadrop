@@ -165,7 +165,7 @@ export const createGrabHandlers = <
       const { verified } = msg as ConfirmIntegrityMessage;
 
       if (verified)
-        logger.info(`Message validated!\nSecret: ${ctx.message}`);
+        logger.info(`Message validated!\n\nSecret: ${ctx.message}`);
       else logger.error('Validation failed!');
 
       sendEvent({

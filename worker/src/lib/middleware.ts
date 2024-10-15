@@ -15,6 +15,7 @@ export const cors = (): Middleware =>
   baseCors({
     origin: [
       'https://deadrop.io',
+      'https://*.deadrop.io',
       'https://*nieky-allens-projects.vercel.app',
       'https://*nieky.vercel.app',
     ],

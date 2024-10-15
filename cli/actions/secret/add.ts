@@ -9,9 +9,13 @@ export async function secretAdd(name: string, value: string) {
 
   const { vaults, active_vault } = config;
 
-  const { addSecrets } = createSecretsHelpers(vaults[active_vault]);
+  const { addSecrets } = createSecretsHelpers(
+    vaults[active_vault.name],
+  );
 
-  await addSecrets([{ name, value }]);
+  await addSecrets([
+    { name, value, environment: active_vault.environment },
+  ]);
 
   logInfo('secret added successfully!');
 }

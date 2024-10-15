@@ -14,7 +14,7 @@ export async function vaultExport(
 
   const { vaults, active_vault } = config;
 
-  const { location, key } = vaults[active_vault];
+  const { location, key } = vaults[active_vault.name];
 
   const { getAllSecrets } = createSecretsHelpers({
     location,
@@ -22,15 +22,14 @@ export async function vaultExport(
   });
 
   const secrets = await getAllSecrets();
-  const secretsMap = secrets.reduce(
-    (prev, { name, value }) => (prev += `${name}="${value}"\n`),
-    ``,
-  );
 
   logInfo(`Secrets retrieved for '${vaultNameInput}' vault!`);
-  console.log(secretsMap);
 
   const fullEnvPath = resolve(cwd(), envDestinationPath);
 
-  console.log(fullEnvPath);
+  await syncEnv(fullEnvPath, secrets);
+
+  logInfo(
+    `Secrets successfully exported to '${envDestinationPath}'!`,
+  );
 }

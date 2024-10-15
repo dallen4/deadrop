@@ -9,16 +9,20 @@ export async function vaultImport(envPath: string) {
 
   const { vaults, active_vault } = config;
 
-  const { key } = vaults[active_vault];
+  const { key } = vaults[active_vault.name];
 
-  const location = vaultExists(vaults, active_vault);
+  const location = vaultExists(vaults, active_vault.name);
 
   if (!location) {
     logError('Default vault could not be found!');
     return exit(1);
   }
 
-  const newSecrets = await addEnvToVault(envPath, { key, location });
+  const newSecrets = await addEnvToVault(
+    envPath,
+    active_vault.environment,
+    { key, location },
+  );
 
   logInfo(
     `${newSecrets.rowsAffected} secrets added to vault from '${envPath}'!`,

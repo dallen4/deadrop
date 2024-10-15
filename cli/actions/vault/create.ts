@@ -36,7 +36,10 @@ export async function vaultCreate(
 
   initDB(newVaultLocation, newVault.key);
 
-  config.active_vault = vaultNameInput;
+  config.active_vault = {
+    name: vaultNameInput,
+    environment: 'development',
+  };
 
   await saveConfig(cwd(), { ...config }, true);
 
