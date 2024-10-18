@@ -38,7 +38,10 @@ export const vault = (path: string): VaultDBConfig => ({
 export const initConfig = (
   defaultVaultPath: string,
 ): DeadropConfig => ({
-  active_vault: 'default',
+  active_vault: {
+    name: 'default',
+    environment: 'development',
+  },
   vaults: {
     default: vault(defaultVaultPath),
   },

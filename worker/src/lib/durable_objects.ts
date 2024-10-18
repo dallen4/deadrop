@@ -20,7 +20,12 @@ export class PeerServerDO implements DurableObject {
 
     if (!id || !token) return new Response(null, { status: 400 });
 
-    const [wsclient, wsserver] = Object.values(new WebSocketPair());
+    const { 0: wsClient, 1: wsServer } = new WebSocketPair();
+
+    const AckWSResponse = new Response(null, {
+      webSocket: wsClient,
+      status: 101,
+    });
 
     const existingWss = this.state.getWebSockets(id);
 
@@ -28,19 +33,22 @@ export class PeerServerDO implements DurableObject {
       existingWss.length > 0 &&
       existingWss[0].deserializeAttachment().token !== token
     ) {
-      wsserver.accept();
-      wsserver.send(ID_TAKEN);
-      wsserver.close(1008, 'ID is taken');
-      return new Response(null, { webSocket: wsclient, status: 101 });
-    } else {
-      existingWss.forEach((ws) => ws.close(1000));
+      wsServer.accept();
+
+      wsServer.send(ID_TAKEN);
+      wsServer.close(1008, 'ID is taken');
+
+      return AckWSResponse;
     }
 
-    this.state.acceptWebSocket(wsserver, [id]);
-    wsserver.serializeAttachment({ id, token });
-    wsserver.send(OPEN);
+    existingWss.forEach((ws) => ws.close(1000));
 
-    return new Response(null, { webSocket: wsclient, status: 101 });
+    this.state.acceptWebSocket(wsServer, [id]);
+
+    wsServer.serializeAttachment({ id, token });
+    wsServer.send(OPEN);
+
+    return AckWSResponse;
   }
 
   webSocketMessage(
