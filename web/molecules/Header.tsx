@@ -1,20 +1,12 @@
+import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
 import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from '@clerk/nextjs';
-import {
-  Avatar,
   Header as BaseHeader,
   Box,
   Button,
+  createStyles,
   Flex,
   Group,
   Loader,
-  Popover,
-  createStyles,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { OVERVIEW_DOCS_PATH } from '@shared/config/paths';
@@ -66,27 +58,17 @@ const Header = () => {
           >
             Docs
           </Button>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
           {user ? (
-            <Popover position={'bottom-end'}>
-              <Popover.Target>
-                <Avatar
-                  src={user!.imageUrl}
-                  style={{
-                    float: 'right',
-                    cursor: 'pointer',
-                  }}
-                  size={'lg'}
-                >
-                  {user!.emailAddresses[0].emailAddress[0]}
-                </Avatar>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <UserButton />
-              </Popover.Dropdown>
-            </Popover>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: {
+                    height: '50px',
+                    width: '50px',
+                  },
+                },
+              }}
+            />
           ) : (
             <Button
               variant={'outline'}
