@@ -9,7 +9,9 @@ export async function secretRemove(name: string) {
 
   const { vaults, active_vault } = config;
 
-  const { removeSecret } = createSecretsHelpers(vaults[active_vault]);
+  const { removeSecret } = createSecretsHelpers(
+    vaults[active_vault.name],
+  );
 
   await removeSecret(name);
 
