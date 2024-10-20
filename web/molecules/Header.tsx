@@ -80,7 +80,7 @@ const Header = () => {
                   }}
                   size={'lg'}
                 >
-                  {user!.firstName![0]}
+                  {user!.emailAddresses[0].emailAddress[0]}
                 </Avatar>
               </Popover.Target>
               <Popover.Dropdown>
@@ -93,6 +93,7 @@ const Header = () => {
               style={{ minWidth: '75px' }}
               disabled={!isLoaded}
               component={SignInButton}
+              // forceRedirectUrl={`/signin?redirectUrl=${router.query.redirectUrl}`}
             >
               {!isLoaded ? (
                 <Loader color={'blue'} size={'sm'} />
