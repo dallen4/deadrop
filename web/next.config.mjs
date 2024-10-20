@@ -53,6 +53,8 @@ const clerkDomains = [
   'https://*.clerk.accounts.dev',
 ].join(' ');
 
+const clerkImgDomain = 'https://img.clerk.com/';
+
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',
   contentTypeOptions: 'nosniff',
@@ -67,7 +69,7 @@ const safeConfig = {
     'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
     'script-src': `'self' 'unsafe-inline' ${clerkDomains} ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
     'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
-    'img-src': `'self' data: ${assetsDomains}`,
+    'img-src': `'self' data: ${assetsDomains} ${clerkImgDomain}`,
     'worker-src': `'self' blob:`,
   },
 };
