@@ -42,18 +42,19 @@ const googleAssetsDomain = 'https://lh3.googleusercontent.com';
 const googleFontsDomain = 'https://fonts.gstatic.com';
 const vercelAssetsDomain = 'https://assets.vercel.com';
 
-const assetsDomains = [
-  vercelAssetsDomain,
-  googleAssetsDomain,
-  githubAssetsDomain,
-].join(' ');
-
 const clerkDomains = [
   'https://clerk.deadrop.io',
   'https://*.clerk.accounts.dev',
 ].join(' ');
 
 const clerkImgDomain = 'https://img.clerk.com/';
+
+const assetsDomains = [
+  vercelAssetsDomain,
+  googleAssetsDomain,
+  githubAssetsDomain,
+  clerkImgDomain,
+].join(' ');
 
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',
@@ -69,7 +70,7 @@ const safeConfig = {
     'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
     'script-src': `'self' 'unsafe-inline' ${clerkDomains} ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
     'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
-    'img-src': `'self' data: ${assetsDomains} ${clerkImgDomain}`,
+    'img-src': `'self' data: ${assetsDomains}`,
     'worker-src': `'self' blob:`,
   },
 };
