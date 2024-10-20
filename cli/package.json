@@ -25,6 +25,7 @@
     "release": "yarn build && npm publish"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.2",
     "@inquirer/prompts": "^5.3.8",
     "@libsql/client": "^0.9.0",
     "@roamhq/wrtc": "^0.8.0",
@@ -35,6 +36,7 @@
     "envfile": "^7.1.0",
     "figlet": "^1.5.2",
     "mime-type": "^4.0.0",
+    "open": "^10.1.0",
     "ora": "^6.1.2",
     "semver": "^7.5.4",
     "ws": "^8.11.0",
