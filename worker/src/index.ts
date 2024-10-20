@@ -1,8 +1,8 @@
-import { clerkMiddleware } from '@hono/clerk-auth';
-import { PeerServerDO } from './lib/durable_objects';
-import { cors, tracing } from './lib/middleware';
-import { hono, Middleware } from './lib/http/core';
+import { clerkMiddleware, getAuth } from '@hono/clerk-auth';
 import { AppRoutes } from './constants';
+import { PeerServerDO } from './lib/durable_objects';
+import { hono, Middleware } from './lib/http/core';
+import { cors, tracing } from './lib/middleware';
 import { dropRouter } from './routers/drop';
 import peersRouter from './routers/peers';
 
@@ -20,6 +20,25 @@ app.get(AppRoutes.Root, (c) =>
     website: 'https://deadrop.io/',
   }),
 );
+
+app.get('/auth/token', async (c) => {
+  const auth = getAuth(c);
+
+  if (!auth?.userId) {
+    return c.json({
+      message: 'Not authenticated!',
+    });
+  }
+
+  const clerkClient = c.get('clerk');
+
+  const { token } = await clerkClient.signInTokens.createSignInToken({
+    userId: auth!.userId,
+    expiresInSeconds: 25,
+  });
+
+  return c.json({ token });
+});
 
 app.route(AppRoutes.PeerJsRoot, peersRouter);
 
