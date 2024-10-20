@@ -21,6 +21,7 @@ if (!process.env.DEADDROP_API_URL || !process.env.PEER_SERVER_URL) {
             environmentPlugin({
                 DEADDROP_API_URL: process.env.DEADDROP_API_URL,
                 PEER_SERVER_URL: process.env.PEER_SERVER_URL,
+                CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
             }),
         ],
     }).catch((err) => {
