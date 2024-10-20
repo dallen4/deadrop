@@ -10,8 +10,11 @@ if (!process.env.DEADDROP_API_URL || !process.env.PEER_SERVER_URL) {
 
 (async () => {
     await build({
-        entryPoints: ['index.ts'],
-        outfile: 'dist/deadrop.js',
+        entryPoints: {
+            'deadrop': 'index.ts',
+            'inject': 'inject.ts',
+        },
+        outdir: 'dist',
         platform: 'node',
         bundle: true,
         inject: ['./scripts/inject.js'],
