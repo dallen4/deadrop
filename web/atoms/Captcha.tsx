@@ -2,32 +2,40 @@ import React from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { post } from '@shared/lib/fetch';
 import { CAPTCHA_API_PATCH } from '@shared/config/paths';
+import { useMantineTheme } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 
 export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
-    const onVerify = async (token: string, _ekey: string) => {
-        const resp = await post<{ success: boolean }, { token: string }>(
-            CAPTCHA_API_PATCH,
-            { token },
-        );
+  const theme = useMantineTheme();
+  const isMobile = useMediaQuery(
+    `(max-width: ${theme.breakpoints.sm}px)`,
+  );
 
-        if (resp.success) onSuccess();
-    };
-
-    const onError = (event: string) => {
-        console.warn(event);
-    };
-
-    return (
-        <HCaptcha
-            sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
-            onVerify={onVerify}
-            onError={onError}
-            onExpire={onExpire}
-        />
+  const onVerify = async (token: string, _ekey: string) => {
+    const resp = await post<{ success: boolean }, { token: string }>(
+      CAPTCHA_API_PATCH,
+      { token },
     );
+
+    if (resp.success) onSuccess();
+  };
+
+  const onError = (event: string) => {
+    console.warn(event);
+  };
+
+  return (
+    <HCaptcha
+      sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
+      size={isMobile ? 'compact' : 'normal'}
+      onVerify={onVerify}
+      onError={onError}
+      onExpire={onExpire}
+    />
+  );
 };
 
 type CaptchaProps = {
-    onSuccess: () => void;
-    onExpire: () => void;
+  onSuccess: () => void;
+  onExpire: () => void;
 };
