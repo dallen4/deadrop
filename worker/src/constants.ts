@@ -9,9 +9,25 @@ export enum ContentType {
   Json = 'application/json',
 }
 
+export enum AppRouteParts {
+  Root = '/',
+
+  // auth
+  AuthRoot = '/auth',
+  CreateSignInToken = '/token',
+  Me = '/me',
+}
+
 export enum AppRoutes {
   Root = '/',
   Drop = '/drop',
+
+  // auth
+  AuthRoot = '/auth',
+  AuthCreateSignInToken = '/auth/token',
+  CreateSignInToken = '/token',
+  AuthMe = '/auth/me',
+  Me = '/me',
 
   // peerjs paths
   PeerJsRoot = '/peerjs',

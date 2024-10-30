@@ -56,6 +56,8 @@ const assetsDomains = [
   clerkImgDomain,
 ].join(' ');
 
+const deadropWorkerDomain = 'https://deadrop.nieky.workers.dev/';
+
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',
   contentTypeOptions: 'nosniff',
@@ -64,7 +66,7 @@ const safeConfig = {
   frameOptions: 'DENY',
   permissionsPolicy: false,
   contentSecurityPolicy: {
-    'connect-src': `'self' ${clerkDomains} ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains}`,
+    'connect-src': `'self' ${clerkDomains} ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains} ${deadropWorkerDomain}`,
     'default-src': `'self'`,
     'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
     'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
