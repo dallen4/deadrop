@@ -3,7 +3,7 @@ export const STORAGE_DIR_NAME = '.deadrop';
 export const CONFIG_FILE_NAME = '.deadroprc';
 
 export const DEADROP_URL =
-  process.env.DEADDROP_API_URL || 'http://localhost:3000';
+  process.env.DEADROP_API_URL || 'http://localhost:3000';
 
 export const LOGIN_URL = `${DEADROP_URL}/auth/cli`;
 

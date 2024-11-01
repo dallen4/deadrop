@@ -56,7 +56,7 @@ const assetsDomains = [
   clerkImgDomain,
 ].join(' ');
 
-const deadropWorkerDomain = 'https://deadrop.nieky.workers.dev/';
+const deadropWorkerDomain = process.env.NEXT_PUBLIC_DEADROP_API_URL;
 
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',

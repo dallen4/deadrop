@@ -3,7 +3,7 @@ import { engines } from '../../package.json';
 import { generateGrabUrl as baseGenerateGrabUrl } from '@shared/lib/util';
 
 export const generateGrabUrl = (id: string) =>
-  baseGenerateGrabUrl(process.env.DEADDROP_API_URL!, id);
+  baseGenerateGrabUrl(process.env.DEADROP_API_URL!, id);
 
 export const checkNodeVersion = () => {
   const neededVersion = engines.node;

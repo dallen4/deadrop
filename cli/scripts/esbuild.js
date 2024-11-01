@@ -3,7 +3,7 @@ require('dotenv').config();
 const { build } = require('esbuild');
 const { environmentPlugin } = require('esbuild-plugin-environment');
 
-if (!process.env.DEADDROP_API_URL || !process.env.PEER_SERVER_URL) {
+if (!process.env.DEADROP_API_URL || !process.env.PEER_SERVER_URL) {
   console.error('Invalid environment configuration provided');
   process.exit(1);
 }
@@ -19,7 +19,7 @@ if (!process.env.DEADDROP_API_URL || !process.env.PEER_SERVER_URL) {
     external: ['libsql'],
     plugins: [
       environmentPlugin({
-        DEADDROP_API_URL: process.env.DEADDROP_API_URL,
+        DEADROP_API_URL: process.env.DEADROP_API_URL,
         PEER_SERVER_URL: process.env.PEER_SERVER_URL,
         CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
       }),

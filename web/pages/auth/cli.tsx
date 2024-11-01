@@ -24,7 +24,7 @@ const CliAuth = () => {
     }
 
     const res = await fetch(
-      'https://deadrop.nieky.workers.dev/auth/token',
+      `${process.env.NEXT_PUBLIC_DEADROP_API_URL!}/auth/token`,
       {
         headers: {
           Authorization: `Bearer ${sessionToken}`,

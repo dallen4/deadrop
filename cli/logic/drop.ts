@@ -31,7 +31,7 @@ export async function dropSecret(ctx: DropContext) {
       hash: hashFile,
     },
     cleanupSession,
-    apiUri: process.env.DEADDROP_API_URL!,
+    apiUri: process.env.DEADROP_API_URL!,
     initPeer,
   });
 

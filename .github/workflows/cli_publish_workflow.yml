@@ -15,14 +15,14 @@ jobs:
         shell: bash
         env:
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
-          DEADDROP_API_URL: ${{ secrets.DEADDROP_API_URL }}
+          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           cd cli
           yarn install --frozen-lockfile
-          echo $DEADDROP_API_URL
+          echo $DEADROP_API_URL
           echo $PEER_SERVER_URL
-          DEADDROP_API_URL=$DEADDROP_API_URL PEER_SERVER_URL=$PEER_SERVER_URL yarn build
+          DEADROP_API_URL=$DEADROP_API_URL PEER_SERVER_URL=$PEER_SERVER_URL yarn build
           echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" >> ./.npmrc
           npm publish
       # - uses: marvinpinto/action-automatic-releases@latest
