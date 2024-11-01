@@ -1,16 +1,38 @@
 import React from 'react';
 import { Button, Container, Text, Title } from '@mantine/core';
+import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
-import { SignedIn, SignedOut, SignIn } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignIn, useClerk } from '@clerk/nextjs';
+import { IconX } from '@tabler/icons';
 
 const CliAuth = () => {
+  const clerk = useClerk();
   const router = useRouter();
   const { redirectUrl } = router.query;
 
   const getTokenAndRedirect = async () => {
+    const sessionToken = await clerk.session!.getToken();
+
+    if (!sessionToken) {
+      showNotification({
+        message: 'Tried to authenticate CLI without a session!',
+        color: 'red',
+        icon: <IconX />,
+        autoClose: 4500,
+      });
+      return;
+    }
+
     const res = await fetch(
       'https://deadrop.nieky.workers.dev/auth/token',
+      {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+          'Content-Type': 'application/json',
+        },
+      },
     );
+
     const payload = await res.json();
 
     if (typeof redirectUrl === 'string') {
