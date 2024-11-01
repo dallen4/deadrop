@@ -1,6 +1,12 @@
 name = "deadrop"
 main = "src/index.ts"
 compatibility_date = "2023-11-21"
+routes = [
+  { pattern = "deadrop.nieky.dev", custom_domain = true }
+]
+
+[vars]
+DAILY_DROP_LIMIT = 5
 
 # ref: https://developers.cloudflare.com/workers/runtime-apis/kv
 [[kv_namespaces]]
