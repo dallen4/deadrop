@@ -1,41 +1,53 @@
 import { createClerkClient } from 'lib/auth/clerk';
 import { createLocalAuthServer } from 'lib/auth/localhostServer';
-// import { loadConfig } from 'lib/config';
 import { LOCALHOST_AUTH_URL, LOGIN_URL } from 'lib/constants';
-import { logError, logInfo } from 'lib/log';
+import { loader, logError, logInfo } from 'lib/log';
 import open from 'open';
 
 export default async function login() {
-  // const { config } = await loadConfig();
-
-  // const { vaults, active_vault } = config;
-  console.log('INITING CLERK');
   const clerkClient = await createClerkClient();
-  console.log('STARTING SERVER');
+
+  if (clerkClient.session) {
+    logInfo(
+      `You're already signed in as ${clerkClient.session.user.emailAddresses[0]}!`,
+    );
+
+    return process.exit(0);
+  }
+
   const { listenForAuthRedirect } = await createLocalAuthServer();
 
   const newUrl = new URL(LOGIN_URL);
   newUrl.searchParams.set('redirectUrl', LOCALHOST_AUTH_URL);
+
   const url = encodeURI(newUrl.toString());
-  console.log(url);
+
+  loader.start('Opening webpage for authentication...');
+
   await open(url);
 
   let success = false;
 
   try {
+    loader.text = 'Awaiting confirmation in the browser...';
+
     const token = await listenForAuthRedirect();
-    console.log('TOKEN RETRIEVED', token);
+
     if (token) {
+      loader.text = 'Authenticating CLI and storing credentials...';
+
       const res = await clerkClient.client?.signIn.create({
         strategy: 'ticket',
         ticket: token,
       });
-      success = (res && res.status !== 'complete') || false;
-      console.log(clerkClient.client?.activeSessions[0].user);
-    }
+
+      success = (res && res.status === 'complete') || false;
+    } else throw new Error('Failed to authenticate!');
   } catch (err) {
     console.error(err);
   }
+
+  loader.stop();
 
   if (success) logInfo('Successfully logged in!');
   else logError('Authentication with provided token failed!');
