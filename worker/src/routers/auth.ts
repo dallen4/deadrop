@@ -5,19 +5,22 @@ import { hono } from '../lib/http/core';
 const authRouter = hono();
 
 authRouter.get(AppRoutes.CreateSignInToken, async (c) => {
-  const user = getAuth(c);
+  const auth = getAuth(c);
 
-  if (!user?.userId)
+  if (!auth?.userId) {
     return c.json({
-      message: 'You are not logged in.',
+      message: 'Not authenticated!',
     });
+  }
 
   const clerkClient = c.get('clerk');
 
-  const ticket = await clerkClient.signInTokens.createSignInToken({
-    userId: user.userId,
-    expiresInSeconds: 20,
+  const { token } = await clerkClient.signInTokens.createSignInToken({
+    userId: auth!.userId,
+    expiresInSeconds: 25,
   });
 
-  return c.json({ token: ticket.token });
+  return c.json({ token });
 });
+
+export default authRouter;
