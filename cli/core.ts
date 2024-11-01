@@ -21,7 +21,7 @@ deadrop.name('deadrop').description(description).version(version);
 
 deadrop.command('init').action(init);
 
-deadrop.command('login').action(login)
+deadrop.command('login').action(login);
 
 deadrop
   .command('drop')

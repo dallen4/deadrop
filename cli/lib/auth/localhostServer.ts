@@ -37,22 +37,24 @@ export const createLocalAuthServer = async () => {
 
   const app = new Hono();
 
-  const server = serve({ fetch: app.fetch, port: LOCALHOST_AUTH_PORT });
+  const server = serve({
+    fetch: app.fetch,
+    port: LOCALHOST_AUTH_PORT,
+  });
 
   const destroyServer = createDestroy(server);
 
   const listenForAuthRedirect = () =>
     new Promise((resolve, reject) => {
-      server.listen();
+      if (!server.listening) server.listen();
 
       server.addListener('close', () => {
-        if (authToken) resolve(authToken);
-        else reject('Failed to authenticate!');
+        resolve(authToken);
       });
 
       app.use(PATH, async (_, next) => {
         await next();
-        destroyServer();
+        process.nextTick(() => destroyServer());
       });
 
       app.get(PATH, (c) => {
@@ -62,7 +64,7 @@ export const createLocalAuthServer = async () => {
 
         return c.html(successHtml);
       });
-    }) as Promise<string>;
+    }) as Promise<string | null>;
 
   return { listenForAuthRedirect };
 };
