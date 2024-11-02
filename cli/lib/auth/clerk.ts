@@ -1,7 +1,6 @@
 import type { Clerk as ClerkType } from '@clerk/clerk-js';
 import { Clerk } from '@clerk/clerk-js/headless';
 import { getToken, setSession } from './cache';
-// import { loadConfig } from './config';
 
 global.window = global.window || {};
 

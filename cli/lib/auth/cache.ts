@@ -6,7 +6,6 @@ import { cwd } from 'process';
 import { stringify } from 'yaml';
 
 type AuthCache = {
-  //   username: string;
   token: string;
   lastAuthenticated: number;
 };
