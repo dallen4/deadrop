@@ -14,6 +14,7 @@ import {
   vaultSync,
   vaultUse,
 } from 'actions/vault';
+import logout from 'actions/logout';
 
 const deadrop = new Command();
 
@@ -22,6 +23,8 @@ deadrop.name('deadrop').description(description).version(version);
 deadrop.command('init').action(init);
 
 deadrop.command('login').action(login);
+
+deadrop.command('logout').action(logout);
 
 deadrop
   .command('drop')
