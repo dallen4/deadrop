@@ -20,6 +20,7 @@ if (!process.env.DEADROP_API_URL || !process.env.PEER_SERVER_URL) {
     plugins: [
       environmentPlugin({
         DEADROP_API_URL: process.env.DEADROP_API_URL,
+        DEADROP_APP_URL: process.env.DEADROP_APP_URL,
         PEER_SERVER_URL: process.env.PEER_SERVER_URL,
         CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
       }),

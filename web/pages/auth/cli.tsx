@@ -23,15 +23,15 @@ const CliAuth = () => {
       return;
     }
 
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_DEADROP_API_URL!}/auth/token`,
-      {
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-          'Content-Type': 'application/json',
-        },
+    const apiUrl = new URL(process.env.NEXT_PUBLIC_DEADROP_API_URL!);
+    apiUrl.pathname = '/auth/token';
+
+    const res = await fetch(apiUrl.toString(), {
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+        'Content-Type': 'application/json',
       },
-    );
+    });
 
     const payload = await res.json();
 
