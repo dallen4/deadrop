@@ -1,6 +1,18 @@
-name = "deadrop-peerjs"
+name = "deadrop"
 main = "src/index.ts"
 compatibility_date = "2023-11-21"
+routes = [
+  { pattern = "deadrop.nieky.dev", custom_domain = true }
+]
+
+[vars]
+DAILY_DROP_LIMIT = 5
+
+# ref: https://developers.cloudflare.com/workers/runtime-apis/kv
+[[kv_namespaces]]
+binding = "DROP_STORE"
+id = "0ab3b4313ce542d8af187a5f881dcbb1"
+preview_id = "a3d27b9d9c6841a9969cd9e07a73c9ff"
 
 # Bind a Durable Object. Durable objects are a scale-to-zero compute primitive based on the actor model.
 # Durable Objects can live for as long as needed. Use these when you need a long-running "server", such as in realtime apps.

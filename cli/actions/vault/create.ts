@@ -1,7 +1,7 @@
 import { initDB } from 'db/init';
 import { vaultExists } from 'db/vaults';
 import { loadConfig, saveConfig, vault } from 'lib/config';
-import { VAULT_DIR_NAME } from 'lib/constants';
+import { STORAGE_DIR_NAME } from 'lib/constants';
 import { logError, logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd, exit } from 'process';
@@ -24,7 +24,7 @@ export async function vaultCreate(
     return exit(1);
   }
 
-  const dbLocation = locationInput ?? `${cwd()}/${VAULT_DIR_NAME}`;
+  const dbLocation = locationInput ?? `${cwd()}/${STORAGE_DIR_NAME}`;
 
   const newVaultLocation = resolve(
     dbLocation,

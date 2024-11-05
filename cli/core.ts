@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { description, version } from '../package.json';
 import init from 'actions/init';
+import login from 'actions/login';
 import { drop } from 'actions/drop';
 import { grab } from 'actions/grab';
 import { secretAdd } from 'actions/secret/add';
@@ -19,6 +20,8 @@ const deadrop = new Command();
 deadrop.name('deadrop').description(description).version(version);
 
 deadrop.command('init').action(init);
+
+deadrop.command('login').action(login);
 
 deadrop
   .command('drop')
