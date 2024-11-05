@@ -1,6 +1,6 @@
 import { cosmiconfig } from 'cosmiconfig';
 import { existsSync } from 'fs';
-import { writeFile } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import { STORAGE_DIR_NAME } from 'lib/constants';
 import { cwd } from 'process';
 import { stringify } from 'yaml';
@@ -31,6 +31,10 @@ export async function readAuthCache() {
 
 export async function writeAuthCache(cache: AuthCache) {
   const configString = stringify(cache);
+
+  const configDir = `${cwd()}/${STORAGE_DIR_NAME}`;
+
+  if (!existsSync(configDir)) await mkdir(configDir);
 
   await writeFile(getAuthCachePath(), configString);
 }
