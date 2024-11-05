@@ -13,14 +13,7 @@ export type TestOptions = {
   dropBrowser: BrowserName;
   grabBrowser: BrowserName;
 };
-base('', async ({ playwright, browser }) => {
-  const myContext = await browser.newContext();
-  const myPage = await myContext.newPage();
 
-  const firefox = await playwright.firefox.launch();
-  const firefoxContext = await firefox.newContext();
-  const firefoxPage = await firefoxContext.newPage();
-});
 export const test = base.extend<TestOptions>({
   dropBrowser: ['chromium', { option: true }],
   grabBrowser: ['chromium', { option: true }],

@@ -39,7 +39,7 @@ export const createDropHandlers = <
   file,
   onRetryExceeded,
   cleanupSession,
-  apiUri,
+  apiUri = '',
   initPeer,
 }: DropHandlerInputs<FileType>) => {
   const dropApiUrl = apiUri + DROP_API_PATH;

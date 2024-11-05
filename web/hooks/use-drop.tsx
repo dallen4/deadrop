@@ -69,7 +69,7 @@ export const useDrop = () => {
                     hash: hashFile,
                 },
                 cleanupSession,
-                apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL || '',
+                // apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL || '',
                 initPeer,
                 onRetryExceeded,
             }),
