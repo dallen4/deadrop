@@ -1,8 +1,8 @@
-import { AppRoutes } from '../constants';
+import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 
 const peersRouter = hono()
-  .get(AppRoutes.Root, (c) => {
+  .get(AppRouteParts.Root, (c) => {
     const url = new URL(c.req.url);
 
     const objId = c.env.PEER_SERVER.idFromName(url.host);
@@ -10,6 +10,6 @@ const peersRouter = hono()
 
     return stub.fetch(c.req.raw);
   })
-  .get(AppRoutes.GenerateId, (c) => c.text(crypto.randomUUID()));
+  .get(AppRouteParts.GenerateId, (c) => c.text(crypto.randomUUID()));
 
 export default peersRouter;
