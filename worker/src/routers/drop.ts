@@ -1,6 +1,6 @@
 import { getCookie } from 'hono/cookie';
 import { DropDetails } from '@shared/types/common';
-import { AppRoutes } from '../constants';
+import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { formatDropKey } from '@shared/lib/util';
 import { DISABLE_CAPTCHA_COOKIE } from '@shared/config/http';
@@ -13,7 +13,7 @@ const dropIdSchema = z.object({ id: z.string() });
 
 const dropRouter = hono()
   .post(
-    AppRoutes.Root,
+    AppRouteParts.Root,
     zValidator('json', dropIdSchema),
     async (c) => {
       const ipAddress = c.get('ipAddress');
@@ -52,7 +52,7 @@ const dropRouter = hono()
     },
   )
   .get(
-    AppRoutes.Root,
+    AppRouteParts.Root,
     zValidator('query', dropIdSchema),
     async (c) => {
       const { id: dropId } = c.req.valid('query');
@@ -71,7 +71,7 @@ const dropRouter = hono()
     },
   )
   .delete(
-    AppRoutes.Root,
+    AppRouteParts.Root,
     zValidator('json', dropIdSchema),
     async (c) => {
       const { id: dropId } = c.req.valid('json');

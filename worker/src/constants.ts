@@ -21,6 +21,11 @@ export enum AppRouteParts {
   // peerjs
   PeerJsRoot = '/peerjs',
   GenerateId = `/id`,
+
+  // vaults
+  VaultRoot = '/vault',
+  NameParam = '/:name',
+  Share = '/:name/share',
 }
 
 export enum AppRoutes {
@@ -35,4 +40,8 @@ export enum AppRoutes {
   // peerjs paths
   PeerJsRoot = AppRouteParts.PeerJsRoot,
   PeerJsGenerateId = `${AppRouteParts.PeerJsRoot}${AppRouteParts.GenerateId}`,
+
+  // vault paths
+  VaultRoot = AppRouteParts.VaultRoot,
+  ShareVault = `${AppRouteParts.VaultRoot}${AppRouteParts.NameParam}${AppRouteParts.Share}`,
 }
