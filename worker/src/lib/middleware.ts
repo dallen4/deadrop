@@ -31,7 +31,7 @@ export const cors = (): Middleware =>
       else return null;
     },
     allowHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
-    allowMethods: ['GET', 'HEAD', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'],
     credentials: true,
   });
 

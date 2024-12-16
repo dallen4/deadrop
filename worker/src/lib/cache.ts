@@ -1,10 +1,10 @@
-import { hashRaw } from '@shared/lib/crypto/operations';
-import { HonoCtx } from './http/core';
-import { Context } from 'hono';
-import { generateDateTotalId } from '../../../web/api/util';
-import { nanoid } from 'nanoid';
 import { formatDropKey, generateIV } from '@shared/lib/util';
 import { DropDetails } from '@shared/types/common';
+import { Context } from 'hono';
+import { nanoid } from 'nanoid';
+import { generateDateTotalId } from '../../../web/api/util';
+import { hash } from './crypto';
+import { HonoCtx } from './http/core';
 
 const DAY_IN_SEC = 60 * 60 * 24;
 
@@ -68,7 +68,7 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
   const checkAndIncrementUserDropCount = async (
     ipAddress: string,
   ) => {
-    const userIpHash = await hashRaw(ipAddress);
+    const userIpHash = await hash(ipAddress);
 
     const userDropCount = await client.get<number>(userIpHash);
 
