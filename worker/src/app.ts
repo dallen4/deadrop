@@ -6,6 +6,7 @@ import { cors, redis } from './lib/middleware';
 import authRouter from './routers/auth';
 import peersRouter from './routers/peers';
 import dropRouter from './routers/drop';
+import vaultRouter from './routers/vault';
 
 const api = hono();
 
@@ -25,6 +26,7 @@ export const app = api
   )
   .route(AppRoutes.AuthRoot, authRouter)
   .route(AppRoutes.PeerJsRoot, peersRouter)
-  .route(AppRoutes.Drop, dropRouter);
+  .route(AppRoutes.Drop, dropRouter)
+  .route(AppRoutes.VaultRoot, vaultRouter);
 
 export type DeadropWorkerApi = typeof app;
