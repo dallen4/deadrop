@@ -32,6 +32,4 @@ export const generateGrabUrl = (id: string) => {
     return baseGenerateGrabUrl(url, id);
 };
 
-export const formatDropKey = (id: string) => `drop:${id}`;
-
 export const getBrowserInfo = () => new UAParser().getResult();

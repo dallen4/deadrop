@@ -39,7 +39,7 @@ export const post = async <Data, Body>(
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data: Data | ErrorBody = await res.json();
+  const data: Data | ErrorBody | { error: string } = await res.json();
 
   if (res.status === 500)
     throw new Error((data as ErrorBody).message);

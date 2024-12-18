@@ -26,7 +26,7 @@ const Header = () => {
   const isMobile = useMediaQuery(
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
-  console.log(user);
+
   // const onLogin = () => router.push(LOGIN_PATH);
 
   const onDocsClick = () => router.push(OVERVIEW_DOCS_PATH);

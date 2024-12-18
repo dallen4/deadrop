@@ -38,7 +38,7 @@ const CliAuth = () => {
     if (typeof redirectUrl === 'string') {
       const localhostRedirect = new URL(redirectUrl);
       localhostRedirect.searchParams.set('token', payload.token);
-      console.log(localhostRedirect.href);
+
       window.location.href = localhostRedirect.href;
     }
   };
