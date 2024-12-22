@@ -51,11 +51,13 @@
   "devDependencies": {
     "@types/nanoid-dictionary": "^4.2.3",
     "@types/node": "^20",
+    "@vitest/coverage-istanbul": "^2.1.8",
     "eslint": "^8.31.0",
     "prettier": "^2.8.2",
     "ts-node": "^10.7.0",
     "ts-prune": "^0.10.3",
-    "typescript": "^4.0.3"
+    "typescript": "^4.0.3",
+    "vitest": "^2.1.8"
   },
   "browser": {
     "tls": false,
