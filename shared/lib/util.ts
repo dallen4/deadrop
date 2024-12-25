@@ -34,3 +34,6 @@ export const generateGrabUrl = (url: string, id: string) => {
 };
 
 export const formatDropKey = (id: string) => `drop:${id}`;
+
+export const formatCloudSyncUrl = (name: string) =>
+  `libsql://${name}-${process.env.TURSO_ORGANIZATION!}.turso.io`;

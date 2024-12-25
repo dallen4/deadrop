@@ -50,11 +50,13 @@ export const post = async <Data, Body>(
 export const deleteReq = async <Data, Body>(
   uri: string,
   body?: Body,
+  headers: HeadersInit = {},
 ) => {
   const res = await fetch(uri, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
+      ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
