@@ -34,16 +34,15 @@ const vaultRouter = hono()
 
         const vaultDatabase = await createVault(vaultName);
 
-        console.log(vaultDatabase);
         const vaultToken = await createVaultToken(
           vaultName,
           'full-access',
         );
-        console.log(vaultToken);
+
         return c.json(
           {
             id: vaultDatabase.DbId,
-            url: `libsql://${vaultDatabase.Hostname}`,
+            name: vaultName,
             token: vaultToken,
           },
           201,

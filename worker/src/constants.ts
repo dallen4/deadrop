@@ -25,7 +25,10 @@ export enum AppRouteParts {
   // vaults
   VaultRoot = '/vault',
   NameParam = '/:name',
-  Share = '/:name/share',
+  Share = `${AppRouteParts.NameParam}/share`,
+
+  // TODO not implemented
+  VaultExists = `${AppRouteParts.NameParam}/exists`,
 }
 
 export enum AppRoutes {

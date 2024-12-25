@@ -1,4 +1,4 @@
-import { deleteReq, post } from '@shared/lib/fetch';
+import { deleteReq, get, post } from '@shared/lib/fetch';
 import { hash } from './crypto';
 import {
   CreateDatabaseRequest,
@@ -77,11 +77,13 @@ export const createVaultUtils = (
   const getVault = async (vaultName: string) => {
     const reqUrl = buildUrl(`/${vaultName}`);
 
-    const { database } = await post<GetDatabaseResponse, undefined>(
+    const data = await get<GetDatabaseResponse>(
       reqUrl.toString(),
+      undefined,
+      headers,
     );
 
-    return database;
+    return data?.database ?? null;
   };
 
   const deleteVault = async (vaultName: string) => {
@@ -90,7 +92,7 @@ export const createVaultUtils = (
     const resp = await deleteReq<
       Partial<{ database: string; error: string }>,
       undefined
-    >(reqUrl.toString());
+    >(reqUrl.toString(), undefined, headers);
 
     if (resp.database) return true;
     return false;
