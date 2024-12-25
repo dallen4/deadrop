@@ -49,10 +49,12 @@ const vaultRoot = deadrop
 vaultRoot
   .command('create')
   .description(
-    'create a new vault, optionally specify its parent folder',
+    `create a new vault, optionally specify its parent folder
+add cloud-based replica for ease of sharing`,
   )
   .argument('<name>', 'name of the vault')
   .argument('[location]', 'folder location of the vault')
+  .option('--cloud', 'create a cloud-based replica')
   .action(vaultCreate);
 
 vaultRoot

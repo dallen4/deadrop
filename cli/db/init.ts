@@ -1,12 +1,22 @@
-import { createClient } from '@libsql/client';
+import { Config, createClient } from '@libsql/client';
+import { formatCloudSyncUrl } from '@shared/lib/util';
 import { drizzle } from 'drizzle-orm/libsql';
-import { migrate } from 'drizzle-orm/libsql/migrator';
+import { CloudVaultConfig } from 'types/config';
 
-export const initDB = (path: string, encryptionKey: string) => {
-  const client = createClient({
+export const initDB = async (
+  path: string,
+  encryptionKey: string,
+  cloudConfig?: CloudVaultConfig,
+) => {
+  const config: Config = {
     url: `file:${path}`,
     encryptionKey,
-  });
+  };
 
-  return drizzle(client);
+  if (cloudConfig) {
+    config.syncUrl = formatCloudSyncUrl(cloudConfig.name);
+    config.authToken = cloudConfig.authToken;
+  }
+
+  return drizzle(createClient(config));
 };

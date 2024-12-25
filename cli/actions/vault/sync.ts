@@ -11,16 +11,13 @@ export async function vaultSync(
 
   const { vaults, active_vault } = config;
 
-  const { location, key } = vaults[active_vault.name];
+  const { getAllSecrets } = await createSecretsHelpers(
+    vaults[active_vault.name],
+  );
 
-  const { getAllSecrets } = createSecretsHelpers({
-    location,
-    key,
-  });
-
-  const secrets = await getAllSecrets();
-
-  logInfo(`Secrets synced to ./.env for '${active_vault}' vault!`);
+  const secrets = await getAllSecrets(active_vault.environment);
 
   await syncEnv('./.env', secrets);
+
+  logInfo(`Secrets synced to ./.env for '${active_vault}' vault!`);
 }

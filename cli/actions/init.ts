@@ -1,6 +1,5 @@
 import { confirm } from '@inquirer/prompts';
 import { initDB } from 'db/init';
-import { migrate } from 'drizzle-orm/libsql/migrator';
 import { existsSync } from 'fs';
 import { appendFile, mkdir } from 'fs/promises';
 import { initConfig, loadConfig, saveConfig } from 'lib/config';
@@ -13,20 +12,19 @@ export default async function () {
   const defaultConfigPath = resolve(cwd(), CONFIG_FILE_NAME);
   const defaultVaultPath = resolve(STORAGE_DIR_NAME, 'default.db');
 
-  const defaultConfig = initConfig(defaultVaultPath);
+  const defaultConfig = await initConfig(defaultVaultPath);
 
   await saveConfig(cwd(), defaultConfig);
 
   // validate it can be loaded
   const { config } = await loadConfig();
 
-  if (!existsSync(STORAGE_DIR_NAME)) await mkdir(STORAGE_DIR_NAME);
+  if (!existsSync(STORAGE_DIR_NAME))
+    await mkdir(STORAGE_DIR_NAME, { recursive: true });
 
   const { location, key } = config.vaults.default;
 
-  const db = initDB(location, key);
-
-  await migrate(db, { migrationsFolder: './db/migrations' });
+  const db = await initDB(location, key);
 
   logInfo(`Default vault initalized & config created at '${defaultConfigPath}'!
 We recommend adding the following to your .gitignore:

@@ -1,7 +1,10 @@
-import { initDB } from 'db/init';
-import { secretsTable } from 'db/schema';
-import { stringify, parse } from 'envfile';
+import {
+  exportKeyToBase64,
+  generateKey,
+} from '@shared/lib/crypto/operations';
+import { parse, stringify } from 'envfile';
 import { appendFile, readFile, writeFile } from 'fs/promises';
+import { addSecretsToVault } from 'logic/secrets';
 import { resolve } from 'path';
 import { cwd } from 'process';
 import { VaultDBConfig } from 'types/config';
@@ -35,6 +38,12 @@ export async function loadEnvFromFile(filePath: string) {
   return parsedEnv;
 }
 
+export async function initEnvKey() {
+  const environmentKey = await generateKey();
+
+  return exportKeyToBase64(environmentKey);
+}
+
 export async function addEnvToVault(
   envPath: string,
   environment: string,
@@ -42,7 +51,11 @@ export async function addEnvToVault(
 ) {
   const envVars = await loadEnvFromFile(envPath);
 
-  const db = initDB(vault.location, vault.key);
+  // generate key for environment
+  if (!vault.environments![environment])
+    vault.environments![environment] = await initEnvKey();
+
+  // TODO update .deadroprc file
 
   const secretsToAdd = Object.entries(envVars).map(
     ([key, value]) => ({
@@ -51,6 +64,6 @@ export async function addEnvToVault(
       value,
     }),
   );
-  console.log(secretsToAdd);
-  return db.insert(secretsTable).values(secretsToAdd).run();
+
+  return addSecretsToVault(vault, secretsToAdd);
 }
