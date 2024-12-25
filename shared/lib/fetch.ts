@@ -3,6 +3,7 @@ import { ErrorBody } from '../types/fetch';
 export const get = async <Data>(
   uri: string,
   params?: { [key: string]: any },
+  headers: HeadersInit = {},
 ) => {
   let url = uri;
 
@@ -15,6 +16,7 @@ export const get = async <Data>(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      ...headers,
     },
   });
 
