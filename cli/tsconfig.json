@@ -14,7 +14,10 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "paths": {
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
+      // would like to find a cleaner way to do this
+      // i.e. not import from worker directly
+      "@api/*": ["../worker/*"]
     },
     "typeRoots": [
       "./node_modules/@types/",
