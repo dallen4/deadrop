@@ -26,8 +26,6 @@ export async function createSecretsHelpers(vault: VaultDBConfig) {
         ),
       );
 
-    // TODO unwrap
-
     return secret;
   };
 
@@ -43,7 +41,6 @@ export async function createSecretsHelpers(vault: VaultDBConfig) {
       .where(eq(secretsTable.environment, environment))
       .all();
 
-    // TODO unwrap
     return secretItems.reduce(
       (prev, { name, value }) => ({
         ...prev,

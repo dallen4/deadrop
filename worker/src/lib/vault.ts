@@ -31,7 +31,7 @@ export const createVaultUtils = (
   };
 
   const buildUrl = (path: string) => {
-    const reqUrl = new URL(baseUrl.toString());
+    const reqUrl = new URL(baseUrl);
 
     reqUrl.pathname += path;
 
@@ -39,17 +39,16 @@ export const createVaultUtils = (
   };
 
   const createVault = async (vaultName: string) => {
-    const reqUrl = new URL(baseUrl.toString()).toString();
-
     const body = {
       name: vaultName,
       group: 'deadrop',
+      schema: 'parent-vault-schema',
     };
 
     const { database } = await post<
       CreateDatabaseResponse,
       CreateDatabaseRequest
-    >(reqUrl, body, headers);
+    >(baseUrl.toString(), body, headers);
 
     return database;
   };
