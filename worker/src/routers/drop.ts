@@ -63,7 +63,7 @@ const dropRouter = hono()
 
       // get drop
       const dropKey = formatDropKey(dropId);
-      const dropDetails = await redis.get<DropDetails>(dropKey);
+      const dropDetails = await redis.hgetall<DropDetails>(dropKey);
 
       if (!dropDetails) return c.json(SessionNotFound, 404);
 
