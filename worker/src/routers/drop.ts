@@ -42,7 +42,7 @@ const dropRouter = hono()
         disableCaptchaCookie,
       );
 
-      c.json(
+      return c.json(
         {
           id: dropId,
           nonce,
