@@ -67,7 +67,7 @@ export const useGrab = () => {
           decrypt: decryptFile,
           hash: hashFile,
         },
-        // apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL || '',
+        apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
         initPeer,
         cleanupSession,
         onRetryExceeded,
