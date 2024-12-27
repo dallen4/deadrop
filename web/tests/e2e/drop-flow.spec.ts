@@ -10,6 +10,7 @@ import {
   CONFIRM_PAYLOAD_BTN_ID,
   DROP_LINK_ID,
   DROP_SECRET_VALUE_ID,
+  HCAPTCHA_EMBED_ID,
 } from '../../lib/constants';
 
 test('should drop a text secret from one page session to another', async ({
@@ -38,6 +39,8 @@ test('should drop a text secret from one page session to another', async ({
     ).toBeVisible({
       timeout: 10_000,
     });
+
+    await dropperPage.locator(`#${HCAPTCHA_EMBED_ID}`).click();
 
     await dropperPage
       .getByPlaceholder('Your secret')

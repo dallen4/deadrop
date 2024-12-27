@@ -26,8 +26,9 @@ export const createContextForBrowser = async (browser: Browser) => {
     {
       name: DISABLE_CAPTCHA_COOKIE,
       value: 'true',
-      sameSite: 'Strict',
+      sameSite: 'None',
       url: baseURL,
+      httpOnly: true,
     },
   ]);
 

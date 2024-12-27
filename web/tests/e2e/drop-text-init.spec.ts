@@ -5,6 +5,7 @@ import {
   BEGIN_DROP_BTN_ID,
   CONFIRM_PAYLOAD_BTN_ID,
   DROP_LINK_ID,
+  HCAPTCHA_EMBED_ID,
 } from '../../lib/constants';
 
 test('should start the drop session successfully', async ({
@@ -24,6 +25,8 @@ test('should start the drop session successfully', async ({
   ).toBeVisible({
     timeout: 10_000,
   });
+
+  await page.locator(`#${HCAPTCHA_EMBED_ID}`).click();
 
   await page.getByPlaceholder('Your secret').fill(secretValue);
 

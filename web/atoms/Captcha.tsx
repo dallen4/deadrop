@@ -4,6 +4,7 @@ import { post } from '@shared/lib/fetch';
 import { CAPTCHA_API_PATCH } from '@shared/config/paths';
 import { useMantineTheme } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import { HCAPTCHA_EMBED_ID } from 'lib/constants';
 
 export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
   const theme = useMantineTheme();
@@ -12,6 +13,7 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
   );
 
   const onVerify = async (token: string, _ekey: string) => {
+    console.log('testing');
     const resp = await post<{ success: boolean }, { token: string }>(
       CAPTCHA_API_PATCH,
       { token },
@@ -26,6 +28,7 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
 
   return (
     <HCaptcha
+      id={HCAPTCHA_EMBED_ID}
       sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
       size={isMobile ? 'compact' : 'normal'}
       onVerify={onVerify}
