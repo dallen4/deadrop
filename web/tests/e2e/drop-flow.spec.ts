@@ -40,7 +40,9 @@ test('should drop a text secret from one page session to another', async ({
       timeout: 10_000,
     });
 
-    await dropperPage.locator(`#${HCAPTCHA_EMBED_ID}`).click();
+    await dropperPage
+      .locator(`#${HCAPTCHA_EMBED_ID}`)
+      .click({ position: { x: 10, y: 10 } });
 
     await dropperPage
       .getByPlaceholder('Your secret')

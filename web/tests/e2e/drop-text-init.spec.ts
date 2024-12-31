@@ -26,7 +26,9 @@ test('should start the drop session successfully', async ({
     timeout: 10_000,
   });
 
-  await page.locator(`#${HCAPTCHA_EMBED_ID}`).click();
+  await page
+    .locator(`#${HCAPTCHA_EMBED_ID}`)
+    .click({ position: { x: 10, y: 10 } });
 
   await page.getByPlaceholder('Your secret').fill(secretValue);
 
