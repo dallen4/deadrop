@@ -8,6 +8,6 @@ export const OVERVIEW_DOCS_PATH = '/docs/overview';
 
 export const CLI_DOCS_PATH = '/docs/cli';
 
-export const CAPTCHA_API_PATCH = '/api/captcha';
+export const CAPTCHA_API_PATH = '/api/captcha';
 
 export const DROP_API_PATH = '/drop';

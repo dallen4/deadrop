@@ -1,9 +1,12 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { getCookie } from 'cookies-next';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
-import { post } from '@shared/lib/fetch';
-import { CAPTCHA_API_PATCH } from '@shared/config/paths';
 import { useMantineTheme } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
+import { TEST_FLAG_COOKIE } from '@shared/tests/http';
+import { CAPTCHA_API_PATH } from '@shared/config/paths';
+import { post } from '@shared/lib/fetch';
 import { HCAPTCHA_EMBED_ID } from 'lib/constants';
 
 export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
@@ -12,10 +15,25 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
 
-  const onVerify = async (token: string, _ekey: string) => {
-    console.log('testing');
-    const resp = await post<{ success: boolean }, { token: string }>(
-      CAPTCHA_API_PATCH,
+  const [show, setShow] = useState(true);
+
+  const { isLoaded, isSignedIn } = useUser();
+
+  useEffect(() => {
+    if (isLoaded) {
+      if (isSignedIn) {
+        onSuccess();
+        setShow(false);
+      } else if (getCookie(TEST_FLAG_COOKIE)) {
+        console.log(getCookie(TEST_FLAG_COOKIE));
+        onVerify();
+      }
+    }
+  }, [isLoaded]);
+
+  const onVerify = async (token?: string) => {
+    const resp = await post<{ success: boolean }, { token?: string }>(
+      CAPTCHA_API_PATH,
       { token },
     );
 
@@ -26,7 +44,7 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
     console.warn(event);
   };
 
-  return (
+  return show ? (
     <HCaptcha
       id={HCAPTCHA_EMBED_ID}
       sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
@@ -35,6 +53,8 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
       onError={onError}
       onExpire={onExpire}
     />
+  ) : (
+    <></>
   );
 };
 

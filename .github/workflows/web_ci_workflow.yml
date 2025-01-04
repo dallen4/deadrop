@@ -19,15 +19,19 @@ jobs:
       - name: Run Playwright Tests
         shell: bash
         env:
-          STAGE: ${{ github.ref_name }}
+          STAGE: ${{ github.event.deployment.environment }}
           BASE_URL: ${{ github.event.deployment_status.target_url }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
         run: |
-          echo $DEADROP_API_URL
+          export STAGE=$STAGE
+          echo $STAGE
           export DEADROP_API_URL=$DEADROP_API_URL
-          echo $TEST_URI
+          echo $DEADROP_API_URL
           export TEST_URI=$BASE_URL
-          CI=true yarn web playwright test --trace on
+          echo $TEST_URI
+          export REDIS_URL=$REDIS_URL
+          CI=true yarn test:e2e --trace on
       - uses: actions/upload-artifact@v4
         if: always()
         with:

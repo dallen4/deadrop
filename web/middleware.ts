@@ -1,16 +1,15 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { nanoid } from 'nanoid';
-import {
-  DISABLE_CAPTCHA_COOKIE,
-  DAILY_DROP_LIMIT_COOKIE,
-  NONCE_COOKIE,
-} from 'config/cookies';
-import { get } from '@vercel/edge-config';
 import {
   clerkMiddleware,
   createRouteMatcher,
 } from '@clerk/nextjs/server';
+import { TEST_TOKEN_COOKIE } from '@shared/tests/http';
+import { get } from '@vercel/edge-config';
+import {
+  DAILY_DROP_LIMIT_COOKIE,
+  NONCE_COOKIE,
+} from 'config/cookies';
+import { nanoid } from 'nanoid';
+import { NextResponse } from 'next/server';
 
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)']);
 
@@ -54,10 +53,10 @@ export default clerkMiddleware(async (auth, req) => {
   // disable captcha if in development mode
   if (
     process.env.NODE_ENV === 'development' &&
-    !req.cookies.get(DISABLE_CAPTCHA_COOKIE)
+    !req.cookies.get(TEST_TOKEN_COOKIE)
   ) {
     console.log('Disabling captcha');
-    response.cookies.set(DISABLE_CAPTCHA_COOKIE, 'true', {
+    response.cookies.set(TEST_TOKEN_COOKIE, 'true', {
       sameSite: true,
     });
   }

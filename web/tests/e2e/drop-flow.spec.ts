@@ -1,17 +1,16 @@
-import { DROP_PATH } from '@shared/config/paths';
 import { expect } from '@playwright/test';
-import {
-  createContextForBrowser,
-  createPageForBrowser,
-  test,
-} from './util';
+import { DROP_PATH } from '@shared/config/paths';
 import {
   BEGIN_DROP_BTN_ID,
   CONFIRM_PAYLOAD_BTN_ID,
   DROP_LINK_ID,
   DROP_SECRET_VALUE_ID,
-  HCAPTCHA_EMBED_ID,
 } from '../../lib/constants';
+import {
+  createContextForBrowser,
+  createPageForBrowser,
+  test,
+} from './util';
 
 test('should drop a text secret from one page session to another', async ({
   playwright,
@@ -39,10 +38,6 @@ test('should drop a text secret from one page session to another', async ({
     ).toBeVisible({
       timeout: 10_000,
     });
-
-    await dropperPage
-      .locator(`#${HCAPTCHA_EMBED_ID}`)
-      .click({ position: { x: 10, y: 10 } });
 
     await dropperPage
       .getByPlaceholder('Your secret')

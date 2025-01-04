@@ -3,11 +3,11 @@ import { DropDetails } from '@shared/types/common';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { formatDropKey } from '@shared/lib/util';
-import { DISABLE_CAPTCHA_COOKIE } from '@shared/config/http';
 import { createCacheHandlers } from '../lib/cache';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { SessionNotFound } from '../lib/messages';
+import { TEST_TOKEN_COOKIE } from '@shared/tests/http';
 
 const dropIdSchema = z.object({ id: z.string() });
 
@@ -18,17 +18,14 @@ const dropRouter = hono()
     async (c) => {
       const ipAddress = c.get('ipAddress');
 
-      const disableCaptchaCookie = getCookie(
-        c,
-        DISABLE_CAPTCHA_COOKIE,
-      )
+      const testTokenCookie = getCookie(c, TEST_TOKEN_COOKIE)
         ? true
         : false;
-
+      console.log(testTokenCookie);
       const { createDrop, checkAndIncrementUserDropCount } =
         createCacheHandlers(c);
 
-      const canDrop = disableCaptchaCookie
+      const canDrop = testTokenCookie
         ? true
         : await checkAndIncrementUserDropCount(ipAddress!);
 
@@ -39,7 +36,7 @@ const dropRouter = hono()
 
       const { dropId, nonce } = await createDrop(
         peerId,
-        disableCaptchaCookie,
+        testTokenCookie,
       );
 
       return c.json(

@@ -1,12 +1,11 @@
-import { DROP_PATH } from '@shared/config/paths';
 import { expect } from '@playwright/test';
-import { test, createContextForBrowser } from './util';
+import { DROP_PATH } from '@shared/config/paths';
 import {
   BEGIN_DROP_BTN_ID,
   CONFIRM_PAYLOAD_BTN_ID,
   DROP_LINK_ID,
-  HCAPTCHA_EMBED_ID,
 } from '../../lib/constants';
+import { createContextForBrowser, test } from './util';
 
 test('should start the drop session successfully', async ({
   browser,
@@ -25,10 +24,6 @@ test('should start the drop session successfully', async ({
   ).toBeVisible({
     timeout: 10_000,
   });
-
-  await page
-    .locator(`#${HCAPTCHA_EMBED_ID}`)
-    .click({ position: { x: 10, y: 10 } });
 
   await page.getByPlaceholder('Your secret').fill(secretValue);
 

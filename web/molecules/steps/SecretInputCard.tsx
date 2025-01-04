@@ -1,26 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
-  Text,
-  PasswordInput,
+  Box,
   Button,
   FileButton,
   JsonInput,
+  PasswordInput,
   SegmentedControl,
+  Text,
   useMantineTheme,
-  Box,
 } from '@mantine/core';
-import StepCard from './StepCard';
-import { useDropContext } from 'contexts/DropContext';
-import type { PayloadInputMode } from '@shared/types/common';
-import { Captcha } from 'atoms/Captcha';
 import {
   ACCEPTED_FILE_TYPES,
   MAX_PAYLOAD_SIZE,
 } from '@shared/config/files';
+import type { PayloadInputMode } from '@shared/types/common';
+import { Captcha } from 'atoms/Captcha';
+import { useDropContext } from 'contexts/DropContext';
 import { CONFIRM_PAYLOAD_BTN_ID } from 'lib/constants';
-import Cookies from 'js-cookie';
-import { DISABLE_CAPTCHA_COOKIE } from 'config/cookies';
-import { useUser } from '@clerk/nextjs';
+import StepCard from './StepCard';
 
 export const SecretInputCard = () => {
   const [mode, setMode] = useState<PayloadInputMode>('text');
@@ -29,7 +26,6 @@ export const SecretInputCard = () => {
   const [canConfirm, setCanConfirm] = useState(
     process.env.NODE_ENV === 'development',
   );
-  const { user } = useUser();
 
   const textRef = useRef<HTMLInputElement>(null);
   const jsonRef = useRef<HTMLTextAreaElement>(null);
@@ -37,20 +33,6 @@ export const SecretInputCard = () => {
   const theme = useMantineTheme();
 
   const { setPayload } = useDropContext();
-
-  useEffect(() => {
-    if (user) setCanConfirm(true);
-    else setCanConfirm(false);
-  }, [user]);
-
-  useEffect(() => {
-    const disableCaptcha = Cookies.get(DISABLE_CAPTCHA_COOKIE);
-
-    if (disableCaptcha) {
-      setCanConfirm(true);
-      setIsValid(true);
-    }
-  }, []);
 
   const isValidJson = (input: string) => {
     try {

@@ -1,4 +1,3 @@
-import { getUserIdsByEmail, updateUser } from 'api/auth0';
 import { runMiddleware } from 'api/middleware';
 import { cors } from 'api/middleware/cors';
 import { getEmailForCheckout } from 'api/stripe';
@@ -18,19 +17,19 @@ export default async function stripeWebhook(
 
         const email = await getEmailForCheckout(sessionId);
 
-        const usersToUpdate = await getUserIdsByEmail(email);
+        // const usersToUpdate = await getUserIdsByEmail(email);
 
-        const userUpdates = usersToUpdate.map((id) =>
-            updateUser(id, { premium: true }),
-        );
+        // const userUpdates = usersToUpdate.map((id) =>
+        //     updateUser(id, { premium: true }),
+        // );
 
-        try {
-            await Promise.all(userUpdates);
+        // try {
+        //     await Promise.all(userUpdates);
 
-            console.log(`${userUpdates.length} users updated...`);
-        } catch (err) {
-            console.error(err);
-        }
+        //     console.log(`${userUpdates.length} users updated...`);
+        // } catch (err) {
+        //     console.error(err);
+        // }
     }
 
     return res.status(200).send({ message: 'success' });

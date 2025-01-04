@@ -1,11 +1,18 @@
-import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
+import {
+  TEST_FLAG_COOKIE,
+  TEST_TOKEN_COOKIE,
+  testTokenKey,
+} from '@shared/tests/http';
 import {
   Browser,
+  BrowserContextOptions,
   BrowserType,
   PlaywrightWorkerOptions,
   test as base,
 } from '@playwright/test';
 import { baseURL } from './config';
+import { getRedis } from 'api/redis';
+import { randomBytes } from 'crypto';
 
 type BrowserName = PlaywrightWorkerOptions['browserName'];
 
@@ -19,14 +26,50 @@ export const test = base.extend<TestOptions>({
   grabBrowser: ['chromium', { option: true }],
 });
 
-export const createContextForBrowser = async (browser: Browser) => {
-  const context = await browser.newContext();
+let testToken: string | null = null;
+
+const getTestToken = async () => getRedis().get(testTokenKey);
+
+export const getOrCreateTestToken = async () => {
+  const client = getRedis();
+
+  if (!testToken) testToken = await getTestToken();
+
+  if (!testToken) {
+    const token = randomBytes(32).toString('base64');
+
+    await client.setex(testTokenKey, 60 * 10, token);
+  }
+
+  return getTestToken();
+};
+
+export const verifyTestToken = async (token: string) => {
+  const fetchedToken = await getTestToken();
+
+  return fetchedToken && fetchedToken === token ? true : false;
+};
+
+export const createContextForBrowser = async (
+  browser: Browser,
+  options?: BrowserContextOptions,
+) => {
+  const context = await browser.newContext(options);
+
+  if (!testToken) testToken = await getOrCreateTestToken();
 
   await context.addCookies([
     {
-      name: DISABLE_CAPTCHA_COOKIE,
+      name: TEST_FLAG_COOKIE,
       value: 'true',
-      sameSite: 'None',
+      sameSite: 'Strict',
+      url: baseURL,
+      httpOnly: false,
+    },
+    {
+      name: TEST_TOKEN_COOKIE,
+      value: testToken!,
+      sameSite: 'Strict',
       url: baseURL,
       httpOnly: true,
     },
@@ -35,9 +78,12 @@ export const createContextForBrowser = async (browser: Browser) => {
   return context;
 };
 
-export const createPageForBrowser = async (browser: BrowserType) => {
+export const createPageForBrowser = async (
+  browser: BrowserType,
+  options?: BrowserContextOptions,
+) => {
   const newBrowser = await browser.launch();
-  const context = await createContextForBrowser(newBrowser);
+  const context = await createContextForBrowser(newBrowser, options);
 
   return context.newPage();
 };
