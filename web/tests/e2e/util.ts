@@ -81,7 +81,6 @@ export const createContextForBrowser = async (
       sameSite: 'Strict',
       url: baseURL,
       httpOnly: false,
-      secure: !isLocal,
     },
   ]);
 
