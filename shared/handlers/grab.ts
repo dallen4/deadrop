@@ -238,8 +238,6 @@ export const createGrabHandlers = <
     ctx.connection!.on('error', console.error);
 
     ctx.connection!.on('open', () => {
-      // loader.stop();
-
       const handlerWithLock = withMessageLock(onMessage, logger.info);
       ctx.connection!.on('data', (data) =>
         handlerWithLock(data as BaseMessage),
