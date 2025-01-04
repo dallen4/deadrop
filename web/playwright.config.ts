@@ -1,9 +1,6 @@
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 import path from 'path';
-
-const PORT = process.env.PORT || 3000;
-
-const baseURL = process.env.TEST_URI || `http://localhost:${PORT}/`;
+import { baseURL } from './tests/e2e/config';
 
 const isLocal = baseURL.includes('localhost');
 

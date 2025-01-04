@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { description, version } from '../package.json';
 import init from 'actions/init';
+import login from 'actions/login';
 import { drop } from 'actions/drop';
 import { grab } from 'actions/grab';
 import { secretAdd } from 'actions/secret/add';
@@ -13,12 +14,17 @@ import {
   vaultSync,
   vaultUse,
 } from 'actions/vault';
+import logout from 'actions/logout';
 
 const deadrop = new Command();
 
 deadrop.name('deadrop').description(description).version(version);
 
 deadrop.command('init').action(init);
+
+deadrop.command('login').action(login);
+
+deadrop.command('logout').action(logout);
 
 deadrop
   .command('drop')
@@ -43,10 +49,12 @@ const vaultRoot = deadrop
 vaultRoot
   .command('create')
   .description(
-    'create a new vault, optionally specify its parent folder',
+    `create a new vault, optionally specify its parent folder
+add cloud-based replica for ease of sharing`,
   )
   .argument('<name>', 'name of the vault')
   .argument('[location]', 'folder location of the vault')
+  .option('--cloud', 'create a cloud-based replica')
   .action(vaultCreate);
 
 vaultRoot

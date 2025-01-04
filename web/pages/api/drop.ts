@@ -3,9 +3,10 @@ import type { DropDetails } from '@shared/types/common';
 import { getClientIp } from 'request-ip';
 import { checkAndIncrementDropCount } from 'api/limiter';
 import { createDrop, deleteDrop, getDrop } from 'api/drops';
-import { DISABLE_CAPTCHA_COOKIE } from '@config/cookies';
+import { TEST_TOKEN_COOKIE } from '@shared/tests/http';
 import { cors } from 'api/middleware/cors';
 import { runMiddleware } from 'api/middleware';
+import { verifyTestToken } from 'tests/e2e/util';
 
 export default async function drop(
   req: NextApiRequest,
@@ -33,8 +34,8 @@ export default async function drop(
   } else if (req.method === 'POST') {
     const userIpAddr = getClientIp(req);
 
-    const canDrop = req.cookies[DISABLE_CAPTCHA_COOKIE]
-      ? true
+    const canDrop = req.cookies[TEST_TOKEN_COOKIE]
+      ? await verifyTestToken(req.cookies[TEST_TOKEN_COOKIE])
       : await checkAndIncrementDropCount(userIpAddr!);
 
     if (!canDrop)

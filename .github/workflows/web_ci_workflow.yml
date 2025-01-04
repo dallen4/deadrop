@@ -8,8 +8,8 @@ jobs:
     timeout-minutes: 20
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install dependencies
@@ -19,10 +19,20 @@ jobs:
       - name: Run Playwright Tests
         shell: bash
         env:
-          STAGE: ${{ github.ref_name }}
+          STAGE: ${{ github.event.deployment.environment }}
           BASE_URL: ${{ github.event.deployment_status.target_url }}
-        run: CI=true TEST_URI=$BASE_URL yarn web playwright test --trace on
-      - uses: actions/upload-artifact@v3
+          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+        run: |
+          export STAGE=$STAGE
+          echo $STAGE
+          export DEADROP_API_URL=$DEADROP_API_URL
+          echo $DEADROP_API_URL
+          export TEST_URI=$BASE_URL
+          echo $TEST_URI
+          export REDIS_URL=$REDIS_URL
+          CI=true yarn test:e2e --trace on
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report

@@ -1,25 +1,44 @@
 import { cors as baseCors } from 'hono/cors';
+import { createMiddleware } from 'hono/factory';
 import { AppHeaders } from '../constants';
-import { Middleware } from './http/core';
+import { HonoCtx, Middleware } from './http/core';
+import { Redis } from '@upstash/redis/cloudflare';
 
-export const tracing = (): Middleware => async (c, next) => {
-  c.set('requestId', crypto.randomUUID());
+export const tracing = () =>
+  createMiddleware<HonoCtx>(async (c, next) => {
+    const ipAddress = c.req.header(AppHeaders.IpAddress)! as string;
 
-  const ipAddress = c.req.header(AppHeaders.IpAddress)! as string;
-  c.set('ipAddress', ipAddress);
+    c.set('ipAddress', ipAddress);
 
-  await next();
-};
+    await next();
+  });
+
+const originRoots = [
+  'deadrop.io',
+  '-nieky-allens-projects.vercel.app',
+  'nieky.vercel.app',
+  'deadrop.vercel.app',
+];
 
 export const cors = (): Middleware =>
   baseCors({
-    origin: [
-      'https://deadrop.io',
-      'https://*.deadrop.io',
-      'https://*nieky-allens-projects.vercel.app',
-      'https://*nieky.vercel.app',
-    ],
+    origin: (origin) => {
+      if (
+        origin.startsWith('https://') &&
+        originRoots.some((root) => origin.endsWith(root))
+      )
+        return origin;
+      else return null;
+    },
     allowHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
-    allowMethods: ['GET', 'HEAD', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'],
     credentials: true,
+  });
+
+export const redis = () =>
+  createMiddleware<HonoCtx>(async (c, next) => {
+    const redisClient = Redis.fromEnv(c.env);
+    c.set('redis', redisClient);
+
+    await next();
   });

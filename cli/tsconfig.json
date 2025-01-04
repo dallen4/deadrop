@@ -1,26 +1,31 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "baseUrl": "./",
-        "outDir": "build",
-        "target": "ES2020",
-        "module": "commonjs",
-        "allowJs": true,
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
-        "esModuleInterop": true,
-        "resolveJsonModule": true,
-        "incremental": true,
-        "paths": {
-            "@shared/*": ["../shared/*"]
-        },
-        "typeRoots": [
-            "./node_modules/@types/",
-            "../node_modules/@types/",
-            "./types/",
-            "../shared/types/"
-        ]
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "build",
+    "target": "ES2020",
+    "module": "commonjs",
+    "allowJs": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "paths": {
+      "@shared/*": ["../shared/*"],
+      // would like to find a cleaner way to do this
+      // i.e. not import from worker directly
+      "@api/*": ["../worker/*"]
     },
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules"]
+    "typeRoots": [
+      "./node_modules/@types/",
+      "../node_modules/@types/",
+      "./types/",
+      "../shared/types/"
+    ]
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }

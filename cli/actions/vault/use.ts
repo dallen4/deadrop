@@ -2,11 +2,11 @@ import chalk from 'chalk';
 import { vaultExists } from 'db/vaults';
 import { loadConfig, saveConfig } from 'lib/config';
 import { logError, logInfo } from 'lib/log';
-import { cwd, exit } from 'process';
+import { exit } from 'process';
 import { DeadropConfig } from 'types/config';
 
 export async function vaultUse(vaultNameInput: string) {
-  const { config } = await loadConfig();
+  const { config, filepath: configPath } = await loadConfig();
 
   const { vaults, active_vault } = config;
 
@@ -36,7 +36,7 @@ export async function vaultUse(vaultNameInput: string) {
     vaults,
   };
 
-  await saveConfig(cwd(), updatedConfig, true);
+  await saveConfig(configPath, updatedConfig, true);
 
   logInfo(`Vault '${chalk.bold(vaultNameInput)}' is now active...`);
   exit(0);

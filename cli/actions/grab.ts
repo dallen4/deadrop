@@ -48,7 +48,7 @@ export const grab = async (id: string) => {
     },
     initPeer,
     cleanupSession: cleanup,
-    apiUri: process.env.DEADDROP_API_URL!,
+    apiUri: process.env.DEADROP_API_URL!,
   });
 
   await init();

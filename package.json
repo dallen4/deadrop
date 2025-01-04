@@ -27,19 +27,19 @@
     "cli:build": "yarn cli build",
     "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
     "worker:deploy": "yarn worker deploy",
-    "analyze:dup": "npx jscpd shared cli web --format \"typescript\"",
+    "analyze:dup": "jscpd",
     "analyze:unused": "ts-prune",
     "postversion": "git push --tags"
   },
   "dependencies": {
     "@clerk/clerk-js": "^5.22.3",
     "@clerk/clerk-sdk-node": "^5.0.42",
-    "@libsql/client": "^0.9.0",
+    "@libsql/client": "^0.14.0",
     "@xstate/react": "^3.0.1",
     "drizzle-kit": "^0.24.0",
     "drizzle-orm": "^0.33.0",
     "drizzle-zod": "^0.5.1",
-    "hono": "^4.6.2",
+    "hono": "^4.6.13",
     "nanoid": "^5.0.1",
     "nanoid-dictionary": "^4.3.0",
     "peerjs": "^1.4.7",
@@ -51,11 +51,15 @@
   "devDependencies": {
     "@types/nanoid-dictionary": "^4.2.3",
     "@types/node": "^20",
+    "@vitest/coverage-istanbul": "^2.1.8",
     "eslint": "^8.31.0",
+    "jscpd": "^4.0.5",
     "prettier": "^2.8.2",
     "ts-node": "^10.7.0",
     "ts-prune": "^0.10.3",
-    "typescript": "^4.0.3"
+    "tsx": "^4.19.2",
+    "typescript": "^4.0.3",
+    "vitest": "^2.1.8"
   },
   "browser": {
     "tls": false,
@@ -66,5 +70,21 @@
   "engines": {
     "node": ">=20",
     "yarn": "1"
+  },
+  "jscpd": {
+    "format": [
+      "typescript"
+    ],
+    "ignore": [
+      "**/node_modules/**"
+    ],
+    "absolute": true,
+    "gitignore": true,
+    "path": [
+      "shared",
+      "cli",
+      "web",
+      "worker"
+    ]
   }
 }

@@ -1,6 +1,6 @@
 import { generateIV } from '@shared/lib/util';
 import { getRedis } from 'api/redis';
-import { formatDropKey } from 'lib/util';
+import { formatDropKey } from '@shared/lib/util';
 import { nanoid } from 'nanoid';
 import { generateDateTotalId } from './util';
 import { DropDetails } from '@shared/types/common';

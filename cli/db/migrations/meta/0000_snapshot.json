@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "94c1139e-1551-40ef-b359-31110efb28be",
+  "id": "08e593ab-613c-43c1-a166-cf8f9c7fbbda",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "secrets": {
@@ -10,7 +10,7 @@
         "name": {
           "name": "name",
           "type": "text",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
@@ -20,11 +20,26 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "environment": {
+          "name": "environment",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "secrets_name_environment_pk": {
+          "columns": [
+            "name",
+            "environment"
+          ],
+          "name": "secrets_name_environment_pk"
+        }
+      },
       "uniqueConstraints": {}
     }
   },

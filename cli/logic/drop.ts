@@ -3,8 +3,7 @@ import { dropMachine } from '@shared/lib/machines/drop';
 import { AnyDropEvent, DropContext } from '@shared/types/drop';
 import chalk from 'chalk';
 import { encryptFile, hashFile } from 'lib/crypto';
-import { loader } from 'lib/loader';
-import { logDebug, logError, logInfo } from 'lib/log';
+import { loader, logDebug, logError, logInfo } from 'lib/log';
 import { initPeer } from 'lib/peer';
 import { cleanupSession } from 'lib/session';
 import { generateGrabUrl } from 'lib/util';
@@ -32,7 +31,7 @@ export async function dropSecret(ctx: DropContext) {
       hash: hashFile,
     },
     cleanupSession,
-    apiUri: process.env.DEADDROP_API_URL!,
+    apiUri: process.env.DEADROP_API_URL!,
     initPeer,
   });
 

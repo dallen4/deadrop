@@ -7,7 +7,20 @@ import {
 } from '../../config/crypto';
 import { getSubtle } from '.';
 import { bufferFromString, getIVBuffer } from '../util';
-import { decode, encode, encodeJson } from '../data';
+import {
+  base64FromBuffer,
+  bufferFromBase64,
+  decode,
+  encode,
+  encodeJson,
+} from '../data';
+
+export const generateKey = () =>
+  getSubtle().generateKey(
+    { name: ENCRYPTION_ALGO, length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  ) as Promise<CryptoKey>;
 
 export const generateKeyPair = () =>
   getSubtle().generateKey(KEY_PAIR_PARAMS, true, ['deriveKey']);
@@ -28,6 +41,18 @@ export const deriveKey = (
     usages,
   );
 
+export const importKeyFromBase64 = (
+  input: string,
+  usages: KeyUsage[],
+) =>
+  getSubtle().importKey(
+    'raw',
+    bufferFromBase64(input),
+    ENCRYPTION_ALGO,
+    true,
+    usages,
+  );
+
 export const importKey = (input: string, usages: KeyUsage[]) =>
   getSubtle().importKey(
     KEY_FMT,
@@ -36,6 +61,9 @@ export const importKey = (input: string, usages: KeyUsage[]) =>
     true,
     usages,
   );
+
+export const exportKeyToBase64 = (key: CryptoKey) =>
+  getSubtle().exportKey('raw', key).then(base64FromBuffer);
 
 export const exportKey = (key: CryptoKey) =>
   getSubtle().exportKey(KEY_FMT, key).then(JSON.stringify);

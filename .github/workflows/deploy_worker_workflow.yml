@@ -1,0 +1,30 @@
+name: Release Worker
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "worker/**"
+      - "shared/**"
+      - "package.json"
+      - "yarn.lock"
+      - ".github"
+      - "!web/**"
+
+jobs:
+  deploy-worker:
+    runs-on: ubuntu-latest
+    name: Deploy Ada Worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - uses: cloudflare/wrangler-action@v3
+        name: Deploy Worker w/ Wrangler
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: "worker"

@@ -2,11 +2,11 @@ import { cosmiconfig, CosmiconfigResult } from 'cosmiconfig';
 import { randomBytes } from 'crypto';
 import { existsSync } from 'fs';
 import { writeFile } from 'fs/promises';
-import { resolve } from 'path';
 import { DeadropConfig, VaultDBConfig } from 'types/config';
 import { stringify } from 'yaml';
-import { CONFIG_FILE_NAME } from './constants';
+import { initEnvKey } from './env';
 import { displayWelcomeMessage, logError, logInfo } from './log';
+import { CONFIG_FILE_NAME } from './constants';
 
 type CustomConfigResult = Omit<
   NonNullable<CosmiconfigResult>,
@@ -30,20 +30,25 @@ export const loadConfig = async (): Promise<CustomConfigResult> => {
   return configFile;
 };
 
-export const vault = (path: string): VaultDBConfig => ({
+export const vault = async (
+  path: string,
+): Promise<VaultDBConfig> => ({
   location: path,
   key: randomBytes(32).toString('base64'),
+  environments: {
+    development: await initEnvKey(),
+  },
 });
 
-export const initConfig = (
+export const initConfig = async (
   defaultVaultPath: string,
-): DeadropConfig => ({
+): Promise<DeadropConfig> => ({
   active_vault: {
     name: 'default',
     environment: 'development',
   },
   vaults: {
-    default: vault(defaultVaultPath),
+    default: await vault(defaultVaultPath),
   },
 });
 
@@ -52,11 +57,13 @@ export const saveConfig = async (
   config: DeadropConfig,
   overwrite: boolean = false,
 ) => {
-  const configPath = resolve(path, CONFIG_FILE_NAME);
+  const configPath = `${path}/${CONFIG_FILE_NAME}`;
   const configExists = existsSync(configPath);
 
   if (configExists && !overwrite)
-    logInfo(`deadrop is already configured, using config at ${path}`);
+    logInfo(
+      `deadrop is already configured, using config at '${configPath}'`,
+    );
   else {
     if (configExists) logInfo('Updating deadrop config...');
     else {

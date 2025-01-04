@@ -3,6 +3,7 @@ import { ErrorBody } from '../types/fetch';
 export const get = async <Data>(
   uri: string,
   params?: { [key: string]: any },
+  headers: HeadersInit = {},
 ) => {
   let url = uri;
 
@@ -15,6 +16,7 @@ export const get = async <Data>(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
+      ...headers,
     },
   });
 
@@ -39,7 +41,7 @@ export const post = async <Data, Body>(
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data: Data | ErrorBody = await res.json();
+  const data: Data | ErrorBody | { error: string } = await res.json();
 
   if (res.status === 500)
     throw new Error((data as ErrorBody).message);
@@ -50,11 +52,13 @@ export const post = async <Data, Body>(
 export const deleteReq = async <Data, Body>(
   uri: string,
   body?: Body,
+  headers: HeadersInit = {},
 ) => {
   const res = await fetch(uri, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
+      ...headers,
     },
     body: body ? JSON.stringify(body) : undefined,
   });

@@ -7,3 +7,5 @@ export const DROP_LINK_ID = 'drop-link';
 export const DROP_SECRET_BTN_ID = 'drop-secret-btn';
 
 export const DROP_SECRET_VALUE_ID = 'drop-secret-value';
+
+export const HCAPTCHA_EMBED_ID = 'hcaptcha-embed';

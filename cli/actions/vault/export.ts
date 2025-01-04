@@ -14,14 +14,11 @@ export async function vaultExport(
 
   const { vaults, active_vault } = config;
 
-  const { location, key } = vaults[active_vault.name];
+  const { getAllSecrets } = await createSecretsHelpers(
+    vaults[active_vault.name],
+  );
 
-  const { getAllSecrets } = createSecretsHelpers({
-    location,
-    key,
-  });
-
-  const secrets = await getAllSecrets();
+  const secrets = await getAllSecrets(active_vault.environment);
 
   logInfo(`Secrets retrieved for '${vaultNameInput}' vault!`);
 
