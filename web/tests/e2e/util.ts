@@ -10,7 +10,7 @@ import {
   PlaywrightWorkerOptions,
   test as base,
 } from '@playwright/test';
-import { baseURL } from './config';
+import { apiURL, baseURL } from './config';
 import { getRedis } from 'api/redis';
 import { randomBytes } from 'crypto';
 
@@ -28,7 +28,7 @@ export const test = base.extend<TestOptions>({
 
 let testToken: string | null = null;
 
-const getTestToken = async () => getRedis().get(testTokenKey);
+const getTestToken = async () => getRedis().get<string>(testTokenKey);
 
 export const getOrCreateTestToken = async () => {
   const client = getRedis();
@@ -64,6 +64,13 @@ export const createContextForBrowser = async (
       value: 'true',
       sameSite: 'Strict',
       url: baseURL,
+      httpOnly: false,
+    },
+    {
+      name: TEST_FLAG_COOKIE,
+      value: 'true',
+      sameSite: 'Strict',
+      url: apiURL,
       httpOnly: false,
     },
     {

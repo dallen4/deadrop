@@ -1,13 +1,10 @@
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 
 let client: Redis;
 
 export const getRedis = () =>
-    client || (client = new Redis(process.env.REDIS_URL!));
-
-export const cleanupRedis = async () => {
-    if (client) {
-        await client.quit();
-        console.log('Redis connection closed...');
-    }
-};
+  client ||
+  (client = new Redis({
+    url: process.env.REDIS_REST_URL!,
+    token: process.env.REDIS_REST_TOKEN!,
+  }));
