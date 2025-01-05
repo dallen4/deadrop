@@ -27,8 +27,6 @@ const Header = () => {
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
 
-  // const onLogin = () => router.push(LOGIN_PATH);
-
   const onDocsClick = () => router.push(OVERVIEW_DOCS_PATH);
 
   return (

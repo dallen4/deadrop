@@ -28,7 +28,7 @@ export const test = base.extend<TestOptions>({
 
 let testToken: string | null = null;
 
-const getTestToken = async () => getRedis().get(testTokenKey);
+const getTestToken = async () => getRedis().get<string>(testTokenKey);
 
 export const getOrCreateTestToken = async () => {
   const client = getRedis();
