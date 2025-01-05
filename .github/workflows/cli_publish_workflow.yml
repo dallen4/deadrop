@@ -7,14 +7,16 @@ jobs:
   cli-package:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Build CLI
         shell: bash
         env:
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
+          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          TURN_PWD: ${{ secrets.TURN_PWD }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
@@ -22,7 +24,11 @@ jobs:
           yarn install --frozen-lockfile
           echo $DEADROP_API_URL
           echo $PEER_SERVER_URL
-          DEADROP_API_URL=$DEADROP_API_URL PEER_SERVER_URL=$PEER_SERVER_URL yarn build
+          export DEADROP_API_URL=$DEADROP_API_URL
+          export PEER_SERVER_URL=$PEER_SERVER_URL
+          export TURN_USERNAME=$TURN_USERNAME
+          export TURN_PWD=$TURN_PWD
+          yarn build
           echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" >> ./.npmrc
           npm publish
       # - uses: marvinpinto/action-automatic-releases@latest

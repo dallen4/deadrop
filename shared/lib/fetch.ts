@@ -14,6 +14,7 @@ export const get = async <Data>(
 
   const res = await fetch(url, {
     method: 'GET',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...headers,
@@ -34,6 +35,7 @@ export const post = async <Data, Body>(
 ) => {
   const res = await fetch(uri, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...headers,
@@ -56,6 +58,7 @@ export const deleteReq = async <Data, Body>(
 ) => {
   const res = await fetch(uri, {
     method: 'DELETE',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...headers,

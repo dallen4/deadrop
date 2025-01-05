@@ -7,7 +7,7 @@ import { createCacheHandlers } from '../lib/cache';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { SessionNotFound } from '../lib/messages';
-import { TEST_TOKEN_COOKIE } from '@shared/tests/http';
+import { TEST_TOKEN_COOKIE, testTokenKey } from '@shared/tests/http';
 
 const dropIdSchema = z.object({ id: z.string() });
 
@@ -18,15 +18,21 @@ const dropRouter = hono()
     async (c) => {
       const ipAddress = c.get('ipAddress');
 
-      const testTokenCookie = getCookie(c, TEST_TOKEN_COOKIE)
-        ? true
-        : false;
-      console.log(testTokenCookie);
+      const testToken = getCookie(c, TEST_TOKEN_COOKIE);
+
       const { createDrop, checkAndIncrementUserDropCount } =
         createCacheHandlers(c);
 
-      const canDrop = testTokenCookie
-        ? true
+      const verifyTestToken = async (token: string) => {
+        const fetchedToken = await c
+          .get('redis')
+          .get<string>(testTokenKey);
+
+        return fetchedToken ? fetchedToken === token : false;
+      };
+
+      const canDrop = testToken
+        ? await verifyTestToken(testToken)
         : await checkAndIncrementUserDropCount(ipAddress!);
 
       if (!canDrop)
@@ -34,10 +40,7 @@ const dropRouter = hono()
 
       const { id: peerId } = c.req.valid('json');
 
-      const { dropId, nonce } = await createDrop(
-        peerId,
-        testTokenCookie,
-      );
+      const { dropId, nonce } = await createDrop(peerId, !!testToken);
 
       return c.json(
         {

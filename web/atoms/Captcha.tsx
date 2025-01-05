@@ -25,7 +25,6 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
         onSuccess();
         setShow(false);
       } else if (getCookie(TEST_FLAG_COOKIE)) {
-        console.log(getCookie(TEST_FLAG_COOKIE));
         onVerify();
       }
     }

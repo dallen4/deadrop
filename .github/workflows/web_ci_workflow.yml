@@ -22,7 +22,8 @@ jobs:
           STAGE: ${{ github.event.deployment.environment }}
           BASE_URL: ${{ github.event.deployment_status.target_url }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
+          REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
+          REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
         run: |
           export STAGE=$STAGE
           echo $STAGE
@@ -30,7 +31,8 @@ jobs:
           echo $DEADROP_API_URL
           export TEST_URI=$BASE_URL
           echo $TEST_URI
-          export REDIS_URL=$REDIS_URL
+          export REDIS_REST_URL=$REDIS_REST_URL
+          export REDIS_REST_TOKEN=$REDIS_REST_TOKEN
           CI=true yarn test:e2e --trace on
       - uses: actions/upload-artifact@v4
         if: always()

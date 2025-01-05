@@ -6,7 +6,7 @@
   "private": true,
   "peerDependencies": {
     "peerjs": "^1",
-    "typescript": "^4",
+    "typescript": "^5",
     "ws": "*"
   }
 }

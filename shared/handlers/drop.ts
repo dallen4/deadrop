@@ -66,8 +66,6 @@ export const createDropHandlers = <
       ),
     );
 
-    // logger.info(chalk.bold('Drop completed!'));
-
     cleanupSession(ctx);
   };
 
@@ -171,8 +169,6 @@ export const createDropHandlers = <
 
     sendMessage(message);
 
-    // loader.start('Payload dropped, awaiting response...');
-
     sendEvent({ type: DropEventType.Drop });
   };
 
@@ -203,19 +199,11 @@ export const createDropHandlers = <
 
       await drop();
     } else if (msg.type === MessageType.Verify) {
-      // loader.stop();
-
       logger.info('Integrity verification request received...');
 
       const { integrity } = msg as VerifyMessage;
 
       const verified = integrity === ctx.integrity!;
-
-      // logger.info(
-      //     `Integrity checked ${chalk.bold(
-      //         verified ? 'PASSED' : 'FAILED',
-      //     )}`,
-      // );
 
       const message: ConfirmIntegrityMessage = {
         type: MessageType.ConfirmVerification,
@@ -246,8 +234,6 @@ export const createDropHandlers = <
     }
 
     ctx.connection = newConnection;
-
-    // loader.stop();
 
     logger.info('Grab request received!');
 

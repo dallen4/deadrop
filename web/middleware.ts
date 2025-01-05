@@ -2,7 +2,6 @@ import {
   clerkMiddleware,
   createRouteMatcher,
 } from '@clerk/nextjs/server';
-import { TEST_TOKEN_COOKIE } from '@shared/tests/http';
 import { get } from '@vercel/edge-config';
 import {
   DAILY_DROP_LIMIT_COOKIE,
@@ -48,17 +47,6 @@ export default clerkMiddleware(async (auth, req) => {
     );
 
     console.log('Drop limit set');
-  }
-
-  // disable captcha if in development mode
-  if (
-    process.env.NODE_ENV === 'development' &&
-    !req.cookies.get(TEST_TOKEN_COOKIE)
-  ) {
-    console.log('Disabling captcha');
-    response.cookies.set(TEST_TOKEN_COOKIE, 'true', {
-      sameSite: true,
-    });
   }
 
   return response;

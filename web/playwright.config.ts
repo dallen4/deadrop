@@ -1,8 +1,6 @@
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 import path from 'path';
-import { baseURL } from './tests/e2e/config';
-
-const isLocal = baseURL.includes('localhost');
+import { baseURL, isLocal } from './tests/e2e/config';
 
 const server = {
   command: 'yarn run start',
@@ -23,7 +21,7 @@ const config: PlaywrightTestConfig<{
   outputDir: 'test-results/',
   expect: {},
   webServer: isLocal ? server : undefined,
-  workers: isLocal ? 3 : undefined,
+  workers: 3,
   use: {
     baseURL,
     trace: 'retry-with-trace',
