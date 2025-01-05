@@ -14,6 +14,11 @@ import { description, title } from '@config/app';
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
 
+  const isPreview =
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.startsWith(
+      'pk_test_',
+    );
+
   return (
     <>
       <DefaultSeo
@@ -58,7 +63,7 @@ export default function MyApp(props: AppProps) {
             </Layout>
           </NotificationsProvider>
         </MantineProvider>
-        <Analytics />
+        {!isPreview && <Analytics />}
       </ClerkProvider>
     </>
   );
