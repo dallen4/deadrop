@@ -10,7 +10,7 @@ import {
   PlaywrightWorkerOptions,
   test as base,
 } from '@playwright/test';
-import { apiURL, baseURL } from './config';
+import { apiURL, baseURL, isLocal } from './config';
 import { getRedis } from 'api/redis';
 import { randomBytes } from 'crypto';
 
@@ -60,18 +60,20 @@ export const createContextForBrowser = async (
 
   await context.addCookies([
     {
-      name: TEST_FLAG_COOKIE,
-      value: 'true',
-      sameSite: 'Strict',
+      name: TEST_TOKEN_COOKIE,
+      value: testToken!,
+      sameSite: 'None',
       url: apiURL,
-      httpOnly: false,
+      httpOnly: true,
+      secure: !isLocal,
     },
     {
       name: TEST_TOKEN_COOKIE,
       value: testToken!,
-      sameSite: 'Strict',
-      url: apiURL,
+      sameSite: 'None',
+      url: baseURL,
       httpOnly: true,
+      secure: !isLocal,
     },
     {
       name: TEST_FLAG_COOKIE,
@@ -79,13 +81,7 @@ export const createContextForBrowser = async (
       sameSite: 'Strict',
       url: baseURL,
       httpOnly: false,
-    },
-    {
-      name: TEST_TOKEN_COOKIE,
-      value: testToken!,
-      sameSite: 'Strict',
-      url: baseURL,
-      httpOnly: true,
+      secure: !isLocal,
     },
   ]);
 
