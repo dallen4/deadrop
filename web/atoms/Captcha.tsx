@@ -20,14 +20,13 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
   const { isLoaded, isSignedIn } = useUser();
 
   useEffect(() => {
-    if (isLoaded) {
-      if (isSignedIn) {
-        onSuccess();
-        setShow(false);
-      } else if (getCookie(TEST_FLAG_COOKIE)) {
-        onVerify();
-      }
+    if (isLoaded && isSignedIn) {
+      onSuccess();
+      setShow(false);
     }
+
+    if (getCookie(TEST_FLAG_COOKIE))
+      onVerify();
   }, [isLoaded]);
 
   const onVerify = async (token?: string) => {
