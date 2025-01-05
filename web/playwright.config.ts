@@ -21,7 +21,7 @@ const config: PlaywrightTestConfig<{
   outputDir: 'test-results/',
   expect: {},
   webServer: isLocal ? server : undefined,
-  workers: isLocal ? 3 : undefined,
+  workers: 3,
   use: {
     baseURL,
     trace: 'retry-with-trace',
