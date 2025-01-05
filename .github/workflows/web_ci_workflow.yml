@@ -26,13 +26,21 @@ jobs:
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
         run: |
           export STAGE=$STAGE
-          echo $STAGE
+          echo "Running '$STAGE' environment tests..."
+
           export DEADROP_API_URL=$DEADROP_API_URL
           echo $DEADROP_API_URL
-          export TEST_URI=$BASE_URL
-          echo $TEST_URI
+
           export REDIS_REST_URL=$REDIS_REST_URL
           export REDIS_REST_TOKEN=$REDIS_REST_TOKEN
+
+          if [ ${{ github.event.deployment.environment }} == 'Production' ]; then
+            export TEST_URI="https://deadrop.io/"
+          else
+            export TEST_URI=$BASE_URL
+          fi
+
+          echo $TEST_URI
           CI=true yarn test:e2e --trace on
       - uses: actions/upload-artifact@v4
         if: always()
