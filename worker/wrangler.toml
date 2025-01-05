@@ -27,3 +27,8 @@ class_name = "PeerServerDO"
 [[migrations]]
 tag = "v1" # Should be unique for each entry
 new_classes = ["PeerServerDO"]
+
+[observability]
+enabled = true
+logs.enabled = true
+logs.invocation_logs = true

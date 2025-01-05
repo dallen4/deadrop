@@ -54,6 +54,7 @@
     "@vitest/coverage-istanbul": "^2.1.8",
     "eslint": "^8.31.0",
     "jscpd": "^4.0.5",
+    "postcss": "^8.4.49",
     "prettier": "^2.8.2",
     "ts-node": "^10.7.0",
     "ts-prune": "^0.10.3",
