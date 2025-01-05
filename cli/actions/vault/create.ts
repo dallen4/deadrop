@@ -1,4 +1,4 @@
-import { createClient } from '@api/client';
+import { createClient } from '@shared/client';
 import { initDB } from 'db/init';
 import { vaultExists } from 'db/vaults';
 import { createClerkClient } from 'lib/auth/clerk';
