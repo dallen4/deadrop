@@ -49,6 +49,10 @@ jobs:
           yarn cli version --${{ github.event.inputs.rel_type }}
           echo "bumped cli version"
 
+          yarn config set version-tag-prefix "worker-v"
+          yarn worker version --${{ github.event.inputs.rel_type }}
+          echo "bumped worker version"
+
           yarn config set version-tag-prefix "shared-v"
           yarn shared version --${{ github.event.inputs.rel_type }}
           echo "bumped shared version"
