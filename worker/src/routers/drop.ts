@@ -20,7 +20,6 @@ const dropRouter = hono()
 
       const testToken = getCookie(c, TEST_TOKEN_COOKIE);
 
-      console.log(testToken);
       const { createDrop, checkAndIncrementUserDropCount } =
         createCacheHandlers(c);
 
