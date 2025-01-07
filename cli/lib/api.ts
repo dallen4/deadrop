@@ -1,4 +1,4 @@
-import { createClient, DeadropApiClient } from '@api/client';
+import { createClient, DeadropApiClient } from '@shared/client';
 import { createClerkClient } from './auth/clerk';
 
 const deadropFactory = () => {
