@@ -8,7 +8,7 @@ import {
   importKeyFromBase64,
 } from '@shared/lib/crypto/operations';
 import { writeFileFromBuffer, readFileAsBuffer } from './files';
-import Mime from 'mime-type';
+import mime from 'mime';
 import { generateIV } from '@shared/lib/util';
 import { SECRET_VALUE_DELIMITER } from './constants';
 
@@ -20,7 +20,7 @@ export const encryptFile = async (
   const fileBuffer = await readFileAsBuffer(path);
 
   const name = path.split('/').pop()!;
-  const type = new Mime({}, 0).lookup(path);
+  const type = mime.getType(path);
   const encryptedFile = await encrypt(key, iv, fileBuffer);
 
   return {

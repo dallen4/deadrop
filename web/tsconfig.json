@@ -1,32 +1,38 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "baseUrl": "./",
-        "jsx": "preserve",
-        "target": "esnext",
-        "lib": ["dom", "dom.iterable", "esnext"],
-        "allowJs": true,
-        "skipLibCheck": true,
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
-        "noEmit": true,
-        "esModuleInterop": true,
-        "module": "esnext",
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "incremental": true,
-        "paths": {
-            "@config/*": ["config/*"],
-            "@shared/*": ["../shared/*"]
-        },
-        "typeRoots": [
-            "./node_modules/@types/",
-            "../node_modules/@types/",
-            "./types/",
-            "../shared/types/"
-        ]
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "jsx": "preserve",
+    "target": "esnext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "paths": {
+      "@config/*": ["config/*"],
+      "@shared/*": ["../shared/*"]
     },
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mdx"],
-    "exclude": ["node_modules"]
+    "typeRoots": [
+      "./node_modules/@types/",
+      "../node_modules/@types/",
+      "./types/",
+      "../shared/types/"
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mdx",
+    "vitest.config.mts"
+  ],
+  "exclude": ["node_modules"]
 }

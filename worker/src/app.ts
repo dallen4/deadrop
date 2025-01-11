@@ -23,6 +23,7 @@ export const app = api
       description:
         'A serverless API to handle drops and peer connection brokering',
       website: 'https://deadrop.io/',
+      version: require('../package.json').version as string,
     }),
   )
   .route(AppRoutes.AuthRoot, authRouter)

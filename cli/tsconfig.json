@@ -14,10 +14,7 @@
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "paths": {
-      "@shared/*": ["../shared/*"],
-      // would like to find a cleaner way to do this
-      // i.e. not import from worker directly
-      "@api/*": ["../worker/*"]
+      "@shared/*": ["../shared/*"]
     },
     "typeRoots": [
       "./node_modules/@types/",
@@ -26,6 +23,6 @@
       "../shared/types/"
     ]
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "vitest.config.mts"],
   "exclude": ["node_modules"]
 }

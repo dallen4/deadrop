@@ -1,7 +1,7 @@
 import { MessageType } from './constants';
 import { BaseMessage, MessageHandler } from '../types/messages';
 
-function createMessageMutex() {
+export function createMessageMutex() {
   let currentMessageType: MessageType | null = null;
   const processed = new Set<MessageType>();
 

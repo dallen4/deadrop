@@ -1,17 +1,25 @@
 {
-    "compilerOptions": {
-        "target": "esnext",
-        "lib": ["dom", "dom.iterable", "esnext"],
-        "allowJs": true,
-        "skipLibCheck": true,
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
-        "esModuleInterop": true,
-        "module": "esnext",
-        "moduleResolution": "node",
-        "resolveJsonModule": true,
-        "isolatedModules": true
-    },
-    "include": ["**/*.ts", "**/*.tsx", "**/*.mdx"],
-    "exclude": ["node_modules"]
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mdx",
+    "vitest.config.mts",
+    "web/vitest.config.mts"
+, "shared/vitest.config.mts", "cli/vitest.config.mts"  ],
+  "exclude": ["node_modules"]
 }
