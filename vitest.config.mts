@@ -4,8 +4,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 
 const reporters = ['verbose'];
 
-if (process.env.CI)
-  reporters.push('json-summary', 'html', 'github-actions');
+if (process.env.CI) reporters.push('html', 'github-actions');
 
 export default defineConfig({
   test: {
