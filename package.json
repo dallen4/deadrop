@@ -23,13 +23,17 @@
     "start": "yarn web start",
     "build": "yarn web build",
     "start:prod": "yarn web start:prod",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage.enabled true",
     "test:e2e": "yarn web test:e2e",
     "cli:build": "yarn cli build",
     "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
     "worker:deploy": "yarn worker deploy",
     "analyze:dup": "jscpd",
     "analyze:unused": "ts-prune",
-    "postversion": "git push --tags"
+    "postversion": "git push --tags",
+    "prepare": "husky"
   },
   "dependencies": {
     "@clerk/clerk-js": "^5.22.3",
@@ -54,13 +58,17 @@
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",
     "@vitest/coverage-istanbul": "^2.1.8",
+    "@vitest/ui": "^2.1.8",
     "eslint": "^8.31.0",
+    "happy-dom": "^16.5.2",
+    "husky": "^9.1.7",
     "jscpd": "^4.0.5",
     "postcss": "^8.4.49",
     "prettier": "^2.8.2",
     "ts-prune": "^0.10.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.8"
   },
   "browser": {

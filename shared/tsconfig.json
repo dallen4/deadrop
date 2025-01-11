@@ -1,18 +1,18 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "baseUrl": "./",
-        "strict": true,
-        "forceConsistentCasingInFileNames": true,
-        "esModuleInterop": true,
-        "resolveJsonModule": true,
-        "incremental": true,
-        "typeRoots": [
-            "./node_modules/@types/",
-            "../node_modules/@types/",
-            "./types/"
-        ]
-    },
-    "include": ["**/*.ts"],
-    "exclude": ["node_modules"]
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "typeRoots": [
+      "./node_modules/@types/",
+      "../node_modules/@types/",
+      "./types/"
+    ]
+  },
+  "include": ["**/*.ts", "vitest.config.mts"],
+  "exclude": ["node_modules"]
 }
