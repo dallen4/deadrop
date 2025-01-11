@@ -12,7 +12,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: |
+            ./node_modules
+            ./web/node_modules
+            ./cli/node_modules
+            ./worker/node_modules
+            ./shared/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('./yarn.lock') }}
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: yarn install --frozen-lockfile
       - name: Install Playwright Browsers
         run: yarn web playwright install --with-deps
