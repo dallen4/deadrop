@@ -65,7 +65,7 @@
     "husky": "^9.1.7",
     "jscpd": "^4.0.5",
     "postcss": "^8.4.49",
-    "prettier": "3.4.2",
+    "prettier": "^3.4.2",
     "ts-prune": "^0.10.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",

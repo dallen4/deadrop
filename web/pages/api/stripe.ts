@@ -16,20 +16,6 @@ export default async function stripeWebhook(
         const sessionId = (event.data.object as Record<string, string>).id;
 
         const email = await getEmailForCheckout(sessionId);
-
-        // const usersToUpdate = await getUserIdsByEmail(email);
-
-        // const userUpdates = usersToUpdate.map((id) =>
-        //     updateUser(id, { premium: true }),
-        // );
-
-        // try {
-        //     await Promise.all(userUpdates);
-
-        //     console.log(`${userUpdates.length} users updated...`);
-        // } catch (err) {
-        //     console.error(err);
-        // }
     }
 
     return res.status(200).send({ message: 'success' });
