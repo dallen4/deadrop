@@ -1,23 +1,19 @@
-import { getAuth } from '@hono/clerk-auth';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { AppRouteParts } from '../constants';
-import { hono } from '../lib/http/core';
-import { NotAuthenticated } from '../lib/messages';
-import { createVaultUtils, vaultNameFromUserId } from '../lib/vault';
+import { hono } from 'lib/http/core';
+import { createVaultUtils, vaultNameFromUserId } from 'lib/vault';
+import { authenticated, restricted } from 'lib/middleware';
 
 const VaultNameSchema = z.object({ name: z.string() });
 
 const vaultRouter = hono()
   .post(
     AppRouteParts.Root,
+    restricted(),
     zValidator('json', VaultNameSchema.partial()),
     async (c) => {
-      const auth = getAuth(c);
-
-      if (!auth?.userId) {
-        return c.json(NotAuthenticated, 401);
-      }
+      const userId = c.get('clerkAuth')!.userId!;
 
       const { createVault, createVaultToken } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -27,10 +23,7 @@ const vaultRouter = hono()
       try {
         const { name } = c.req.valid('json');
 
-        const vaultName = await vaultNameFromUserId(
-          auth.userId,
-          name,
-        );
+        const vaultName = await vaultNameFromUserId(userId!, name);
 
         const vaultDatabase = await createVault(vaultName);
 
@@ -57,13 +50,10 @@ const vaultRouter = hono()
   )
   .post(
     AppRouteParts.Share,
+    restricted(),
     zValidator('json', VaultNameSchema),
     async (c) => {
-      const auth = getAuth(c);
-
-      if (!auth?.userId) {
-        return c.json(NotAuthenticated, 401);
-      }
+      const userId = c.get('clerkAuth')!.userId!;
 
       const { createVaultToken } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -73,10 +63,7 @@ const vaultRouter = hono()
       const { name } = c.req.valid('json');
 
       try {
-        const vaultName = await vaultNameFromUserId(
-          auth.userId,
-          name,
-        );
+        const vaultName = await vaultNameFromUserId(userId!, name);
 
         const token = await createVaultToken(vaultName, 'read-only');
 
@@ -91,17 +78,14 @@ const vaultRouter = hono()
   )
   .get(
     AppRouteParts.NameParam,
+    authenticated(),
     zValidator('param', z.object({ name: z.string() })),
     async (c) => {
-      const auth = getAuth(c);
-
-      if (!auth?.userId) {
-        return c.json(NotAuthenticated, 401);
-      }
+      const userId = c.get('clerkAuth')!.userId!;
 
       const { name } = c.req.valid('param');
 
-      const vaultName = await vaultNameFromUserId(auth.userId, name);
+      const vaultName = await vaultNameFromUserId(userId!, name);
 
       const { getVault } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -115,17 +99,14 @@ const vaultRouter = hono()
   )
   .delete(
     AppRouteParts.NameParam,
+    restricted(),
     zValidator('param', z.object({ name: z.string() })),
     async (c) => {
-      const auth = getAuth(c);
-
-      if (!auth?.userId) {
-        return c.json(NotAuthenticated, 401);
-      }
+      const userId = c.get('clerkAuth')!.userId!;
 
       const { name } = c.req.valid('param');
 
-      const vaultName = await vaultNameFromUserId(auth.userId, name);
+      const vaultName = await vaultNameFromUserId(userId!, name);
 
       const { deleteVault } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,

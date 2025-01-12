@@ -1,22 +1,18 @@
-import { getAuth } from '@hono/clerk-auth';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
-import { NotAuthenticated } from '../lib/messages';
+import { authenticated } from '../lib/middleware';
 
 const authRouter = hono().get(
   AppRouteParts.CreateSignInToken,
+  authenticated(),
   async (c) => {
-    const auth = getAuth(c);
-
-    if (!auth?.userId) {
-      return c.json(NotAuthenticated, 401);
-    }
+    const userId = c.get('clerkAuth')!.userId!;
 
     const clerkClient = c.get('clerk');
 
     const { token } =
       await clerkClient.signInTokens.createSignInToken({
-        userId: auth!.userId,
+        userId,
         expiresInSeconds: 25,
       });
 
