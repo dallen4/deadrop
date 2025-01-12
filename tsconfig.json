@@ -19,7 +19,8 @@
     "**/*.tsx",
     "**/*.mdx",
     "vitest.config.mts",
-    "web/vitest.config.mts"
-, "shared/vitest.config.mts", "cli/vitest.config.mts"  ],
+    "web/vitest.config.mts",
+    "cli/vitest.config.mts"
+  ],
   "exclude": ["node_modules"]
 }
