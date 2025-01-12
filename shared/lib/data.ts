@@ -1,12 +1,20 @@
-export const encode = (input: string) => Buffer.from(input);
+export const encode = (input: string) =>
+  new TextEncoder().encode(input);
 
 export const encodeJson = (input: Record<string, any>) => {
   const data = JSON.stringify(input);
   return encode(data);
 };
 
-export const decode = (input: ArrayBuffer) =>
+export const decode = (input: AllowSharedBufferSource) =>
   new TextDecoder().decode(input);
+
+export const decodeJsonBuffer = (
+  value: AllowSharedBufferSource,
+): Record<string, any> => {
+  const stringifiedJson = decode(value);
+  return JSON.parse(stringifiedJson);
+};
 
 export const bufferFromBase64 = (input: string) => {
   const binary = Buffer.from(input, 'base64');

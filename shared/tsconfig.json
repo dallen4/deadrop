@@ -13,6 +13,6 @@
       "./types/"
     ]
   },
-  "include": ["**/*.ts", "vitest.config.mts"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules"]
 }
