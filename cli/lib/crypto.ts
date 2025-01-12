@@ -37,7 +37,7 @@ export const decryptFile = async (
   meta: NonNullable<DropMessage['meta']>,
 ) => {
   const bufferTransform = (buffer: ArrayBuffer) =>
-    writeFileFromBuffer(Buffer.from(buffer), meta);
+    writeFileFromBuffer(new Uint8Array(buffer), meta);
 
   return decrypt(key, iv, data, bufferTransform);
 };

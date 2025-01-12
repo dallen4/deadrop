@@ -1,4 +1,4 @@
-type BaseCrypto = Omit<Crypto, 'webkitSubtle'>;
+export type BaseCrypto = Omit<Crypto, 'webkitSubtle'>;
 
 export const getCrypto = () => {
   if (
