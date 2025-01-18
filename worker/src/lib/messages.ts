@@ -5,3 +5,7 @@ export const SessionNotFound = {
 export const NotAuthenticated = {
   message: 'Not authenticated!',
 };
+
+export const PermissionDenied = {
+  message: 'Permission denied!',
+};
