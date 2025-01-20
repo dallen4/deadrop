@@ -31,6 +31,9 @@ jobs:
         run: |
           yarn config set version-tag-prefix "${{ github.event.inputs.pkg_name }}-v"
           yarn ${{ github.event.inputs.pkg_name }} version --${{ github.event.inputs.rel_type }}
+
+          git push
+          git push origin --tags
   platform-version-bump:
     if: github.event.inputs.pkg_name == 'shared'
     runs-on: macos-latest
@@ -60,3 +63,6 @@ jobs:
           yarn config set version-tag-prefix "v"
           yarn version --${{ github.event.inputs.rel_type }}
           echo "bumped platform version"
+          
+          git push
+          git push origin --tags
