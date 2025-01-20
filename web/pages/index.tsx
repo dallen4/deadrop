@@ -1,5 +1,4 @@
 import React, { useRef } from 'react';
-import { HeroBanner } from 'molecules/HeroBanner';
 import {
     Title,
     Text,
@@ -12,13 +11,15 @@ import {
     Table,
     Container,
 } from '@mantine/core';
-import { Features, Faq } from 'molecules/sections';
-import { useRouter } from 'next/router';
-import { GRAB_PATH, OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import { useMediaQuery } from '@mantine/hooks';
+import { GRAB_PATH, OVERVIEW_DOCS_PATH } from '@shared/config/paths';
+import { HeroBanner } from 'molecules/HeroBanner';
+import { Faq, Features } from 'molecules/sections';
+import { FeaturesSupport } from 'molecules/sections/FeaturesSupport';
 import { Tools } from 'molecules/sections/Tools';
 import classes from './index.module.css';
 import { SectionTitle } from 'molecules/sections/SectionTitle';
+import { useRouter } from 'next/router';
 
 type SupportStatus = '✅ stable' | '📝 planned' | '🧪 experimental';
 type FeatureEntry = {
@@ -151,34 +152,7 @@ const Home = () => {
       </Center>
       <Faq />
       <Tools />
-      <Container
-        size={'lg'}
-        py={'md'}
-        px={0}
-        mb={theme.spacing.xl * 2}
-      >
-        <SectionTitle
-          label={'Features Support'}
-          id={'features-section'}
-        />
-        <Card maw={'650px'}>
-          <Table fontSize={'lg'}>
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>Web Application</th>
-                <th>CLI</th>
-                {/* <th>VSCode Extension</th> */}
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, index) => (
-                <FeatureRow key={index} item={item} />
-              ))}
-            </tbody>
-          </Table>
-        </Card>
-      </Container>
+      <FeaturesSupport />
       <Center>
         <Button
           className={classes.control}
