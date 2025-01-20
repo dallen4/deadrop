@@ -2,7 +2,7 @@ name: Release CLI
 on:
   push:
     tags:
-      - "cli-v*"
+      - 'cli-v*'
 jobs:
   cli-package:
     runs-on: macos-latest
@@ -31,10 +31,9 @@ jobs:
           yarn build
           echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" >> ./.npmrc
           npm publish
-      # - uses: marvinpinto/action-automatic-releases@latest
-      #   if: steps.cache-bundle.outputs.cache-hit != 'true'
-      #   with:
-      #     repo_token: "${{ secrets.GITHUB_TOKEN }}"
-      #     draft: true
-      #     prerelease: false
-      #     files: cli/dist/deadrop-*
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
+          draft: true
+          prerelease: false
+          files: cli/dist/deadrop*
