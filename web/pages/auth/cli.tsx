@@ -1,9 +1,10 @@
 import React from 'react';
-import { Button, Container, Text, Title } from '@mantine/core';
+import { Button, Text, Title } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 import { SignedIn, SignedOut, SignIn, useClerk } from '@clerk/nextjs';
 import { IconX } from '@tabler/icons';
+import { MainWrapper } from 'atoms/MainWrapper';
 
 const CliAuth = () => {
   const clerk = useClerk();
@@ -44,13 +45,8 @@ const CliAuth = () => {
   };
 
   return (
-    <Container
-      maw={'700px'}
-      mih={'calc(100vh - 225px)'}
-      p={0}
-      display={'flex'}
+    <MainWrapper
       style={{
-        flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'center',
       }}
@@ -68,7 +64,7 @@ const CliAuth = () => {
         </Text>
         <Button onClick={getTokenAndRedirect}>Yes, sign me in</Button>
       </SignedIn>
-    </Container>
+    </MainWrapper>
   );
 };
 
