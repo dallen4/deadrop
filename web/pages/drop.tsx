@@ -1,15 +1,15 @@
 import React from 'react';
-import DropFlow from 'organisms/DropFlow';
-import { Container } from '@mantine/core';
+import { MainWrapper } from 'atoms/MainWrapper';
+import { DropProvider } from 'contexts/DropContext';
+import { DropFlow } from 'organisms/DropFlow';
 
 const Drop = () => {
   return (
-    <Container
-      style={{ maxWidth: '700px', minHeight: 'calc(100vh - 202px)' }}
-      p={0}
-    >
-      <DropFlow />
-    </Container>
+    <MainWrapper>
+      <DropProvider>
+        <DropFlow />
+      </DropProvider>
+    </MainWrapper>
   );
 };
 

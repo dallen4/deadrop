@@ -6,67 +6,58 @@ import { GrabState } from '@shared/lib/constants';
 import { DROP_SECRET_VALUE_ID } from 'lib/constants';
 import { downloadFile } from 'lib/files';
 
-const GrabFlow = () => {
-    const { init, status, getLogs, getMode, getSecret } = useGrabContext();
-    const [secretFile, setSecretFile] = useState<File | null>(null);
+export const GrabFlow = () => {
+  const { init, status, getLogs, getMode, getSecret } =
+    useGrabContext();
+  const [secretFile, setSecretFile] = useState<File | null>(null);
 
-    useEffect(() => {
-        if (getMode() === 'file' && getSecret())
-            setSecretFile(getSecret() as File);
-    }, [getSecret()]);
+  useEffect(() => {
+    if (getMode() === 'file' && getSecret())
+      setSecretFile(getSecret() as File);
+  }, [getSecret()]);
 
-    const downloadSecret = () => {
-        downloadFile(secretFile!);
-    };
-    const getLoaderText = () => {
-        return status === GrabState.Ready
-            ? ''
-            : status === GrabState.Connected
-            ? 'Exchanging secret identities...'
-            : GrabState.Waiting
-            ? 'Waiting for payload drop...'
-            : '';
-    };
+  const downloadSecret = () => {
+    downloadFile(secretFile!);
+  };
+  const getLoaderText = () => {
+    return status === GrabState.Ready
+      ? ''
+      : status === GrabState.Connected
+        ? 'Exchanging secret identities...'
+        : GrabState.Waiting
+          ? 'Waiting for payload drop...'
+          : '';
+  };
 
-    return (
+  return (
+    <Box>
+      {status === GrabState.Initial ? (
+        <>
+          <Text>You are about to begin a deadrop.</Text>
+          <Button id={'begin-grab-btn'} onClick={init}>
+            Begin
+          </Button>
+        </>
+      ) : status === GrabState.Confirmed ? (
         <Box>
-            {status === GrabState.Initial ? (
-                <>
-                    <Text>You are about to begin a deadrop.</Text>
-                    <Button id={'begin-grab-btn'} onClick={init}>
-                        Begin
-                    </Button>
-                </>
-            ) : status === GrabState.Confirmed ? (
-                <Box>
-                    {getMode() === 'raw' ? (
-                        <Code block id={DROP_SECRET_VALUE_ID}>
-                            {getSecret() as string}
-                        </Code>
-                    ) : (
-                        <>
-                            <Text>
-                                File received: {(getSecret() as File).name}
-                            </Text>
-                            <Button onClick={downloadSecret}>Download</Button>
-                        </>
-                    )}
-                </Box>
-            ) : (
-                <Card>
-                    <Loader color={'teal'} />
-                    <Text>{getLoaderText()}</Text>
-                </Card>
-            )}
-            <DropLog logs={getLogs()} />
+          {getMode() === 'raw' ? (
+            <Code block id={DROP_SECRET_VALUE_ID}>
+              {getSecret() as string}
+            </Code>
+          ) : (
+            <>
+              <Text>File received: {(getSecret() as File).name}</Text>
+              <Button onClick={downloadSecret}>Download</Button>
+            </>
+          )}
         </Box>
-    );
-};
-
-export default () => {
-    return (
-        <GrabProvider>
-            <GrabFlow />
-        </GrabProvider>
-    );
+      ) : (
+        <Card>
+          <Loader color={'teal'} />
+          <Text>{getLoaderText()}</Text>
+        </Card>
+      )}
+      <DropLog logs={getLogs()} />
+    </Box>
+  );
 };
