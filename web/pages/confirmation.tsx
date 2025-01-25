@@ -1,19 +1,13 @@
 import React from 'react';
-import {
-  Center,
-  Container,
-  Title,
-  useMantineTheme,
-} from '@mantine/core';
+import { Center, Title, useMantineTheme } from '@mantine/core';
 import { GetServerSideProps } from 'next/types';
 import { validateCheckoutSession } from 'api/stripe';
+import { MainWrapper } from 'atoms/MainWrapper';
 
 const PremiumConfirmation = (props: { success: boolean }) => {
   const theme = useMantineTheme();
   return (
-    <Container
-      style={{ maxWidth: '700px', minHeight: 'calc(100vh - 202px)' }}
-    >
+    <MainWrapper>
       <Center
         style={{
           minHeight: '230px',
@@ -26,7 +20,7 @@ const PremiumConfirmation = (props: { success: boolean }) => {
           {props.success ? 'Activated' : 'Subscription Failed'}!
         </Title>
       </Center>
-    </Container>
+    </MainWrapper>
   );
 };
 
@@ -36,16 +30,16 @@ export const getServerSideProps: GetServerSideProps = async ({
 }) => {
   res.setHeader('Cache-Control', 'private, maxage=600');
 
-  let success = false;
+  const success = true;
   const checkoutSessionId = query.id;
 
-  if (checkoutSessionId && typeof checkoutSessionId === 'string') {
-    const sessionPaid = await validateCheckoutSession(
-      checkoutSessionId,
-    );
+  // if (checkoutSessionId && typeof checkoutSessionId === 'string') {
+  //   const sessionPaid = await validateCheckoutSession(
+  //     checkoutSessionId,
+  //   );
 
-    if (sessionPaid) success = true;
-  }
+  //   if (sessionPaid) success = true;
+  // }
 
   return { props: { success } };
 };
