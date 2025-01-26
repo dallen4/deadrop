@@ -1,12 +1,12 @@
+import { CONFIG_FILE_NAME } from '@shared/lib/constants';
+import { DeadropConfig } from '@shared/types/config';
 import { cosmiconfig, CosmiconfigResult } from 'cosmiconfig';
-import { randomBytes } from 'crypto';
 import { existsSync } from 'fs';
 import { writeFile } from 'fs/promises';
-import { DeadropConfig, VaultDBConfig } from '@shared/types/config';
 import { stringify } from 'yaml';
-import { initEnvKey } from './env';
 import { displayWelcomeMessage, logError, logInfo } from './log';
-import { CONFIG_FILE_NAME } from '@shared/lib/constants';
+import { initConfig as baseInitConfig } from '@shared/lib/vault';
+import { randomBytes } from 'crypto';
 
 type CustomConfigResult = Omit<
   NonNullable<CosmiconfigResult>,
@@ -30,27 +30,11 @@ export const loadConfig = async (): Promise<CustomConfigResult> => {
   return configFile;
 };
 
-export const vault = async (
-  path: string,
-): Promise<VaultDBConfig> => ({
-  location: path,
-  key: randomBytes(32).toString('base64'),
-  environments: {
-    development: await initEnvKey(),
-  },
-});
-
-export const initConfig = async (
-  defaultVaultPath: string,
-): Promise<DeadropConfig> => ({
-  active_vault: {
-    name: 'default',
-    environment: 'development',
-  },
-  vaults: {
-    default: await vault(defaultVaultPath),
-  },
-});
+export const initConfig = async (defaultVaultPath: string) =>
+  baseInitConfig(
+    defaultVaultPath,
+    randomBytes(32).toString('base64'),
+  );
 
 export const saveConfig = async (
   path: string,
