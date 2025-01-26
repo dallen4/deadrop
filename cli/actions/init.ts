@@ -3,10 +3,11 @@ import { initDB } from 'db/init';
 import { existsSync } from 'fs';
 import { appendFile, mkdir } from 'fs/promises';
 import { initConfig, loadConfig, saveConfig } from 'lib/config';
-import { CONFIG_FILE_NAME, STORAGE_DIR_NAME } from 'lib/constants';
+import { CONFIG_FILE_NAME } from '@shared/lib/constants';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd } from 'process';
+import { STORAGE_DIR_NAME } from 'lib/constants';
 
 export default async function () {
   const defaultConfigPath = resolve(cwd(), CONFIG_FILE_NAME);

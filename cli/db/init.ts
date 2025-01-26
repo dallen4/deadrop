@@ -1,7 +1,7 @@
 import { Config, createClient } from '@libsql/client';
 import { formatCloudSyncUrl } from '@shared/lib/util';
 import { drizzle } from 'drizzle-orm/libsql';
-import { CloudVaultConfig } from 'types/config';
+import { CloudVaultConfig } from '@shared/types/config';
 
 export const initDB = async (
   path: string,

@@ -64,3 +64,7 @@ export const GrabMessageOrderMap = new Map([
   [MessageType.Handshake, MessageType.Payload],
   [MessageType.Verify, MessageType.ConfirmVerification],
 ]);
+
+export const CONFIG_FILE_NAME = '.deadroprc';
+
+export const SECRET_VALUE_DELIMITER = ' | ';

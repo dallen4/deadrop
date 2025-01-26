@@ -3,7 +3,7 @@ import { vaultExists } from 'db/vaults';
 import { loadConfig, saveConfig } from 'lib/config';
 import { logError, logInfo } from 'lib/log';
 import { exit } from 'process';
-import { DeadropConfig } from 'types/config';
+import { DeadropConfig } from '@shared/types/config';
 
 export async function vaultUse(vaultNameInput: string) {
   const { config, filepath: configPath } = await loadConfig();

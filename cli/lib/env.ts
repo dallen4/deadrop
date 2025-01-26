@@ -4,10 +4,10 @@ import {
 } from '@shared/lib/crypto/operations';
 import { parse, stringify } from 'envfile';
 import { appendFile, readFile, writeFile } from 'fs/promises';
-import { addSecretsToVault } from 'logic/secrets';
 import { resolve } from 'path';
 import { cwd } from 'process';
-import { VaultDBConfig } from 'types/config';
+import { VaultDBConfig } from '@shared/types/config';
+import { createSecretsHelpers } from 'db/secrets';
 
 type Env = Record<string, string>;
 
@@ -52,8 +52,8 @@ export async function addEnvToVault(
   const envVars = await loadEnvFromFile(envPath);
 
   // generate key for environment
-  if (!vault.environments![environment])
-    vault.environments![environment] = await initEnvKey();
+  if (!vault.environments[environment])
+    vault.environments[environment] = await initEnvKey();
 
   // TODO update .deadroprc file
 
@@ -65,5 +65,7 @@ export async function addEnvToVault(
     }),
   );
 
-  return addSecretsToVault(vault, secretsToAdd);
+  const { addSecrets } = await createSecretsHelpers(vault);
+
+  return addSecrets(secretsToAdd);
 }

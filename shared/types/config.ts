@@ -16,7 +16,6 @@ export type CloudVaultConfig = {
   authToken: string;
 };
 
-
 export type VaultDBConfig = {
   location: string;
   key: string;

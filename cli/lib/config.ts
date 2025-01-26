@@ -2,11 +2,11 @@ import { cosmiconfig, CosmiconfigResult } from 'cosmiconfig';
 import { randomBytes } from 'crypto';
 import { existsSync } from 'fs';
 import { writeFile } from 'fs/promises';
-import { DeadropConfig, VaultDBConfig } from 'types/config';
+import { DeadropConfig, VaultDBConfig } from '@shared/types/config';
 import { stringify } from 'yaml';
 import { initEnvKey } from './env';
 import { displayWelcomeMessage, logError, logInfo } from './log';
-import { CONFIG_FILE_NAME } from './constants';
+import { CONFIG_FILE_NAME } from '@shared/lib/constants';
 
 type CustomConfigResult = Omit<
   NonNullable<CosmiconfigResult>,

@@ -1,19 +1,28 @@
-import { VaultDBConfig } from 'types/config';
+import { VaultDBConfig } from '@shared/types/config';
 import { initDB } from './init';
 import { and, eq } from 'drizzle-orm/expressions';
-import { migrate } from 'drizzle-orm/libsql/migrator';
 import { SecretsInput, secretsTable } from './schema';
+import { unwrapSecret, wrapSecret } from '@shared/lib/secrets';
 
 export async function createSecretsHelpers(vault: VaultDBConfig) {
   const { location, key, cloud } = vault;
 
   const db = await initDB(location, key, cloud);
 
-  const runMigrations = () =>
-    migrate(db, { migrationsFolder: './db/migrations' });
+  const addSecrets = async (inputs: SecretsInput[]) => {
+    const secretsToAdd: SecretsInput[] = await Promise.all(
+      inputs.map(async ({ name, value, environment }) => ({
+        name,
+        value: await wrapSecret(
+          vault.environments[environment],
+          value,
+        ),
+        environment,
+      })),
+    );
 
-  const addSecrets = async (inputs: SecretsInput[]) =>
-    db.insert(secretsTable).values(inputs).returning();
+    return db.insert(secretsTable).values(secretsToAdd).returning();
+  };
 
   const getSecret = async (name: string, environment: string) => {
     const [secret] = await db
@@ -26,7 +35,9 @@ export async function createSecretsHelpers(vault: VaultDBConfig) {
         ),
       );
 
-    return secret;
+    const decryptionKey = vault.environments[environment];
+
+    return unwrapSecret(decryptionKey, secret.value);
   };
 
   const removeSecret = async (name: string) =>
@@ -41,17 +52,24 @@ export async function createSecretsHelpers(vault: VaultDBConfig) {
       .where(eq(secretsTable.environment, environment))
       .all();
 
+    const decryptionKey = vault.environments[environment];
+
+    const decryptedSecrets = await Promise.all(
+      secretItems.map((item) =>
+        unwrapSecret(decryptionKey, item.value),
+      ),
+    );
+
     return secretItems.reduce(
-      (prev, { name, value }) => ({
+      (prev, { name }, index) => ({
         ...prev,
-        [name]: value,
+        [name]: decryptedSecrets[index],
       }),
       {},
     );
   };
 
   return {
-    runMigrations,
     addSecrets,
     getSecret,
     removeSecret,
