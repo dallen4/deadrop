@@ -87,7 +87,8 @@
       "typescript"
     ],
     "ignore": [
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*.spec.ts"
     ],
     "absolute": true,
     "gitignore": true,
