@@ -27,8 +27,8 @@ import {
 } from '../types/messages';
 import { DataConnection } from 'peerjs';
 import { withMessageLock } from '../lib/messages';
-import { deleteReq, post } from '../lib/fetch';
 import { DROP_API_PATH } from '../config/paths';
+import { createClient } from '../client';
 
 export const createDropHandlers = <
   FileType extends string | File = string,
@@ -43,6 +43,7 @@ export const createDropHandlers = <
   initPeer,
 }: DropHandlerInputs<FileType>) => {
   const dropApiUrl = apiUri + DROP_API_PATH;
+  const client = createClient(dropApiUrl);
   const timers = new Map<MessageType, NodeJS.Timeout>();
 
   const clearTimer = (msgType: MessageType) => {
@@ -57,14 +58,14 @@ export const createDropHandlers = <
   const cleanup = async () => {
     const dropId = ctx.id!;
 
-    await deleteReq(dropApiUrl, {
-      id: dropId,
-    }).catch((err) =>
-      console.error(
-        `Failed to clear session data from cache (drop: ${dropId})`,
-        err,
-      ),
-    );
+    await client.drop
+      .$delete({ json: { id: dropId } })
+      .catch((err) =>
+        console.error(
+          `Failed to clear session data from cache (drop: ${dropId})`,
+          err,
+        ),
+      );
 
     cleanupSession(ctx);
   };
@@ -258,12 +259,13 @@ export const createDropHandlers = <
 
     ctx.peer.on('connection', onConnection);
 
-    const { id, nonce } = await post<InitDropResult, { id: string }>(
-      dropApiUrl,
-      {
+    const resp = await client.drop.$post({
+      json: {
         id: ctx.peer.id,
       },
-    );
+    });
+
+    const { id, nonce }: InitDropResult = await resp.json();
 
     ctx.id = id;
     ctx.nonce = nonce;
