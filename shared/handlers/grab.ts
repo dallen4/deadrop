@@ -24,9 +24,9 @@ import {
   hashRaw,
   importKey,
 } from '../lib/crypto/operations';
-import { get } from '../lib/fetch';
 import { DropDetails } from '../types/common';
 import { withMessageLock } from '../lib/messages';
+import { createClient } from '../client';
 
 export const createGrabHandlers = <
   FileType extends string | File = string,
@@ -41,6 +41,7 @@ export const createGrabHandlers = <
   onRetryExceeded,
 }: GrabHandlerInputs<FileType>) => {
   const dropApiUrl = apiUri + DROP_API_PATH;
+  const client = createClient(dropApiUrl);
   const timers = new Map<MessageType, NodeJS.Timeout>();
 
   const clearTimer = (msgType: MessageType) => {
@@ -197,9 +198,9 @@ export const createGrabHandlers = <
     logger.info('Fetching drop details...');
 
     try {
-      const details = await get<DropDetails>(dropApiUrl, {
-        id: ctx.id,
-      });
+      const resp = await client.drop.$get({ query: { id: ctx.id! } });
+
+      const details: DropDetails = await resp.json();
 
       if (!details) {
         logger.error(
