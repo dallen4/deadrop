@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { VaultStore } from 'types/config';
+import { VaultStore } from '@shared/types/config';
 
 export const vaultExists = (vaults: VaultStore, name: string) => {
   const config = vaults[name];
