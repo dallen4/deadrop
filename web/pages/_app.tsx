@@ -3,6 +3,7 @@ import { AppProps } from 'next/app';
 import { DefaultSeo } from 'next-seo';
 import { MantineProvider } from '@mantine/core';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import Layout from 'molecules/Layout';
 import { emotionCache } from 'lib/emotion';
 import { NotificationsProvider } from '@mantine/notifications';
@@ -64,6 +65,7 @@ export default function MyApp(props: AppProps) {
           </NotificationsProvider>
         </MantineProvider>
         {!isPreview && <Analytics />}
+        <SpeedInsights />
       </ClerkProvider>
     </>
   );
