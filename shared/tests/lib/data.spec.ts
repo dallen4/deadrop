@@ -1,4 +1,11 @@
-import { decode, decodeJsonBuffer, encode, encodeJson } from 'lib/data';
+import {
+  base64FromBuffer,
+  bufferFromBase64,
+  decode,
+  decodeJsonBuffer,
+  encode,
+  encodeJson,
+} from 'lib/data';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 describe('data transform utilities', () => {
@@ -24,6 +31,19 @@ describe('data transform utilities', () => {
     expect(encodedInput instanceof Uint8Array).toBeTruthy();
 
     const decodedInput = decodeJsonBuffer(encodedInput);
+
+    expect(decodedInput).toStrictEqual(input);
+  });
+
+  it('should transform base64 to and from ArrayBuffer', () => {
+    const input = 'aGVsbG8gdGhlcmU='; // 'hello there' in base64
+
+    const encodedInput = bufferFromBase64(input);
+
+    expectTypeOf(encodedInput).toMatchTypeOf<ArrayBuffer>();
+    expect(encodedInput instanceof ArrayBuffer).toBeTruthy();
+
+    const decodedInput = base64FromBuffer(encodedInput);
 
     expect(decodedInput).toStrictEqual(input);
   });
