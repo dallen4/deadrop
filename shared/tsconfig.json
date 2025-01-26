@@ -7,6 +7,9 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "incremental": true,
+    "paths": {
+      "@api/*": ["../worker/*"]
+    },
     "typeRoots": [
       "./node_modules/@types/",
       "../node_modules/@types/",
