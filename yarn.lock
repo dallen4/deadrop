@@ -960,10 +960,10 @@
   resolved "https://registry.yarnpkg.com/@cloudflare/workerd-windows-64/-/workerd-windows-64-1.20241218.0.tgz#f62b6cdb7a970375721c22ef70a9c238c4bb5f9b"
   integrity sha512-tO1VjlvK3F6Yb2d1jgEy/QBYl//9Pyv3K0j+lq8Eu7qdfm0IgKwSRgDWLept84/qmNsQfausZ4JdNGxTf9xsxQ==
 
-"@cloudflare/workers-types@^4.20231121.0":
-  version "4.20241230.0"
-  resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20241230.0.tgz#75b40be5509fdb6568decf4bca71dd82f1e6fc38"
-  integrity sha512-dtLD4jY35Lb750cCVyO1i/eIfdZJg2Z0i+B1RYX6BVeRPlgaHx/H18ImKAkYmy0g09Ow8R2jZy3hIxMgXun0WQ==
+"@cloudflare/workers-types@^4.20250124.3":
+  version "4.20250124.3"
+  resolved "https://registry.yarnpkg.com/@cloudflare/workers-types/-/workers-types-4.20250124.3.tgz#d61824d6cece57485af51a6043290ae1a07d7bb7"
+  integrity sha512-WRZ+ol4RnMroF3tc7en6w8b0MqLrmGnLr2LIhG8EWqIoy8MeYk5uhyNXMZ0WPBhwkRtDcTRwOt61xwnJrthskA==
 
 "@coinbase/wallet-sdk@4.0.4":
   version "4.0.4"
