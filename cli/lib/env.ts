@@ -9,13 +9,13 @@ import { cwd } from 'process';
 import { VaultDBConfig } from '@shared/types/config';
 import { createSecretsHelpers } from 'db/secrets';
 
-type Env = Record<string, string>;
+type EnvVars = Record<string, string>;
 
 const encoding: BufferEncoding = 'utf-8';
 
 export async function syncEnv(
   filePath: string,
-  envVars: Env,
+  envVars: EnvVars,
   append = false,
 ) {
   const fullPath = resolve(cwd(), filePath);
