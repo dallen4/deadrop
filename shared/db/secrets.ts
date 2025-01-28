@@ -1,10 +1,10 @@
-import { VaultDBConfig } from '@shared/types/config';
-import { DBClient } from '@shared/db/init';
 import { and, eq } from 'drizzle-orm/expressions';
-import { SecretsInput, secretsTable } from '@shared/db/schema';
-import { unwrapSecret, wrapSecret } from '@shared/lib/secrets';
+import { VaultDBConfig } from '../types/config';
+import { DBClient } from './init';
+import { SecretsInput, secretsTable } from './schema';
+import { unwrapSecret, wrapSecret } from '../lib/secrets';
 
-export async function createSecretsHelpers(
+export function createSecretsHelpers(
   vault: VaultDBConfig,
   db: DBClient,
 ) {
@@ -21,6 +21,26 @@ export async function createSecretsHelpers(
     );
 
     return db.insert(secretsTable).values(secretsToAdd).returning();
+  };
+
+  const updateSecret = async (input: SecretsInput) => {
+    const wrappedSecret = await wrapSecret(
+      vault.environments[input.environment],
+      input.value,
+    );
+
+    const [updatedSecret] = await db
+      .update(secretsTable)
+      .set({ value: wrappedSecret })
+      .where(
+        and(
+          eq(secretsTable.name, input.name),
+          eq(secretsTable.environment, input.environment),
+        ),
+      )
+      .returning();
+
+    return updatedSecret;
   };
 
   const getSecret = async (name: string, environment: string) => {
@@ -70,6 +90,7 @@ export async function createSecretsHelpers(
 
   return {
     addSecrets,
+    updateSecret,
     getSecret,
     removeSecret,
     getAllSecrets,
