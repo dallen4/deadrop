@@ -1,5 +1,5 @@
 import { initDBClient } from 'db/init';
-import { createSecretsHelpers } from 'db/secrets';
+import { createSecretsHelpers } from '@shared/db/secrets';
 import { loadConfig } from 'lib/config';
 import { logInfo } from 'lib/log';
 
@@ -18,7 +18,7 @@ export async function secretRemove(name: string) {
     activeVault.cloud,
   );
 
-  const { removeSecret } = await createSecretsHelpers(
+  const { removeSecret } = createSecretsHelpers(
     vaults[active_vault.name],
     db,
   );

@@ -1,5 +1,5 @@
 import { initDBClient } from 'db/init';
-import { createSecretsHelpers } from 'db/secrets';
+import { createSecretsHelpers } from '@shared/db/secrets';
 import { loadConfig } from 'lib/config';
 import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
@@ -20,7 +20,7 @@ export async function vaultSync(
     activeVault.cloud,
   );
 
-  const { getAllSecrets } = await createSecretsHelpers(
+  const { getAllSecrets } = createSecretsHelpers(
     vaults[active_vault.name],
     db,
   );

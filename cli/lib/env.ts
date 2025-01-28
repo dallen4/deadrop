@@ -7,7 +7,7 @@ import { appendFile, readFile, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 import { cwd } from 'process';
 import { VaultDBConfig } from '@shared/types/config';
-import { createSecretsHelpers } from 'db/secrets';
+import { createSecretsHelpers } from '@shared/db/secrets';
 import { initDBClient } from 'db/init';
 
 type EnvVars = Record<string, string>;
@@ -72,7 +72,7 @@ export async function addEnvToVault(
     vault.cloud,
   );
 
-  const { addSecrets } = await createSecretsHelpers(vault, db);
+  const { addSecrets } = createSecretsHelpers(vault, db);
 
   return addSecrets(secretsToAdd);
 }
