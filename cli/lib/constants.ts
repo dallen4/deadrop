@@ -1,4 +1,3 @@
-export const STORAGE_DIR_NAME = '.deadrop';
 
 export const DEADROP_URL =
   process.env.DEADROP_APP_URL || 'http://localhost:3000';

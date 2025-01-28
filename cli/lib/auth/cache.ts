@@ -1,7 +1,7 @@
 import { cosmiconfig } from 'cosmiconfig';
 import { existsSync } from 'fs';
 import { mkdir, writeFile } from 'fs/promises';
-import { STORAGE_DIR_NAME } from 'lib/constants';
+import { STORAGE_DIR_NAME } from '@shared/lib/constants';
 import { cwd } from 'process';
 import { stringify } from 'yaml';
 

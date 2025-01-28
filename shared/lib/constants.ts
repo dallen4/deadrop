@@ -67,4 +67,8 @@ export const GrabMessageOrderMap = new Map([
 
 export const CONFIG_FILE_NAME = '.deadroprc';
 
+export const STORAGE_DIR_NAME = '.deadrop';
+
+export const DEFAULT_VAULT_NAME = 'default.db';
+
 export const SECRET_VALUE_DELIMITER = ' | ';
