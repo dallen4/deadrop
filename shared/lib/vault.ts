@@ -1,4 +1,4 @@
-import { DeadropConfig, VaultDBConfig } from 'types/config';
+import { DeadropConfig, VaultDBConfig } from '../types/config';
 import { exportKeyToBase64, generateKey } from './crypto/operations';
 
 export async function initEnvKey() {

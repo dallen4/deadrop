@@ -1,5 +1,5 @@
 import { confirm } from '@inquirer/prompts';
-import { initDB } from 'db/init';
+import { initDBClient } from 'db/init';
 import { existsSync } from 'fs';
 import { appendFile, mkdir } from 'fs/promises';
 import { initConfig, loadConfig, saveConfig } from 'lib/config';
@@ -7,11 +7,17 @@ import { CONFIG_FILE_NAME } from '@shared/lib/constants';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd } from 'process';
-import { STORAGE_DIR_NAME } from 'lib/constants';
+import {
+  DEFAULT_VAULT_NAME,
+  STORAGE_DIR_NAME,
+} from '@shared/lib/constants';
 
 export default async function () {
   const defaultConfigPath = resolve(cwd(), CONFIG_FILE_NAME);
-  const defaultVaultPath = resolve(STORAGE_DIR_NAME, 'default.db');
+  const defaultVaultPath = resolve(
+    STORAGE_DIR_NAME,
+    DEFAULT_VAULT_NAME,
+  );
 
   const defaultConfig = await initConfig(defaultVaultPath);
 
@@ -25,7 +31,8 @@ export default async function () {
 
   const { location, key } = config.vaults.default;
 
-  const db = await initDB(location, key);
+  // TODO consider writing NODE_ENV to vault
+  const db = await initDBClient(location, key);
 
   logInfo(`Default vault initalized & config created at '${defaultConfigPath}'!
 We recommend adding the following to your .gitignore:

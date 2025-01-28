@@ -8,6 +8,7 @@ import { resolve } from 'path';
 import { cwd } from 'process';
 import { VaultDBConfig } from '@shared/types/config';
 import { createSecretsHelpers } from 'db/secrets';
+import { initDBClient } from 'db/init';
 
 type EnvVars = Record<string, string>;
 
@@ -65,7 +66,13 @@ export async function addEnvToVault(
     }),
   );
 
-  const { addSecrets } = await createSecretsHelpers(vault);
+  const db = await initDBClient(
+    vault.location,
+    vault.key,
+    vault.cloud,
+  );
+
+  const { addSecrets } = await createSecretsHelpers(vault, db);
 
   return addSecrets(secretsToAdd);
 }

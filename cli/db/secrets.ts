@@ -1,14 +1,13 @@
 import { VaultDBConfig } from '@shared/types/config';
-import { initDB } from './init';
+import { DBClient } from '@shared/db/init';
 import { and, eq } from 'drizzle-orm/expressions';
-import { SecretsInput, secretsTable } from './schema';
+import { SecretsInput, secretsTable } from '@shared/db/schema';
 import { unwrapSecret, wrapSecret } from '@shared/lib/secrets';
 
-export async function createSecretsHelpers(vault: VaultDBConfig) {
-  const { location, key, cloud } = vault;
-
-  const db = await initDB(location, key, cloud);
-
+export async function createSecretsHelpers(
+  vault: VaultDBConfig,
+  db: DBClient,
+) {
   const addSecrets = async (inputs: SecretsInput[]) => {
     const secretsToAdd: SecretsInput[] = await Promise.all(
       inputs.map(async ({ name, value, environment }) => ({
