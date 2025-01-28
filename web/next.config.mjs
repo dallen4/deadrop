@@ -12,7 +12,11 @@ const withTM = nextTranspileModules(['shared']);
 import { withSentryConfig } from '@sentry/nextjs';
 
 import nextPwa from 'next-pwa';
-const withPWA = nextPwa({ dest: '/public' });
+
+const withPWA = nextPwa({
+  dest: '/public',
+  customWorkerDir: 'scripts/service-worker',
+});
 
 const nonce = randomBytes(8).toString('base64');
 
