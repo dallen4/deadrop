@@ -4,7 +4,6 @@ import { DeadropConfig } from '@shared/types/config';
 type ConfigMessage =
   | {
       type: 'get_config';
-      payload: undefined;
     }
   | {
       type: 'config' | 'set_config';

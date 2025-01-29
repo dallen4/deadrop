@@ -1,7 +1,8 @@
 export type BaseCrypto = Omit<Crypto, 'webkitSubtle'>;
 
 export const getCrypto = () => {
-  if (
+  if (typeof crypto !== 'undefined') return crypto;
+  else if (
     typeof window !== 'undefined' &&
     Object.keys(window).length > 0
   ) {
