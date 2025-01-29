@@ -1,5 +1,5 @@
+import React, { useEffect, useMemo, useRef } from 'react';
 import type { DropContext } from '@shared/types/drop';
-import { useEffect, useMemo, useRef } from 'react';
 import { useMachine } from '@xstate/react';
 import {
   dropMachine,
