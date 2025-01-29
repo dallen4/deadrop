@@ -11,11 +11,12 @@ const withTM = nextTranspileModules(['shared']);
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 import { withSentryConfig } from '@sentry/nextjs';
 
-import nextPwa from 'next-pwa';
+import nextPwa from '@ducanh2912/next-pwa';
 
 const withPWA = nextPwa({
   dest: '/public',
-  customWorkerDir: 'scripts/service-worker',
+  customWorkerSrc: 'scripts/service-worker',
+  register: false,
 });
 
 const nonce = randomBytes(8).toString('base64');
@@ -62,6 +63,17 @@ const assetsDomains = [
 
 const deadropWorkerDomain = process.env.NEXT_PUBLIC_DEADROP_API_URL;
 
+const connectSrcEntries = [
+  `'self'`,
+  clerkDomains,
+  peerDomain,
+  vercelMetricsDomains,
+  captchaDomains,
+  sentryDomain,
+  assetsDomains,
+  deadropWorkerDomain,
+].join(' ');
+
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',
   contentTypeOptions: 'nosniff',
@@ -70,7 +82,7 @@ const safeConfig = {
   frameOptions: 'DENY',
   permissionsPolicy: false,
   contentSecurityPolicy: {
-    'connect-src': `'self' ${clerkDomains} ${peerDomain} ${vercelMetricsDomains} ${captchaDomains} ${sentryDomain} ${assetsDomains} ${deadropWorkerDomain}`,
+    'connect-src': connectSrcEntries,
     'default-src': `'self'`,
     'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
     'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
@@ -98,7 +110,25 @@ const baseConfig = {
   headers() {
     return [
       {
-        source: '/:path*',
+        source: '/vault/:path*',
+        headers: [
+          /**
+           * Cross-Origin-Embedder-Policy & Cross-Origin-Opener-Policy
+           * are required for OPFS
+           */
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          ...headers,
+        ],
+      },
+      {
+        source: '/((?!vault).*)',
         headers,
       },
     ];

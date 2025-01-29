@@ -21,7 +21,7 @@ const randomBase64 = () => {
 
 async function processMessage(
   message: DeadropMessage,
-): Promise<DeadropMessage> {
+): Promise<DeadropMessage | undefined> {
   const directoryHandler = await navigator.storage.getDirectory();
   const fileHandler = await directoryHandler.getFileHandle(
     CONFIG_FILE_NAME,
@@ -52,18 +52,18 @@ async function processMessage(
   if (message.type === 'get_config')
     return { type: 'config', payload: config };
 
-  let response: DeadropMessage = {
-    type: 'notification',
-    payload: {
-      variant: 'success',
-      message: '',
-    },
-  };
+  let response: DeadropMessage | undefined;
 
   if (message.type === 'set_config') {
     await writeConfig(message.payload);
 
-    response.payload.message = 'deadrop config updated!';
+    response = {
+      type: 'notification',
+      payload: {
+        variant: 'success',
+        message: 'deadrop config updated!',
+      },
+    };
   } else if (message.type.includes('secret')) {
     const activeVault = config.vaults[config.active_vault.name];
 
@@ -73,17 +73,29 @@ async function processMessage(
       activeVault.cloud,
     );
 
-    const { addSecrets, updateSecret, getSecret, getAllSecrets } =
+    const { addSecrets, updateSecret, getSecret } =
       createSecretsHelpers(activeVault, db);
 
     if (message.type === 'add_secret') {
       await addSecrets([message.payload]);
 
-      response.payload.message = 'secret added to vault!';
+      response = {
+        type: 'notification',
+        payload: {
+          variant: 'success',
+          message: 'secret added to vault!',
+        },
+      };
     } else if (message.type === 'update_secret') {
       await updateSecret(message.payload);
 
-      response.payload.message = 'secret updated in vault!';
+      response = {
+        type: 'notification',
+        payload: {
+          variant: 'success',
+          message: 'secret updated in vault!',
+        },
+      };
     } else if (message.type === 'get_secret') {
       const { name, environment } = message.payload;
 
@@ -96,15 +108,6 @@ async function processMessage(
           value: secretValue,
           environment,
         },
-      };
-    } else if (message.type === 'get_secrets') {
-      const { environment } = message.payload;
-
-      const secrets = await getAllSecrets(environment);
-
-      response = {
-        type: 'all_secrets',
-        payload: [],
       };
     }
   }
@@ -119,6 +122,6 @@ sw.addEventListener(
   async (msg: DeadropServiceWorkerMessage) => {
     const response = await processMessage(msg.data);
 
-    if (response) msg.ports[0].postMessage(response);
+    if (response) msg.source?.postMessage(response);
   },
 );
