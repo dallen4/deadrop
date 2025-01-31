@@ -118,6 +118,7 @@ export const SWProvider = ({
       window.workbox !== undefined &&
       !workerRef.current
     ) {
+      console.log('Registering service worker...');
       await window.workbox.register();
     }
   };
