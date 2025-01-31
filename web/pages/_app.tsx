@@ -11,6 +11,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import Head from 'next/head';
 import { description, title } from '@config/app';
+import { SWProvider } from 'contexts/SWContext';
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
@@ -59,9 +60,11 @@ export default function MyApp(props: AppProps) {
           emotionCache={emotionCache}
         >
           <NotificationsProvider>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
+            <SWProvider>
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </SWProvider>
           </NotificationsProvider>
         </MantineProvider>
         {!isPreview && <Analytics />}

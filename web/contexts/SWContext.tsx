@@ -4,7 +4,6 @@ import React, {
   useContext,
   useEffect,
   useRef,
-  useState,
 } from 'react';
 import { showNotification } from '@mantine/notifications';
 import { DeadropMessage } from 'types/worker';
@@ -23,7 +22,7 @@ const SWContext = createContext<ServiceWorkerCtx>(
   {} as ServiceWorkerCtx,
 );
 
-export const useSWContext = () => useContext(SWContext);
+export const useServiceWorker = () => useContext(SWContext);
 
 export const SWProvider = ({
   children,
@@ -31,8 +30,7 @@ export const SWProvider = ({
   children: React.ReactNode;
 }) => {
   // SW controller instance
-  const [workerController, setWorkerController] =
-    useState<ServiceWorker | null>(null);
+  const workerRef = useRef<ServiceWorker | null>(null);
 
   /**
    * set of handlers to run on each message
@@ -42,7 +40,8 @@ export const SWProvider = ({
 
   useEffect(() => {
     const updateController = () => {
-      setWorkerController(navigator.serviceWorker.controller);
+      console.log('service worker controller change detected...');
+      workerRef.current = navigator.serviceWorker.controller;
     };
 
     // Set initial controller if available
@@ -117,26 +116,26 @@ export const SWProvider = ({
     if (
       'serviceWorker' in navigator &&
       window.workbox !== undefined &&
-      !workerController
+      !workerRef.current
     ) {
       await window.workbox.register();
     }
   };
 
   const sendMessage = useCallback((message: DeadropMessage) => {
-    if (!workerController) {
+    if (!workerRef.current) {
       console.error('No active Service Worker controller found.');
       return;
     }
 
-    workerController.postMessage(message);
+    workerRef.current.postMessage(message);
   }, []);
 
   return (
     <SWContext.Provider
       value={{
         activateWorker: activateServiceWorker,
-        workerController,
+        workerController: workerRef.current,
         sendMessage,
         addMessageHandler,
         removeMessageHandler,
