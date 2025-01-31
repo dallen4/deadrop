@@ -121,7 +121,7 @@ sw.addEventListener(
   'message',
   async (msg: DeadropServiceWorkerMessage) => {
     const response = await processMessage(msg.data);
-
+    console.log('SW RESPONSE: ', response);
     if (response) msg.source?.postMessage(response);
   },
 );
