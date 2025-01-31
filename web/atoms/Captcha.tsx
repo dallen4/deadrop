@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { getCookie } from 'cookies-next';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
@@ -22,10 +22,9 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
   useEffect(() => {
     if (isLoaded) {
       if (isSignedIn) {
-      onSuccess();
-      setShow(false);
-      } else if (getCookie(TEST_FLAG_COOKIE))
-        onVerify();
+        onSuccess();
+        setShow(false);
+      } else if (getCookie(TEST_FLAG_COOKIE)) onVerify();
     }
   }, [isLoaded]);
 

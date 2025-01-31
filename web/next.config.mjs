@@ -11,11 +11,11 @@ const withTM = nextTranspileModules(['shared']);
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 import { withSentryConfig } from '@sentry/nextjs';
 
-import nextPwa from '@ducanh2912/next-pwa';
+import nextPwa from 'next-pwa';
 
 const withPWA = nextPwa({
   dest: '/public',
-  customWorkerSrc: 'scripts/service-worker',
+  customWorkerDir: 'scripts/service-worker',
   register: false,
 });
 
