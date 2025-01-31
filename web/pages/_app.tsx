@@ -10,6 +10,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import Head from 'next/head';
 import { description, title } from '@config/app';
+import { SWProvider } from 'contexts/SWContext';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -60,9 +61,11 @@ export default function MyApp(props: AppProps) {
           }}
         >
           <Notifications />
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
+          <SWProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </SWProvider>
         </MantineProvider>
         {!isPreview && <Analytics />}
         <SpeedInsights />
