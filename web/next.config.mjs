@@ -74,6 +74,16 @@ const connectSrcEntries = [
   deadropWorkerDomain,
 ].join(' ');
 
+const scriptSrcEntries = [
+  `'self'`,
+  `'unsafe-eval'`,
+  `'unsafe-inline'`,
+  clerkDomains,
+  vercelMetricsDomains,
+  vercelCdnDomain,
+  captchaDomains,
+].join(' ');
+
 const safeConfig = {
   isDev: process.env.NODE_ENV !== 'production',
   contentTypeOptions: 'nosniff',
@@ -86,7 +96,7 @@ const safeConfig = {
     'default-src': `'self'`,
     'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
     'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
-    'script-src': `'self' 'unsafe-inline' ${clerkDomains} ${vercelMetricsDomains} ${vercelCdnDomain} ${captchaDomains}`,
+    'script-src': scriptSrcEntries,
     'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
     'img-src': `'self' data: ${assetsDomains}`,
     'worker-src': `'self' blob:`,
