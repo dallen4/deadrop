@@ -16,12 +16,23 @@ export const decodeJsonBuffer = (
   return JSON.parse(stringifiedJson);
 };
 
-export const bufferFromBase64 = (input: string) => {
-  const binary = Buffer.from(input, 'base64');
-  return new Uint8Array(binary).buffer;
+export const bufferFromBase64 = (input: string): ArrayBuffer => {
+  const binaryString =
+    typeof atob === 'function'
+      ? atob(input)
+      : Buffer.from(input, 'base64').toString('binary');
+
+  const buffer = new Uint8Array(
+    [...binaryString].map((char) => char.charCodeAt(0)),
+  );
+  return buffer.buffer;
 };
 
-export const base64FromBuffer = (buffer: ArrayBuffer) => {
-  const binary = new Uint8Array(buffer);
-  return Buffer.from(binary).toString('base64');
+export const base64FromBuffer = (buffer: ArrayBuffer): string => {
+  const view = new Uint8Array(buffer);
+  const binaryString = String.fromCharCode(...view);
+
+  return typeof btoa === 'function'
+    ? btoa(binaryString)
+    : Buffer.from(binaryString, 'binary').toString('base64');
 };

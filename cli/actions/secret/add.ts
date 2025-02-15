@@ -1,6 +1,7 @@
+import { initDBClient } from 'db/init';
+import { createSecretsHelpers } from '@shared/db/secrets';
 import { loadConfig } from 'lib/config';
 import { logInfo } from 'lib/log';
-import { addSecretsToVault } from 'logic/secrets';
 
 export async function secretAdd(name: string, value: string) {
   logInfo('adding secret to vault...');
@@ -9,7 +10,20 @@ export async function secretAdd(name: string, value: string) {
 
   const { vaults, active_vault } = config;
 
-  await addSecretsToVault(vaults[active_vault.name], [
+  const activeVault = vaults[active_vault.name];
+
+  const db = await initDBClient(
+    activeVault.location,
+    activeVault.key,
+    activeVault.cloud,
+  );
+
+  const { addSecrets } = createSecretsHelpers(
+    vaults[active_vault.name],
+    db,
+  );
+
+  await addSecrets([
     { name, value, environment: active_vault.environment },
   ]);
 

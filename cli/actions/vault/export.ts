@@ -1,4 +1,5 @@
-import { createSecretsHelpers } from 'db/secrets';
+import { initDBClient } from 'db/init';
+import { createSecretsHelpers } from '@shared/db/secrets';
 import { loadConfig } from 'lib/config';
 import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
@@ -14,8 +15,17 @@ export async function vaultExport(
 
   const { vaults, active_vault } = config;
 
-  const { getAllSecrets } = await createSecretsHelpers(
+  const activeVault = vaults[active_vault.name];
+
+  const db = await initDBClient(
+    activeVault.location,
+    activeVault.key,
+    activeVault.cloud,
+  );
+
+  const { getAllSecrets } = createSecretsHelpers(
     vaults[active_vault.name],
+    db,
   );
 
   const secrets = await getAllSecrets(active_vault.environment);

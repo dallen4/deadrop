@@ -15,7 +15,6 @@ import {
   GrabMessageOrderMap,
   MessageType,
 } from '../lib/constants';
-import { DROP_API_PATH } from '../config/paths';
 import {
   decryptRaw,
   deriveKey,
@@ -24,9 +23,9 @@ import {
   hashRaw,
   importKey,
 } from '../lib/crypto/operations';
-import { get } from '../lib/fetch';
 import { DropDetails } from '../types/common';
 import { withMessageLock } from '../lib/messages';
+import { createClient } from '../client';
 
 export const createGrabHandlers = <
   FileType extends string | File = string,
@@ -40,7 +39,7 @@ export const createGrabHandlers = <
   apiUri = '',
   onRetryExceeded,
 }: GrabHandlerInputs<FileType>) => {
-  const dropApiUrl = apiUri + DROP_API_PATH;
+  const client = createClient(apiUri);
   const timers = new Map<MessageType, NodeJS.Timeout>();
 
   const clearTimer = (msgType: MessageType) => {
@@ -197,17 +196,17 @@ export const createGrabHandlers = <
     logger.info('Fetching drop details...');
 
     try {
-      const details = await get<DropDetails>(dropApiUrl, {
-        id: ctx.id,
-      });
+      const resp = await client.drop.$get({ query: { id: ctx.id! } });
 
-      if (!details) {
+      if (resp.status === 404) {
         logger.error(
           `Drop instance ${ctx.id} not found, closing connection...`,
         );
 
         throw new Error('Invalid drop ID provided');
       }
+
+      const details: DropDetails = await resp.json();
 
       logger.info(`Drop ${ctx.id} found!`);
 
