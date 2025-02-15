@@ -43,7 +43,7 @@ async function processMessage(
 
     config = JSON.parse(configString);
   } catch (err) {
-    // if not found, create config
+    // if not found, create config & init secret
     config = await initConfig(DEFAULT_VAULT_NAME, randomBase64());
 
     await writeConfig(config);
@@ -73,7 +73,7 @@ async function processMessage(
       activeVault.cloud,
     );
 
-    const { addSecrets, updateSecret, getSecret } =
+    const { addSecrets, updateSecret, getSecret, getAllSecrets } =
       createSecretsHelpers(activeVault, db);
 
     if (message.type === 'add_secret') {
@@ -109,6 +109,15 @@ async function processMessage(
           environment,
         },
       };
+    } else if (message.type === 'get_secrets') {
+      const { environment } = message.payload;
+
+      const secretsMap = await getAllSecrets(environment);
+
+      response = {
+        type: 'all_secrets',
+        payload: Object.keys(secretsMap),
+      };
     }
   }
 
@@ -120,8 +129,14 @@ async function processMessage(
 sw.addEventListener(
   'message',
   async (msg: DeadropServiceWorkerMessage) => {
+    console.log('Message received, processing...');
     const response = await processMessage(msg.data);
-    console.log('SW RESPONSE: ', response);
-    if (response) msg.source?.postMessage(response);
+    console.log('Message processed...');
+
+    if (response) {
+      console.log('Sending response...');
+      msg.source?.postMessage(response);
+      console.log('Response sent!');
+    }
   },
 );
