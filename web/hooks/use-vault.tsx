@@ -6,6 +6,7 @@ import { showNotification } from '@mantine/notifications';
 
 export const useVault = () => {
   const [config, setConfig] = useState<DeadropConfig | null>(null);
+  const [secrets, setSecrets] = useState<string[]>([]);
   const {
     activateWorker,
     sendMessage,
@@ -14,19 +15,36 @@ export const useVault = () => {
   } = useServiceWorker();
 
   const onMessage = useCallback((message: DeadropMessage) => {
-    console.log('RECEIVED', message);
     if (message.type === 'config') {
       setConfig(message.payload);
 
       showNotification({ message: 'Config loaded!' });
+    } else if (message.type === 'all_secrets') {
+      setSecrets(message.payload);
+
+      showNotification({
+        message: `Secrets loaded for '${config!.active_vault.environment}'`,
+      });
     }
   }, []);
 
   useEffect(() => {
-    console.log('registering');
     activateWorker().then(() => {
-      console.log('registered');
+      console.log('Worker registered!');
+
       addMessageHandler(onMessage);
+
+      console.log('Message handler mounted!');
+
+      sendMessage({ type: 'get_config' });
+      sendMessage({
+        type: 'add_secret',
+        payload: {
+          name: 'NODE_ENV',
+          environment: '',
+          value: '',
+        },
+      });
     });
 
     return () => {
@@ -34,5 +52,5 @@ export const useVault = () => {
     };
   }, []);
 
-  return { config, sendMessage };
+  return { config, sendMessage, secrets };
 };

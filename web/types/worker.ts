@@ -38,7 +38,7 @@ type VaultMessage =
     }
   | {
       type: 'all_secrets';
-      payload: Secret[];
+      payload: string[];
     };
 
 export type DeadropMessage =

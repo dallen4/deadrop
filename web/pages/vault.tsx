@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React from 'react';
 import {
   ActionIcon,
   Button,
@@ -12,19 +12,8 @@ import { InlineCode } from 'atoms/Code';
 import { MainWrapper } from 'atoms/MainWrapper';
 import { useVault } from 'hooks/use-vault';
 
-type SecretValue = string | number | boolean;
-
-type SecretEntry = {
-  name: string;
-  value: SecretValue;
-};
-
 const Vault = () => {
-  const [secrets, setSecrets] = useState<SecretEntry[]>([]);
-
-  const { config, sendMessage } = useVault();
-
-  console.log(config);
+  const { sendMessage, secrets } = useVault();
 
   return (
     <MainWrapper>
@@ -39,7 +28,7 @@ const Vault = () => {
       </Flex>
       <Text size={'lg'}>
         Here you can manage your personal secrets for drops from this
-        device.
+        device or using in your projects.
       </Text>
       <Flex
         direction={'column'}
@@ -63,7 +52,7 @@ const Vault = () => {
               columnGap={'sm'}
               px={'md'}
             >
-              <InlineCode size={'md'}>{secret.name}</InlineCode>
+              <InlineCode size={'md'}>{secret}</InlineCode>
               <Flex
                 direction={'row'}
                 justify={'space-between'}
