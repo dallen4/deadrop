@@ -67,11 +67,7 @@ async function processMessage(
   } else if (message.type.includes('secret')) {
     const activeVault = config.vaults[config.active_vault.name];
 
-    const db = await initDBClient(
-      activeVault.location,
-      activeVault.key,
-      activeVault.cloud,
-    );
+    const db = initDBClient(activeVault.location, activeVault.cloud);
 
     const { addSecrets, updateSecret, getSecret, getAllSecrets } =
       createSecretsHelpers(activeVault, db);
