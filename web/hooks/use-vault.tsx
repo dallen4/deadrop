@@ -41,8 +41,14 @@ export const useVault = () => {
         type: 'add_secret',
         payload: {
           name: 'NODE_ENV',
-          environment: '',
-          value: '',
+          environment: 'development',
+          value: 'TESTING-jfdkslajfk',
+        },
+      });
+      sendMessage({
+        type: 'get_secrets',
+        payload: {
+          environment: 'development',
         },
       });
     });
