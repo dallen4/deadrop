@@ -16,7 +16,6 @@ export type CloudVaultConfig = {
   authToken: string;
 };
 
-
 export type VaultDBConfig = {
   location: string;
   key: string;
@@ -30,5 +29,3 @@ export type DeadropConfig = {
   active_vault: ActiveVaultConfig;
   vaults: VaultStore;
 };
-
-export type Env = Record<string, string>;
