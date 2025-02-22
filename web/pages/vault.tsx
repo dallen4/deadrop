@@ -14,7 +14,7 @@ import { useVault } from 'hooks/use-vault';
 
 const Vault = () => {
   const { sendMessage, secrets } = useVault();
-
+  console.log(secrets);
   return (
     <MainWrapper>
       <Flex direction={'row'} justify={'space-between'}>
