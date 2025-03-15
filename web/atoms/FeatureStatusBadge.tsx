@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from '@mantine/core/lib/Badge';
+import { Badge } from '@mantine/core';
 
 export type FeatureStatus =
   | 'stable'
