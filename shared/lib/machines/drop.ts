@@ -10,6 +10,8 @@ export const initDropContext = (): DropContext => ({
   integrity: null,
   peer: null,
   connection: null,
+  connections: new Map(),
+  activeConnections: 0,
   keyPair: null,
   dropKey: null,
   nonce: null,

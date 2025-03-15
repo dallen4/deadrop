@@ -21,6 +21,8 @@ export type DropOptions = {
 export type DropContext = BaseContext & {
   integrity: string | null;
   dropKey: CryptoKey | null;
+  connections: Map<string, DataConnection>;
+  activeConnections: number;
 };
 
 export type DropEvent<EventType extends DropEventType> =
