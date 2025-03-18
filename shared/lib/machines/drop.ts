@@ -1,56 +1,44 @@
-import type { AnyDropEvent, DropContext } from '../../types/drop';
+import type { AnyDropEvent, ConnectionContext, DropContext } from '../../types/drop';
 import { DropEventType, DropState } from '../constants';
-import { createMachine, TransitionsConfig } from 'xstate';
+import { createMachine, sendParent } from 'xstate';
 import { raise as baseRaise } from 'xstate/lib/actions';
 
+export const raise = baseRaise<ConnectionContext, AnyDropEvent>;
+
 export const initDropContext = (): DropContext => ({
+  // drop details
   id: null,
-  mode: 'raw',
-  message: '',
-  integrity: null,
   peer: null,
-  connection: null,
-  connections: new Map(),
-  activeConnections: 0,
+  mode: 'raw',
+  message: null,
+
+  // crypto
   keyPair: null,
   dropKey: null,
   nonce: null,
+  integrity: null,
+
+  // session state
+  drops: new Map(),
+  connections: new Map(),
+
+  // session meta
+  maxSessions: 1,
+  activeSessions: 0,
+  completedSessions: 0,
 });
 
-export const raise = baseRaise<Record<string, never>, AnyDropEvent>;
-
-export const dropMachine = createMachine<
-  Record<string, never>,
+// Connection machine handles individual grab flow
+export const connectionMachine = createMachine<
+  ConnectionContext,
   AnyDropEvent,
-  { value: DropState; context: Record<string, never> }
+  { value: DropState; context: ConnectionContext }
 >({
-  id: 'drop',
+  id: 'connection',
   preserveActionOrder: true,
   predictableActionArguments: true,
-  initial: DropState.Initial,
+  initial: DropState.Connected,
   states: {
-    [DropState.Initial]: {
-      on: {
-        INITIALIZE: {
-          target: DropState.Ready,
-        },
-      },
-    },
-    [DropState.Ready]: {
-      on: {
-        WRAP: {
-          target: DropState.Waiting,
-        },
-      },
-    },
-    [DropState.Waiting]: {
-      on: {
-        CONNECT: {
-          target: DropState.Connected,
-          actions: [raise(DropEventType.Handshake)],
-        },
-      } as TransitionsConfig<Record<string, never>, AnyDropEvent>,
-    },
     [DropState.Connected]: {
       on: {
         HANDSHAKE: {
@@ -67,15 +55,83 @@ export const dropMachine = createMachine<
     },
     [DropState.Acknowledged]: {
       on: {
-        DROP: {
+        [DropEventType.Drop]: {
           target: DropState.AwaitingConfirmation,
         },
       },
     },
     [DropState.AwaitingConfirmation]: {
       on: {
-        CONFIRM: {
+        [DropEventType.ConnectionComplete]: {
           target: DropState.Completed,
+          actions: [sendParent(DropEventType.ConnectionComplete)],
+        },
+      },
+    },
+    [DropState.Error]: {},
+    [DropState.Completed]: {
+      type: 'final',
+    },
+  },
+});
+
+// Drop machine handles initialization and connection tracking
+export const dropMachine = createMachine<
+  DropContext,
+  AnyDropEvent,
+  { value: DropState; context: DropContext }
+>({
+  id: 'drop',
+  preserveActionOrder: true,
+  predictableActionArguments: true,
+  initial: DropState.Initial,
+  context: initDropContext(),
+  states: {
+    [DropState.Initial]: {
+      on: {
+        [DropEventType.Init]: {
+          target: DropState.Ready,
+          actions: [(context, event) => {
+            const { id, peer, keyPair, nonce } = event;
+            context.id = id;
+            context.peer = peer;
+            context.keyPair = keyPair;
+            context.nonce = nonce;
+          }],
+        },
+      },
+    },
+    [DropState.Ready]: {
+      on: {
+        WRAP: {
+          target: DropState.Waiting,
+          actions: [(context, event) => {
+            const { payload, integrity } = event;
+            context.message = payload;
+            context.integrity = integrity;
+          }],
+        },
+      },
+    },
+    [DropState.Waiting]: {
+      on: {
+        CONNECT: {
+          actions: [(context, event) => {
+            const { connection } = event;
+            if (connection && context.activeSessions < context.maxSessions) {
+              context.connections.set(connection.peer, connection);
+              context.activeSessions++;
+            }
+          }],
+        },
+        [DropEventType.ConnectionComplete]: {
+          target: DropState.Completed,
+          cond: (context) => {
+            context.completedSessions++;
+
+            // all sessions completed b/c max sessions reached
+            return context.completedSessions === context.maxSessions;
+          },
         },
       },
     },

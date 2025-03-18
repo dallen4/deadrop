@@ -15,12 +15,12 @@ export const initGrabContext = (): GrabContext => ({
   nonce: null,
 });
 
-export const raise = baseRaise<Record<string, never>, AnyGrabEvent>;
+export const raise = baseRaise<GrabContext, AnyGrabEvent>;
 
 export const grabMachine = createMachine<
-  Record<string, never>,
+  GrabContext,
   AnyGrabEvent,
-  { value: GrabState; context: {} }
+  { value: GrabState; context: GrabContext }
 >({
   id: 'grab',
   preserveActionOrder: true,
@@ -33,7 +33,7 @@ export const grabMachine = createMachine<
           target: GrabState.Ready,
           actions: [raise(GrabEventType.Connect)],
         },
-      } as TransitionsConfig<Record<string, never>, AnyGrabEvent>,
+      } as TransitionsConfig<GrabContext, AnyGrabEvent>,
     },
     [GrabState.Ready]: {
       on: {
@@ -55,7 +55,7 @@ export const grabMachine = createMachine<
           target: GrabState.Received,
           actions: [raise(GrabEventType.Verify)],
         },
-      } as TransitionsConfig<Record<string, never>, AnyGrabEvent>,
+      } as TransitionsConfig<GrabContext, AnyGrabEvent>,
     },
     [GrabState.Received]: {
       on: {
