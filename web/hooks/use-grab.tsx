@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useRef } from 'react';
 import {
   grabMachine,
   initGrabContext,
@@ -7,75 +7,29 @@ import { useMachine } from '@xstate/react';
 import type { GrabContext } from '@shared/types/grab';
 import { GrabState } from '@shared/lib/constants';
 import { useRouter } from 'next/router';
-import { decryptFile, hashFile } from 'lib/crypto';
+import { createGrabHandlers } from '@shared/handlers/grab';
+
+import { useHandlers } from './use-handlers';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
-import { createGrabHandlers } from '@shared/handlers/grab';
-import { cleanupSession } from 'lib/session';
-import { initPeer } from 'lib/peer';
 
 export const useGrab = () => {
   const router = useRouter();
 
-  const logsRef = useRef<Array<string>>([]);
   const contextRef = useRef<GrabContext>(initGrabContext());
 
   const [{ value: state }, send] = useMachine(grabMachine);
 
-  useEffect(() => {
-    const onLeaveAttempt = () => {
-      throw 'Cannot navigate away, peer active';
-    };
-
-    if (state === GrabState.Ready) {
-      router.events.on('routeChangeStart', onLeaveAttempt);
-    } else if (
-      [GrabState.Completed, GrabState.Error].includes(
-        state as GrabState,
-      )
-    ) {
-      router.events.off('routeChangeStart', onLeaveAttempt);
+  const { init: baseInit, getLogs } = useHandlers(
+    createGrabHandlers,
+    contextRef.current,
+    send,
+    state,
+    {
+      activateState: GrabState.Ready,
+      disabledStates: [GrabState.Completed, GrabState.Error],
     }
-
-    return () => {
-      router.events.off('routeChangeStart', onLeaveAttempt);
-    };
-  }, [state]);
-
-  const pushLog = (message: string) => logsRef.current.push(message);
-
-  const onRetryExceeded = () => {
-    showNotification({
-      message: 'Connection may be unstable, please try again',
-      color: 'red',
-      icon: <IconX />,
-      autoClose: 4500,
-    });
-  };
-
-  const { init: baseInit } = useMemo(
-    () =>
-      createGrabHandlers<File>({
-        ctx: contextRef.current,
-        sendEvent: send,
-        logger: {
-          info: pushLog,
-          error: console.error,
-          debug: console.log,
-        },
-        file: {
-          decrypt: decryptFile,
-          hash: hashFile,
-        },
-        apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
-        initPeer,
-        cleanupSession,
-        onRetryExceeded,
-      }),
-    [],
   );
-
-  const getLogs = () => logsRef.current;
 
   const getMode = () => contextRef.current.mode;
 
@@ -84,7 +38,17 @@ export const useGrab = () => {
   const init = async () => {
     contextRef.current.id = router.query.drop as string;
 
-    await baseInit();
+    try {
+      await baseInit();
+    } catch (err) {
+      console.error(err);
+      showNotification({
+        message: (err as Error).message,
+        color: 'red',
+        icon: <IconX />,
+        autoClose: 2000,
+      });
+    }
   };
 
   return {
