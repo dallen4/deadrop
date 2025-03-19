@@ -1,6 +1,13 @@
-import type { AnyDropEvent, ConnectionContext, DropContext } from '../../types/drop';
+import type {
+  AnyDropEvent,
+  ConnectEvent,
+  ConnectionContext,
+  DropContext,
+  InitDropEvent,
+  WrapEvent,
+} from '../../types/drop';
 import { DropEventType, DropState } from '../constants';
-import { createMachine, sendParent } from 'xstate';
+import { createMachine, sendParent, spawn } from 'xstate';
 import { raise as baseRaise } from 'xstate/lib/actions';
 
 export const raise = baseRaise<ConnectionContext, AnyDropEvent>;
@@ -64,13 +71,16 @@ export const connectionMachine = createMachine<
       on: {
         [DropEventType.ConnectionComplete]: {
           target: DropState.Completed,
-          actions: [sendParent(DropEventType.ConnectionComplete)],
         },
       },
     },
-    [DropState.Error]: {},
+    [DropState.Error]: {
+      type: 'final',
+      entry: [sendParent(DropEventType.ConnectionComplete)],
+    },
     [DropState.Completed]: {
       type: 'final',
+      entry: [sendParent(DropEventType.ConnectionComplete)],
     },
   },
 });
@@ -91,38 +101,56 @@ export const dropMachine = createMachine<
       on: {
         [DropEventType.Init]: {
           target: DropState.Ready,
-          actions: [(context, event) => {
-            const { id, peer, keyPair, nonce } = event;
-            context.id = id;
-            context.peer = peer;
-            context.keyPair = keyPair;
-            context.nonce = nonce;
-          }],
+          actions: [
+            (context, event: InitDropEvent) => {
+              const { id, peer, keyPair, nonce } = event;
+
+              context.id = id;
+              context.peer = peer;
+              context.keyPair = keyPair;
+              context.nonce = nonce;
+            },
+          ],
         },
       },
     },
     [DropState.Ready]: {
       on: {
-        WRAP: {
+        [DropEventType.Wrap]: {
           target: DropState.Waiting,
-          actions: [(context, event) => {
-            const { payload, integrity } = event;
-            context.message = payload;
-            context.integrity = integrity;
-          }],
+          actions: [
+            (context, event: WrapEvent) => {
+              const { payload, integrity } = event;
+
+              context.message = payload;
+              context.integrity = integrity;
+            },
+          ],
         },
       },
     },
     [DropState.Waiting]: {
       on: {
-        CONNECT: {
-          actions: [(context, event) => {
-            const { connection } = event;
-            if (connection && context.activeSessions < context.maxSessions) {
-              context.connections.set(connection.peer, connection);
-              context.activeSessions++;
-            }
-          }],
+        [DropEventType.Connect]: {
+          actions: [
+            (context, event: ConnectEvent) => {
+              const { connection } = event;
+
+              if (
+                connection &&
+                context.activeSessions < context.maxSessions
+              ) {
+                context.connections.set(connection.peer, connection);
+                context.activeSessions++;
+
+                const newDrop = spawn(connectionMachine);
+                context.drops.set(connection.peer, newDrop);
+              } else {
+                // reject connection
+                if (connection.open) connection.close();
+              }
+            },
+          ],
         },
         [DropEventType.ConnectionComplete]: {
           target: DropState.Completed,
