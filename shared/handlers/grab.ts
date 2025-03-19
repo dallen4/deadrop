@@ -250,3 +250,5 @@ export const createGrabHandlers = <
 
   return { init };
 };
+
+export type GrabHandlers = ReturnType<typeof createGrabHandlers>;

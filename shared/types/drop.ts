@@ -13,7 +13,7 @@ import { DropEventType } from '../lib/constants';
 // Main drop context with all state
 export type DropContext = BaseContext & {
   // Actor management
-  drops: Map<string, ActorRef<any>>;
+  drops: Map<string, ActorRef<{ type: DropEventType }>>;
 
   // Connection tracking
   connections: Map<string, DataConnection>;
@@ -59,7 +59,7 @@ export interface ConnectEvent
 }
 
 export interface WrapEvent extends DropEvent<DropEventType.Wrap> {
-  payload: Record<string, any>;
+  payload: string | File;
   integrity: string;
 }
 

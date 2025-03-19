@@ -291,3 +291,5 @@ export const createDropHandlers = <
 
   return { init, stagePayload, startHandshake, drop, cleanup };
 };
+
+export type DropHandlers = ReturnType<typeof createDropHandlers>;

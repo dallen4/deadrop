@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Card, Code, Loader, Text } from '@mantine/core';
-import { GrabProvider, useGrabContext } from 'contexts/GrabContext';
+import { useGrabContext } from 'contexts/GrabContext';
 import DropLog from 'molecules/DropLog';
 import { GrabState } from '@shared/lib/constants';
 import { DROP_SECRET_VALUE_ID } from 'lib/constants';
