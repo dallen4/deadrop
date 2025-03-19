@@ -1,18 +1,21 @@
-import { useLogger, useNavigationProtection } from './util';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useLogger } from './util';
 import { handlerOptions } from './util';
-import { StateValue } from 'xstate';
+import { StateMachine } from 'xstate';
 import { useMemo } from 'react';
+import { useMachine } from '@xstate/react';
+import { DropEvent } from '@shared/types/drop';
+import { GrabEvent } from '@shared/types/grab';
+import { DropEventType, GrabEventType } from '@shared/lib/constants';
 
 type HandlerResult = {
   init: () => Promise<void>;
-  stagePayload?: (content: string | File, mode: 'file' | 'raw') => Promise<void>;
+  stagePayload?: (
+    content: string | File,
+    mode: 'file' | 'raw',
+  ) => Promise<void>;
   startHandshake?: () => Promise<void>;
   drop?: () => Promise<void>;
-};
-
-type NavigationProtection = {
-  activateState: string;
-  disabledStates: string[];
 };
 
 type CreateHandlersFn<
@@ -28,23 +31,34 @@ type CreateHandlersFn<
   } & typeof handlerOptions,
 ) => THandlers;
 
+type GlobalEvent =
+  | DropEvent<DropEventType>
+  | GrabEvent<GrabEventType>;
+
 export const useHandlers = <
   TContext,
-  TEvent,
+  TEvent extends GlobalEvent,
   THandlers extends HandlerResult,
 >(
   createHandlers: CreateHandlersFn<TContext, TEvent, THandlers>,
-  ctx: TContext,
-  send: (event: TEvent) => void,
-  state: StateValue,
-  navigationProtection: NavigationProtection,
+  machine: StateMachine<TContext, any, TEvent>,
+  initContext: () => TContext,
 ) => {
   const { logger, getLogs } = useLogger();
 
-  const handlers =  useMemo(
+  const [{ value: state, context }, send] = useMachine(machine, {
+    context: initContext(),
+    actions: {
+      cleanup: (context, event) => {
+        console.log('cleanup', context, event);
+      },
+    },
+  });
+
+  const handlers = useMemo(
     () =>
       createHandlers({
-        ctx,
+        ctx: context,
         sendEvent: send,
         logger,
         apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
@@ -53,14 +67,10 @@ export const useHandlers = <
     [],
   );
 
-  useNavigationProtection(
-    state,
-    navigationProtection.activateState,
-    navigationProtection.disabledStates
-  );
-
   return {
     ...handlers,
     getLogs,
+    state,
+    context,
   };
 };

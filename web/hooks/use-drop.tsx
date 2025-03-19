@@ -1,6 +1,5 @@
-import React, { useRef } from 'react';
-import type { DropContext } from '@shared/types/drop';
-import { useMachine } from '@xstate/react';
+import React from 'react';
+import type { AnyDropEvent, DropContext } from '@shared/types/drop';
 import {
   dropMachine,
   initDropContext,
@@ -9,31 +8,32 @@ import { DropState } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
-import { createDropHandlers } from '@shared/handlers/drop';
-
+import {
+  createDropHandlers,
+  DropHandlers,
+} from '@shared/handlers/drop';
 import { useHandlers } from './use-handlers';
+import { useNavigationProtection } from './util';
 
 export const useDrop = () => {
-  const contextRef = useRef<DropContext>(initDropContext());
-
-  const [{ value: state }, send] = useMachine(dropMachine);
-
   const {
     init: initDrop,
     stagePayload,
     startHandshake,
     drop,
     getLogs,
-  } = useHandlers(
-    createDropHandlers,
-    contextRef.current,
-    send,
     state,
-    {
-      activateState: DropState.Ready,
-      disabledStates: [DropState.Completed, DropState.Error],
-    }
+    context,
+  } = useHandlers<DropContext, AnyDropEvent, DropHandlers>(
+    createDropHandlers,
+    dropMachine,
+    initDropContext,
   );
+
+  useNavigationProtection(state, DropState.Ready, [
+    DropState.Completed,
+    DropState.Error,
+  ]);
 
   const init = async () => {
     try {
@@ -50,7 +50,7 @@ export const useDrop = () => {
   };
 
   const dropLink = () => {
-    const dropId = contextRef.current.id!;
+    const dropId = context.id!;
     return typeof window !== 'undefined'
       ? generateGrabUrl(dropId)
       : undefined;

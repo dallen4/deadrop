@@ -1,42 +1,45 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   grabMachine,
   initGrabContext,
 } from '@shared/lib/machines/grab';
-import { useMachine } from '@xstate/react';
-import type { GrabContext } from '@shared/types/grab';
+import type { AnyGrabEvent, GrabContext } from '@shared/types/grab';
 import { GrabState } from '@shared/lib/constants';
 import { useRouter } from 'next/router';
-import { createGrabHandlers } from '@shared/handlers/grab';
-
+import {
+  createGrabHandlers,
+  GrabHandlers,
+} from '@shared/handlers/grab';
 import { useHandlers } from './use-handlers';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons';
+import { useNavigationProtection } from './util';
 
 export const useGrab = () => {
   const router = useRouter();
 
-  const contextRef = useRef<GrabContext>(initGrabContext());
-
-  const [{ value: state }, send] = useMachine(grabMachine);
-
-  const { init: baseInit, getLogs } = useHandlers(
-    createGrabHandlers,
-    contextRef.current,
-    send,
+  const {
+    init: baseInit,
+    getLogs,
     state,
-    {
-      activateState: GrabState.Ready,
-      disabledStates: [GrabState.Completed, GrabState.Error],
-    }
+    context,
+  } = useHandlers<GrabContext, AnyGrabEvent, GrabHandlers>(
+    createGrabHandlers,
+    grabMachine,
+    initGrabContext,
   );
 
-  const getMode = () => contextRef.current.mode;
+  useNavigationProtection(state, GrabState.Ready, [
+    GrabState.Completed,
+    GrabState.Error,
+  ]);
 
-  const getSecret = () => contextRef.current.message;
+  const getMode = () => context.mode;
+
+  const getSecret = () => context.message;
 
   const init = async () => {
-    contextRef.current.id = router.query.drop as string;
+    context.id = router.query.drop as string;
 
     try {
       await baseInit();
