@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useLogger } from './util';
-import { handlerOptions } from './util';
+import { useLogger, handlerOptions } from './util';
 import { StateMachine } from 'xstate';
 import { useMemo } from 'react';
 import { useMachine } from '@xstate/react';
 import { DropEvent } from '@shared/types/drop';
 import { GrabEvent } from '@shared/types/grab';
 import { DropEventType, GrabEventType } from '@shared/lib/constants';
+import { BaseContext } from '@shared/types/common';
 
 type HandlerResult = {
   init: () => Promise<void>;
@@ -19,8 +19,8 @@ type HandlerResult = {
 };
 
 type CreateHandlersFn<
-  TContext,
-  TEvent,
+  TContext extends BaseContext,
+  TEvent extends GlobalEvent,
   THandlers extends HandlerResult,
 > = (
   options: {
@@ -36,9 +36,9 @@ type GlobalEvent =
   | GrabEvent<GrabEventType>;
 
 export const useHandlers = <
-  TContext,
-  TEvent extends GlobalEvent,
   THandlers extends HandlerResult,
+  TContext extends BaseContext,
+  TEvent extends GlobalEvent,
 >(
   createHandlers: CreateHandlersFn<TContext, TEvent, THandlers>,
   machine: StateMachine<TContext, any, TEvent>,

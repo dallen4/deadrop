@@ -1,4 +1,3 @@
-import React from 'react';
 import type { AnyDropEvent, DropContext } from '@shared/types/drop';
 import {
   dropMachine,
@@ -6,14 +5,12 @@ import {
 } from '@shared/lib/machines/drop';
 import { DropState } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
-import { showNotification } from '@mantine/notifications';
-import { IconX } from '@tabler/icons';
 import {
   createDropHandlers,
   DropHandlers,
 } from '@shared/handlers/drop';
 import { useHandlers } from './use-handlers';
-import { useNavigationProtection } from './util';
+import { showError, useNavigationProtection } from './util';
 
 export const useDrop = () => {
   const {
@@ -24,7 +21,7 @@ export const useDrop = () => {
     getLogs,
     state,
     context,
-  } = useHandlers<DropContext, AnyDropEvent, DropHandlers>(
+  } = useHandlers<DropHandlers, DropContext, AnyDropEvent>(
     createDropHandlers,
     dropMachine,
     initDropContext,
@@ -39,13 +36,12 @@ export const useDrop = () => {
     try {
       await initDrop();
     } catch (err) {
-      console.error(err);
-      showNotification({
-        message: (err as Error).message,
-        color: 'red',
-        icon: <IconX />,
-        autoClose: 2000,
-      });
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to initialize drop';
+
+      showError(message);
     }
   };
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   grabMachine,
   initGrabContext,
@@ -11,9 +10,7 @@ import {
   GrabHandlers,
 } from '@shared/handlers/grab';
 import { useHandlers } from './use-handlers';
-import { showNotification } from '@mantine/notifications';
-import { IconX } from '@tabler/icons';
-import { useNavigationProtection } from './util';
+import { showError, useNavigationProtection } from './util';
 
 export const useGrab = () => {
   const router = useRouter();
@@ -23,7 +20,7 @@ export const useGrab = () => {
     getLogs,
     state,
     context,
-  } = useHandlers<GrabContext, AnyGrabEvent, GrabHandlers>(
+  } = useHandlers<GrabHandlers, GrabContext, AnyGrabEvent>(
     createGrabHandlers,
     grabMachine,
     initGrabContext,
@@ -44,13 +41,12 @@ export const useGrab = () => {
     try {
       await baseInit();
     } catch (err) {
-      console.error(err);
-      showNotification({
-        message: (err as Error).message,
-        color: 'red',
-        icon: <IconX />,
-        autoClose: 2000,
-      });
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to initialize grab';
+
+      showError(message);
     }
   };
 
