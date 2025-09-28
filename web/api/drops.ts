@@ -1,7 +1,10 @@
 import { getRedis } from 'api/redis';
-import { generateIV, formatDropKey } from '@shared/lib/util';
+import {
+  generateIV,
+  formatDropKey,
+  generateDateTotalId,
+} from '@shared/lib/util';
 import { nanoid } from 'nanoid';
-import { generateDateTotalId } from './util';
 import { DropDetails } from '@shared/types/common';
 
 export const getDailyDropCount = async (target: Date) => {
