@@ -1,8 +1,7 @@
-import { formatDropKey, generateIV } from '@shared/lib/util';
+import { formatDropKey, generateDateTotalId, generateIV } from '@shared/lib/util';
 import { DropDetails } from '@shared/types/common';
 import { Context } from 'hono';
 import { nanoid } from 'nanoid';
-import { generateDateTotalId } from '../../../web/api/util';
 import { hash } from './crypto';
 import { HonoCtx } from './http/core';
 

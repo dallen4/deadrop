@@ -1,6 +1,8 @@
-import { PlaywrightTestConfig, devices } from '@playwright/test';
+import 'dotenv/config';
+import { devices, defineConfig } from '@playwright/test';
 import path from 'path';
 import { baseURL, isLocal } from './tests/e2e/config';
+import { TestOptions } from 'tests/e2e/util';
 
 const server = {
   command: 'yarn run start',
@@ -8,13 +10,10 @@ const server = {
   timeout: 120_000,
 };
 
-type BrowserName = 'chromium' | 'firefox' | 'webkit';
+const useVideo = process.env.USE_VIDEO === 'true';
 
 // ref: https://playwright.dev/docs/test-configuration
-const config: PlaywrightTestConfig<{
-  dropBrowser: BrowserName;
-  grabBrowser: BrowserName;
-}> = {
+const config = defineConfig<TestOptions>({
   timeout: 30_000,
   testDir: path.join(__dirname, 'tests', 'e2e'),
   retries: 2,
@@ -26,6 +25,15 @@ const config: PlaywrightTestConfig<{
     baseURL,
     trace: 'retry-with-trace',
     bypassCSP: true,
+    video: useVideo
+      ? {
+          mode: 'on',
+          size: {
+            width: 1920,
+            height: 1080,
+          },
+        }
+      : undefined,
   },
   projects: [
     /* Test against desktop browsers */
@@ -93,5 +101,6 @@ const config: PlaywrightTestConfig<{
       },
     },
   ],
-};
+});
+
 export default config;

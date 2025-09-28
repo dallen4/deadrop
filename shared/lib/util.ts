@@ -29,3 +29,11 @@ export const formatDropKey = (id: string) => `drop:${id}`;
 
 export const formatCloudSyncUrl = (name: string) =>
   `libsql://${name}-${process.env.TURSO_ORGANIZATION!}.turso.io`;
+
+export const generateDateTotalId = (target: Date | undefined = new Date()) => {
+  const year = target.getFullYear();
+  const month = String(target.getMonth() + 1).padStart(2, '0');
+  const day = String(target.getDate()).padStart(2, '0');
+
+  return `drop-total::${year}-${month}-${day}`;
+};

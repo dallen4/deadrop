@@ -56,7 +56,9 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@clerk/testing": "^1.4.34",
     "@cloudflare/workers-types": "^4.20250124.3",
+    "@dotenvx/dotenvx": "^1.51.0",
     "@types/nanoid-dictionary": "^4.2.3",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",

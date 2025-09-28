@@ -14,7 +14,7 @@ import { apiURL, baseURL, isLocal } from './config';
 import { getRedis } from 'api/redis';
 import { randomBytes } from 'crypto';
 
-type BrowserName = PlaywrightWorkerOptions['browserName'];
+export type BrowserName = PlaywrightWorkerOptions['browserName'];
 
 export type TestOptions = {
   dropBrowser: BrowserName;
@@ -54,7 +54,12 @@ export const createContextForBrowser = async (
   browser: Browser,
   options?: BrowserContextOptions,
 ) => {
-  const context = await browser.newContext(options);
+  const context = await browser.newContext({
+    recordVideo: {
+      dir: 'test-results',
+    },
+    ...options,
+  });
 
   if (!testToken) testToken = await getOrCreateTestToken();
 
