@@ -35,5 +35,5 @@ export const generateDateTotalId = (target: Date | undefined = new Date()) => {
   const month = String(target.getMonth() + 1).padStart(2, '0');
   const day = String(target.getDate()).padStart(2, '0');
 
-  return `drop-total::${year}-${month}-${day}`;
+  return `total:${year}-${month}-${day}`;
 };
