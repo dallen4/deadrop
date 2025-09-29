@@ -1,0 +1,15 @@
+.control {
+  height: rem(42px);
+  font-size: var(--mantine-font-size-md);
+}
+
+.control:not(:first-child) {
+  margin-left: var(--mantine-spacing-md);
+}
+
+@media (max-width: 520px) {
+  .control:not(:first-child) {
+    margin-top: var(--mantine-spacing-md);
+    margin-left: 0;
+  }
+}

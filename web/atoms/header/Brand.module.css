@@ -1,0 +1,19 @@
+.linkContainer {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.headerName {
+  color: white;
+  font-weight: bold;
+  float: left;
+}
+
+.headerName:hover {
+  color: var(--mantine-primary-color-4);
+}
+
+.hoverPointer:hover {
+  cursor: pointer;
+}

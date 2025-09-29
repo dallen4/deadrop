@@ -7,7 +7,7 @@ import {
     useMantineTheme,
     Anchor,
 } from '@mantine/core';
-import { IconCopy } from '@tabler/icons';
+import { IconCopy } from '@tabler/icons-react';
 import { QRCode } from 'atoms/QRCode';
 
 export const SharePane = ({ link }: { link: string }) => {

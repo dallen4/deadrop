@@ -3,7 +3,7 @@ import { Button, Container, Text, Title } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 import { SignedIn, SignedOut, SignIn, useClerk } from '@clerk/nextjs';
-import { IconX } from '@tabler/icons';
+import { IconX } from '@tabler/icons-react';
 
 const CliAuth = () => {
   const clerk = useClerk();

@@ -5,54 +5,13 @@ import {
     SimpleGrid,
     Container,
     useMantineTheme,
-    createStyles,
 } from '@mantine/core';
-import { IconBrowser, IconTerminal2, IconBrandVscode } from '@tabler/icons';
+import { IconBrowser, IconTerminal2, IconBrandVscode } from '@tabler/icons-react';
 import { SectionTitle } from './SectionTitle';
 
 // ref: https://ui.mantine.dev/category/features/#features-cards
 
-const useStyles = createStyles((theme) => ({
-    title: {
-        fontSize: '34px',
-        fontWeight: 900,
-
-        '@media (max-width: 520px)': {
-            fontSize: '24px',
-        },
-    },
-
-    description: {
-        maxWidth: '600px',
-        margin: 'auto',
-
-        '&::after': {
-            content: '""',
-            display: 'block',
-            backgroundColor: theme.colors.blue[7],
-            width: '45px',
-            height: '2px',
-            marginTop: theme.spacing.sm,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-        },
-    },
-
-    card: {
-        border: `1px solid light-dark(${theme.colors.gray[1]}, ${theme.colors.gray[5]})`,
-    },
-
-    cardTitle: {
-        '&::after': {
-            content: '""',
-            display: 'block',
-            backgroundColor: theme.colors.blue[7],
-            width: '45px',
-            height: '2px',
-            marginTop: theme.spacing.sm,
-        },
-    },
-}));
+import classes from './Tools.module.css';
 
 const toolData = [
     {
@@ -83,7 +42,6 @@ const statusToColor = {
 
 export function Tools() {
     const theme = useMantineTheme();
-    const { classes } = useStyles();
 
     const features = toolData.map((feature) => (
         <Card
@@ -93,21 +51,15 @@ export function Tools() {
             className={classes.card}
             p={'xl'}
         >
-            <Container
-                p={0}
-                display={'flex'}
-                style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                }}
-            >
+            <div className={classes.cardHeader}>
                 <feature.icon
+                    className={classes.cardIcon}
                     style={{ width: 50, height: 50 }}
                     stroke={2}
                     color={theme.colors.blue[6]}
                 />
                 <Badge
+                    className={classes.cardBadge}
                     size={'lg'}
                     color={
                         statusToColor[
@@ -117,7 +69,7 @@ export function Tools() {
                 >
                     {feature.status}
                 </Badge>
-            </Container>
+            </div>
 
             <Text
                 size={'lg'}
@@ -136,12 +88,11 @@ export function Tools() {
     ));
 
     return (
-        <Container size="lg" py="xl" px={0} mb={theme.spacing.xl * 2}>
+        <Container size="lg" py="xl" px={0} mb={'calc(var(--mantine-spacing-xl) * 2)'}>
             <SectionTitle label={'Tools'} id={'tools-section'} />
 
             <SimpleGrid
-                cols={3}
-                breakpoints={[{ maxWidth: 'sm', cols: 1 }]}
+                cols={{ base: 1, sm: 3 }}
                 spacing="xl"
             >
                 {features}

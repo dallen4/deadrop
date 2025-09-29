@@ -1,41 +1,10 @@
 import React from 'react';
-import { Container, Accordion, createStyles } from '@mantine/core';
+import { Container, Accordion } from '@mantine/core';
 import { SectionTitle } from './SectionTitle';
 
 // based off of: https://ui.mantine.dev/category/faq
 
-const useStyles = createStyles((theme) => ({
-  wrapper: {
-    paddingTop: theme.spacing.xl * 2,
-    minHeight: 580,
-
-    '@media (max-width: 520px)': {
-      paddingLeft: 0,
-      paddingRight: 0,
-    },
-  },
-
-  title: {
-    marginBottom: theme.spacing.xl * 1.5,
-  },
-
-  item: {
-    borderRadius: theme.radius.md,
-    marginBottom: theme.spacing.lg,
-
-    border: `1px solid ${
-      theme.colorScheme === 'dark'
-        ? theme.colors.dark[4]
-        : theme.colors.gray[3]
-    }`,
-  },
-
-  question: {
-    '&[data-active]': {
-      color: theme.colors[theme.primaryColor][4],
-    },
-  },
-}));
+import classes from './Faq.module.css';
 
 const questions = [
   {
@@ -73,7 +42,6 @@ const questions = [
 ];
 
 export function Faq() {
-  const { classes } = useStyles();
 
   return (
     <Container size={'sm'} className={classes.wrapper}>

@@ -6,9 +6,7 @@ import Document, {
     Main,
     NextScript,
 } from 'next/document';
-import { ServerStyles, createStylesServer } from '@mantine/next';
 import getConfig from 'next/config';
-import { emotionCache } from 'lib/emotion';
 import { description, themeColors, title } from '@config/app';
 import { Assets } from 'atoms/Assets';
 
@@ -16,24 +14,7 @@ const { publicRuntimeConfig } = getConfig();
 
 const nonce = publicRuntimeConfig.nonce;
 
-const stylesServer = createStylesServer(emotionCache);
-
 export default class _Document extends Document {
-    static async getInitialProps(ctx: DocumentContext) {
-        const initialProps = await Document.getInitialProps(ctx);
-
-        return {
-            ...initialProps,
-            styles: [
-                initialProps.styles,
-                <ServerStyles
-                    html={initialProps.html}
-                    server={stylesServer}
-                    key="styles"
-                />,
-            ],
-        };
-    }
 
     render() {
         return (

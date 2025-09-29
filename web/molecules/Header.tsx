@@ -1,28 +1,23 @@
 import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
 import {
-  Header as BaseHeader,
   Box,
   Button,
-  createStyles,
   Flex,
   Group,
   Loader,
+  useMantineTheme,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import Brand from 'atoms/header/Brand';
 import { useRouter } from 'next/router';
 
-const useStyles = createStyles((theme) => ({
-  navButton: {
-    fontWeight: 'bold',
-  },
-}));
+import classes from './Header.module.css';
 
 const Header = () => {
   const router = useRouter();
   const { user, isLoaded } = useUser();
-  const { classes, theme } = useStyles();
+  const theme = useMantineTheme();
   const isMobile = useMediaQuery(
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
@@ -30,14 +25,11 @@ const Header = () => {
   const onDocsClick = () => router.push(OVERVIEW_DOCS_PATH);
 
   return (
-    <BaseHeader
-      height={102}
-      withBorder={false}
-      styles={(theme) => ({
-        root: {
-          padding: isMobile ? theme.spacing.md : theme.spacing.xl,
-        },
-      })}
+    <div
+      style={{
+        height: 102,
+        padding: isMobile ? 'var(--mantine-spacing-md)' : 'var(--mantine-spacing-xl)',
+      }}
     >
       <Flex direction={'row'} justify={'space-between'}>
         <Box
@@ -68,23 +60,24 @@ const Header = () => {
               }}
             />
           ) : (
-            <Button
-              variant={'outline'}
-              style={{ minWidth: '75px' }}
-              disabled={!isLoaded}
-              component={SignInButton}
-              // forceRedirectUrl={`/signin?redirectUrl=${router.query.redirectUrl}`}
-            >
-              {!isLoaded ? (
-                <Loader color={'blue'} size={'sm'} />
-              ) : (
-                'Login'
-              )}
-            </Button>
+            <SignInButton>
+              <Button
+                variant={'outline'}
+                style={{ minWidth: '75px' }}
+                disabled={!isLoaded}
+                // forceRedirectUrl={`/signin?redirectUrl=${router.query.redirectUrl}`}
+              >
+                {!isLoaded ? (
+                  <Loader color={'blue'} size={'sm'} />
+                ) : (
+                  'Login'
+                )}
+              </Button>
+            </SignInButton>
           )}
         </Group>
       </Flex>
-    </BaseHeader>
+    </div>
   );
 };
 

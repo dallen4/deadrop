@@ -1,0 +1,59 @@
+.title {
+  font-size: 34px;
+  font-weight: 900;
+}
+
+@media (max-width: 520px) {
+  .title {
+    font-size: 24px;
+  }
+}
+
+.description {
+  max-width: 600px;
+  margin: auto;
+}
+
+.description::after {
+  content: "";
+  display: block;
+  background-color: var(--mantine-color-blue-7);
+  width: 45px;
+  height: 2px;
+  margin-top: var(--mantine-spacing-sm);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.card {
+  border: 1px solid light-dark(var(--mantine-color-gray-1), var(--mantine-color-gray-5));
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.cardTitle::after {
+  content: "";
+  display: block;
+  background-color: var(--mantine-color-blue-7);
+  width: 45px;
+  height: 2px;
+  margin-top: var(--mantine-spacing-sm);
+}
+
+.cardHeader {
+  position: relative;
+  height: 50px;
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.cardIcon {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.cardBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

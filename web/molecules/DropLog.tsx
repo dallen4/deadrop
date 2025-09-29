@@ -8,8 +8,7 @@ const DropLog = ({ logs }: { logs: Array<string> }) => {
     <div>
       <Text>Drop Logs</Text>
       <Button
-        compact
-        size={'sm'}
+        size={'compact-sm'}
         my={'sm'}
         variant={'light'}
         onClick={() => setOpen((prev) => !prev)}

@@ -4,7 +4,6 @@ import {
     Text,
     Container,
     Button,
-    createStyles,
     Anchor,
 } from '@mantine/core';
 import { useRouter } from 'next/router';
@@ -13,95 +12,11 @@ import { TypeAnimation } from 'react-type-animation';
 
 // based off of: https://ui.mantine.dev/category/hero
 
-const useStyles = createStyles((theme) => ({
-    wrapper: {
-        position: 'relative',
-        paddingTop: 75,
-        paddingBottom: 105,
-
-        '@media (max-width: 520px)': {
-            paddingTop: 65,
-            paddingBottom: 50,
-        },
-    },
-
-    inner: {
-        position: 'relative',
-        zIndex: 1,
-    },
-
-    brandName: {
-        display: 'none',
-        paddingBottom: theme.spacing.xs,
-        color: theme.white,
-        fontSize: (theme.headings.sizes.h1.fontSize! as number) * 1.4,
-
-        '@media (max-width: 504px)': {
-            display: 'block',
-        },
-    },
-
-    brandNameDrop: {
-        color: theme.colors.blue['4'],
-    },
-
-    title: {
-        fontWeight: 800,
-        fontSize: 40,
-        letterSpacing: -1,
-        color: theme.white,
-        marginBottom: theme.spacing.xs,
-        textAlign: 'center',
-
-        '@media (max-width: 520px)': {
-            fontSize: 28,
-            textAlign: 'left',
-        },
-    },
-
-    highlight: {
-        color: theme.colors[theme.primaryColor][4],
-    },
-
-    description: {
-        color: theme.colors.gray[0],
-        textAlign: 'center',
-
-        '@media (max-width: 520px)': {
-            fontSize: theme.fontSizes.md,
-            textAlign: 'left',
-        },
-    },
-
-    controls: {
-        marginTop: theme.spacing.xl * 1.5,
-        display: 'flex',
-        justifyContent: 'center',
-
-        '@media (max-width: 520px)': {
-            flexDirection: 'column',
-        },
-    },
-
-    control: {
-        height: 42,
-        fontSize: theme.fontSizes.md,
-
-        '&:not(:first-child)': {
-            marginLeft: theme.spacing.md,
-        },
-
-        '@media (max-width: 520px)': {
-            '&:not(:first-child)': {
-                marginTop: theme.spacing.md,
-                marginLeft: 0,
-            },
-        },
-    },
-}));
+import classes from './HeroBanner.module.css';
+import { useMantineTheme } from '@mantine/core';
 
 export function HeroBanner() {
-    const { classes, theme } = useStyles();
+    const theme = useMantineTheme();
     const router = useRouter();
 
     return (

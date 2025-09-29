@@ -9,7 +9,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { decryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
-import { IconX } from '@tabler/icons';
+import { IconX } from '@tabler/icons-react';
 import { createGrabHandlers } from '@shared/handlers/grab';
 import { cleanupSession } from 'lib/session';
 import { initPeer } from 'lib/peer';
