@@ -9,7 +9,7 @@ import { DropState } from '@shared/lib/constants';
 import { generateGrabUrl } from 'lib/util';
 import { encryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
-import { IconX } from '@tabler/icons';
+import { IconX } from '@tabler/icons-react';
 import { initPeer } from 'lib/peer';
 import { createDropHandlers } from '@shared/handlers/drop';
 import { cleanupSession } from 'lib/session';

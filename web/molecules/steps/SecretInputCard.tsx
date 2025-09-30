@@ -147,7 +147,7 @@ export const SecretInputCard = () => {
             </FileButton>
             {file && (
               <Text
-                weight={'bold'}
+                fw={'bold'}
                 style={{ marginLeft: theme.spacing.sm }}
               >
                 {file.name}

@@ -120,17 +120,17 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         ),
         hr: () => <Divider my={'sm'} />,
         li: ({ children }) => (
-            <List.Item style={{ paddingBottom: theme.spacing.xs * 0.7 }}>
+            <List.Item style={{ paddingBottom: 'calc(var(--mantine-spacing-xs) * 0.7)' }}>
                 {children}
             </List.Item>
         ),
         ol: ({ children }) => (
-            <List mb={theme.spacing.md} type={'ordered'}>
+            <List mb={'md'} type={'ordered'}>
                 {children}
             </List>
         ),
         p: ({ children }) => (
-            <LargeText pb={theme.spacing.xs}>{children}</LargeText>
+            <LargeText pb={'xs'}>{children}</LargeText>
         ),
         strong: ({ children }) => (
             <LargeText component={'span'} fw={700}>
@@ -145,8 +145,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         wrapper: ({ children }) => (
             <Center
                 style={{
-                    marginBottom: theme.spacing.xl * 1.25,
-                    marginTop: theme.spacing.xl,
+                    marginBottom: 'calc(var(--mantine-spacing-xl) * 1.25)',
+                    marginTop: 'var(--mantine-spacing-xl)',
                 }}
             >
                 <Box style={{ width: '100%', maxWidth: MAX_MDX_CONTENT_WIDTH }}>

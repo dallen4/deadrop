@@ -7,11 +7,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     return (
         <AppShell
             padding={'md'}
-            fixed={false}
-            header={<Header />}
-            footer={<Footer />}
+            header={{ height: 102 }}
         >
-            {children}
+            <AppShell.Header withBorder={false}>
+                <Header />
+            </AppShell.Header>
+            <AppShell.Main>
+                {children}
+                <Footer />
+            </AppShell.Main>
         </AppShell>
     );
 };

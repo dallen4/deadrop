@@ -1,0 +1,25 @@
+.wrapper {
+  padding-top: calc(var(--mantine-spacing-xl) * 2);
+  min-height: 580px;
+}
+
+@media (max-width: 520px) {
+  .wrapper {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.title {
+  margin-bottom: calc(var(--mantine-spacing-xl) * 1.5);
+}
+
+.item {
+  border-radius: var(--mantine-radius-md);
+  margin-bottom: var(--mantine-spacing-lg);
+  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.question[data-active] {
+  color: var(--mantine-primary-color-4);
+}

@@ -1,28 +1,23 @@
 import React from 'react';
 import {
   Anchor,
-  Footer as BaseFooter,
   useMantineTheme,
   Text,
 } from '@mantine/core';
 import { useRouter } from 'next/router';
-import { IconBrandGithub } from '@tabler/icons';
+import { IconBrandGithub } from '@tabler/icons-react';
 
 const Footer = () => {
   const router = useRouter();
   const theme = useMantineTheme();
 
   return (
-    <BaseFooter
-      height={100}
-      withBorder={false}
-      styles={(theme) => ({
-        root: {
-          padding: theme.spacing.md,
-          textAlign: 'center',
-          bottom: 0,
-        },
-      })}
+    <div
+      style={{
+        height: 100,
+        padding: 'var(--mantine-spacing-md)',
+        textAlign: 'center',
+      }}
     >
       <Anchor
         href={'https://github.com/dallen4/deadrop'}
@@ -40,7 +35,7 @@ const Footer = () => {
       <Text size={'xs'} c={'dimmed'} fw={500}>
         v{require('../package.json').version}
       </Text>
-    </BaseFooter>
+    </div>
   );
 };
 

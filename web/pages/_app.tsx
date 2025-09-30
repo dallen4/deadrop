@@ -4,12 +4,15 @@ import { DefaultSeo } from 'next-seo';
 import { MantineProvider } from '@mantine/core';
 import { Analytics } from '@vercel/analytics/react';
 import Layout from 'molecules/Layout';
-import { emotionCache } from 'lib/emotion';
-import { NotificationsProvider } from '@mantine/notifications';
+import { Notifications } from '@mantine/notifications';
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import Head from 'next/head';
 import { description, title } from '@config/app';
+
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import '@mantine/dropzone/styles.css';
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
@@ -50,18 +53,15 @@ export default function MyApp(props: AppProps) {
         {...pageProps}
       >
         <MantineProvider
-          withGlobalStyles
-          withNormalizeCSS
+          defaultColorScheme="dark"
           theme={{
-            colorScheme: 'dark',
+            primaryColor: 'blue',
           }}
-          emotionCache={emotionCache}
         >
-          <NotificationsProvider>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </NotificationsProvider>
+          <Notifications />
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
         </MantineProvider>
         {!isPreview && <Analytics />}
       </ClerkProvider>
