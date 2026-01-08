@@ -45,7 +45,7 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
     await client.hset(key, { peerId, nonce });
     await client.expire(key, FIVE_MINS_IN_SEC);
 
-    if (disableIncrement) await incrementDailyDropCount();
+    if (!disableIncrement) await incrementDailyDropCount();
 
     return { dropId, nonce };
   };
