@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { RefObject, useRef } from 'react';
 import {
     Title,
     Text,
@@ -128,7 +128,7 @@ const Home = () => {
           </Text>
           <Group style={{ paddingTop: theme.spacing.md }}>
             <TextInput
-              ref={inputRef as any}
+              ref={inputRef as RefObject<HTMLInputElement>}
               styles={{
                 root: isMobile
                   ? {

@@ -7,7 +7,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { IconEdit, IconPlus, IconTrash } from '@tabler/icons';
+import { IconEdit, IconPlus, IconTrash } from '@tabler/icons-react';
 import { InlineCode } from 'atoms/Code';
 import { MainWrapper } from 'atoms/MainWrapper';
 import { useVault } from 'hooks/use-vault';
