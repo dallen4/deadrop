@@ -23,6 +23,7 @@ export enum DropEventType {
   HandshakeComplete = 'HANDSHAKE_COMPLETE',
   Drop = 'DROP',
   Confirm = 'CONFIRM',
+  ConnectionComplete = 'GRAB_COMPLETE',
 }
 
 export enum GrabState {

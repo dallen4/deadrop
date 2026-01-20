@@ -28,15 +28,26 @@ const dropRouter = hono()
           .get('redis')
           .get<string>(testTokenKey);
 
-        return fetchedToken ? fetchedToken === token : false;
+        console.log('Test token detected...');
+
+        const isValid = fetchedToken ? fetchedToken === token : false;
+
+        console.log('Test token is valid:', isValid);
+
+        return isValid;
       };
 
       const canDrop = testToken
         ? await verifyTestToken(testToken)
         : await checkAndIncrementUserDropCount(ipAddress!);
 
-      if (!canDrop)
-        return c.json({ message: 'Daily drop limit reached' }, 500);
+      if (!canDrop) {
+        const message = 'Daily drop limit reached!';
+
+        console.log(message);
+
+        return c.json({ message }, 500);
+      }
 
       const { id: peerId } = c.req.valid('json');
 

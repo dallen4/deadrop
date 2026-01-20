@@ -7,20 +7,33 @@ import type {
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 import type { DataConnection } from 'peerjs';
+import type { ActorRef } from 'xstate';
 import { DropEventType } from '../lib/constants';
+
+// Main drop context with all state
+export type DropContext = BaseContext & {
+  // Actor management
+  drops: Map<string, ActorRef<{ type: DropEventType }>>;
+
+  // Connection tracking
+  connections: Map<string, DataConnection>;
+  activeSessions: number;
+  maxSessions: number;
+  completedSessions: number;
+
+  // Drop state
+  integrity: string | null;
+  dropKey: CryptoKey | null;
+};
+
+// Connection machine is stateless
+export type ConnectionContext = {};
 
 export type DropOptions = {
   decryptedAccess?: 'copy' | 'view' | 'both';
-
-  // premium
   requireMFA?: boolean;
   requireCaptcha?: boolean;
-  groupCount?: number;
-};
-
-export type DropContext = BaseContext & {
-  integrity: string | null;
-  dropKey: CryptoKey | null;
+  maxSessions?: number;
 };
 
 export type DropEvent<EventType extends DropEventType> =
@@ -46,7 +59,7 @@ export interface ConnectEvent
 }
 
 export interface WrapEvent extends DropEvent<DropEventType.Wrap> {
-  payload: Record<string, any>;
+  payload: string | File;
   integrity: string;
 }
 

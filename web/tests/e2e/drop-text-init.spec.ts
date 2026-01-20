@@ -35,6 +35,6 @@ test('should start the drop session successfully', async ({
 
   expect(dropLink).toBeDefined();
 
-  await page.close();
+  await page.context().close();
   await browser.close();
 });

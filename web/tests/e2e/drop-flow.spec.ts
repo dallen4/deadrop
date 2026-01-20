@@ -5,7 +5,7 @@ import {
   CONFIRM_PAYLOAD_BTN_ID,
   DROP_LINK_ID,
   DROP_SECRET_VALUE_ID,
-} from '../../lib/constants';
+} from 'lib/constants';
 import {
   createContextForBrowser,
   createPageForBrowser,
@@ -72,8 +72,8 @@ test('should drop a text secret from one page session to another', async ({
   expect(grabbedSecretValue).toBeDefined();
   expect(grabbedSecretValue).toEqual(secretValue);
 
-  await dropperPage.close();
-  await grabberPage.close();
+  await dropperPage.context().close();
+  await grabberPage.context().close();
 
   await context.close();
 

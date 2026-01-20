@@ -51,7 +51,7 @@ jobs:
             export TEST_URI=$BASE_URL
           fi
 
-          echo $TEST_URI
+          echo "Running tests against $TEST_URI..."
           CI=true yarn test:e2e --trace on
       - uses: actions/upload-artifact@v4
         if: always()

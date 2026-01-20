@@ -1,4 +1,4 @@
-import { formatDropKey, generateIV } from '@shared/lib/util';
+import { formatDropKey, generateDateTotalId, generateIV } from '@shared/lib/util';
 import { DropDetails } from '@shared/types/common';
 import { Context } from 'hono';
 import { nanoid } from 'nanoid';

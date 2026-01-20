@@ -6,7 +6,7 @@ import { MessageType } from '../lib/constants';
 export type BaseContext = {
   id: string | null;
   peer: Peer | null;
-  connection: DataConnection | null;
+  connection?: DataConnection | null;
   keyPair: CryptoKeyPair | null;
   nonce: string | null;
   mode: PayloadMode;
