@@ -4,11 +4,9 @@ import {
   useMantineTheme,
   Text,
 } from '@mantine/core';
-import { useRouter } from 'next/router';
 import { IconBrandGithub } from '@tabler/icons-react';
 
 const Footer = () => {
-  const router = useRouter();
   const theme = useMantineTheme();
 
   return (

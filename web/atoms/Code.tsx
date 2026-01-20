@@ -25,7 +25,7 @@ export const InlineCode = ({
       block={false}
       style={{
         fontSize: size && theme.fontSizes[size],
-        padding: theme.spacing.xs * 0.6,
+        padding: theme.spacing.xs,
       }}
     >
       {children}

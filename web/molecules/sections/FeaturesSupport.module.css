@@ -1,0 +1,9 @@
+.featuresContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card {
+  border: 1px solid light-dark(var(--mantine-color-gray-1), var(--mantine-color-gray-5));
+}

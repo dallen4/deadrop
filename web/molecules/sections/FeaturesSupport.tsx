@@ -2,11 +2,11 @@ import React from 'react';
 import {
   Container,
   Card,
-  createStyles,
   Table,
   useMantineTheme,
 } from '@mantine/core';
 import { SectionTitle } from './SectionTitle';
+import classes from './FeaturesSupport.module.css';
 
 type SupportStatus =
   | '✅ stable'
@@ -71,27 +71,15 @@ const FeatureRow = ({ item }: { item: FeatureEntry }) => {
   );
 };
 
-const useStyles = createStyles((theme) => ({
-  featuresContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  card: {
-    border: `1px solid light-dark(${theme.colors.gray[1]}, ${theme.colors.gray[5]})`,
-  },
-}));
-
 export const FeaturesSupport = () => {
   const theme = useMantineTheme();
-  const { classes } = useStyles();
 
   return (
     <Container
       size={'lg'}
       py={'xl'}
       px={0}
-      mb={theme.spacing.xl * 2}
+      mb={theme.spacing.xl}
       display={'flex'}
       className={classes.featuresContainer}
     >
@@ -100,7 +88,7 @@ export const FeaturesSupport = () => {
         id={'features-section'}
       />
       <Card maw={'600px'} className={classes.card}>
-        <Table fontSize={'lg'}>
+        <Table fz={'lg'}>
           <thead>
             <tr>
               <th>Feature</th>
