@@ -2,11 +2,19 @@ import { formatDropKey, generateIV } from '@shared/lib/util';
 import { DropDetails } from '@shared/types/common';
 import { Context } from 'hono';
 import { nanoid } from 'nanoid';
-import { generateDateTotalId } from '../../../web/api/util';
 import { hash } from './crypto';
 import { HonoCtx } from './http/core';
 
 const DAY_IN_SEC = 60 * 60 * 24;
+
+function generateDateTotalId(target?: Date) {
+  const currDate = target || new Date();
+  const month = currDate.getMonth() + 1;
+  const date = currDate.getDate();
+  const year = currDate.getFullYear();
+
+  return `total:${month}/${date}/${year}`;
+}
 
 export const createCacheHandlers = (c: Context<HonoCtx>) => {
   const client = c.get('redis');
@@ -45,7 +53,7 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
     await client.hset(key, { peerId, nonce });
     await client.expire(key, FIVE_MINS_IN_SEC);
 
-    if (disableIncrement) await incrementDailyDropCount();
+    if (!disableIncrement) await incrementDailyDropCount();
 
     return { dropId, nonce };
   };
