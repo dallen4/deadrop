@@ -43,6 +43,7 @@
 [post-create]
 copy = "wt step copy-ignored"
 deps = "yarn install --frozen-lockfile"
+open = "windsurf {{ worktree_path }}"
 
 # Pre-Merge: run unit tests and type-check before merging
 [pre-merge]
