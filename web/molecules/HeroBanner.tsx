@@ -6,7 +6,7 @@ import {
     Button,
     Anchor,
 } from '@mantine/core';
-import { useRouter } from 'next/router';
+import { useNavigate } from 'react-router';
 import { DROP_PATH } from '@shared/config/paths';
 import { TypeAnimation } from 'react-type-animation';
 
@@ -17,7 +17,7 @@ import { useMantineTheme } from '@mantine/core';
 
 export function HeroBanner() {
     const theme = useMantineTheme();
-    const router = useRouter();
+    const navigate = useNavigate();
 
     return (
         <div className={classes.wrapper}>
@@ -58,7 +58,7 @@ export function HeroBanner() {
                         <Button
                             className={classes.control}
                             size={'lg'}
-                            onClick={() => router.push(DROP_PATH)}
+                            onClick={() => navigate(DROP_PATH)}
                         >
                             Start a Drop
                         </Button>

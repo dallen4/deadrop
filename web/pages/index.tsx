@@ -21,7 +21,7 @@ const Home = () => {
     const router = useRouter();
     const theme = useMantineTheme();
     const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
-    const inputRef = useRef<HTMLInputElement>();
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const submitGrab = () => {
         const inputVal = inputRef.current!.value;
@@ -66,7 +66,7 @@ const Home = () => {
                     </Text>
                     <Group style={{ paddingTop: theme.spacing.md }}>
                         <TextInput
-                            ref={inputRef as any}
+                            ref={inputRef}
                             styles={{
                                 root: isMobile
                                     ? {

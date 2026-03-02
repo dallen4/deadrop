@@ -1,14 +1,12 @@
-import React from 'react';
 import {
   Anchor,
   useMantineTheme,
   Text,
 } from '@mantine/core';
-import { useRouter } from 'next/router';
 import { IconBrandGithub } from '@tabler/icons-react';
+import { version } from '../../package.json';
 
 const Footer = () => {
-  const router = useRouter();
   const theme = useMantineTheme();
 
   return (
@@ -33,7 +31,7 @@ const Footer = () => {
         .
       </Text>
       <Text size={'xs'} c={'dimmed'} fw={500}>
-        v{require('../package.json').version}
+        v{version}
       </Text>
     </div>
   );

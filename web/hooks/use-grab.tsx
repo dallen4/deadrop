@@ -5,8 +5,8 @@ import {
 import { useMachine } from '@xstate/react';
 import type { GrabContext } from '@shared/types/grab';
 import { GrabState } from '@shared/lib/constants';
-import { useEffect, useMemo, useRef } from 'react';
-import { useRouter } from 'next/router';
+import { useMemo, useRef } from 'react';
+import { useBlocker, useSearchParams } from 'react-router';
 import { decryptFile, hashFile } from 'lib/crypto';
 import { showNotification } from '@mantine/notifications';
 import { IconX } from '@tabler/icons-react';
@@ -15,32 +15,16 @@ import { cleanupSession } from 'lib/session';
 import { initPeer } from 'lib/peer';
 
 export const useGrab = () => {
-  const router = useRouter();
-
+  const [searchParams] = useSearchParams();
   const logsRef = useRef<Array<string>>([]);
   const contextRef = useRef<GrabContext>(initGrabContext());
 
   const [{ value: state }, send] = useMachine(grabMachine);
 
-  useEffect(() => {
-    const onLeaveAttempt = () => {
-      throw 'Cannot navigate away, peer active';
-    };
-
-    if (state === GrabState.Ready) {
-      router.events.on('routeChangeStart', onLeaveAttempt);
-    } else if (
-      [GrabState.Completed, GrabState.Error].includes(
-        state as GrabState,
-      )
-    ) {
-      router.events.off('routeChangeStart', onLeaveAttempt);
-    }
-
-    return () => {
-      router.events.off('routeChangeStart', onLeaveAttempt);
-    };
-  }, [state]);
+  // Block navigation when in Ready state
+  useBlocker(() => {
+    return state === GrabState.Ready;
+  });
 
   const pushLog = (message: string) => logsRef.current.push(message);
 
@@ -67,7 +51,7 @@ export const useGrab = () => {
           decrypt: decryptFile,
           hash: hashFile,
         },
-        apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
+        apiUri: import.meta.env.VITE_DEADROP_API_URL!,
         initPeer,
         cleanupSession,
         onRetryExceeded,
@@ -82,7 +66,7 @@ export const useGrab = () => {
   const getSecret = () => contextRef.current.message;
 
   const init = async () => {
-    contextRef.current.id = router.query.drop as string;
+    contextRef.current.id = searchParams.get('drop') as string;
 
     await baseInit();
   };

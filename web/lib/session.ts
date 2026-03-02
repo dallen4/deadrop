@@ -1,5 +1,5 @@
-import { DropContext } from '@shared/types/drop';
-import { GrabContext } from '@shared/types/grab';
+import type { DropContext } from '@shared/types/drop';
+import type { GrabContext } from '@shared/types/grab';
 
 export const cleanupSession = async (ctx: DropContext | GrabContext) => {
     const { removeOnUnloadListener } = await import('@shared/lib/peer');

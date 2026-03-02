@@ -1,5 +1,5 @@
 import type { FileWithPath } from '@mantine/dropzone';
-import { DropMessage } from '@shared/types/messages';
+import type { DropMessage } from '@shared/types/messages';
 
 export const readFileAsBuffer = async (file: FileWithPath) =>
   new Promise<ArrayBuffer>((resolve, reject) => {

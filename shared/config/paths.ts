@@ -4,6 +4,8 @@ export const DROP_PATH = '/drop';
 
 export const GRAB_PATH = '/grab';
 
+export const CLI_AUTH_PATH = '/auth/cli';
+
 export const OVERVIEW_DOCS_PATH = '/docs/overview';
 
 export const CLI_DOCS_PATH = '/docs/cli';

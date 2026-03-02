@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Card, Title, useMantineTheme } from '@mantine/core';
 
 const StepCard = ({
@@ -6,7 +6,7 @@ const StepCard = ({
     children,
 }: {
     title: string;
-    children: ReactNode;
+    children: React.ReactNode;
 }) => {
     const theme = useMantineTheme();
 

@@ -1,9 +1,7 @@
-import React from 'react';
 import { HOME_PATH } from '@shared/config/paths';
 import { Box, Title } from '@mantine/core';
 import clsx from 'clsx';
-import Link from 'next/link';
-import Image from 'next/image';
+import { Link } from 'react-router';
 import { useMediaQuery } from '@mantine/hooks';
 
 import classes from './Brand.module.css';
@@ -12,9 +10,9 @@ const Brand = () => {
   const renderBrandName = useMediaQuery('(min-width: 505px)');
 
   return (
-    <Link href={HOME_PATH} style={{ textDecoration: 'none' }}>
+    <Link to={HOME_PATH} style={{ textDecoration: 'none' }}>
       <Box className={classes.linkContainer}>
-        <Image
+        <img
           src={'/icons/handshake-transparent.svg'}
           alt={'deadrop icon'}
           height={60}

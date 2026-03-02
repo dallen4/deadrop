@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/react-router';
 import { getCookie } from 'cookies-next';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { useMantineTheme } from '@mantine/core';
@@ -45,7 +45,7 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
   return show ? (
     <HCaptcha
       id={HCAPTCHA_EMBED_ID}
-      sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITEKEY!}
+      sitekey={import.meta.env.VITE_HCAPTCHA_SITEKEY!}
       size={isMobile ? 'compact' : 'normal'}
       onVerify={onVerify}
       onError={onError}

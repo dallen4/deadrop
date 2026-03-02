@@ -1,8 +1,7 @@
-import React from 'react';
 import { Button, Container, Text, Title } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
-import { SignedIn, SignedOut, SignIn, useClerk } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignIn, useClerk } from '@clerk/react-router';
 import { IconX } from '@tabler/icons-react';
 
 const CliAuth = () => {
@@ -33,7 +32,7 @@ const CliAuth = () => {
       },
     });
 
-    const payload = await res.json();
+    const payload = await res.json<{ token: string }>();
 
     if (typeof redirectUrl === 'string') {
       const localhostRedirect = new URL(redirectUrl);

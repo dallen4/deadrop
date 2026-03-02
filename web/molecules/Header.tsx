@@ -1,4 +1,4 @@
-import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import {  UserButton, useUser } from '@clerk/react-router';
 import {
   Box,
   Button,
@@ -10,19 +10,16 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import { OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import Brand from 'atoms/header/Brand';
-import { useRouter } from 'next/router';
-
 import classes from './Header.module.css';
+import { Link } from 'react-router';
 
 const Header = () => {
-  const router = useRouter();
   const { user, isLoaded } = useUser();
+  console.log(user);
   const theme = useMantineTheme();
   const isMobile = useMediaQuery(
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
-
-  const onDocsClick = () => router.push(OVERVIEW_DOCS_PATH);
 
   return (
     <div
@@ -44,7 +41,8 @@ const Header = () => {
           <Button
             variant={'subtle'}
             className={classes.navButton}
-            onClick={onDocsClick}
+            component={Link}
+            to={OVERVIEW_DOCS_PATH}
           >
             Docs
           </Button>
@@ -60,7 +58,7 @@ const Header = () => {
               }}
             />
           ) : (
-            <SignInButton>
+            // <SignInButton>
               <Button
                 variant={'outline'}
                 style={{ minWidth: '75px' }}
@@ -73,7 +71,7 @@ const Header = () => {
                   'Login'
                 )}
               </Button>
-            </SignInButton>
+            // </SignInButton>
           )}
         </Group>
       </Flex>

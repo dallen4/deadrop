@@ -1,5 +1,5 @@
 import type { DropContext } from '@shared/types/drop';
-import { useEffect, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useMachine } from '@xstate/react';
 import {
   dropMachine,
@@ -13,11 +13,9 @@ import { IconX } from '@tabler/icons-react';
 import { initPeer } from 'lib/peer';
 import { createDropHandlers } from '@shared/handlers/drop';
 import { cleanupSession } from 'lib/session';
-import { useRouter } from 'next/router';
+import { useBlocker } from 'react-router';
 
 export const useDrop = () => {
-  const router = useRouter();
-
   const logsRef = useRef<Array<string>>([]);
   const contextRef = useRef<DropContext>(initDropContext());
 
@@ -25,25 +23,10 @@ export const useDrop = () => {
 
   const pushLog = (message: string) => logsRef.current.push(message);
 
-  useEffect(() => {
-    const onLeaveAttempt = () => {
-      throw 'Cannot navigate away, peer active';
-    };
-
-    if (state === DropState.Ready) {
-      router.events.on('routeChangeStart', onLeaveAttempt);
-    } else if (
-      [DropState.Completed, DropState.Error].includes(
-        state as DropState,
-      )
-    ) {
-      router.events.off('routeChangeStart', onLeaveAttempt);
-    }
-
-    return () => {
-      router.events.off('routeChangeStart', onLeaveAttempt);
-    };
-  }, [state]);
+  // Block navigation when in Ready state
+  useBlocker(() => {
+    return state === DropState.Ready;
+  });
 
   const onRetryExceeded = () => {
     showNotification({
@@ -74,7 +57,7 @@ export const useDrop = () => {
           hash: hashFile,
         },
         cleanupSession,
-        apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
+        apiUri: import.meta.env.VITE_DEADROP_API_URL!,
         initPeer,
         onRetryExceeded,
       }),

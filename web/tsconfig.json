@@ -1,22 +1,25 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "rootDirs": [".", "./.react-router/types"],
     "baseUrl": "./",
-    "jsx": "preserve",
-    "target": "esnext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "ES2022"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
+    "types": ["vite/client"],
     "paths": {
+      "~/*": ["./*"],
       "@config/*": ["config/*"],
       "@shared/*": ["../shared/*"]
     },
@@ -28,11 +31,10 @@
     ]
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.mdx",
-    "vitest.config.mts"
+    "**/*",
+    "**/.server/**/*",
+    "**/.client/**/*",
+    ".react-router/types/**/*"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "build"]
 }

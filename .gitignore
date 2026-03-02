@@ -18,6 +18,12 @@ build/
 dist/
 fonts/
 
+# react router
+.react-router
+tsconfig.tsbuildinfo
+
+.wrangler
+
 # vitest reports output
 test-report/
 

@@ -6,8 +6,7 @@
     "extends": [
         "eslint:recommended",
         "plugin:react/recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@next/next/recommended"
+        "plugin:@typescript-eslint/recommended"
     ],
     "overrides": [],
     "parser": "@typescript-eslint/parser",
@@ -21,6 +20,7 @@
         "semi": ["error", "always"],
         "@typescript-eslint/no-explicit-any": "warn",
         "react/display-name": "off",
-        "@typescript-eslint/no-non-null-assertion": "off"
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "react/react-in-jsx-scope": "off"
     }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Title, useMantineTheme, Text, Center } from '@mantine/core';
 
-const paymentLink = process.env.NEXT_PUBLIC_STRIPE_LIFETIME_LICENSE_LINK!;
+const paymentLink = import.meta.env.VITE_STRIPE_LIFETIME_LICENSE_LINK!;
 
 export function Premium() {
     const theme = useMantineTheme();
