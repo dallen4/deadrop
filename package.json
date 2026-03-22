@@ -9,7 +9,6 @@
     "url": "https://github.com/dallen4/deadrop.git"
   },
   "private": true,
-  "packageManager": "pnpm@10.30.2",
   "workspaces": [
     "web",
     "cli",
