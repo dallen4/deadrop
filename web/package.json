@@ -55,7 +55,7 @@
   "devDependencies": {
     "@next/bundle-analyzer": "^14.2.13",
     "@next/eslint-plugin-next": "^13.1.1",
-    "@playwright/test": "^1.36.2",
+    "@playwright/test": "^1.58.2",
     "@testing-library/react-hooks": "^8.0.1",
     "@types/cors": "^2.8.13",
     "@types/mdx": "^2.0.13",
