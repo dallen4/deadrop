@@ -15,6 +15,7 @@ const config: PlaywrightTestConfig<{
   dropBrowser: BrowserName;
   grabBrowser: BrowserName;
 }> = {
+  globalSetup: path.join(__dirname, 'tests', 'e2e', 'global-setup.ts'),
   timeout: 30_000,
   testDir: path.join(__dirname, 'tests', 'e2e'),
   retries: 2,
