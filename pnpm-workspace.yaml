@@ -3,3 +3,6 @@ packages:
   - web
   - worker
   - cli
+
+publicHoistPattern:
+  - "next"
