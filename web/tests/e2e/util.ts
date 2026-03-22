@@ -54,7 +54,11 @@ export const createContextForBrowser = async (
   browser: Browser,
   options?: BrowserContextOptions,
 ) => {
-  const context = await browser.newContext(options);
+  const context = await browser.newContext({
+    ...options,
+    permissions: ['microphone', 'camera'],
+    bypassCSP: true,
+  });
 
   if (!testToken) testToken = await getOrCreateTestToken();
 
