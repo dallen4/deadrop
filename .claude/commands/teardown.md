@@ -21,14 +21,14 @@ Use the first word of `$ARGUMENTS` as the branch name. If none provided, inform 
 
 ### 1. Close the iTerm2 session (if it exists)
 
-Find the session by name:
+List sessions and find the one matching the branch name:
 ```bash
-SESSION_ID=$(it2 session list --json | jq -r '.[] | select(.name == "<branch>") | .id')
+it2 session list
 ```
 
-If a session was found, close it:
+If a matching session is found, close it:
 ```bash
-it2 session close -s $SESSION_ID
+it2 session close -s <session-id>
 ```
 
 If no session found, note it and continue — don't stop.
@@ -46,13 +46,13 @@ If this fails (worktree already gone, branch doesn't exist, etc.), note it and c
 Report each step's outcome independently:
 
 ```
-iTerm2 session: closed (w0t1p0 "fix-nav")   ✓
+iTerm2 session: closed (<session-id> "<branch>")   ✓
   — or —
-iTerm2 session: not found (already closed)   –
+iTerm2 session: not found (already closed)          –
 
-Worktree: removed (fix-nav)                  ✓
+Worktree: removed (<branch>)                       ✓
   — or —
-Worktree: not found (already removed)        –
+Worktree: not found (already removed)               –
 ```
 
 Never surface an error that stops the command — always attempt both steps and summarize what happened.

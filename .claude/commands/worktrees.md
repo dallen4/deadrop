@@ -18,7 +18,7 @@ wt list
 ### 2. Get all iTerm2 sessions
 
 ```bash
-it2 session list --json
+it2 session list
 ```
 
 ### 3. Correlate and display
@@ -38,9 +38,9 @@ Example output:
 ```
 Worktrees & Sessions
 ────────────────────────────────────────────────────────
-@ main          ../nieky-tanstack          !? ⇡    session: w0t0p0 (active)
-  fix-nav       ../nieky-tanstack/fix-nav  clean   session: w0t1p0 "fix-nav"
-  feat-music    ../nieky-tanstack/feat-music +3     no session
+@ main          ../deadrop                 !? ⇡    session: E345D769 (active)
+  fix-nav       ../deadrop-workbench/…     clean   session: 30C13B2B "fix-nav"
+  feat-music    ../deadrop-workbench/…     +3      no session
 ────────────────────────────────────────────────────────
 3 worktrees · 2 sessions
 ```

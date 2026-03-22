@@ -53,8 +53,8 @@ types = "yarn workspace web tsc --noEmit"
 # ============================================================================
 # Dev Server URL (shown in `wt list`)
 # ============================================================================
-[list]
-url = "http://localhost:{{ branch | hash_port }}"
+# [list]
+# url = "http://localhost:{{ branch | hash_port }}"
 
 # ============================================================================
 # CI Platform

@@ -215,22 +215,51 @@ it2 alias <alias-name>
 
 ### Multi-agent workspace setup
 
-```bash
-# Open a new window and split into 3 panes
-it2 window new
-it2 session split --vertical
-it2 session split
+**Layout rule: max 2 columns wide.** Fill panes in this order:
 
-# Name each pane
-it2 session set-name "Orchestrator" -s <id1>
-it2 session set-name "Worker A"    -s <id2>
-it2 session set-name "Worker B"    -s <id3>
-
-# Start agents in each
-it2 session run "claude" -s <id1>
-it2 session run "claude" -s <id2>
-it2 session run "claude" -s <id3>
 ```
+Step 1        Step 2        Step 3        Step 4 (full)
+┌───────┐    ┌────┬────┐   ┌────┬────┐   ┌────┬────┐
+│  p1   │ →  │ p1 │ p2 │ → │ p1 │ p2 │ → │ p1 │ p2 │
+│       │    │    │    │   │    ├────┤   ├────┼────┤
+│       │    │    │    │   │    │ p3 │   │ p4 │ p3 │
+└───────┘    └────┴────┘   └────┴────┘   └────┴────┘
+  start     split vert   split right H  split left H
+```
+
+Split order: **vertical → right-horizontal → left-horizontal → done (2×2)**
+
+```bash
+# 1. Open a fresh window (pane1, left column)
+it2 window new
+P1=$(it2 session list --json | jq -r '.[-1].id')
+
+# 2. Split LEFT vertically → pane2 on the right
+it2 session split --vertical -s "$P1"
+P2=$(it2 session list --json | jq -r '.[-1].id')
+
+# 3. Split RIGHT pane horizontally → pane3 below pane2
+it2 session split -s "$P2"
+P3=$(it2 session list --json | jq -r '.[-1].id')
+
+# 4. Split LEFT pane horizontally → pane4 below pane1 (2×2 complete)
+it2 session split -s "$P1"
+P4=$(it2 session list --json | jq -r '.[-1].id')
+
+# Name and start agents
+it2 session set-name "Orchestrator" -s "$P1"
+it2 session set-name "Worker A"     -s "$P2"
+it2 session set-name "Worker B"     -s "$P3"
+it2 session set-name "Worker C"     -s "$P4"
+
+it2 session run "claude" -s "$P1"
+it2 session run "claude" -s "$P2"
+it2 session run "claude" -s "$P3"
+it2 session run "claude" -s "$P4"
+```
+
+For more than 4 agents, open a new window/tab rather than adding a
+third column.
 
 ### Read output from a session
 
