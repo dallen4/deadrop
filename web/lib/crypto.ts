@@ -23,7 +23,7 @@ export const decryptFile = (
   meta: NonNullable<DropMessage['meta']>,
 ) => {
   const bufferTransform = (buffer: AllowSharedBufferSource) =>
-    buildFileFromBuffer(buffer, meta);
+    buildFileFromBuffer(buffer as ArrayBuffer, meta);
 
   return decrypt(key, iv, data, bufferTransform);
 };

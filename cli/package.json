@@ -19,11 +19,11 @@
     "prepackage": "cpx \"../node_modules/figlet/fonts/*.flf\" ./fonts",
     "package": "nexe ./dist/deadrop.js --output \"./dist/deadrop\" --resource \"./fonts/Standard.flf\" --build",
     "postpackage": "rimraf fonts/",
-    "compile": "yarn build && yarn package",
+    "compile": "pnpm build && pnpm package",
     "postversion": "sh ./scripts/postversion.sh",
     "prepublishOnly": "sh ./scripts/prepublish.sh",
     "postpublish": "sh ./scripts/postpublish.sh",
-    "release": "yarn build && npm publish"
+    "release": "pnpm build && npm publish"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.2",

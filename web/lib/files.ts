@@ -13,7 +13,7 @@ export const readFileAsBuffer = async (file: FileWithPath) =>
   });
 
 export const buildFileFromBuffer = (
-  fileBuffer: AllowSharedBufferSource,
+  fileBuffer: BlobPart,
   meta: NonNullable<DropMessage['meta']>,
 ) =>
   new File([fileBuffer], meta!.name, {
