@@ -6,3 +6,15 @@ packages:
 
 publicHoistPattern:
   - "next"
+
+onlyBuiltDependencies:
+  - "@sentry/cli"
+  - "bufferutil"
+  - "esbuild"
+  - "esbuild-plugin-define"
+  - "esbuild-plugin-environment"
+  - "fsevents"
+  - "sharp"
+  - "unrs-resolver"
+  - "utf-8-validate"
+  - "workerd"

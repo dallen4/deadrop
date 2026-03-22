@@ -84,20 +84,6 @@
     "node": ">=24",
     "pnpm": ">=9"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@sentry/cli",
-      "bufferutil",
-      "esbuild",
-      "esbuild-plugin-define",
-      "esbuild-plugin-environment",
-      "fsevents",
-      "sharp",
-      "unrs-resolver",
-      "utf-8-validate",
-      "workerd"
-    ]
-  },
   "jscpd": {
     "format": [
       "typescript"
