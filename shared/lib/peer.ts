@@ -32,17 +32,22 @@ export function createPeer(
         urls: 'stun:stun.relay.metered.ca:80',
       },
       {
-        urls: 'turn:a.relay.metered.ca:80',
+        urls: 'turn:standard.relay.metered.ca:80',
         username,
         credential,
       },
       {
-        urls: 'turn:a.relay.metered.ca:443',
+        urls: 'turn:standard.relay.metered.ca:80?transport=tcp',
         username,
         credential,
       },
       {
-        urls: 'turn:a.relay.metered.ca:443?transport=tcp',
+        urls: 'turn:standard.relay.metered.ca:443',
+        username,
+        credential,
+      },
+      {
+        urls: 'turns:standard.relay.metered.ca:443?transport=tcp',
         username,
         credential,
       },
