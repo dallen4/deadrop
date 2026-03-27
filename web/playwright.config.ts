@@ -12,8 +12,8 @@ type BrowserName = 'chromium' | 'firefox' | 'webkit';
 
 // ref: https://playwright.dev/docs/test-configuration
 const config: PlaywrightTestConfig<{
-  dropBrowser: BrowserName | null;
-  grabBrowser: BrowserName | null;
+  dropBrowser: BrowserName;
+  grabBrowser: BrowserName;
 }> = {
   globalSetup: path.join(__dirname, 'tests', 'e2e', 'global-setup.ts'),
   timeout: 30_000,

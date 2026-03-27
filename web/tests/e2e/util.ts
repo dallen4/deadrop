@@ -16,13 +16,13 @@ import { getRedis } from 'api/redis';
 type BrowserName = PlaywrightWorkerOptions['browserName'];
 
 export type TestOptions = {
-  dropBrowser: BrowserName | null;
-  grabBrowser: BrowserName | null;
+  dropBrowser: BrowserName;
+  grabBrowser: BrowserName;
 };
 
 export const test = base.extend<TestOptions>({
-  dropBrowser: [null, { option: true }],
-  grabBrowser: [null, { option: true }],
+  dropBrowser: ['chromium', { option: true }],
+  grabBrowser: ['chromium', { option: true }],
 });
 
 let testToken: string | null = null;
