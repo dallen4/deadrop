@@ -59,40 +59,17 @@ const config: PlaywrightTestConfig<{
       },
     },
     {
-      name: 'Chrome to WebKit',
-      use: {
-        ...devices['Desktop Safari'],
-        dropBrowser: 'chromium',
-      },
-    },
-    {
       name: 'Firefox to Chrome',
       use: {
         dropBrowser: 'firefox',
         grabBrowser: 'chromium',
       },
     },
-    {
-      name: 'Firefox to WebKit',
-      use: {
-        ...devices['Desktop Safari'],
-        dropBrowser: 'firefox',
-      },
-    },
-    {
-      name: 'WebKit to Chrome',
-      use: {
-        ...devices['Desktop Safari'],
-        grabBrowser: 'chromium',
-      },
-    },
-    {
-      name: 'WebKit to Firefox',
-      use: {
-        ...devices['Desktop Safari'],
-        grabBrowser: 'firefox',
-      },
-    },
+    // WebKit cross-browser projects disabled due to Playwright
+    // limitation: WebRTC ICE negotiation fails when WebKit runs
+    // in a separate process from the other browser.
+    // Standalone webkit + Mobile Safari projects still cover
+    // WebKit end-to-end. See: https://github.com/microsoft/playwright/issues/2973
   ],
 };
 export default config;
