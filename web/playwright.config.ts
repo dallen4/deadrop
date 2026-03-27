@@ -12,8 +12,8 @@ type BrowserName = 'chromium' | 'firefox' | 'webkit';
 
 // ref: https://playwright.dev/docs/test-configuration
 const config: PlaywrightTestConfig<{
-  dropBrowser: BrowserName;
-  grabBrowser: BrowserName;
+  dropBrowser: BrowserName | null;
+  grabBrowser: BrowserName | null;
 }> = {
   globalSetup: path.join(__dirname, 'tests', 'e2e', 'global-setup.ts'),
   timeout: 30_000,
@@ -61,8 +61,8 @@ const config: PlaywrightTestConfig<{
     {
       name: 'Chrome to WebKit',
       use: {
+        ...devices['Desktop Safari'],
         dropBrowser: 'chromium',
-        grabBrowser: 'webkit',
       },
     },
     {
@@ -75,21 +75,21 @@ const config: PlaywrightTestConfig<{
     {
       name: 'Firefox to WebKit',
       use: {
+        ...devices['Desktop Safari'],
         dropBrowser: 'firefox',
-        grabBrowser: 'webkit',
       },
     },
     {
       name: 'WebKit to Chrome',
       use: {
-        dropBrowser: 'webkit',
+        ...devices['Desktop Safari'],
         grabBrowser: 'chromium',
       },
     },
     {
       name: 'WebKit to Firefox',
       use: {
-        dropBrowser: 'webkit',
+        ...devices['Desktop Safari'],
         grabBrowser: 'firefox',
       },
     },
