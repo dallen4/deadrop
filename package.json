@@ -16,22 +16,22 @@
     "shared"
   ],
   "scripts": {
-    "web": "yarn workspace web",
-    "cli": "yarn workspace cli",
-    "worker": "yarn workspace worker",
-    "shared": "yarn workspace shared",
-    "start": "yarn web start",
-    "build": "yarn web build",
-    "start:prod": "yarn web start:prod",
+    "web": "pnpm -F web",
+    "cli": "pnpm -F cli",
+    "worker": "pnpm -F worker",
+    "shared": "pnpm -F shared",
+    "start": "pnpm -F web start",
+    "build": "pnpm -F web build",
+    "start:prod": "pnpm -F web start:prod",
     "drybuild": "sh ./scripts/drybuild.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage.enabled true",
-    "test:e2e": "yarn web test:e2e",
+    "test:e2e": "pnpm -F web test:e2e",
     "test:preview": "vite preview --outDir test-report",
-    "cli:build": "yarn cli build",
-    "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
-    "worker:deploy": "yarn worker deploy",
+    "cli:build": "pnpm -F cli build",
+    "cli:release": "cd cli && pnpm install --frozen-lockfile && pnpm release",
+    "worker:deploy": "pnpm -F worker deploy",
     "analyze:dup": "jscpd",
     "analyze:unused": "ts-prune",
     "postversion": "git push --tags",
@@ -58,7 +58,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250124.3",
     "@types/nanoid-dictionary": "^4.2.3",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/qrcode": "^1.5.5",
     "@vitest/coverage-istanbul": "^2.1.8",
     "@vitest/ui": "^2.1.8",
@@ -70,7 +70,7 @@
     "prettier": "^3.4.2",
     "ts-prune": "^0.10.3",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.8"
   },
@@ -81,9 +81,10 @@
     "utf-8-validate": false
   },
   "engines": {
-    "node": ">=20",
-    "yarn": "1"
+    "node": ">=24",
+    "pnpm": ">=10"
   },
+  "packageManager": "pnpm@10.27.0",
   "jscpd": {
     "format": [
       "typescript"

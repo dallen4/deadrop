@@ -8,43 +8,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Monorepo Structure
 
-Yarn 1 Workspaces with four packages:
+pnpm Workspaces with four packages:
 
 - `shared/` — Core crypto primitives, XState state machines, PeerJS utilities, shared types. Consumed by `web` and `cli`.
 - `web/` — Next.js 14 (Pages Router) PWA deployed on Vercel.
 - `worker/` — Cloudflare Worker (Hono framework) providing the backend API, KV-backed drop session storage, and PeerJS signaling via Durable Objects.
 - `cli/` — Node.js CLI published to npm as `deadrop`.
 
-`vscode-extension/` exists but is **not** a Yarn workspace (has its own isolated node_modules).
-
 ## Commands
 
 ```bash
 # Development
-yarn start              # Start Next.js dev server (web)
-yarn worker dev         # Start Cloudflare Worker locally (wrangler dev)
+pnpm start              # Start Next.js dev server (web)
+pnpm -F worker dev      # Start Cloudflare Worker locally (wrangler dev)
 
 # Build
-yarn build              # Build web (Next.js)
-yarn cli:build          # Build CLI (esbuild)
-yarn worker:deploy      # Deploy Cloudflare Worker (wrangler deploy)
+pnpm build              # Build web (Next.js)
+pnpm cli:build          # Build CLI (esbuild)
+pnpm worker:deploy      # Deploy Cloudflare Worker (wrangler deploy)
 
 # Testing
-yarn test               # Run all unit tests once (Vitest)
-yarn test:watch         # Run unit tests in watch mode
-yarn test:cov           # Run unit tests with Istanbul coverage
-yarn test:e2e           # Run Playwright e2e tests (requires running web server)
+pnpm test               # Run all unit tests once (Vitest)
+pnpm test:watch         # Run unit tests in watch mode
+pnpm test:cov           # Run unit tests with Istanbul coverage
+pnpm test:e2e           # Run Playwright e2e tests (requires running web server)
 
 # Run tests for a specific workspace
-yarn workspace web vitest run
-yarn workspace cli vitest run
+pnpm vitest run --project web
+pnpm vitest run --project cli
 
 # Run a single test file
-yarn vitest run shared/tests/crypto.spec.ts
+pnpm vitest run shared/tests/crypto.spec.ts
 
 # Code analysis
-yarn analyze:dup        # Detect code duplication (jscpd)
-yarn analyze:unused     # Find unused TS exports (ts-prune)
+pnpm analyze:dup        # Detect code duplication (jscpd)
+pnpm analyze:unused     # Find unused TS exports (ts-prune)
 ```
 
 ## Architecture
@@ -102,7 +100,7 @@ Hono routes:
 | Backend | Cloudflare Workers, Hono, Cloudflare KV + Durable Objects |
 | CLI DB | Drizzle ORM + SQLite (libsql) |
 | Testing | Vitest 2 + Istanbul, Playwright (11 browser configs) |
-| Tooling | Yarn 1 Workspaces, TypeScript 5.7, esbuild, Husky |
+| Tooling | pnpm Workspaces, TypeScript 5.7, esbuild, Husky |
 
 ## TypeScript
 

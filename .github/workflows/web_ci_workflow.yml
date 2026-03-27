@@ -9,24 +9,15 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: actions/cache@v4
-        id: cache-node-modules
-        with:
-          path: |
-            ./node_modules
-            ./web/node_modules
-            ./cli/node_modules
-            ./worker/node_modules
-            ./shared/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('./yarn.lock') }}
+          cache: 'pnpm'
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Install Playwright Browsers
-        run: yarn web playwright install --with-deps
+        run: pnpm -F web exec playwright install --with-deps
       - name: Run Playwright Tests
         shell: bash
         env:
@@ -52,7 +43,7 @@ jobs:
           fi
 
           echo $TEST_URI
-          CI=true yarn test:e2e --trace on
+          CI=true pnpm test:e2e --trace on
       - uses: actions/upload-artifact@v4
         if: always()
         with:

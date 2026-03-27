@@ -5,7 +5,7 @@ on:
       pkg_name:
         type: choice
         description: Package to Release
-        options: 
+        options:
         - web
         - cli
         - worker
@@ -13,7 +13,7 @@ on:
       rel_type:
         type: choice
         description: Type of Release
-        options: 
+        options:
         - patch
         - minor
         - major
@@ -24,44 +24,45 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
+          cache: 'pnpm'
       - name: Version Bump
         run: |
-          yarn config set version-tag-prefix "${{ github.event.inputs.pkg_name }}-v"
-          yarn ${{ github.event.inputs.pkg_name }} version --${{ github.event.inputs.rel_type }}
-
-          git push
-          git push origin --tags
+          cd ${{ github.event.inputs.pkg_name }}
+          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="${{ github.event.inputs.pkg_name }}-v"
   platform-version-bump:
     if: github.event.inputs.pkg_name == 'shared'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
+          cache: 'pnpm'
       - name: Version Bump
         run: |
-          yarn config set version-tag-prefix "web-v"
-          yarn web version --${{ github.event.inputs.rel_type }}
+          cd web
+          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="web-v"
           echo "bumped web version"
 
-          yarn config set version-tag-prefix "cli-v"
-          yarn cli version --${{ github.event.inputs.rel_type }}
+          cd ../cli
+          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="cli-v"
           echo "bumped cli version"
 
-          yarn config set version-tag-prefix "worker-v"
-          yarn worker version --${{ github.event.inputs.rel_type }}
+          cd ../worker
+          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="worker-v"
           echo "bumped worker version"
 
-          yarn config set version-tag-prefix "shared-v"
-          yarn shared version --${{ github.event.inputs.rel_type }}
+          cd ../shared
+          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="shared-v"
           echo "bumped shared version"
 
-          yarn config set version-tag-prefix "v"
-          yarn version --${{ github.event.inputs.rel_type }}
+          cd ..
+          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="v"
           echo "bumped platform version"
           
           git push

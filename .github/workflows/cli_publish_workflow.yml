@@ -8,9 +8,11 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
+          cache: 'pnpm'
       - name: Build CLI
         shell: bash
         env:
@@ -21,14 +23,14 @@ jobs:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
         run: |
           cd cli
-          yarn install --frozen-lockfile
+          pnpm install --frozen-lockfile
           echo $DEADROP_API_URL
           echo $PEER_SERVER_URL
           export DEADROP_API_URL=$DEADROP_API_URL
           export PEER_SERVER_URL=$PEER_SERVER_URL
           export TURN_USERNAME=$TURN_USERNAME
           export TURN_PWD=$TURN_PWD
-          yarn build
+          pnpm build
           echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" >> ./.npmrc
           npm publish
       - uses: marvinpinto/action-automatic-releases@latest
