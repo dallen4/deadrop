@@ -113,3 +113,30 @@ Strict mode is enabled globally (`tsconfig.json`). Each workspace extends the ro
 ## Code Style
 
 Prettier config (`.prettierrc`): 70-char print width, 2-space indent, single quotes, trailing commas, semicolons. ESLint is configured for `web/` only.
+
+## Environment Requirements
+
+- Node.js >= 24 (see `.nvmrc`)
+- pnpm >= 10
+
+## Cross-Package Import Conventions
+
+- `@shared/*` resolves to `../shared/*` from `web/` and `cli/`
+- `@api/*` resolves to `../worker/*` from `shared/`, `web/`, and `cli/`
+- `@config/*` resolves to `config/*` within `web/` only
+- Never import from `worker/` directly — use `shared/client.ts` for the typed API client
+
+## Security Constraints
+
+- No secrets, keys, or plaintext ever leave the client
+- Server-side only stores: drop ID, peer ID, session nonce (all opaque identifiers)
+- All crypto operations use Web Crypto API (ECDH key exchange, AES-256-GCM encryption, SHA-256 hashing)
+- CSP nonce enforced in `web/` (next-safe + `next.config.mjs`)
+
+## Workspace-Specific Guidance
+
+Each workspace has its own `CLAUDE.md` with package-specific context:
+- `shared/CLAUDE.md` — crypto primitives, XState machines, types
+- `web/CLAUDE.md` — Next.js Pages Router, Mantine UI, Playwright e2e
+- `worker/CLAUDE.md` — Hono routes, Durable Objects, KV patterns
+- `cli/CLAUDE.md` — Commander.js commands, Drizzle ORM, esbuild
