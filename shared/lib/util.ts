@@ -16,7 +16,8 @@ export const generateIV = () => {
   return String.fromCharCode(...randomBytes);
 };
 
-export const getIVBuffer = (iv: string) => Buffer.from(iv, 'binary');
+export const getIVBuffer = (iv: string) =>
+  Uint8Array.from(iv, (char) => char.charCodeAt(0));
 
 export const generateGrabUrl = (url: string, id: string) => {
   const params = new URLSearchParams({ drop: id });

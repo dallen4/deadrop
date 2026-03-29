@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@shared/*": ["../shared/*"],
+      "@api/*": ["../worker/*"]
+    }
+  },
+  "include": ["views/**/*.ts", "views/**/*.tsx"],
+  "exclude": ["node_modules", "../worker", "../shared"]
+}
