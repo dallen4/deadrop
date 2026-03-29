@@ -46,7 +46,16 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         a: ({ href, children }) => (
             <DynamicLink href={href}>{children}</DynamicLink>
         ),
-        blockquote: ({ children }) => <Blockquote>{children}</Blockquote>,
+        blockquote: ({ children }) => (
+            <Blockquote
+                color={'blue'}
+                mt={'md'}
+                mb={'lg'}
+                pl={'lg'}
+            >
+                {children}
+            </Blockquote>
+        ),
         code: ({ children }) => <InlineCode>{children}</InlineCode>,
         em: ({ children }) => (
             <LargeText component={'span'} fs={'italic'}>
@@ -57,7 +66,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             <Title
                 order={1}
                 style={{
-                    paddingBottom: theme.spacing.sm,
+                    paddingTop: theme.spacing.md,
+                    paddingBottom: theme.spacing.md,
                 }}
             >
                 {children}
@@ -67,8 +77,10 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             <Title
                 order={2}
                 style={{
-                    paddingTop: theme.spacing.sm,
+                    paddingTop: theme.spacing.xl,
                     paddingBottom: theme.spacing.sm,
+                    borderBottom: `1px solid light-dark(${theme.colors.gray[2]}, ${theme.colors.dark[4]})`,
+                    marginBottom: theme.spacing.sm,
                 }}
             >
                 {children}
@@ -78,8 +90,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             <Title
                 order={3}
                 style={{
-                    paddingTop: theme.spacing.sm,
-                    paddingBottom: theme.spacing.sm,
+                    paddingTop: theme.spacing.lg,
+                    paddingBottom: theme.spacing.xs,
                 }}
             >
                 {children}
@@ -89,8 +101,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             <Title
                 order={4}
                 style={{
-                    paddingTop: theme.spacing.sm,
-                    paddingBottom: theme.spacing.sm,
+                    paddingTop: theme.spacing.md,
+                    paddingBottom: theme.spacing.xs,
                 }}
             >
                 {children}
@@ -101,7 +113,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
                 order={5}
                 style={{
                     paddingTop: theme.spacing.sm,
-                    paddingBottom: theme.spacing.sm,
+                    paddingBottom: theme.spacing.xs,
                 }}
             >
                 {children}
@@ -112,15 +124,20 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
                 order={6}
                 style={{
                     paddingTop: theme.spacing.sm,
-                    paddingBottom: theme.spacing.sm,
+                    paddingBottom: theme.spacing.xs,
                 }}
             >
                 {children}
             </Title>
         ),
-        hr: () => <Divider my={'sm'} />,
+        hr: () => <Divider my={'lg'} />,
         li: ({ children }) => (
-            <List.Item style={{ paddingBottom: 'calc(var(--mantine-spacing-xs) * 0.7)' }}>
+            <List.Item
+                style={{
+                    paddingBottom:
+                        'calc(var(--mantine-spacing-xs) * 0.3)',
+                }}
+            >
                 {children}
             </List.Item>
         ),
@@ -130,7 +147,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             </List>
         ),
         p: ({ children }) => (
-            <LargeText pb={'xs'}>{children}</LargeText>
+            <LargeText pb={'sm'}>{children}</LargeText>
         ),
         strong: ({ children }) => (
             <LargeText component={'span'} fw={700}>
@@ -138,18 +155,24 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             </LargeText>
         ),
         ul: ({ children }) => (
-            <List mb={theme.spacing.xs} type={'unordered'}>
+            <List mb={'md'} type={'unordered'}>
                 {children}
             </List>
         ),
         wrapper: ({ children }) => (
             <Center
                 style={{
-                    marginBottom: 'calc(var(--mantine-spacing-xl) * 1.25)',
+                    marginBottom:
+                        'calc(var(--mantine-spacing-xl) * 1.25)',
                     marginTop: 'var(--mantine-spacing-xl)',
                 }}
             >
-                <Box style={{ width: '100%', maxWidth: MAX_MDX_CONTENT_WIDTH }}>
+                <Box
+                    style={{
+                        width: '100%',
+                        maxWidth: MAX_MDX_CONTENT_WIDTH,
+                    }}
+                >
                     {children}
                 </Box>
             </Center>

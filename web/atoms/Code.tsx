@@ -5,7 +5,17 @@ export const BlockCode = ({ data }: { data: string }) => {
   const theme = useMantineTheme();
 
   return (
-    <Code block style={{ padding: theme.spacing.sm }}>
+    <Code
+      block
+      style={{
+        padding: theme.spacing.md,
+        marginTop: theme.spacing.xs,
+        marginBottom: theme.spacing.md,
+        marginLeft: theme.spacing.xs,
+        marginRight: theme.spacing.xs,
+        borderLeft: `2px solid ${theme.colors.blue[9]}a8`,
+      }}
+    >
       {data}
     </Code>
   );
@@ -25,7 +35,7 @@ export const InlineCode = ({
       block={false}
       style={{
         fontSize: size && theme.fontSizes[size],
-        padding: theme.spacing.xs,
+        padding: '2px 6px',
       }}
     >
       {children}
