@@ -3,6 +3,7 @@ packages:
   - web
   - worker
   - cli
+  - vscode-extension
 
 publicHoistPattern:
   - "next"
