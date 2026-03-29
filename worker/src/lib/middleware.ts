@@ -29,6 +29,10 @@ export const cors = (): Middleware =>
         originRoots.some((root) => origin.endsWith(root))
       )
         return origin;
+
+      // VS Code webview panels use a vscode-webview:// origin
+      if (origin.startsWith('vscode-webview://')) return origin;
+
       else return null;
     },
     allowHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
