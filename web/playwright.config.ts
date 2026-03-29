@@ -3,7 +3,7 @@ import path from 'path';
 import { baseURL, isLocal } from './tests/e2e/config';
 
 const server = {
-  command: 'yarn run start',
+  command: 'pnpm start',
   url: baseURL,
   timeout: 120_000,
 };

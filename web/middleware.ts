@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server';
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) auth().protect();
+  if (isProtectedRoute(req)) await auth.protect();
 
   const response = NextResponse.next();
 

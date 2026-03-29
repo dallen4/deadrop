@@ -38,8 +38,8 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@clerk/clerk-js": "^5.22.3",
-    "@clerk/clerk-sdk-node": "^5.0.42",
+    "@clerk/clerk-js": "^6.3.3",
+    "@clerk/backend": "^3.2.3",
     "@libsql/client": "^0.14.0",
     "@upstash/redis": "^1.34.3",
     "@xstate/react": "^3.0.1",
