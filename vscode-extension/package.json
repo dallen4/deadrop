@@ -1,0 +1,59 @@
+{
+  "name": "vscode",
+  "displayName": "deadrop",
+  "description": "End-to-end encrypted secret sharing",
+  "version": "0.1.0",
+  "publisher": "deadrop",
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "deadrop.drop", "title": "deadrop: Start Drop" },
+      { "command": "deadrop.dropFile", "title": "deadrop: Drop File" },
+      { "command": "deadrop.grab", "title": "deadrop: Grab Secret" },
+      { "command": "deadrop.login", "title": "deadrop: Login" },
+      { "command": "deadrop.logout", "title": "deadrop: Logout" }
+    ],
+    "menus": {
+      "editor/context": [
+        { "command": "deadrop.drop", "when": "editorHasSelection", "group": "deadrop" },
+        { "command": "deadrop.dropFile", "group": "deadrop" }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        { "id": "deadrop", "title": "deadrop", "icon": "media/handshake.svg" }
+      ]
+    },
+    "views": {
+      "deadrop": [
+        { "type": "webview", "id": "deadropSidebar", "name": "deadrop" }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/esbuild.js --production && vite build --config vite.config.ts",
+    "dev": "node scripts/esbuild.js --watch",
+    "views:build": "vite build --config vite.config.ts",
+    "views:dev": "vite dev --config vite.config.ts",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.views.json",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@types/vscode": "^1.110.0",
+    "@vitejs/plugin-react-swc": "^4.3.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "dotenv": "^16.6.1",
+    "vite": "^8.0.3"
+  }
+}
