@@ -4,9 +4,14 @@
   "description": "End-to-end encrypted secret sharing",
   "version": "0.1.0",
   "publisher": "deadrop",
+  "license": "MIT",
   "engines": {
-    "vscode": "^1.92.0"
+    "vscode": "^1.110.0"
   },
+  "repository": {
+    "url": "https://github.com/dallen4/deadrop.git"
+  },
+  "icon": "media/icon.png",
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
