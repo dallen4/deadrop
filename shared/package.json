@@ -2,7 +2,7 @@
   "name": "shared",
   "version": "0.1.0",
   "main": "build/index.js",
-  "license": "GPL-3.0-only",
+  "license": "MIT",
   "private": true,
   "peerDependencies": {
     "peerjs": "^1",

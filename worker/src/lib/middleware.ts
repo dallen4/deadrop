@@ -4,6 +4,7 @@ import { AppHeaders } from '../constants';
 import { HonoCtx, Middleware } from './http/core';
 import { Redis } from '@upstash/redis/cloudflare';
 import { NotAuthenticated, PermissionDenied } from './messages';
+import { getAuth } from '@hono/clerk-auth';
 
 export const tracing = () =>
   createMiddleware<HonoCtx>(async (c, next) => {
@@ -29,6 +30,10 @@ export const cors = (): Middleware =>
         originRoots.some((root) => origin.endsWith(root))
       )
         return origin;
+
+      // VS Code webview panels use a vscode-webview:// origin
+      if (origin.startsWith('vscode-webview://')) return origin;
+
       else return null;
     },
     allowHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
@@ -46,7 +51,7 @@ export const redis = () =>
 
 export const authenticated = () =>
   createMiddleware<HonoCtx>(async (c, next) => {
-    const auth = c.get('clerkAuth');
+    const auth = getAuth(c);
 
     if (!auth?.userId) {
       return c.json(NotAuthenticated, 401);
@@ -58,7 +63,7 @@ export const authenticated = () =>
 // only allowed if user has been granted early_access or marked as internal
 export const restricted = () =>
   createMiddleware<HonoCtx>(async (c, next) => {
-    const auth = c.get('clerkAuth');
+    const auth = getAuth(c);
 
     if (!auth?.userId) {
       return c.json(NotAuthenticated, 401);

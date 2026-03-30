@@ -17,24 +17,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - uses: actions/cache@v4
-        id: cache-node-modules
-        with:
-          path: |
-            ./node_modules
-            ./web/node_modules
-            ./cli/node_modules
-            ./worker/node_modules
-            ./shared/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('./yarn.lock') }}
+          node-version: 24
+          cache: 'pnpm'
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - name: Run Unit Tests
-        run: CI="true" yarn test:cov
+        run: CI="true" pnpm test:cov
       # - name: Report Coverage
       #   if: github.event_name == 'pull_request'
       #   uses: davelosert/vitest-coverage-report-action@v2

@@ -7,14 +7,14 @@ import { HonoCtx } from './http/core';
 
 const DAY_IN_SEC = 60 * 60 * 24;
 
-function generateDateTotalId(target?: Date) {
+export const generateDateTotalId = (target?: Date) => {
   const currDate = target || new Date();
   const month = currDate.getMonth() + 1;
   const date = currDate.getDate();
   const year = currDate.getFullYear();
 
   return `total:${month}/${date}/${year}`;
-}
+};
 
 export const createCacheHandlers = (c: Context<HonoCtx>) => {
   const client = c.get('redis');

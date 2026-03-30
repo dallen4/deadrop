@@ -7,7 +7,7 @@ on:
       - "worker/**"
       - "shared/**"
       - "package.json"
-      - "yarn.lock"
+      - "pnpm-lock.yaml"
       - ".github"
       - "!web/**"
 
@@ -17,11 +17,13 @@ jobs:
     name: Deploy Ada Worker
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
+          cache: 'pnpm'
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
       - uses: cloudflare/wrangler-action@v3
         name: Deploy Worker w/ Wrangler
         with:

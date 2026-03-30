@@ -8,43 +8,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Monorepo Structure
 
-Yarn 1 Workspaces with four packages:
+pnpm Workspaces with four packages:
 
 - `shared/` — Core crypto primitives, XState state machines, PeerJS utilities, shared types. Consumed by `web` and `cli`.
 - `web/` — Next.js 14 (Pages Router) PWA deployed on Vercel.
 - `worker/` — Cloudflare Worker (Hono framework) providing the backend API, KV-backed drop session storage, and PeerJS signaling via Durable Objects.
 - `cli/` — Node.js CLI published to npm as `deadrop`.
 
-`vscode-extension/` exists but is **not** a Yarn workspace (has its own isolated node_modules).
-
 ## Commands
 
 ```bash
 # Development
-yarn start              # Start Next.js dev server (web)
-yarn worker dev         # Start Cloudflare Worker locally (wrangler dev)
+pnpm start              # Start Next.js dev server (web)
+pnpm -F worker dev      # Start Cloudflare Worker locally (wrangler dev)
 
 # Build
-yarn build              # Build web (Next.js)
-yarn cli:build          # Build CLI (esbuild)
-yarn worker:deploy      # Deploy Cloudflare Worker (wrangler deploy)
+pnpm build              # Build web (Next.js)
+pnpm cli:build          # Build CLI (esbuild)
+pnpm worker:deploy      # Deploy Cloudflare Worker (wrangler deploy)
 
 # Testing
-yarn test               # Run all unit tests once (Vitest)
-yarn test:watch         # Run unit tests in watch mode
-yarn test:cov           # Run unit tests with Istanbul coverage
-yarn test:e2e           # Run Playwright e2e tests (requires running web server)
+pnpm test               # Run all unit tests once (Vitest)
+pnpm test:watch         # Run unit tests in watch mode
+pnpm test:cov           # Run unit tests with Istanbul coverage
+pnpm test:e2e           # Run Playwright e2e tests (requires running web server)
 
 # Run tests for a specific workspace
-yarn workspace web vitest run
-yarn workspace cli vitest run
+pnpm vitest run --project web
+pnpm vitest run --project cli
 
 # Run a single test file
-yarn vitest run shared/tests/crypto.spec.ts
+pnpm vitest run shared/tests/crypto.spec.ts
 
 # Code analysis
-yarn analyze:dup        # Detect code duplication (jscpd)
-yarn analyze:unused     # Find unused TS exports (ts-prune)
+pnpm analyze:dup        # Detect code duplication (jscpd)
+pnpm analyze:unused     # Find unused TS exports (ts-prune)
 ```
 
 ## Architecture
@@ -102,7 +100,7 @@ Hono routes:
 | Backend | Cloudflare Workers, Hono, Cloudflare KV + Durable Objects |
 | CLI DB | Drizzle ORM + SQLite (libsql) |
 | Testing | Vitest 2 + Istanbul, Playwright (11 browser configs) |
-| Tooling | Yarn 1 Workspaces, TypeScript 5.7, esbuild, Husky |
+| Tooling | pnpm Workspaces, TypeScript 5.7, esbuild, Husky |
 
 ## TypeScript
 
@@ -115,3 +113,30 @@ Strict mode is enabled globally (`tsconfig.json`). Each workspace extends the ro
 ## Code Style
 
 Prettier config (`.prettierrc`): 70-char print width, 2-space indent, single quotes, trailing commas, semicolons. ESLint is configured for `web/` only.
+
+## Environment Requirements
+
+- Node.js >= 24 (see `.nvmrc`)
+- pnpm >= 10
+
+## Cross-Package Import Conventions
+
+- `@shared/*` resolves to `../shared/*` from `web/` and `cli/`
+- `@api/*` resolves to `../worker/*` from `shared/`, `web/`, and `cli/`
+- `@config/*` resolves to `config/*` within `web/` only
+- Never import from `worker/` directly — use `shared/client.ts` for the typed API client
+
+## Security Constraints
+
+- No secrets, keys, or plaintext ever leave the client
+- Server-side only stores: drop ID, peer ID, session nonce (all opaque identifiers)
+- All crypto operations use Web Crypto API (ECDH key exchange, AES-256-GCM encryption, SHA-256 hashing)
+- CSP nonce enforced in `web/` (next-safe + `next.config.mjs`)
+
+## Workspace-Specific Guidance
+
+Each workspace has its own `CLAUDE.md` with package-specific context:
+- `shared/CLAUDE.md` — crypto primitives, XState machines, types
+- `web/CLAUDE.md` — Next.js Pages Router, Mantine UI, Playwright e2e
+- `worker/CLAUDE.md` — Hono routes, Durable Objects, KV patterns
+- `cli/CLAUDE.md` — Commander.js commands, Drizzle ORM, esbuild

@@ -12,7 +12,6 @@ import {
 } from '@playwright/test';
 import { apiURL, baseURL, isLocal } from './config';
 import { getRedis } from 'api/redis';
-import { randomBytes } from 'crypto';
 
 type BrowserName = PlaywrightWorkerOptions['browserName'];
 
@@ -31,17 +30,9 @@ let testToken: string | null = null;
 const getTestToken = async () => getRedis().get<string>(testTokenKey);
 
 export const getOrCreateTestToken = async () => {
-  const client = getRedis();
+  if (!testToken) testToken = process.env.TEST_TOKEN ?? await getTestToken();
 
-  if (!testToken) testToken = await getTestToken();
-
-  if (!testToken) {
-    const token = randomBytes(32).toString('base64');
-
-    await client.setex(testTokenKey, 60 * 10, token);
-  }
-
-  return getTestToken();
+  return testToken;
 };
 
 export const verifyTestToken = async (token: string) => {
@@ -54,7 +45,10 @@ export const createContextForBrowser = async (
   browser: Browser,
   options?: BrowserContextOptions,
 ) => {
-  const context = await browser.newContext(options);
+  const context = await browser.newContext({
+    ...options,
+    bypassCSP: true,
+  });
 
   if (!testToken) testToken = await getOrCreateTestToken();
 

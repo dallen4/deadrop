@@ -42,19 +42,20 @@
 # Post-Create: copy ignored & hydrate deps after worktree creation
 [post-create]
 copy = "wt step copy-ignored"
-deps = "yarn install --frozen-lockfile"
+deps = "pnpm install --frozen-lockfile"
+plan = "sh ./scripts/copy-plan.sh {{ primary_worktree_path }} {{ worktree_path }} {{ branch | sanitize }}"
 # open = "windsurf ."
 
 # Pre-Merge: run unit tests and type-check before merging
 [pre-merge]
-test = "yarn test"
-types = "yarn workspace web tsc --noEmit"
+test = "pnpm test"
+types = "pnpm -F web tsc --noEmit"
 
 # ============================================================================
 # Dev Server URL (shown in `wt list`)
 # ============================================================================
-[list]
-url = "http://localhost:{{ branch | hash_port }}"
+# [list]
+# url = "http://localhost:{{ branch | hash_port }}"
 
 # ============================================================================
 # CI Platform

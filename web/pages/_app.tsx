@@ -3,12 +3,14 @@ import { AppProps } from 'next/app';
 import { DefaultSeo } from 'next-seo';
 import { MantineProvider } from '@mantine/core';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import Layout from 'molecules/Layout';
 import { Notifications } from '@mantine/notifications';
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import Head from 'next/head';
 import { description, title } from '@config/app';
+import { SWProvider } from 'contexts/SWContext';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -59,11 +61,14 @@ export default function MyApp(props: AppProps) {
           }}
         >
           <Notifications />
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
+          <SWProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </SWProvider>
         </MantineProvider>
         {!isPreview && <Analytics />}
+        <SpeedInsights />
       </ClerkProvider>
     </>
   );

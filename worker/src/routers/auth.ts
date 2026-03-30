@@ -1,3 +1,4 @@
+import { getAuth } from '@hono/clerk-auth';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { authenticated } from '../lib/middleware';
@@ -6,7 +7,7 @@ const authRouter = hono().get(
   AppRouteParts.CreateSignInToken,
   authenticated(),
   async (c) => {
-    const userId = c.get('clerkAuth')!.userId!;
+    const userId = getAuth(c)!.userId!;
 
     const clerkClient = c.get('clerk');
 

@@ -4,7 +4,7 @@
   "description": "e2e encrypted secret sharing",
   "main": "index.js",
   "author": "Nieky Allen <nieky.allen@gmail.com>",
-  "license": "GPL-3.0-only",
+  "license": "MIT",
   "repository": {
     "url": "https://github.com/dallen4/deadrop.git"
   },
@@ -16,47 +16,49 @@
     "shared"
   ],
   "scripts": {
-    "web": "yarn workspace web",
-    "cli": "yarn workspace cli",
-    "worker": "yarn workspace worker",
-    "shared": "yarn workspace shared",
-    "start": "yarn web start",
-    "build": "yarn web build",
-    "start:prod": "yarn web start:prod",
+    "web": "pnpm -F web",
+    "cli": "pnpm -F cli",
+    "worker": "pnpm -F worker",
+    "shared": "pnpm -F shared",
+    "start": "pnpm -F web start",
+    "build": "pnpm -F web build",
+    "start:prod": "pnpm -F web start:prod",
+    "drybuild": "sh ./scripts/drybuild.sh",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage.enabled true",
-    "test:e2e": "yarn web test:e2e",
+    "test:e2e": "pnpm -F web test:e2e",
     "test:preview": "vite preview --outDir test-report",
-    "cli:build": "yarn cli build",
-    "cli:release": "cd cli && yarn install --frozen-lockfile && yarn release",
-    "worker:deploy": "yarn worker deploy",
+    "cli:build": "pnpm -F cli build",
+    "cli:release": "cd cli && pnpm install --frozen-lockfile && pnpm release",
+    "worker:deploy": "pnpm -F worker deploy",
     "analyze:dup": "jscpd",
     "analyze:unused": "ts-prune",
     "postversion": "git push --tags",
     "prepare": "husky"
   },
   "dependencies": {
-    "@clerk/clerk-js": "^5.22.3",
-    "@clerk/clerk-sdk-node": "^5.0.42",
+    "@clerk/clerk-js": "^6.3.3",
+    "@clerk/backend": "^3.2.3",
     "@libsql/client": "^0.14.0",
     "@upstash/redis": "^1.34.3",
     "@xstate/react": "^3.0.1",
-    "drizzle-kit": "^0.24.0",
-    "drizzle-orm": "^0.33.0",
-    "drizzle-zod": "^0.5.1",
-    "hono": "^4.6.13",
+    "drizzle-kit": "^0.30.3",
+    "drizzle-orm": "^0.38.0",
+    "drizzle-zod": "^0.7.0",
+    "hono": "^4.6.19",
     "nanoid": "^5.0.1",
     "nanoid-dictionary": "^4.3.0",
     "peerjs": "^1.4.7",
     "qrcode": "^1.5.3",
     "ws": "^8.11.0",
     "xstate": "^4.38.2",
-    "zod": "^3.23.8"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250124.3",
     "@types/nanoid-dictionary": "^4.2.3",
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/qrcode": "^1.5.5",
     "@vitest/coverage-istanbul": "^2.1.8",
     "@vitest/ui": "^2.1.8",
@@ -68,7 +70,7 @@
     "prettier": "^3.4.2",
     "ts-prune": "^0.10.3",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
+    "typescript": "^5.8.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.8"
   },
@@ -79,15 +81,17 @@
     "utf-8-validate": false
   },
   "engines": {
-    "node": ">=20",
-    "yarn": "1"
+    "node": ">=24",
+    "pnpm": ">=10"
   },
+  "packageManager": "pnpm@10.27.0",
   "jscpd": {
     "format": [
       "typescript"
     ],
     "ignore": [
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/*.spec.ts"
     ],
     "absolute": true,
     "gitignore": true,

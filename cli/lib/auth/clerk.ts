@@ -1,5 +1,5 @@
 import type { Clerk as ClerkType } from '@clerk/clerk-js';
-import { Clerk } from '@clerk/clerk-js/headless';
+import { Clerk } from '@clerk/clerk-js';
 import { getToken, setSession } from './cache';
 
 global.window = global.window || {};

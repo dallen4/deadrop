@@ -19,16 +19,18 @@ Find the iTerm2 session named after the given branch and bring it into focus.
 
 Use the first word of `$ARGUMENTS` as the branch name. If none provided, list available sessions and ask.
 
-### 2. Find matching session
+### 2. List sessions and find match
 
 ```bash
-it2 session list --json | jq -r '.[] | select(.name == "<branch>") | .id'
+it2 session list
 ```
+
+Find the session whose name contains the branch name.
 
 ### 3. Focus the session
 
 ```bash
-it2 session focus -s <session-id>
+it2 session focus <session-id>
 ```
 
 Also activate the iTerm2 app window:
@@ -38,13 +40,7 @@ it2 app activate
 
 ### 4. Handle no match
 
-If no session matches the branch name, list all sessions so the user can identify the right one:
-
-```bash
-it2 session list --json | jq -r '.[] | "\(.id)  \(.name)"'
-```
-
-Inform the user which sessions are available.
+If no session matches the branch name, show the full session list output so the user can identify the right one.
 
 ## Output
 

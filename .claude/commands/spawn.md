@@ -32,49 +32,78 @@ wt switch --create <branch> --yes
 ### 2. Get the new worktree path
 
 ```bash
-wt list --json 2>/dev/null | jq -r '.[] | select(.branch == "<branch>") | .path'
+wt list
 ```
 
-If `wt list --json` isn't available, derive the path from the worktree-path template pattern.
+Find the row matching `<branch>` and extract the path from the Path column.
 
-### 3. Open a new iTerm2 pane (vertical split)
+### 3. Count existing spawned panes and choose split direction
+
+List sessions to determine how many agent panes already exist:
+```bash
+it2 session list
+```
+
+Count the panes in the current tab (excluding the main session). Use this to decide split direction for a **2x2 grid layout**:
+
+- **Pane 1** (0 agent panes exist): split the main pane **vertically** → creates a right column.
+  ```bash
+  it2 session split --vertical
+  ```
+- **Pane 2** (1 agent pane exists): split the **main pane** (left column) **horizontally** → creates bottom-left.
+  ```bash
+  it2 session split -s <main-session-id>
+  ```
+- **Pane 3** (2 agent panes exist): split the **first agent pane** (top-right) **horizontally** → creates bottom-right.
+  ```bash
+  it2 session split -s <first-agent-session-id>
+  ```
+
+This produces a 2x2 grid:
+```
+┌─────────────┬─────────────┐
+│  main (TL)  │  pane 1 (TR)│
+├─────────────┼─────────────┤
+│  pane 2 (BL)│  pane 3 (BR)│
+└─────────────┴─────────────┘
+```
+
+For 4+ panes, continue splitting existing panes vertically or horizontally as appropriate.
+
+### 4. Get the new session ID
+
+The `it2 session split` command outputs the new session ID directly. Capture it:
+```
+Created new pane: <SESSION_ID>
+```
+
+### 5. Name the pane after the branch
 
 ```bash
-it2 session split --vertical
+it2 session set-name "<branch>" -s <SESSION_ID>
 ```
 
-Get the new session ID:
-```bash
-NEW_SESSION=$(it2 session list --json | jq -r 'sort_by(.id) | last | .id')
-```
-
-### 4. Name the pane after the branch
+### 6. Navigate to the worktree in the new pane
 
 ```bash
-it2 session set-name "<branch>" -s $NEW_SESSION
+it2 session run "cd <worktree_path>" -s <SESSION_ID>
 ```
 
-### 5. Navigate to the worktree in the new pane
-
-```bash
-it2 session run "cd <worktree_path>" -s $NEW_SESSION
-```
-
-### 6. Launch Claude agent
+### 7. Launch Claude agent
 
 If a task was provided:
 ```bash
-it2 session run "claude '<task>'" -s $NEW_SESSION
+it2 session run "claude '<task>'" -s <SESSION_ID>
 ```
 
 If no task was provided:
 ```bash
-it2 session run "claude" -s $NEW_SESSION
+it2 session run "claude" -s <SESSION_ID>
 ```
 
 ## Output
 
 Confirm to the user:
 - Branch name and worktree path
-- Session name of the new pane
+- Session name and grid position (e.g., "top-right", "bottom-left")
 - Whether a task prompt was passed to the agent
