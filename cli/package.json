@@ -10,7 +10,7 @@
     "./dist/*",
     "./fonts/Standard.flf"
   ],
-  "license": "GPL-3.0-only",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "test": "vitest run",

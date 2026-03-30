@@ -4,7 +4,7 @@
   "description": "e2e encrypted secret sharing",
   "main": "index.js",
   "author": "Nieky Allen <nieky.allen@gmail.com>",
-  "license": "GPL-3.0-only",
+  "license": "MIT",
   "repository": {
     "url": "https://github.com/dallen4/deadrop.git"
   },
