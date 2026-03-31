@@ -1,9 +1,10 @@
 {
-  "name": "vscode",
+  "name": "deadrop-vsc",
   "displayName": "deadrop",
-  "description": "End-to-end encrypted secret sharing",
-  "version": "0.1.0",
-  "publisher": "deadrop",
+  "description": "e2e encrypted secret sharing",
+  "version": "0.1.2",
+  "publisher": "n1eky",
+  "author": "Nieky Allen <nieky.allen@gmail.com>",
   "license": "MIT",
   "engines": {
     "vscode": "^1.110.0"
@@ -44,7 +45,9 @@
     "views:build": "vite build --config vite.config.ts",
     "views:dev": "vite dev --config vite.config.ts",
     "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.views.json",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
   },
   "dependencies": {
     "react": "^18.3.1",
