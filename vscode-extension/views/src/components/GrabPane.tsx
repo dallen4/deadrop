@@ -8,7 +8,11 @@ import {
 import { GrabState } from '@shared/lib/constants';
 import { createGrabHandlers } from '@shared/handlers/grab';
 import { decryptRaw, hashRaw } from '@shared/lib/crypto/operations';
-import type { ExtensionConfig } from '../../../src/types';
+import type { ExtensionConfig } from '@ext/types';
+import {
+  ExtensionMessageType,
+  WebviewMessageType,
+} from '@ext/types';
 import { postMessage, onMessage } from '../vscode';
 import { initPeerFromConfig } from '../lib/peer';
 import { cleanupSession } from '../lib/session';
@@ -29,9 +33,9 @@ export default function GrabPane({ config }: Props) {
         sendEvent: send,
         logger: {
           info: (msg) =>
-            postMessage({ type: 'onInfo', message: msg }),
+            postMessage({ type: ExtensionMessageType.OnInfo, message: msg }),
           error: (msg) =>
-            postMessage({ type: 'onError', message: msg }),
+            postMessage({ type: ExtensionMessageType.OnError, message: msg }),
           debug: console.debug,
         },
         file: {
@@ -49,7 +53,7 @@ export default function GrabPane({ config }: Props) {
   // Listen for startGrab messages from extension host (e.g. from grab command)
   useEffect(() => {
     return onMessage((msg) => {
-      if (msg.type === 'startGrab') {
+      if (msg.type === WebviewMessageType.StartGrab) {
         setDropId(msg.dropId);
         contextRef.current.id = msg.dropId;
         init();
@@ -62,7 +66,7 @@ export default function GrabPane({ config }: Props) {
     if (state === GrabState.Confirmed && contextRef.current.message) {
       const payload = contextRef.current.message as string;
       setSecret(payload);
-      postMessage({ type: 'secretReceived', payload });
+      postMessage({ type: ExtensionMessageType.SecretReceived, payload });
     }
   }, [state]);
 

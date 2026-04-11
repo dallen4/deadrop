@@ -7,9 +7,11 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "noEmit": true,
     "skipLibCheck": true,
+    "baseUrl": ".",
     "paths": {
       "@shared/*": ["../shared/*"],
-      "@api/*": ["../worker/*"]
+      "@api/*": ["../worker/*"],
+      "@ext/*": ["src/*"]
     }
   },
   "include": ["views/**/*.ts", "views/**/*.tsx"],
