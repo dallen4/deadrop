@@ -17,17 +17,14 @@ export default function VaultPane({ config }: Props) {
       ) : (
         <ul className="vault-pane-list">
           {vaultNames.map((name) => (
-            <li key={name} className="vault-pane-item">
-              <span className={`vault-pane-name${name === activeVault ? ' active' : ''}`}>
-                {name}
-              </span>
+            <li key={name}>
               <button
-                className="vault-pane-open-btn"
-                onClick={() => {
-                  postMessage({ type: ExtensionMessageType.SwitchVault, name });
-                }}
+                className={`vault-pane-item${name === activeVault ? ' active' : ''}`}
+                onClick={() =>
+                  postMessage({ type: ExtensionMessageType.SwitchVault, name })
+                }
               >
-                Open
+                {name}
               </button>
             </li>
           ))}
