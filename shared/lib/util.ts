@@ -1,4 +1,5 @@
 import { GRAB_PATH } from '../config/paths';
+import { getCrypto } from './crypto';
 import { customAlphabet } from 'nanoid';
 import { alphanumeric } from 'nanoid-dictionary';
 
@@ -10,7 +11,7 @@ export const generateId = () => customAlphabet(alphanumeric, 12)();
 export const generateIV = () => {
   // Generate 12 random bytes
   const randomBytes = new Uint8Array(12);
-  crypto.getRandomValues(randomBytes);
+  getCrypto().getRandomValues(randomBytes);
 
   // Convert to binary string
   return String.fromCharCode(...randomBytes);
