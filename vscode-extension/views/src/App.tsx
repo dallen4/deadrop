@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import type { ExtensionConfig } from '../../src/types';
+import type { ExtensionConfig } from '@ext/types';
+import { ExtensionMessageType, WebviewMessageType } from '@ext/types';
 import { postMessage, onMessage } from './vscode';
 import DropPane from './components/DropPane';
 import GrabPane from './components/GrabPane';
@@ -14,9 +15,9 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('drop');
 
   useEffect(() => {
-    postMessage({ type: 'ready' });
+    postMessage({ type: ExtensionMessageType.Ready });
     return onMessage((msg) => {
-      if (msg.type === 'init') setConfig(msg.config);
+      if (msg.type === WebviewMessageType.Init) setConfig(msg.config);
     });
   }, []);
 

@@ -1,7 +1,15 @@
-import type { ExtensionMessage, WebviewMessage } from '../../src/types';
+import type {
+  ExtensionMessage,
+  VaultExtensionMessage,
+  VaultWebviewMessage,
+  WebviewMessage,
+} from '../../src/types';
+
+type AnyOutMessage = ExtensionMessage | VaultExtensionMessage;
+type AnyInMessage = WebviewMessage | VaultWebviewMessage;
 
 declare function acquireVsCodeApi(): {
-  postMessage(msg: ExtensionMessage): void;
+  postMessage(msg: AnyOutMessage): void;
   getState(): unknown;
   setState(state: unknown): void;
 };
@@ -15,15 +23,15 @@ function getApi() {
   return _vscode;
 }
 
-export function postMessage(msg: ExtensionMessage) {
+export function postMessage(msg: AnyOutMessage) {
   getApi()?.postMessage(msg);
 }
 
 export function onMessage(
-  handler: (msg: WebviewMessage) => void,
+  handler: (msg: AnyInMessage) => void,
 ): () => void {
   const listener = (event: MessageEvent) =>
-    handler(event.data as WebviewMessage);
+    handler(event.data as AnyInMessage);
   window.addEventListener('message', listener);
   return () => window.removeEventListener('message', listener);
 }

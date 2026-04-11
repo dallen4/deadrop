@@ -8,7 +8,12 @@ import {
 import { DropState } from '@shared/lib/constants';
 import { createDropHandlers } from '@shared/handlers/drop';
 import { encryptRaw, hashRaw } from '@shared/lib/crypto/operations';
-import type { ExtensionConfig } from '../../../src/types';
+import type { ExtensionConfig } from '@ext/types';
+import {
+  DropMode,
+  ExtensionMessageType,
+  WebviewMessageType,
+} from '@ext/types';
 import { postMessage, onMessage } from '../vscode';
 import { initPeerFromConfig } from '../lib/peer';
 import { cleanupSession } from '../lib/session';
@@ -18,7 +23,7 @@ type Props = { config: ExtensionConfig };
 export default function DropPane({ config }: Props) {
   const contextRef = useRef<DropContext>(initDropContext());
   const [content, setContent] = useState('');
-  const [mode, setMode] = useState<'text' | 'file'>('text');
+  const [mode, setMode] = useState<DropMode>(DropMode.Text);
   const [dropId, setDropId] = useState<string | null>(null);
 
   const [{ value: state }, send] = useMachine(dropMachine);
@@ -30,9 +35,9 @@ export default function DropPane({ config }: Props) {
         sendEvent: send,
         logger: {
           info: (msg) =>
-            postMessage({ type: 'onInfo', message: msg }),
+            postMessage({ type: ExtensionMessageType.OnInfo, message: msg }),
           error: (msg) =>
-            postMessage({ type: 'onError', message: msg }),
+            postMessage({ type: ExtensionMessageType.OnError, message: msg }),
           debug: console.debug,
         },
         file: {
@@ -50,7 +55,7 @@ export default function DropPane({ config }: Props) {
   // Listen for startDrop messages from extension host
   useEffect(() => {
     return onMessage((msg) => {
-      if (msg.type === 'startDrop') {
+      if (msg.type === WebviewMessageType.StartDrop) {
         setContent(msg.data);
         setMode(msg.mode);
       }

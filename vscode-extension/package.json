@@ -16,26 +16,71 @@
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
-      { "command": "deadrop.drop", "title": "deadrop: Start Drop" },
-      { "command": "deadrop.dropFile", "title": "deadrop: Drop File" },
-      { "command": "deadrop.grab", "title": "deadrop: Grab Secret" },
-      { "command": "deadrop.login", "title": "deadrop: Login" },
-      { "command": "deadrop.logout", "title": "deadrop: Logout" }
+      {
+        "command": "deadrop.drop",
+        "title": "deadrop: Start Drop"
+      },
+      {
+        "command": "deadrop.dropFile",
+        "title": "deadrop: Drop File"
+      },
+      {
+        "command": "deadrop.dropExplorerFile",
+        "title": "deadrop: Drop File"
+      },
+      {
+        "command": "deadrop.grab",
+        "title": "deadrop: Grab Secret"
+      },
+      {
+        "command": "deadrop.login",
+        "title": "deadrop: Login"
+      },
+      {
+        "command": "deadrop.logout",
+        "title": "deadrop: Logout"
+      },
+      {
+        "command": "deadrop.openVault",
+        "title": "deadrop: Open Vault"
+      }
     ],
     "menus": {
       "editor/context": [
-        { "command": "deadrop.drop", "when": "editorHasSelection", "group": "deadrop" },
-        { "command": "deadrop.dropFile", "group": "deadrop" }
+        {
+          "command": "deadrop.drop",
+          "when": "editorHasSelection",
+          "group": "deadrop"
+        },
+        {
+          "command": "deadrop.dropFile",
+          "group": "deadrop"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "deadrop.dropExplorerFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "deadrop"
+        }
       ]
     },
     "viewsContainers": {
       "activitybar": [
-        { "id": "deadrop", "title": "deadrop", "icon": "media/handshake.svg" }
+        {
+          "id": "deadrop",
+          "title": "deadrop",
+          "icon": "media/handshake.svg"
+        }
       ]
     },
     "views": {
       "deadrop": [
-        { "type": "webview", "id": "deadropSidebar", "name": "deadrop" }
+        {
+          "type": "webview",
+          "id": "deadropSidebar",
+          "name": "deadrop"
+        }
       ]
     }
   },
@@ -50,8 +95,10 @@
     "publish": "vsce publish --no-dependencies"
   },
   "dependencies": {
+    "cosmiconfig": "^9.0.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

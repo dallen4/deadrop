@@ -27,7 +27,7 @@ const buildOptions = {
   format: 'cjs',
   platform: 'node',
   outfile: 'dist/extension.js',
-  external: ['vscode'],
+  external: ['vscode', '@libsql/client', 'drizzle-orm'],
   sourcemap: !production,
   minify: production,
   define,
