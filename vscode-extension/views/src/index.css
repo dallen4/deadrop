@@ -207,43 +207,28 @@ body {
 }
 
 .vault-pane-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 3px 0;
-}
-
-.vault-pane-name {
-  font-size: 12px;
-  font-family: var(--vscode-editor-font-family, monospace);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-  color: var(--vscode-foreground);
-}
-
-.vault-pane-name.active {
-  color: var(--vscode-textLink-foreground);
-}
-
-.vault-pane-open-btn {
+  display: block;
+  width: 100%;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 11px;
-  font-family: var(--vscode-font-family);
-  color: var(--vscode-descriptionForeground);
-  padding: 2px 6px;
+  text-align: left;
+  font-size: 12px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-foreground);
+  padding: 4px 6px;
   border-radius: 2px;
-  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.vault-pane-open-btn:hover {
-  background: var(--vscode-toolbar-hoverBackground);
-  color: var(--vscode-foreground);
+.vault-pane-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.vault-pane-item.active {
+  color: var(--vscode-textLink-foreground);
 }
 
 .vault-pane-new-btn {
@@ -338,7 +323,7 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 560px;
+  max-width: 640px;
   overflow: hidden;
 }
 
