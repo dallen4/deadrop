@@ -4,7 +4,7 @@
     {
       "label": "vscode:build",
       "type": "shell",
-      "command": "pnpm -F vscode build",
+      "command": "pnpm -F deadrop-vsc build",
       "group": {
         "kind": "build",
         "isDefault": true
