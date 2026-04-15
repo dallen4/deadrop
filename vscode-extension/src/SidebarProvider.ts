@@ -68,7 +68,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const activeVaultConfig = vaultName ? deadropConfig?.vaults[vaultName] : null;
     const vaults = deadropConfig
       ? Object.fromEntries(
-          Object.entries(deadropConfig.vaults).map(([n, v]) => [n, v.location]),
+          Object.entries(deadropConfig.vaults).map(([n, v]) => [
+            n,
+            { location: v.location, cloud: !!v.cloud },
+          ]),
         )
       : {};
     return {
@@ -79,6 +82,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY ?? '',
       token,
       vaultName,
+      vaultLocation: activeVaultConfig?.location ?? null,
+      cloudSync: !!activeVaultConfig?.cloud,
       vaultEnvironmentKeys: activeVaultConfig?.environments ?? null,
       vaults,
     };

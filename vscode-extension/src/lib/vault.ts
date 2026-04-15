@@ -114,6 +114,20 @@ export async function updateSecret(
   db.$client.close();
 }
 
+export async function renameSecret(
+  vault: VaultDBConfig,
+  oldName: string,
+  newName: string,
+  environment: string,
+): Promise<void> {
+  const db = await openDB(vault);
+  await db
+    .update(secretsTable)
+    .set({ name: newName })
+    .where(and(eq(secretsTable.name, oldName), eq(secretsTable.environment, environment)));
+  db.$client.close();
+}
+
 export async function deleteSecret(
   vault: VaultDBConfig,
   name: string,
