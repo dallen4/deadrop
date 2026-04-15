@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm vscode:build)"
+      "Bash(pnpm vscode:build)",
+      "Bash(pnpm check-types:*)"
     ]
   }
 }
