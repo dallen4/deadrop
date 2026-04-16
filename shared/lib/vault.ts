@@ -9,10 +9,8 @@ export async function initEnvKey() {
 
 export const vault = async (
   path: string,
-  key: string,
 ): Promise<VaultDBConfig> => ({
   location: path,
-  key,
   environments: {
     development: await initEnvKey(),
   },
@@ -20,13 +18,12 @@ export const vault = async (
 
 export const initConfig = async (
   defaultVaultPath: string,
-  key: string,
 ): Promise<DeadropConfig> => ({
   active_vault: {
     name: 'default',
     environment: 'development',
   },
   vaults: {
-    default: await vault(defaultVaultPath, key),
+    default: await vault(defaultVaultPath),
   },
 });

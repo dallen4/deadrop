@@ -6,7 +6,6 @@ import { writeFile } from 'fs/promises';
 import { stringify } from 'yaml';
 import { displayWelcomeMessage, logError, logInfo } from './log';
 import { initConfig as baseInitConfig } from '@shared/lib/vault';
-import { randomBytes } from 'crypto';
 
 type CustomConfigResult = Omit<
   NonNullable<CosmiconfigResult>,
@@ -31,10 +30,7 @@ export const loadConfig = async (): Promise<CustomConfigResult> => {
 };
 
 export const initConfig = async (defaultVaultPath: string) =>
-  baseInitConfig(
-    defaultVaultPath,
-    randomBytes(32).toString('base64'),
-  );
+  baseInitConfig(defaultVaultPath);
 
 export const saveConfig = async (
   path: string,
