@@ -1,6 +1,5 @@
 import { createClient } from '@shared/client';
 import { vault } from '@shared/lib/vault';
-import { randomBytes } from 'crypto';
 import { initDBClient } from 'db/init';
 import { vaultExists } from 'db/vaults';
 import { createClerkClient } from 'lib/auth/clerk';
@@ -30,10 +29,7 @@ export async function vaultCreate(
     dbLocation,
     `${vaultNameInput}.db`,
   );
-  const newVault = await vault(
-    newVaultLocation,
-    randomBytes(32).toString('base64'),
-  );
+  const newVault = await vault(newVaultLocation);
 
   if (options.cloud) {
     const clerkClient = await createClerkClient();
@@ -71,13 +67,15 @@ export async function vaultCreate(
         return process.exit(1);
       }
 
-      const { name, token: authToken } = data as {
+      const { name, hostname, token: authToken } = data as {
         name: string;
+        hostname: string;
         token: string;
       };
 
       newVault.cloud = {
         name,
+        syncUrl: `libsql://${hostname}`,
         authToken,
       };
     } catch (err) {
@@ -89,7 +87,7 @@ export async function vaultCreate(
 
   vaults[vaultNameInput] = newVault;
 
-  await initDBClient(newVault.location, newVault.key, newVault.cloud);
+  await initDBClient(newVault.location, newVault.cloud);
 
   const active_vault = {
     name: vaultNameInput,

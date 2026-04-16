@@ -3,10 +3,8 @@ import { drizzle } from 'drizzle-orm/libsql/node';
 import { eq, and } from 'drizzle-orm/expressions';
 import { sqliteTable, text, primaryKey } from 'drizzle-orm/sqlite-core';
 import { wrapSecret } from '@shared/lib/secrets';
-import { formatCloudSyncUrl } from '@shared/lib/util';
 import { vault as buildVaultConfig } from '@shared/lib/vault';
 import type { VaultDBConfig } from '@shared/types/config';
-import { randomBytes } from 'crypto';
 import { mkdir } from 'fs/promises';
 import * as path from 'path';
 
@@ -21,16 +19,34 @@ const secretsTable = sqliteTable(
   (table) => [primaryKey({ columns: [table.name, table.environment] })],
 );
 
+const RETRYABLE_SYNC_ERRORS = ['PrimaryHandshakeTimeout', 'Unavailable'];
+
+async function syncWithRetry(
+  client: { sync: () => Promise<unknown> },
+  attemptsLeft = 8,
+  delayMs = 750,
+): Promise<void> {
+  try {
+    await client.sync();
+  } catch (e) {
+    const msg = (e as Error).message ?? '';
+    const retryable = RETRYABLE_SYNC_ERRORS.some((s) => msg.includes(s));
+    if (!retryable || attemptsLeft <= 1) throw e;
+    await new Promise((r) => setTimeout(r, delayMs));
+    return syncWithRetry(client, attemptsLeft - 1, delayMs);
+  }
+}
+
 async function openDB(vault: VaultDBConfig) {
   const client = createClient({
     url: `file:${vault.location}`,
-    encryptionKey: vault.key,
     ...(vault.cloud && {
-      syncUrl: formatCloudSyncUrl(vault.cloud.name),
+      syncUrl: vault.cloud.syncUrl,
       authToken: vault.cloud.authToken,
     }),
   });
   const db = drizzle(client, { schema: { secrets: secretsTable } });
+  if (vault.cloud) await syncWithRetry(db.$client);
   await db.$client.execute(
     `CREATE TABLE IF NOT EXISTS secrets (
       name TEXT NOT NULL,
@@ -39,7 +55,6 @@ async function openDB(vault: VaultDBConfig) {
       PRIMARY KEY (name, environment)
     )`,
   );
-  if (vault.cloud) await db.$client.sync();
   return db;
 }
 
@@ -90,13 +105,7 @@ export async function createVaultDB(
   const storageDir = path.join(workspaceRoot, '.deadrop');
   await mkdir(storageDir, { recursive: true });
   const location = path.join(storageDir, `${vaultName}.db`);
-  const key = randomBytes(32).toString('base64');
-  const vaultConfig = await buildVaultConfig(location, key);
-
-  const db = await openDB(vaultConfig);
-  db.$client.close();
-
-  return vaultConfig;
+  return buildVaultConfig(location);
 }
 
 export async function updateSecret(
