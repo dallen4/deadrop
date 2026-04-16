@@ -5,12 +5,10 @@ import { drizzle } from 'drizzle-orm/libsql/node';
 
 export const initDBClient = async (
   path: string,
-  encryptionKey: string,
   cloudConfig?: CloudVaultConfig,
 ) => {
   const [config, drizzleConfig] = initDBConfig(
     path,
-    encryptionKey,
     cloudConfig,
   );
 

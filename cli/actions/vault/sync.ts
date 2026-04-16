@@ -14,11 +14,7 @@ export async function vaultSync(
 
   const activeVault = vaults[active_vault.name];
 
-  const db = await initDBClient(
-    activeVault.location,
-    activeVault.key,
-    activeVault.cloud,
-  );
+  const db = await initDBClient(activeVault.location, activeVault.cloud);
 
   const { getAllSecrets } = createSecretsHelpers(
     vaults[active_vault.name],
