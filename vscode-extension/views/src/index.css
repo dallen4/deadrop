@@ -792,3 +792,53 @@ body {
   padding: 4px 10px;
   font-size: 12px;
 }
+
+/* ── Premium / locked state ── */
+
+.vault-cloud-status.locked,
+.vault-cloud-toggle.locked {
+  opacity: 0.5;
+}
+
+/* ── Toast notifications ── */
+
+.vault-toast-container {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.vault-toast {
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 320px;
+  animation: vault-toast-in 200ms ease-out, vault-toast-out 300ms ease-in 2700ms forwards;
+  pointer-events: auto;
+}
+
+.vault-toast-success {
+  background: var(--vscode-testing-iconPassed, #388a34);
+  color: #fff;
+}
+
+.vault-toast-error {
+  background: var(--vscode-testing-iconFailed, #f14c4c);
+  color: #fff;
+}
+
+@keyframes vault-toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vault-toast-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

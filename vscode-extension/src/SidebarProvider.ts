@@ -6,7 +6,7 @@ import {
   WebviewMessage,
   WebviewMessageType,
 } from './types';
-import { getToken } from './auth/clerk';
+import { getSessionToken } from './auth/clerk';
 import { getNonce } from './lib/nonce';
 import { loadConfig, saveConfig } from './lib/config';
 import { VaultPanel } from './VaultPanel';
@@ -62,7 +62,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private async _buildConfig(): Promise<ExtensionConfig> {
-    const token = await getToken(this._context.secrets);
+    const token = await getSessionToken();
     const deadropConfig = await loadConfig();
     const vaultName = deadropConfig?.active_vault?.name ?? null;
     const activeVaultConfig = vaultName ? deadropConfig?.vaults[vaultName] : null;
