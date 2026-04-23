@@ -23,6 +23,7 @@ export default function GrabPane({ config }: Props) {
   const contextRef = useRef<GrabContext>(initGrabContext());
   const [dropId, setDropId] = useState('');
   const [secret, setSecret] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
 
   const [{ value: state }, send] = useMachine(grabMachine);
 
@@ -71,8 +72,14 @@ export default function GrabPane({ config }: Props) {
   }, [state]);
 
   const handleGrab = async () => {
+    setStarting(true);
     contextRef.current.id = dropId;
-    await init();
+    try {
+      await init();
+    } catch (e) {
+      setStarting(false);
+      postMessage({ type: ExtensionMessageType.OnError, message: `Grab failed: ${(e as Error).message}` });
+    }
   };
 
   const statusLabel: Partial<Record<GrabState, string>> = {
@@ -102,10 +109,10 @@ export default function GrabPane({ config }: Props) {
           />
           <button
             className="action-btn"
-            disabled={!dropId.trim()}
+            disabled={!dropId.trim() || starting}
             onClick={handleGrab}
           >
-            Grab
+            {starting ? 'Connecting...' : 'Grab'}
           </button>
         </>
       )}

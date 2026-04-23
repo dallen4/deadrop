@@ -17,6 +17,8 @@ export type ExtensionConfig = {
   cloudSync?: boolean;
   /** Per-environment encryption keys (base64). Only present when a vault is connected. */
   vaultEnvironmentKeys?: Record<string, string> | null;
+  /** Whether the user has premium access (early_access or internal). */
+  canCloudSync?: boolean;
   /** All known vaults: name → summary (location + cloud status). */
   vaults?: Record<string, VaultSummary>;
 };
@@ -71,6 +73,7 @@ export enum VaultWebviewMessageType {
   EnvironmentCreated = 'environmentCreated',
   CloudSyncEnabled = 'cloudSyncEnabled',
   CloudSyncDisabled = 'cloudSyncDisabled',
+  OperationError = 'operationError',
 }
 
 /** Messages sent from webview → extension host (sidebar) */
@@ -114,4 +117,5 @@ export type VaultWebviewMessage =
   | { type: VaultWebviewMessageType.SecretDeleted; name: string; environment: string }
   | { type: VaultWebviewMessageType.EnvironmentCreated; name: string; key: string }
   | { type: VaultWebviewMessageType.CloudSyncEnabled }
-  | { type: VaultWebviewMessageType.CloudSyncDisabled };
+  | { type: VaultWebviewMessageType.CloudSyncDisabled }
+  | { type: VaultWebviewMessageType.OperationError; operation: string; message: string };

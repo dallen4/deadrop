@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import type { ExtensionConfig } from '@ext/types';
 import { ExtensionMessageType, WebviewMessageType } from '@ext/types';
 import { postMessage, onMessage } from './vscode';
-import DropPane from './components/DropPane';
-import GrabPane from './components/GrabPane';
-import VaultPane from './components/VaultPane';
+import DropPane from './organisms/DropPane';
+import GrabPane from './organisms/GrabPane';
+import VaultPane from './organisms/VaultPane';
 
 type Mode = 'drop' | 'grab';
 

@@ -8,9 +8,17 @@ import { registerGrabCommand } from './commands/grab';
 import { registerLoginCommand } from './commands/login';
 import { registerLogoutCommand } from './commands/logout';
 import { registerOpenVaultCommand } from './commands/openVault';
+import { getSessionToken } from './auth/clerk';
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   const sidebar = new SidebarProvider(context.extensionUri, context);
+
+  const token = await getSessionToken();
+  vscode.commands.executeCommand(
+    'setContext',
+    'deadrop.loggedIn',
+    !!token,
+  );
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider('deadropSidebar', sidebar),

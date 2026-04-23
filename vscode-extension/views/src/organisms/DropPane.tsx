@@ -25,6 +25,7 @@ export default function DropPane({ config }: Props) {
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<DropMode>(DropMode.Text);
   const [dropId, setDropId] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
 
   const [{ value: state }, send] = useMachine(dropMachine);
 
@@ -70,8 +71,14 @@ export default function DropPane({ config }: Props) {
   }, [state]);
 
   const handleStart = async () => {
-    await init();
-    await stagePayload(content, 'raw');
+    setStarting(true);
+    try {
+      await init();
+      await stagePayload(content, 'raw');
+    } catch (e) {
+      setStarting(false);
+      postMessage({ type: ExtensionMessageType.OnError, message: `Drop failed: ${(e as Error).message}` });
+    }
   };
 
   const statusLabel: Partial<Record<DropState, string>> = {
@@ -103,10 +110,10 @@ export default function DropPane({ config }: Props) {
           />
           <button
             className="action-btn"
-            disabled={!content.trim()}
+            disabled={!content.trim() || starting}
             onClick={handleStart}
           >
-            Start Drop
+            {starting ? 'Starting...' : 'Start Drop'}
           </button>
         </>
       )}
