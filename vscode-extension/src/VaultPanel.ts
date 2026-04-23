@@ -6,21 +6,19 @@ import {
   VaultWebviewMessage,
   VaultWebviewMessageType,
 } from './types';
-import { getToken } from './auth/clerk';
+import { getSessionToken, hasCloudAccess } from './auth/clerk';
 import { getNonce } from './lib/nonce';
 import { loadConfig, saveConfig } from './lib/config';
 import {
-  listSecretNames,
-  fetchEncryptedSecret,
-  addSecret,
-  updateSecret,
-  renameSecret,
-  deleteSecret,
+  openVaultHelpers,
   createVaultDB,
+  migrateToCloudSync,
 } from './lib/vault';
 import { initEnvKey } from '@shared/lib/vault';
 import { createClient } from '@shared/client';
+import { syncUrl } from '@shared/lib/turso';
 import type { VaultDBConfig } from '@shared/types/config';
+import type { CreateVaultResponse } from '@shared/types/fetch';
 
 export class VaultPanel {
   public static currentPanel: VaultPanel | undefined;
@@ -57,7 +55,12 @@ export class VaultPanel {
       },
     );
 
-    VaultPanel.currentPanel = new VaultPanel(panel, extensionUri, context, onVaultChanged);
+    VaultPanel.currentPanel = new VaultPanel(
+      panel,
+      extensionUri,
+      context,
+      onVaultChanged,
+    );
   }
 
   private constructor(
@@ -71,8 +74,14 @@ export class VaultPanel {
     this._context = context;
     this._onVaultChanged = onVaultChanged;
 
-    this._panel.webview.html = this._getHtmlForWebview(this._panel.webview);
-    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+    this._panel.webview.html = this._getHtmlForWebview(
+      this._panel.webview,
+    );
+    this._panel.onDidDispose(
+      () => this.dispose(),
+      null,
+      this._disposables,
+    );
 
     this._panel.webview.onDidReceiveMessage(
       async (msg: VaultExtensionMessage) => {
@@ -84,13 +93,25 @@ export class VaultPanel {
             await this._onFetchSecret(msg.name, msg.environment);
             break;
           case VaultExtensionMessageType.AddSecret:
-            await this._onAddSecret(msg.name, msg.value, msg.environment);
+            await this._onAddSecret(
+              msg.name,
+              msg.value,
+              msg.environment,
+            );
             break;
           case VaultExtensionMessageType.UpdateSecret:
-            await this._onUpdateSecret(msg.name, msg.value, msg.environment);
+            await this._onUpdateSecret(
+              msg.name,
+              msg.value,
+              msg.environment,
+            );
             break;
           case VaultExtensionMessageType.RenameSecret:
-            await this._onRenameSecret(msg.oldName, msg.newName, msg.environment);
+            await this._onRenameSecret(
+              msg.oldName,
+              msg.newName,
+              msg.environment,
+            );
             break;
           case VaultExtensionMessageType.CreateVault:
             await this._onCreateVault(msg.name, msg.cloud);
@@ -121,7 +142,10 @@ export class VaultPanel {
   }
 
   private async _onWebviewReady() {
-    const token = await getToken(this._context.secrets);
+    const [token, canCloudSync] = await Promise.all([
+      getSessionToken(),
+      hasCloudAccess(),
+    ]);
     const deadropConfig = await loadConfig();
 
     let vaultName: string | null = null;
@@ -150,27 +174,48 @@ export class VaultPanel {
       vaultName,
       vaultLocation,
       cloudSync: !!this._activeVault?.cloud,
+      canCloudSync,
       vaultEnvironmentKeys,
     };
 
     this.sendMessage({ type: VaultWebviewMessageType.Init, config });
 
     if (this._activeVault) {
-      console.log('[deadrop] vault location:', this._activeVault.location);
-      const names = await listSecretNames(this._activeVault);
+      console.log(
+        '[deadrop] vault location:',
+        this._activeVault.location,
+      );
+      const { run } = openVaultHelpers(this._activeVault);
+      const names = await run((h) => h.listSecretNames());
       console.log('[deadrop] secret names:', names);
-      this.sendMessage({ type: VaultWebviewMessageType.SecretNames, names });
+      this.sendMessage({
+        type: VaultWebviewMessageType.SecretNames,
+        names,
+      });
     }
   }
 
+  private _sendError(operation: string, message: string) {
+    vscode.window.showErrorMessage(message);
+    this.sendMessage({
+      type: VaultWebviewMessageType.OperationError,
+      operation,
+      message,
+    });
+  }
+
   private async _onCreateVault(vaultName: string, cloud?: boolean) {
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const workspaceRoot =
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!workspaceRoot) {
-      vscode.window.showErrorMessage('No workspace folder open.');
+      this._sendError('createVault', 'No workspace folder open.');
       return;
     }
     try {
-      const vaultConfig = await createVaultDB(vaultName, workspaceRoot);
+      const vaultConfig = await createVaultDB(
+        vaultName,
+        workspaceRoot,
+      );
 
       if (cloud) {
         await this._provisionCloud(vaultName, vaultConfig);
@@ -187,7 +232,10 @@ export class VaultPanel {
         vaults,
       });
 
-      const token = await getToken(this._context.secrets);
+      const [token, canSync] = await Promise.all([
+        getSessionToken(),
+        hasCloudAccess(),
+      ]);
       this.sendMessage({
         type: VaultWebviewMessageType.Init,
         config: {
@@ -195,117 +243,204 @@ export class VaultPanel {
           peerServerUrl: process.env.PEER_SERVER_URL ?? '',
           turnUsername: process.env.TURN_USERNAME ?? '',
           turnPassword: process.env.TURN_PWD ?? '',
-          clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY ?? '',
+          clerkPublishableKey:
+            process.env.CLERK_PUBLISHABLE_KEY ?? '',
           token,
           vaultName,
           vaultLocation: vaultConfig.location,
           cloudSync: !!vaultConfig.cloud,
+          canCloudSync: canSync,
           vaultEnvironmentKeys: vaultConfig.environments,
         },
       });
-      this.sendMessage({ type: VaultWebviewMessageType.SecretNames, names: [] });
-      vscode.window.showInformationMessage(`Vault "${vaultName}" created.`);
+      this.sendMessage({
+        type: VaultWebviewMessageType.SecretNames,
+        names: [],
+      });
+      vscode.window.showInformationMessage(
+        `Vault "${vaultName}" created.`,
+      );
       this._onVaultChanged?.();
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to create vault: ${(e as Error).message}`);
+      this._sendError(
+        'createVault',
+        `Failed to create vault: ${(e as Error).message}`,
+      );
     }
   }
 
   private async _provisionCloud(
     vaultName: string,
     vaultConfig: VaultDBConfig,
+    seed?: 'database_upload',
   ): Promise<void> {
-    const token = await getToken(this._context.secrets);
+    const token = await getSessionToken();
     if (!token) {
       throw new Error('You must be signed in to enable cloud sync.');
     }
     const client = createClient(process.env.DEADROP_API_URL ?? '', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const res = await client.vault.$post({ json: { name: vaultName } });
+    const res = await client.vault.$post({
+      json: { name: vaultName, seed },
+    });
+
     const body = await res.json();
+
     if (res.status !== 201) {
-      throw new Error((body as { error?: string }).error ?? 'Cloud provisioning failed.');
+      throw new Error(
+        (body as { error?: string }).error ??
+          'Cloud provisioning failed.',
+      );
     }
-    const data = body as { name: string; token: string };
-    vaultConfig.cloud = { name: data.name, authToken: data.token };
+
+    const data = body as CreateVaultResponse;
+
+    vaultConfig.cloud = {
+      name: data.name,
+      syncUrl: syncUrl(data.hostname),
+      authToken: data.token,
+    };
   }
 
   private async _onEnableCloudSync() {
     if (!this._activeVault || !this._activeVaultName) return;
     if (this._activeVault.cloud) return;
+
+    const canSync = await hasCloudAccess();
+
+    if (!canSync) {
+      this._sendError(
+        'enableCloudSync',
+        'Cloud sync requires a premium account.',
+      );
+      return;
+    }
+
     try {
-      await this._provisionCloud(this._activeVaultName, this._activeVault);
+      // Provision with database_upload seed so we can upload
+      // the existing local .db file directly to Turso.
+      await this._provisionCloud(
+        this._activeVaultName,
+        this._activeVault,
+        'database_upload',
+      );
       const existingConfig = await loadConfig();
       if (existingConfig?.vaults[this._activeVaultName]) {
-        existingConfig.vaults[this._activeVaultName].cloud = this._activeVault.cloud;
+        existingConfig.vaults[this._activeVaultName].cloud =
+          this._activeVault.cloud;
         await saveConfig(existingConfig);
       }
-      this.sendMessage({ type: VaultWebviewMessageType.CloudSyncEnabled });
+
+      // Upload the local DB then re-open as an embedded replica.
+      await migrateToCloudSync(this._activeVault);
+      this.sendMessage({
+        type: VaultWebviewMessageType.CloudSyncEnabled,
+      });
       this._onVaultChanged?.();
       vscode.window.showInformationMessage('Cloud sync enabled.');
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to enable cloud sync: ${(e as Error).message}`);
+      this._sendError(
+        'enableCloudSync',
+        `Failed to enable cloud sync: ${(e as Error).message}`,
+      );
     }
   }
 
   private async _onDisableCloudSync() {
     if (!this._activeVault || !this._activeVaultName) return;
     if (!this._activeVault.cloud) return;
+
     try {
-      const token = await getToken(this._context.secrets);
+      const token = await getSessionToken();
+
       if (token) {
-        const client = createClient(process.env.DEADROP_API_URL ?? '', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const client = createClient(
+          process.env.DEADROP_API_URL ?? '',
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
         await client.vault[':name'].$delete({
           param: { name: this._activeVault.cloud.name },
         });
       }
+
       delete this._activeVault.cloud;
+
       const existingConfig = await loadConfig();
+
       if (existingConfig?.vaults[this._activeVaultName]) {
         delete existingConfig.vaults[this._activeVaultName].cloud;
         await saveConfig(existingConfig);
       }
-      this.sendMessage({ type: VaultWebviewMessageType.CloudSyncDisabled });
+
+      this.sendMessage({
+        type: VaultWebviewMessageType.CloudSyncDisabled,
+      });
       this._onVaultChanged?.();
       vscode.window.showInformationMessage('Cloud sync disabled.');
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to disable cloud sync: ${(e as Error).message}`);
+      this._sendError(
+        'disableCloudSync',
+        `Failed to disable cloud sync: ${(e as Error).message}`,
+      );
     }
   }
 
   private async _onCreateEnvironment(envName: string) {
     if (!this._activeVault || !this._activeVaultName) return;
+
     const trimmed = envName.trim();
+
     if (!trimmed) return;
+
     if (this._activeVault.environments[trimmed]) {
-      vscode.window.showErrorMessage(`Environment "${trimmed}" already exists.`);
+      this._sendError(
+        'createEnvironment',
+        `Environment "${trimmed}" already exists.`,
+      );
       return;
     }
+
     try {
       const key = await initEnvKey();
+
       this._activeVault.environments[trimmed] = key;
+
       const existingConfig = await loadConfig();
+
       if (existingConfig?.vaults[this._activeVaultName]) {
-        existingConfig.vaults[this._activeVaultName].environments[trimmed] = key;
+        existingConfig.vaults[this._activeVaultName].environments[
+          trimmed
+        ] = key;
+
         await saveConfig(existingConfig);
       }
-      this.sendMessage({ type: VaultWebviewMessageType.EnvironmentCreated, name: trimmed, key });
+
+      this.sendMessage({
+        type: VaultWebviewMessageType.EnvironmentCreated,
+        name: trimmed,
+        key,
+      });
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to create environment: ${(e as Error).message}`);
+      this._sendError(
+        'createEnvironment',
+        `Failed to create environment: ${(e as Error).message}`,
+      );
     }
   }
 
   private async _onFetchSecret(name: string, environment: string) {
     if (!this._activeVault) return;
     try {
-      const encryptedValue = await fetchEncryptedSecret(
-        this._activeVault,
-        name,
-        environment,
+      const { run } = openVaultHelpers(this._activeVault);
+
+      const encryptedValue = await run((h) =>
+        h.getEncryptedSecret(name, environment),
       );
+
       if (encryptedValue) {
         this.sendMessage({
           type: VaultWebviewMessageType.SecretPayload,
@@ -315,38 +450,72 @@ export class VaultPanel {
         });
       }
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to fetch secret: ${(e as Error).message}`);
+      this._sendError(
+        'fetchSecret',
+        `Failed to fetch secret: ${(e as Error).message}`,
+      );
     }
   }
 
-  private async _onAddSecret(name: string, value: string, environment: string) {
+  private async _onAddSecret(
+    name: string,
+    value: string,
+    environment: string,
+  ) {
     if (!this._activeVault) return;
     try {
-      await addSecret(this._activeVault, name, value, environment);
+      const { run } = openVaultHelpers(this._activeVault);
+
+      await run((h) => h.addSecrets([{ name, value, environment }]));
+
       this.sendMessage({
         type: VaultWebviewMessageType.SecretAdded,
         name,
         environment,
       });
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to add secret: ${(e as Error).message}`);
+      this._sendError(
+        'addSecret',
+        `Failed to add secret: ${(e as Error).message}`,
+      );
     }
   }
 
-  private async _onUpdateSecret(name: string, value: string, environment: string) {
+  private async _onUpdateSecret(
+    name: string,
+    value: string,
+    environment: string,
+  ) {
     if (!this._activeVault) return;
     try {
-      await updateSecret(this._activeVault, name, value, environment);
-      this.sendMessage({ type: VaultWebviewMessageType.SecretUpdated, name, environment });
+      const { run } = openVaultHelpers(this._activeVault);
+
+      await run((h) => h.updateSecret({ name, value, environment }));
+
+      this.sendMessage({
+        type: VaultWebviewMessageType.SecretUpdated,
+        name,
+        environment,
+      });
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to update secret: ${(e as Error).message}`);
+      this._sendError(
+        'updateSecret',
+        `Failed to update secret: ${(e as Error).message}`,
+      );
     }
   }
 
-  private async _onRenameSecret(oldName: string, newName: string, environment: string) {
+  private async _onRenameSecret(
+    oldName: string,
+    newName: string,
+    environment: string,
+  ) {
     if (!this._activeVault) return;
     try {
-      await renameSecret(this._activeVault, oldName, newName, environment);
+      const { run } = openVaultHelpers(this._activeVault);
+
+      await run((h) => h.renameSecret(oldName, newName, environment));
+
       this.sendMessage({
         type: VaultWebviewMessageType.SecretRenamed,
         oldName,
@@ -354,21 +523,30 @@ export class VaultPanel {
         environment,
       });
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to rename secret: ${(e as Error).message}`);
+      this._sendError(
+        'renameSecret',
+        `Failed to rename secret: ${(e as Error).message}`,
+      );
     }
   }
 
   private async _onDeleteSecret(name: string, environment: string) {
     if (!this._activeVault) return;
     try {
-      await deleteSecret(this._activeVault, name, environment);
+      const { run } = openVaultHelpers(this._activeVault);
+
+      await run((h) => h.removeSecret(name, environment));
+
       this.sendMessage({
         type: VaultWebviewMessageType.SecretDeleted,
         name,
         environment,
       });
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to delete secret: ${(e as Error).message}`);
+      this._sendError(
+        'deleteSecret',
+        `Failed to delete secret: ${(e as Error).message}`,
+      );
     }
   }
 
