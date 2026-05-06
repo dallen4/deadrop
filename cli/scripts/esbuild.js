@@ -16,7 +16,7 @@ if (!process.env.DEADROP_API_URL || !process.env.PEER_SERVER_URL) {
     bundle: true,
     inject: ['./scripts/inject.js'],
     loader: { '.node': 'file' },
-    external: ['libsql'],
+    external: ['libsql', 'node-datachannel'],
     plugins: [
       environmentPlugin({
         DEADROP_API_URL: process.env.DEADROP_API_URL,
