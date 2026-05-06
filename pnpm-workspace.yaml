@@ -4,17 +4,18 @@ packages:
   - worker
   - cli
 
-publicHoistPattern:
-  - "next"
-
 onlyBuiltDependencies:
-  - "@sentry/cli"
-  - "bufferutil"
-  - "esbuild"
-  - "esbuild-plugin-define"
-  - "esbuild-plugin-environment"
-  - "fsevents"
-  - "sharp"
-  - "unrs-resolver"
-  - "utf-8-validate"
-  - "workerd"
+  - '@sentry/cli'
+  - bufferutil
+  - esbuild
+  - esbuild-plugin-define
+  - esbuild-plugin-environment
+  - fsevents
+  - node-datachannel
+  - sharp
+  - unrs-resolver
+  - utf-8-validate
+  - workerd
+
+publicHoistPattern:
+  - next
