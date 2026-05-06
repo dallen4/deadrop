@@ -25,8 +25,10 @@ jobs:
           cd cli
           pnpm install --frozen-lockfile
           echo $DEADROP_API_URL
+          echo $DEADROP_APP_URL
           echo $PEER_SERVER_URL
           export DEADROP_API_URL=$DEADROP_API_URL
+          export DEADROP_APP_URL=$DEADROP_APP_URL
           export PEER_SERVER_URL=$PEER_SERVER_URL
           export TURN_USERNAME=$TURN_USERNAME
           export TURN_PWD=$TURN_PWD
