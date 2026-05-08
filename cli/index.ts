@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import './lib/bun-inject';
+import './scripts/bun-inject';
 import 'dotenv/config';
 import { deadrop } from 'core';
 import { checkNodeVersion, checkBunVersion } from 'lib/util';
