@@ -15,10 +15,18 @@ import {
   vaultUse,
 } from 'actions/vault';
 import logout from 'actions/logout';
+import { displayWelcomeMessage } from 'lib/log';
 
 const deadrop = new Command();
 
-deadrop.name('deadrop').description(description).version(version);
+deadrop
+  .name('deadrop')
+  .description(description)
+  .version(version)
+  .addHelpText('beforeAll', () => {
+    displayWelcomeMessage();
+    return '';
+  });
 
 deadrop.command('init').action(init);
 

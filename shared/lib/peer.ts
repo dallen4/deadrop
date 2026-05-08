@@ -2,7 +2,9 @@ import Peer from 'peerjs';
 import { generateId } from './util';
 import { IceServerCredentials } from '../types/peer';
 
-const isServer = typeof window === 'undefined';
+const isServer =
+  typeof window === 'undefined' ||
+  typeof window.removeEventListener !== 'function';
 
 const onUnload = (e: BeforeUnloadEvent) => {
   const event = e || window.event;

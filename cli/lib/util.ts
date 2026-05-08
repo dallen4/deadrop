@@ -19,3 +19,13 @@ export const checkNodeVersion = () => {
     process.exit(1);
   }
 };
+
+export const checkBunVersion = () => {
+  if (typeof Bun === 'undefined') return; // running under Node (JS build) — skip
+  const needed = '>=1.0.0';
+  const curr = Bun.version;
+  if (!isValidVersion(curr, needed)) {
+    console.error(`Requires Bun ${needed}, found ${curr}`);
+    process.exit(1);
+  }
+};

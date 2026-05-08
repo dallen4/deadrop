@@ -58,6 +58,9 @@ test-results/
 # Sentry
 .vercel
 
+# generated files
+cli/lib/bun-inject.ts
+
 # deadrop config & vaults
 .deadroprc
 .deadrop/

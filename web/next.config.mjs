@@ -117,6 +117,15 @@ const headers = [
 const baseConfig = {
   swcMinify: true,
   poweredByHeader: false,
+  async rewrites() {
+    return [
+      {
+        source: '/install.sh',
+        destination:
+          'https://raw.githubusercontent.com/dallen4/deadrop/main/cli/install.sh',
+      },
+    ];
+  },
   headers() {
     return [
       {
