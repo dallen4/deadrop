@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "brainstorming": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/brainstorming/SKILL.md",
+      "computedHash": "8df9b47092524833138b58682d03f2e153a242e550d1693657afdbee0cc9cdb0"
+    },
     "clerk": {
       "source": "clerk/skills",
       "sourceType": "github",
@@ -54,6 +60,24 @@
       "sourceType": "github",
       "skillPath": "skills/features/clerk-webhooks/SKILL.md",
       "computedHash": "1e64996a3993027a25dcf1032a4ed13f0aa8607801fb2d1d27d653666aa9b929"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    },
+    "gh-cli": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/gh-cli/SKILL.md",
+      "computedHash": "cbe644b0c6760ae2a1eaafa39133920d889331327065d92a131675a665273e56"
+    },
+    "prd": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/prd/SKILL.md",
+      "computedHash": "1f3e1f005fc40fda85d250ae906c8ee4f7e8e833e23adfeca6542c19609fd7cd"
     }
   }
 }
