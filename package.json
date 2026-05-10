@@ -30,6 +30,7 @@
     "test:e2e": "pnpm -F web test:e2e",
     "test:preview": "vite preview --outDir test-report",
     "cli:build": "pnpm -F cli build",
+    "cli:compile": "pnpm -F cli compile",
     "cli:release": "cd cli && pnpm install --frozen-lockfile && pnpm release",
     "worker:deploy": "pnpm -F worker deploy",
     "analyze:dup": "jscpd",

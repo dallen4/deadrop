@@ -1,4 +1,4 @@
 
 rimraf dist/
 
-cpx "../node_modules/figlet/fonts/*.flf" ./fonts
+cpx "./node_modules/figlet/fonts/*.flf" ./fonts

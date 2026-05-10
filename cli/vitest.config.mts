@@ -8,5 +8,8 @@ export default mergeConfig(
       include: ['tests/unit/**/*.spec.ts'],
       environment: 'node',
     },
+    ssr: {
+      external: ['bun'],
+    },
   }),
 );
