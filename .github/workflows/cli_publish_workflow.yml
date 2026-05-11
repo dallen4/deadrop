@@ -14,7 +14,7 @@ jobs:
           - runner: macos-latest
             bun-target: bun-darwin-arm64
             artifact-name: deadrop-darwin-arm64
-          - runner: macos-latest-large
+          - runner: macos-13
             bun-target: bun-darwin-x64
             artifact-name: deadrop-darwin-x64
           - runner: ubuntu-latest
