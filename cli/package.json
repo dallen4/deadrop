@@ -12,6 +12,10 @@
   ],
   "license": "MIT",
   "private": false,
+  "publishConfig": {
+    "name": "deadrop",
+    "access": "public"
+  },
   "scripts": {
     "test": "vitest run",
     "prebuild": "sh ./scripts/prebuild.sh",
@@ -20,8 +24,7 @@
     "compile": "bun run ./scripts/bun-build.ts",
     "postcompile": "rimraf fonts/",
     "postversion": "sh ./scripts/postversion.sh",
-    "prepublishOnly": "sh ./scripts/prepublish.sh",
-    "postpublish": "sh ./scripts/postpublish.sh",
+    "prepublishOnly": "pnpm build",
     "release": "pnpm build && npm publish"
   },
   "dependencies": {
