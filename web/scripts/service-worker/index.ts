@@ -14,10 +14,6 @@ import {
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
-const randomBase64 = () => {
-  const randomBytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...randomBytes));
-};
 
 async function processMessage(
   message: DeadropMessage,
@@ -44,7 +40,7 @@ async function processMessage(
     config = JSON.parse(configString);
   } catch (err) {
     // if not found, create config & init secret
-    config = await initConfig(DEFAULT_VAULT_NAME, randomBase64());
+    config = await initConfig(DEFAULT_VAULT_NAME);
 
     await writeConfig(config);
   }

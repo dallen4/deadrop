@@ -1,22 +1,30 @@
 import React from 'react';
-import { Button, Text, Title } from '@mantine/core';
+import { Button, Code, Text, Title } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useRouter } from 'next/router';
 import { SignedIn, SignedOut, SignIn, useClerk } from '@clerk/nextjs';
 import { IconX } from '@tabler/icons-react';
 import { MainWrapper } from 'atoms/MainWrapper';
 
-const CliAuth = () => {
+const PLATFORMS: Record<string, string> = {
+  cli: 'CLI',
+  vscode: 'VS Code extension',
+};
+
+const PlatformAuth = () => {
   const clerk = useClerk();
   const router = useRouter();
-  const { redirectUrl } = router.query;
+  const { platform, redirectUrl } = router.query;
+
+  const platformKey = typeof platform === 'string' ? platform : '';
+  const label = PLATFORMS[platformKey] ?? platformKey;
 
   const getTokenAndRedirect = async () => {
     const sessionToken = await clerk.session!.getToken();
 
     if (!sessionToken) {
       showNotification({
-        message: 'Tried to authenticate CLI without a session!',
+        message: 'Tried to authenticate without a session!',
         color: 'red',
         icon: <IconX />,
         autoClose: 4500,
@@ -54,13 +62,14 @@ const CliAuth = () => {
       <SignedOut>
         <SignIn
           routing={'hash'}
-          forceRedirectUrl={`/auth/cli?redirectUrl=${redirectUrl}`}
+          forceRedirectUrl={`/auth/${platformKey}?redirectUrl=${redirectUrl}`}
         />
       </SignedOut>
       <SignedIn>
-        <Title>deadrop CLI Authentication</Title>
+        <Title>deadrop {label} Authentication</Title>
         <Text>
-          Do you want to authorize the CLI on this computer?
+          Do you want to authorize the <Code>deadrop {label}</Code> on
+          this device?
         </Text>
         <Button onClick={getTokenAndRedirect}>Yes, sign me in</Button>
       </SignedIn>
@@ -68,4 +77,4 @@ const CliAuth = () => {
   );
 };
 
-export default CliAuth;
+export default PlatformAuth;
