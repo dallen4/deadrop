@@ -11,7 +11,7 @@ export const generateId = () => customAlphabet(alphanumeric, 12)();
 export const generateIV = () => {
   // Generate 12 random bytes
   const randomBytes = new Uint8Array(12);
-  getCrypto().getRandomValues(randomBytes);
+  getCrypto()!.getRandomValues(randomBytes);
 
   // Convert to binary string
   return String.fromCharCode(...randomBytes);
@@ -28,6 +28,3 @@ export const generateGrabUrl = (url: string, id: string) => {
 };
 
 export const formatDropKey = (id: string) => `drop:${id}`;
-
-export const formatCloudSyncUrl = (name: string) =>
-  `libsql://${name}-${process.env.TURSO_ORGANIZATION!}.turso.io`;

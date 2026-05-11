@@ -14,7 +14,7 @@ export const getCrypto = () => {
         subtle: wc.webkitSubtle,
       } as BaseCrypto;
     else return window.crypto;
-  } else return require('crypto').webcrypto as BaseCrypto;
+  } 
 };
 
-export const getSubtle = () => getCrypto().subtle;
+export const getSubtle = () => getCrypto()!.subtle;
