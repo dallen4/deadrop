@@ -50,6 +50,7 @@ jobs:
         run: |
           cd cli
           pnpm install --frozen-lockfile
+          (cd node_modules/bun && node install.js)
           export DEADROP_API_URL=$DEADROP_API_URL
           export DEADROP_APP_URL=$DEADROP_APP_URL
           export PEER_SERVER_URL=$PEER_SERVER_URL
