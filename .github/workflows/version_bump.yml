@@ -22,6 +22,8 @@ jobs:
   pkg-version-bump:
     if: github.event.inputs.pkg_name != 'shared'
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -29,13 +31,29 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
-      - name: Version Bump
+      - name: Bump version
+        id: bump
         run: |
           cd ${{ github.event.inputs.pkg_name }}
-          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="${{ github.event.inputs.pkg_name }}-v"
+          NEW_VERSION=$(npm version ${{ github.event.inputs.rel_type }} --no-git-tag-version --ignore-scripts)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      - name: Commit, tag, and push
+        env:
+          PKG: ${{ github.event.inputs.pkg_name }}
+          NEW_VERSION: ${{ steps.bump.outputs.new_version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$PKG/package.json"
+          git commit -m "chore: bump $PKG to $NEW_VERSION"
+          git tag "$PKG-$NEW_VERSION"
+          git push --follow-tags
+
   platform-version-bump:
     if: github.event.inputs.pkg_name == 'shared'
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -43,27 +61,26 @@ jobs:
         with:
           node-version: 24
           cache: 'pnpm'
-      - name: Version Bump
+      - name: Bump all package versions
+        id: bump
         run: |
-          cd web
-          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="web-v"
-          echo "bumped web version"
-
-          cd ../cli
-          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="cli-v"
-          echo "bumped cli version"
-
-          cd ../worker
-          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="worker-v"
-          echo "bumped worker version"
-
-          cd ../shared
-          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="shared-v"
-          echo "bumped shared version"
-
-          cd ..
-          npm version ${{ github.event.inputs.rel_type }} --tag-version-prefix="v"
-          echo "bumped platform version"
-          
-          git push
-          git push origin --tags
+          for pkg in web cli worker shared; do
+            (cd $pkg && npm version ${{ github.event.inputs.rel_type }} --no-git-tag-version --ignore-scripts)
+          done
+          NEW_VERSION=$(npm version ${{ github.event.inputs.rel_type }} --no-git-tag-version --ignore-scripts)
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      - name: Commit, tag, and push
+        env:
+          NEW_VERSION: ${{ steps.bump.outputs.new_version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION_NUM="${NEW_VERSION#v}"
+          git add package.json web/package.json cli/package.json worker/package.json shared/package.json
+          git commit -m "chore: bump platform to $NEW_VERSION"
+          git tag "$NEW_VERSION"
+          git tag "web-v$VERSION_NUM"
+          git tag "cli-v$VERSION_NUM"
+          git tag "worker-v$VERSION_NUM"
+          git tag "shared-v$VERSION_NUM"
+          git push --follow-tags

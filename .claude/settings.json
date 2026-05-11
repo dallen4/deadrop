@@ -1,7 +1,41 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:clerk.com)"
-    ]
+      "WebFetch(domain:mantine.dev)",
+      "WebFetch(domain:v6.mantine.dev)",
+      "WebFetch(domain:docs.clerk.com)",
+      "WebFetch(domain:hono.dev)",
+      "WebFetch(domain:xstate.js.org)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm vscode:build)",
+      "Bash(pnpm check-types:*)",
+      "Bash(pnpm info:*)",
+      "Bash(pnpm why:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm install:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git ls-tree -r:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh run view:*)",
+      "Bash(tree:*)",
+      "Bash(it2 session:*)",
+      "Bash(wt switch:*)",
+      "Skill(spawn)",
+      "mcp__brightdata__search_engine",
+      "mcp__brightdata__scrape_as_markdown"
+    ],
+    "deny": [],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr create:*)",
+      "Bash(pnpm worker:deploy:*)",
+      "Bash(wrangler deploy:*)",
+      "Bash(pnpm cli:release:*)"
+    ],
+    "additionalDirectories": []
   }
 }
