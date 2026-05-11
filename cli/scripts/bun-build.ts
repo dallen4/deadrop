@@ -26,7 +26,7 @@ if (!libsqlSuffix) {
 // Used by the libsqlNativePlugin below.
 const libsqlNodePath = resolve(
   require.resolve(`@libsql/${libsqlSuffix}`),
-);
+).replace(/\\/g, '/');
 
 
 const env = {
