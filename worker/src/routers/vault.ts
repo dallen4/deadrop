@@ -4,17 +4,19 @@ import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { createVaultUtils, vaultNameFromUserId } from '../lib/vault';
 import { authenticated, restricted } from '../lib/middleware';
-import { getAuth } from '@hono/clerk-auth';
 
 const VaultNameSchema = z.object({ name: z.string() });
+const CreateVaultSchema = VaultNameSchema.partial().extend({
+  seed: z.enum(['database_upload']).optional(),
+});
 
 const vaultRouter = hono()
   .post(
     AppRouteParts.Root,
     restricted(),
-    zValidator('json', VaultNameSchema.partial()),
+    zValidator('json', CreateVaultSchema),
     async (c) => {
-      const userId = getAuth(c)!.userId!;
+      const userId = c.var.clerkAuth().userId!;
 
       const { createVault, createVaultToken } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -22,11 +24,11 @@ const vaultRouter = hono()
       );
 
       try {
-        const { name } = c.req.valid('json');
+        const { name, seed } = c.req.valid('json');
 
         const vaultName = await vaultNameFromUserId(userId!, name);
 
-        const vaultDatabase = await createVault(vaultName);
+        const vaultDatabase = await createVault(vaultName, seed);
 
         const vaultToken = await createVaultToken(
           vaultName,
@@ -37,6 +39,7 @@ const vaultRouter = hono()
           {
             id: vaultDatabase.DbId,
             name: vaultName,
+            hostname: vaultDatabase.Hostname,
             token: vaultToken,
           },
           201,
@@ -54,7 +57,7 @@ const vaultRouter = hono()
     restricted(),
     zValidator('json', VaultNameSchema),
     async (c) => {
-      const userId = getAuth(c)!.userId!;
+      const userId = c.var.clerkAuth().userId!;
 
       const { createVaultToken } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -82,7 +85,7 @@ const vaultRouter = hono()
     authenticated(),
     zValidator('param', VaultNameSchema),
     async (c) => {
-      const userId = getAuth(c)!.userId!;
+      const userId = c.var.clerkAuth().userId!;
 
       const { name } = c.req.valid('param');
 
@@ -103,7 +106,7 @@ const vaultRouter = hono()
     restricted(),
     zValidator('param', VaultNameSchema),
     async (c) => {
-      const userId = getAuth(c)!.userId!;
+      const userId = c.var.clerkAuth().userId!;
 
       const { name } = c.req.valid('param');
 
