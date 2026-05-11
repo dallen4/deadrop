@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@libsql/client-wasm': 0.17.3
+  hono: 4.12.18
 
 importers:
 
@@ -36,8 +37,8 @@ importers:
         specifier: ^0.7.0
         version: 0.7.1(drizzle-orm@0.38.4(@cloudflare/workers-types@4.20260317.1)(@libsql/client-wasm@0.17.3)(@libsql/client@0.17.3(bufferutil@4.1.0)(utf-8-validate@6.0.6))(bun-types@1.3.13)(react@18.3.1))(zod@3.25.76)
       hono:
-        specifier: ^4.6.19
-        version: 4.12.8
+        specifier: 4.12.18
+        version: 4.12.18
       nanoid:
         specifier: ^5.0.1
         version: 5.1.7
@@ -443,7 +444,7 @@ importers:
         specifier: ^0.4.3
         version: 0.4.3(hono@4.12.18)(zod@3.25.76)
       hono:
-        specifier: ^4.12.18
+        specifier: 4.12.18
         version: 4.12.18
     devDependencies:
       wrangler:
@@ -2048,18 +2049,18 @@ packages:
     resolution: {integrity: sha512-wOQaxxaBsVPSNDajUkhpv+9QWwpzLp//Kjr2H3seTgbCmskhPG356GbQjH7/sjQHcgAQKnwCc0cPk4iWCIr24A==}
     engines: {node: '>=16.x.x'}
     peerDependencies:
-      hono: '>=3.0.0'
+      hono: 4.12.18
 
   '@hono/node-server@1.19.11':
     resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
-      hono: ^4
+      hono: 4.12.18
 
   '@hono/zod-validator@0.4.3':
     resolution: {integrity: sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ==}
     peerDependencies:
-      hono: '>=3.9.0'
+      hono: 4.12.18
       zod: ^3.19.1
 
   '@humanwhocodes/config-array@0.13.0':
@@ -5936,10 +5937,6 @@ packages:
 
   hono@4.12.18:
     resolution: {integrity: sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ==}
-    engines: {node: '>=16.9.0'}
-
-  hono@4.12.8:
-    resolution: {integrity: sha512-VJCEvtrezO1IAR+kqEYnxUOoStaQPGrCmX3j4wDTNOcD1uRPFpGlwQUIW8niPuvHXaTUxeOUl5MMDGrl+tmO9A==}
     engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
@@ -15294,8 +15291,6 @@ snapshots:
       react-is: 16.13.1
 
   hono@4.12.18: {}
-
-  hono@4.12.8: {}
 
   html-escaper@2.0.2: {}
 
