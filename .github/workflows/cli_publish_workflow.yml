@@ -3,6 +3,11 @@ on:
   push:
     tags:
       - 'deadrop@*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. deadrop@0.3.0)'
+        required: true
 
 jobs:
   cli-compile-binaries:
@@ -76,6 +81,7 @@ jobs:
       - uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: '${{ secrets.GITHUB_TOKEN }}'
+          automatic_release_tag: ${{ github.event.inputs.tag || github.ref_name }}
           draft: false
           prerelease: false
           files: dist/*
