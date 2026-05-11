@@ -2,7 +2,7 @@ name: Release CLI Binaries
 on:
   push:
     tags:
-      - 'cli@*'
+      - 'deadrop@*'
 
 jobs:
   cli-compile-binaries:

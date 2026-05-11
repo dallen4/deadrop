@@ -37,7 +37,7 @@
     "analyze:unused": "ts-prune",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish",
+    "changeset:publish": "node scripts/changeset-publish.js",
     "changeset:status": "changeset status",
     "postversion": "git push --tags",
     "prepare": "husky"
