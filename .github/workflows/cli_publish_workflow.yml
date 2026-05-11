@@ -1,42 +1,10 @@
-name: Release CLI
+name: Release CLI Binaries
 on:
   push:
     tags:
-      - 'cli-v*'
-jobs:
-  cli-publish-npm:
-    name: Publish JS bundle to npm
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: 'pnpm'
-      - name: Build & publish
-        shell: bash
-        env:
-          PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
-          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          TURN_PWD: ${{ secrets.TURN_PWD }}
-          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
-          DEADROP_APP_URL: ${{ secrets.DEADROP_APP_URL }}
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
-        run: |
-          cd cli
-          pnpm install --frozen-lockfile
-          export DEADROP_API_URL=$DEADROP_API_URL
-          export DEADROP_APP_URL=$DEADROP_APP_URL
-          export PEER_SERVER_URL=$PEER_SERVER_URL
-          export TURN_USERNAME=$TURN_USERNAME
-          export TURN_PWD=$TURN_PWD
-          export CLERK_PUBLISHABLE_KEY=$CLERK_PUBLISHABLE_KEY
-          pnpm build
-          echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" >> ./.npmrc
-          npm publish
+      - 'cli@*'
 
+jobs:
   cli-compile-binaries:
     name: Compile binary (${{ matrix.bun-target }})
     runs-on: ${{ matrix.runner }}

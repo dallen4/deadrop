@@ -11,7 +11,7 @@
     "./fonts/Standard.flf"
   ],
   "license": "MIT",
-  "private": true,
+  "private": false,
   "scripts": {
     "test": "vitest run",
     "prebuild": "sh ./scripts/prebuild.sh",
