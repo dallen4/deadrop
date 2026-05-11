@@ -38,11 +38,16 @@ export const createVaultUtils = (
     return reqUrl;
   };
 
-  const createVault = async (vaultName: string) => {
-    const body = {
+  const createVault = async (
+    vaultName: string,
+    seed?: 'database_upload',
+  ) => {
+    const body: CreateDatabaseRequest = {
       name: vaultName,
       group: 'deadrop',
-      schema: 'parent-vault-schema',
+      ...(seed
+        ? { seed: { type: seed } }
+        : { schema: 'parent-vault-schema' }),
     };
 
     const { database } = await post<

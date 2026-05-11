@@ -1,5 +1,7 @@
 import { createClient } from '@shared/client';
 import { vault } from '@shared/lib/vault';
+import { syncUrl } from '@shared/lib/turso';
+import type { CreateVaultResponse } from '@shared/types/fetch';
 import { initDBClient } from 'db/init';
 import { vaultExists } from 'db/vaults';
 import { createClerkClient } from 'lib/auth/clerk';
@@ -67,15 +69,12 @@ export async function vaultCreate(
         return process.exit(1);
       }
 
-      const { name, hostname, token: authToken } = data as {
-        name: string;
-        hostname: string;
-        token: string;
-      };
+      const { name, hostname, token: authToken } =
+        data as CreateVaultResponse;
 
       newVault.cloud = {
         name,
-        syncUrl: `libsql://${hostname}`,
+        syncUrl: syncUrl(hostname),
         authToken,
       };
     } catch (err) {
