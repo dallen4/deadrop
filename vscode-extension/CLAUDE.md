@@ -130,9 +130,9 @@ All communication between host and webview is via `postMessage`. Use `postMessag
 
 `VaultPanel` is a singleton — `VaultPanel.currentPanel` holds the single open instance. `createOrShow()` reveals the existing panel if already open.
 
-- `_activeVault: VaultDBConfig | null` — currently loaded vault config (location, encryption key, environment keys)
+- `_activeVault: VaultDBConfig | null` — currently loaded vault config (location, environment keys, optional cloud sync)
 - `_activeVaultName: string | null` — name of the active vault (matches key in `.deadroprc`)
-- DB operations in `src/lib/vault.ts` use **Drizzle ORM + libsql** (SQLite, encrypted with per-vault key)
+- DB operations in `src/lib/vault.ts` use **Drizzle ORM + libsql** (SQLite, encrypted at DB level — secret values are encrypted at the app layer via `wrapSecret`)
 - Vault config is persisted in `.deadroprc` in the workspace root via `cosmiconfig` (`src/lib/config.ts`)
 - `loadConfig()` / `saveConfig()` wrap cosmiconfig; `explorer.clearCaches()` is called after writes to avoid stale reads
 
@@ -159,13 +159,12 @@ active_vault:
 vaults:
   my-vault:
     location: /path/to/.deadrop/my-vault.db
-    key: <base64 db encryption key>
     environments:
       development: <base64 AES-256-GCM key>
       staging: <base64 AES-256-GCM key>
 ```
 
-Environment keys are generated via `initEnvKey()` from `@shared/lib/vault` (AES-256-GCM, exported as base64). DB files are stored in `.deadrop/` inside the workspace root.
+No DB-level encryption — the SQLite file is plaintext. Secret **values** are encrypted at the app layer via `wrapSecret`/`unwrapSecret` using per-environment AES-256-GCM keys. Environment keys are generated via `initEnvKey()` from `@shared/lib/vault` (exported as base64). DB files are stored in `.deadrop/` inside the workspace root.
 
 ## Enums Pattern
 

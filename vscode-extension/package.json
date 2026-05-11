@@ -34,11 +34,13 @@
       },
       {
         "command": "deadrop.login",
-        "title": "deadrop: Login"
+        "title": "deadrop: Login",
+        "shortTitle": "Login"
       },
       {
         "command": "deadrop.logout",
-        "title": "deadrop: Logout"
+        "title": "deadrop: Logout",
+        "shortTitle": "Logout"
       },
       {
         "command": "deadrop.openVault",
@@ -62,6 +64,16 @@
           "command": "deadrop.dropExplorerFile",
           "when": "!explorerResourceIsFolder",
           "group": "deadrop"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "deadrop.login",
+          "when": "view == deadropSidebar && !deadrop.loggedIn"
+        },
+        {
+          "command": "deadrop.logout",
+          "when": "view == deadropSidebar && deadrop.loggedIn"
         }
       ]
     },

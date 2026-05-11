@@ -1,10 +1,6 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql/node';
-import {
-  initDBConfig,
-  syncWithRetry,
-  type DBClient,
-} from '@shared/db/init';
+import { initDBConfig, syncWithRetry } from '@shared/db/init';
 import { createSecretsHelpers } from '@shared/db/secrets';
 import { secretsTable } from '@shared/db/schema';
 import { vault as buildVaultConfig } from '@shared/lib/vault';
@@ -44,13 +40,7 @@ export function openVaultHelpers(vault: VaultDBConfig) {
       const db = await openDB(vault);
       try {
         return await fn(
-          createSecretsHelpers(
-            vault,
-            // drizzle-orm resolves to two separate declarations
-            // under pnpm hoisting — structurally identical at
-            // runtime, so the cast is safe.
-            db as unknown as DBClient,
-          ),
+          createSecretsHelpers(vault, db),
         );
       } finally {
         db.$client.close();

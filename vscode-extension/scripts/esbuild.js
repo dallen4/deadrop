@@ -7,6 +7,9 @@ const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
 
 const define = {
+  'process.env.DEADROP_APP_URL': JSON.stringify(
+    process.env.DEADROP_APP_URL || '',
+  ),
   'process.env.DEADROP_API_URL': JSON.stringify(
     process.env.DEADROP_API_URL || '',
   ),
