@@ -122,7 +122,7 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: ^1.13.2
-        version: 1.19.11(hono@4.12.8)
+        version: 1.19.11(hono@4.12.18)
       '@inquirer/prompts':
         specifier: ^5.3.8
         version: 5.5.0
@@ -437,11 +437,14 @@ importers:
   worker:
     dependencies:
       '@hono/clerk-auth':
-        specifier: ^3.1.0
-        version: 3.1.0(hono@4.12.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^3.1.1
+        version: 3.1.1(hono@4.12.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@hono/zod-validator':
-        specifier: ^0.4.1
-        version: 0.4.3(hono@4.12.8)(zod@3.25.76)
+        specifier: ^0.4.3
+        version: 0.4.3(hono@4.12.18)(zod@3.25.76)
+      hono:
+        specifier: ^4.12.18
+        version: 4.12.18
     devDependencies:
       wrangler:
         specifier: ^3.99.0
@@ -2041,8 +2044,8 @@ packages:
       react: '>= 16.3.0'
       react-dom: '>= 16.3.0'
 
-  '@hono/clerk-auth@3.1.0':
-    resolution: {integrity: sha512-kkC6WiCaRwud7sQGSU0zgJJEI1CHPsnM0oK3jmVtozQn7rHMeqITFn4SU+ehnrXdHJBryYJsGheMJwQuhusDgw==}
+  '@hono/clerk-auth@3.1.1':
+    resolution: {integrity: sha512-wOQaxxaBsVPSNDajUkhpv+9QWwpzLp//Kjr2H3seTgbCmskhPG356GbQjH7/sjQHcgAQKnwCc0cPk4iWCIr24A==}
     engines: {node: '>=16.x.x'}
     peerDependencies:
       hono: '>=3.0.0'
@@ -5930,6 +5933,10 @@ packages:
 
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
+
+  hono@4.12.18:
+    resolution: {integrity: sha512-RWzP96k/yv0PQfyXnWjs6zot20TqfpfsNXhOnev8d1InAxubW93L11/oNUc3tQqn2G0bSdAOBpX+2uDFHV7kdQ==}
+    engines: {node: '>=16.9.0'}
 
   hono@4.12.8:
     resolution: {integrity: sha512-VJCEvtrezO1IAR+kqEYnxUOoStaQPGrCmX3j4wDTNOcD1uRPFpGlwQUIW8niPuvHXaTUxeOUl5MMDGrl+tmO9A==}
@@ -10983,22 +10990,22 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@hono/clerk-auth@3.1.0(hono@4.12.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@hono/clerk-auth@3.1.1(hono@4.12.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@clerk/backend': 2.33.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@clerk/shared': 3.47.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      hono: 4.12.8
+      hono: 4.12.18
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@hono/node-server@1.19.11(hono@4.12.8)':
+  '@hono/node-server@1.19.11(hono@4.12.18)':
     dependencies:
-      hono: 4.12.8
+      hono: 4.12.18
 
-  '@hono/zod-validator@0.4.3(hono@4.12.8)(zod@3.25.76)':
+  '@hono/zod-validator@0.4.3(hono@4.12.18)(zod@3.25.76)':
     dependencies:
-      hono: 4.12.8
+      hono: 4.12.18
       zod: 3.25.76
 
   '@humanwhocodes/config-array@0.13.0':
@@ -15285,6 +15292,8 @@ snapshots:
   hoist-non-react-statics@3.3.2:
     dependencies:
       react-is: 16.13.1
+
+  hono@4.12.18: {}
 
   hono@4.12.8: {}
 
