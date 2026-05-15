@@ -1,20 +1,20 @@
 import React, { RefObject, useRef } from 'react';
 import {
-    Title,
-    Text,
-    TextInput,
-    Card,
-    Center,
-    useMantineTheme,
-    Button,
-    Group,
-    Table,
-    Container,
+  Title,
+  Text,
+  TextInput,
+  Card,
+  Center,
+  useMantineTheme,
+  Button,
+  Group,
+  Table,
+  Container,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { GRAB_PATH, OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import { HeroBanner } from 'molecules/HeroBanner';
-import { Faq, Features } from 'molecules/sections';
+import { Faq, Features, PricingTeaser } from 'molecules/sections';
 import { FeaturesSupport } from 'molecules/sections/FeaturesSupport';
 import { Tools } from 'molecules/sections/Tools';
 import classes from './index.module.css';
@@ -80,10 +80,12 @@ const FeatureRow = ({ item }: { item: FeatureEntry }) => {
 };
 
 const Home = () => {
-    const router = useRouter();
-    const theme = useMantineTheme();
-    const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm}px)`);
-    const inputRef = useRef<HTMLInputElement>();
+  const router = useRouter();
+  const theme = useMantineTheme();
+  const isMobile = useMediaQuery(
+    `(max-width: ${theme.breakpoints.sm}px)`,
+  );
+  const inputRef = useRef<HTMLInputElement>();
 
   const submitGrab = () => {
     const inputVal = inputRef.current!.value;
@@ -150,9 +152,10 @@ const Home = () => {
           </Group>
         </Card>
       </Center>
-      <Faq />
       <Tools />
+      <PricingTeaser />
       <FeaturesSupport />
+      <Faq />
       <Center>
         <Button
           className={classes.control}
@@ -162,7 +165,6 @@ const Home = () => {
           Check out the Docs
         </Button>
       </Center>
-      {/* <Premium /> */}
     </>
   );
 };
