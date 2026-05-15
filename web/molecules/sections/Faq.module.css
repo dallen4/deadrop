@@ -1,6 +1,6 @@
 .wrapper {
-  padding-top: calc(var(--mantine-spacing-xl) * 2);
-  min-height: 580px;
+  padding-top: var(--mantine-spacing-xl);
+  padding-bottom: var(--mantine-spacing-xl);
 }
 
 @media (max-width: 520px) {
@@ -17,7 +17,11 @@
 .item {
   border-radius: var(--mantine-radius-md);
   margin-bottom: var(--mantine-spacing-lg);
-  border: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  border: 1px solid
+    light-dark(
+      var(--mantine-color-gray-3),
+      var(--mantine-color-dark-4)
+    );
 }
 
 .question[data-active] {

@@ -1,0 +1,20 @@
+.wrapper {
+  padding-top: var(--mantine-spacing-xl);
+  padding-bottom: var(--mantine-spacing-xl);
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mantine-spacing-sm);
+}
+
+.seeAll {
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-blue-6);
+  text-decoration: none;
+}
+
+.seeAll:hover {
+  text-decoration: underline;
+}
