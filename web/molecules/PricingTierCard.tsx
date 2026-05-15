@@ -7,8 +7,10 @@ import {
   Text,
   Title,
 } from '@mantine/core';
+import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/router';
 import { FeatureCheckmark } from 'atoms/FeatureCheckmark';
+import { PRICING_PATH } from '@shared/config/paths';
 import type { TierDef } from '@shared/config/tiers';
 import classes from './PricingTierCard.module.css';
 
@@ -40,14 +42,22 @@ export function PricingTierCard({
   stripeLink,
 }: Props) {
   const router = useRouter();
+  const { user } = useUser();
   const displayFeatures = compact ? features.slice(0, 3) : features;
 
   const handleCta = () => {
     if (ctaType === 'router' && ctaHref) {
       router.push(ctaHref);
     } else if (ctaType === 'external') {
-      const href = stripeLink ?? ctaHref;
-      if (href) window.location.href = href;
+      // Supporter checkout: must be signed in so we can attach userId for the webhook.
+      if (!stripeLink || stripeLink === '#') return;
+      if (!user) {
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(PRICING_PATH)}`);
+        return;
+      }
+      const url = new URL(stripeLink);
+      url.searchParams.set('client_reference_id', user.id);
+      window.location.href = url.toString();
     } else if (ctaType === 'contact') {
       window.location.href = 'mailto:hello@deadrop.dev';
     }
