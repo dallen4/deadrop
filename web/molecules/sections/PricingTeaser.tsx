@@ -13,8 +13,6 @@ const TEASER_TIERS = TIERS.slice(0, 3);
 
 export function PricingTeaser() {
   const router = useRouter();
-  const stripeLink =
-    process.env.NEXT_PUBLIC_STRIPE_SUPPORTER_LINK ?? '#';
 
   return (
     <Container size="lg" className={classes.wrapper}>
@@ -34,7 +32,6 @@ export function PricingTeaser() {
             key={tier.tierName}
             {...tier}
             compact
-            stripeLink={stripeLink}
           />
         ))}
       </SimpleGrid>

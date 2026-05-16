@@ -116,8 +116,6 @@ function CellValue({ value }: { value: boolean | string }) {
 
 export function PricingSection() {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const stripeLink =
-    process.env.NEXT_PUBLIC_STRIPE_SUPPORTER_LINK ?? '#';
 
   return (
     <Container size="lg" className={classes.wrapper}>
@@ -129,11 +127,7 @@ export function PricingSection() {
         mt="xl"
       >
         {TIERS.map((tier) => (
-          <PricingTierCard
-            key={tier.tierName}
-            {...tier}
-            stripeLink={stripeLink}
-          />
+          <PricingTierCard key={tier.tierName} {...tier} />
         ))}
       </SimpleGrid>
 
