@@ -54,6 +54,8 @@ const clerkDomains = [
 
 const clerkImgDomain = 'https://img.clerk.com/';
 
+const stripeDomain = 'https://*.stripe.com';
+
 const assetsDomains = [
   vercelAssetsDomain,
   googleAssetsDomain,
@@ -72,6 +74,7 @@ const connectSrcEntries = [
   sentryDomain,
   assetsDomains,
   deadropWorkerDomain,
+  stripeDomain,
 ].join(' ');
 
 const scriptSrcEntries = [
@@ -82,6 +85,7 @@ const scriptSrcEntries = [
   vercelMetricsDomains,
   vercelCdnDomain,
   captchaDomains,
+  stripeDomain,
 ].join(' ');
 
 const safeConfig = {
@@ -95,7 +99,7 @@ const safeConfig = {
     'connect-src': connectSrcEntries,
     'default-src': `'self'`,
     'font-src': `'self' data: ${vercelAssetsDomain} ${googleFontsDomain}`,
-    'frame-src': `${vercelLiveDomain} ${captchaDomains}`,
+    'frame-src': `${vercelLiveDomain} ${captchaDomains} ${stripeDomain}`,
     'script-src': scriptSrcEntries,
     'style-src': `'self' 'unsafe-inline' ${captchaDomains}`,
     'img-src': `'self' data: ${assetsDomains}`,
