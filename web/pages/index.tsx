@@ -1,162 +1,24 @@
-import React, { RefObject, useRef } from 'react';
-import {
-  Title,
-  Text,
-  TextInput,
-  Card,
-  Center,
-  useMantineTheme,
-  Button,
-  Group,
-  Table,
-  Container,
-} from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
-import { GRAB_PATH, OVERVIEW_DOCS_PATH } from '@shared/config/paths';
+import { Button, Center } from '@mantine/core';
+import { OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import { HeroBanner } from 'molecules/HeroBanner';
 import { Faq, Features, PricingTeaser } from 'molecules/sections';
-import { FeaturesSupport } from 'molecules/sections/FeaturesSupport';
+import { GrabSection } from 'molecules/sections/GrabSection';
 import { Tools } from 'molecules/sections/Tools';
-import classes from './index.module.css';
-import { SectionTitle } from 'molecules/sections/SectionTitle';
 import { useRouter } from 'next/router';
-
-type SupportStatus = '✅ stable' | '📝 planned' | '🧪 experimental';
-type FeatureEntry = {
-  name: string;
-  web: SupportStatus;
-  cli: SupportStatus;
-  vscode: SupportStatus;
-};
-
-const items: Array<FeatureEntry> = [
-  {
-    name: 'drop string',
-    web: '✅ stable',
-    cli: '✅ stable',
-    vscode: '📝 planned',
-  },
-  {
-    name: 'drop file',
-    web: '✅ stable',
-    cli: '✅ stable',
-    vscode: '📝 planned',
-  },
-  {
-    name: 'grab string',
-    web: '✅ stable',
-    cli: '✅ stable',
-    vscode: '📝 planned',
-  },
-  {
-    name: 'grab file',
-    web: '✅ stable',
-    cli: '✅ stable',
-    vscode: '📝 planned',
-  },
-  {
-    name: 'local vaults',
-    web: '📝 planned',
-    cli: '🧪 experimental',
-    vscode: '📝 planned',
-  },
-  {
-    name: 'cloud vaults',
-    web: '📝 planned',
-    cli: '📝 planned',
-    vscode: '📝 planned',
-  },
-];
-
-const FeatureRow = ({ item }: { item: FeatureEntry }) => {
-  return (
-    <tr key={item.name}>
-      <td>{item.name}</td>
-      <td>{item.web}</td>
-      <td>{item.cli}</td>
-      {/* <td>{item.vscode}</td> */}
-    </tr>
-  );
-};
+import classes from './index.module.css';
 
 const Home = () => {
   const router = useRouter();
-  const theme = useMantineTheme();
-  const isMobile = useMediaQuery(
-    `(max-width: ${theme.breakpoints.sm}px)`,
-  );
-  const inputRef = useRef<HTMLInputElement>();
-
-  const submitGrab = () => {
-    const inputVal = inputRef.current!.value;
-
-    const isUrl = inputVal.includes(
-      window.location.protocol + window.location.host,
-    );
-
-    const params = isUrl
-      ? inputVal.split('?')[1]
-      : new URLSearchParams({
-          drop: inputRef.current!.value,
-        }).toString();
-
-    router.push(`${GRAB_PATH}?${params}`);
-  };
 
   return (
     <>
       <HeroBanner />
       <Features />
-      <Center
-        style={{
-          minHeight: '230px',
-          paddingTop: theme.spacing.xl,
-          paddingBottom: theme.spacing.md,
-        }}
-      >
-        <Card
-          id={'start-grab-section'}
-          withBorder
-          shadow={'sm'}
-          style={{
-            width: '90%',
-            maxWidth: '500px',
-            padding: theme.spacing.xl,
-          }}
-        >
-          <Title size={'h2'}>Grab a Secret</Title>
-          <Text size={'sm'} style={{ paddingTop: 2 }}>
-            Enter your drop ID (or link) that was shared with you!
-          </Text>
-          <Group style={{ paddingTop: theme.spacing.md }}>
-            <TextInput
-              ref={inputRef as RefObject<HTMLInputElement>}
-              styles={{
-                root: isMobile
-                  ? {
-                      width: '100%',
-                    }
-                  : undefined,
-              }}
-              size={'md'}
-              variant={'filled'}
-              placeholder={'sUp3Rs3c3R+'}
-            />
-            <Button
-              size={'md'}
-              fullWidth={isMobile}
-              onClick={submitGrab}
-            >
-              Start
-            </Button>
-          </Group>
-        </Card>
-      </Center>
+      <GrabSection />
       <Tools />
       <PricingTeaser />
-      <FeaturesSupport />
       <Faq />
-      <Center>
+      <Center py="xl">
         <Button
           className={classes.control}
           size={'lg'}
