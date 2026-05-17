@@ -8,7 +8,7 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { OVERVIEW_DOCS_PATH, PRICING_PATH } from '@shared/config/paths';
+import { OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import Brand from 'atoms/header/Brand';
 import { useRouter } from 'next/router';
 
@@ -23,13 +23,14 @@ const Header = () => {
   );
 
   const onDocsClick = () => router.push(OVERVIEW_DOCS_PATH);
-  const onPricingClick = () => router.push(PRICING_PATH);
 
   return (
     <div
       style={{
         height: 102,
-        padding: isMobile ? 'var(--mantine-spacing-md)' : 'var(--mantine-spacing-xl)',
+        padding: isMobile
+          ? 'var(--mantine-spacing-md)'
+          : 'var(--mantine-spacing-xl)',
       }}
     >
       <Flex direction={'row'} justify={'space-between'}>
@@ -42,13 +43,6 @@ const Header = () => {
           <Brand />
         </Box>
         <Group ml={50}>
-          <Button
-            variant={'subtle'}
-            className={classes.navButton}
-            onClick={onPricingClick}
-          >
-            Pricing
-          </Button>
           <Button
             variant={'subtle'}
             className={classes.navButton}

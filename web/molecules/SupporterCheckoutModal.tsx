@@ -17,9 +17,13 @@ type Props = {
 
 export function SupporterCheckoutModal({ opened, onClose }: Props) {
   const fetchClientSecret = useCallback(async () => {
-    const res = await fetch('/api/stripe/checkout', { method: 'POST' });
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+    });
     if (!res.ok) {
-      const { error } = await res.json().catch(() => ({ error: 'failed' }));
+      const { error } = await res
+        .json()
+        .catch(() => ({ error: 'failed' }));
       throw new Error(error ?? 'Failed to start checkout');
     }
     const { clientSecret } = await res.json();

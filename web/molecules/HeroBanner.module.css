@@ -1,7 +1,7 @@
 .wrapper {
   position: relative;
   padding-top: 75px;
-  padding-bottom: 105px;
+  padding-bottom: 64px;
 }
 
 @media (max-width: 520px) {
