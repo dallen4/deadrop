@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, Center } from '@mantine/core';
 import { OVERVIEW_DOCS_PATH } from '@shared/config/paths';
 import { HeroBanner } from 'molecules/HeroBanner';
