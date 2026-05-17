@@ -11,3 +11,5 @@ export const CLI_DOCS_PATH = '/docs/cli';
 export const CAPTCHA_API_PATH = '/api/captcha';
 
 export const DROP_API_PATH = '/drop';
+
+export const PRICING_PATH = '/pricing';
