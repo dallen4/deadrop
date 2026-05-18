@@ -47,6 +47,7 @@ export function SupporterCheckoutModal({ opened, onClose }: Props) {
           stripe={stripePromise}
           options={{
             fetchClientSecret,
+            onComplete: onClose,
           }}
         >
           <EmbeddedCheckout />
