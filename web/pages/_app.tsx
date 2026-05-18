@@ -5,12 +5,14 @@ import { MantineProvider } from '@mantine/core';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import Layout from 'molecules/Layout';
+import DocsLayout from 'molecules/DocsLayout';
 import { Notifications } from '@mantine/notifications';
 import { ClerkProvider } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import Head from 'next/head';
 import { description, title } from '@config/app';
 import { SWProvider } from 'contexts/SWContext';
+import { useRouter } from 'next/router';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -18,6 +20,8 @@ import '@mantine/dropzone/styles.css';
 
 export default function MyApp(props: AppProps) {
   const { Component, pageProps } = props;
+  const router = useRouter();
+  const isDocs = router.pathname.startsWith('/docs');
 
   const isPreview =
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.startsWith(
@@ -63,7 +67,13 @@ export default function MyApp(props: AppProps) {
           <Notifications />
           <SWProvider>
             <Layout>
-              <Component {...pageProps} />
+              {isDocs ? (
+                <DocsLayout>
+                  <Component {...pageProps} />
+                </DocsLayout>
+              ) : (
+                <Component {...pageProps} />
+              )}
             </Layout>
           </SWProvider>
         </MantineProvider>

@@ -35,7 +35,9 @@ export default async function handler(
       return_url: `${origin}/pricing?status=success&session_id={CHECKOUT_SESSION_ID}`,
     });
 
-    return res.status(200).json({ clientSecret: session.client_secret });
+    return res
+      .status(200)
+      .json({ clientSecret: session.client_secret });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : 'Unknown error';
