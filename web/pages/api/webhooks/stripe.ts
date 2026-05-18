@@ -1,12 +1,28 @@
 import { clerkClient } from '@clerk/nextjs/server';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
-import { Session } from 'stripe/cjs/resources/Checkout';
+import { Event } from 'stripe/cjs/resources/Events';
 
 // Must be public — no Clerk auth middleware on this route
 export const config = { api: { bodyParser: false } };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
+const PRICE_TO_PLAN: Record<string, string> = {
+  [process.env.STRIPE_SUPPORTER_PRICE_ID!]: 'supporter',
+  // [process.env.STRIPE_PRO_PRICE_ID!]: 'pro',
+  // [process.env.STRIPE_ORG_PRICE_ID!]: 'org',
+};
+
+async function grantPlan(userId: string, priceId: string) {
+  const plan = PRICE_TO_PLAN[priceId];
+  if (!plan) return;
+
+  const clerk = await clerkClient();
+  await clerk.users.updateUserMetadata(userId, {
+    publicMetadata: { plan },
+  });
+}
 
 async function getRawBody(req: NextApiRequest): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -32,7 +48,7 @@ export default async function handler(
       .json({ error: 'Missing stripe-signature header' });
   }
 
-  let event: ReturnType<typeof stripe.webhooks.constructEvent>;
+  let event: Event;
   try {
     const rawBody = await getRawBody(req);
     event = stripe.webhooks.constructEvent(
@@ -48,21 +64,23 @@ export default async function handler(
       .json({ error: `Webhook error: ${message}` });
   }
 
+  // One-time payment (Supporter)
+  if (event.type === 'payment_intent.succeeded') {
+    const intent = event.data.object;
+    const { userId, priceId } = intent.metadata ?? {};
+    if (userId && priceId) await grantPlan(userId, priceId);
+  }
+
+  // Subscription first payment + renewals (Pro, Org)
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Session;
-    const userId = session.client_reference_id;
-
-    if (!userId) {
-      // No way to map this purchase to a Clerk user — log and ack so Stripe stops retrying.
-      return res
-        .status(200)
-        .json({ received: true, note: 'no client_reference_id' });
-    }
-
-    const clerk = await clerkClient();
-    await clerk.users.updateUserMetadata(userId, {
-      publicMetadata: { plan: 'supporter' },
-    });
+    const checkoutSession = event.data.object;
+    const sub = checkoutSession.subscription
+      ? await stripe.subscriptions.retrieve(
+          checkoutSession.subscription as string,
+        )
+      : null;
+    const { userId, priceId } = sub?.metadata ?? {};
+    if (userId && priceId) await grantPlan(userId, priceId);
   }
 
   return res.status(200).json({ received: true });
