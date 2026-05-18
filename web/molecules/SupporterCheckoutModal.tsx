@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { Modal } from '@mantine/core';
+import { useMobile } from 'hooks/use-mobile';
 import {
   EmbeddedCheckout,
   EmbeddedCheckoutProvider,
@@ -16,6 +17,8 @@ type Props = {
 };
 
 export function SupporterCheckoutModal({ opened, onClose }: Props) {
+  const isMobile = useMobile();
+
   const fetchClientSecret = useCallback(async () => {
     const res = await fetch('/api/stripe/checkout', {
       method: 'POST',
@@ -37,11 +40,14 @@ export function SupporterCheckoutModal({ opened, onClose }: Props) {
       title="Become a Supporter"
       size="lg"
       centered
+      fullScreen={isMobile}
     >
       {opened && (
         <EmbeddedCheckoutProvider
           stripe={stripePromise}
-          options={{ fetchClientSecret }}
+          options={{
+            fetchClientSecret,
+          }}
         >
           <EmbeddedCheckout />
         </EmbeddedCheckoutProvider>
