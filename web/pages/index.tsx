@@ -19,7 +19,7 @@ const Home = () => {
       <Tools />
       <PricingTeaser />
       <Faq />
-      <Center py="xl">
+      <Center pb="xl">
         <Button
           className={classes.control}
           size={'lg'}
