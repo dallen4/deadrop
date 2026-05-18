@@ -1,0 +1,103 @@
+# FAQs
+
+Common questions about how deadrop works, what's stored, and how to use it.
+
+## 🚀 Getting started
+
+### Do I need an account to use deadrop?
+
+No. Dropping and grabbing secrets work without an account on the web app and CLI. An account is only required for premium features: cloud-synced vaults, the VS Code extension, and CI/CD service tokens.
+
+### What kinds of data can I drop?
+
+Raw text strings, JSON payloads, and most plain-text configuration files (`.env`, `.yml`, `.json`, etc). Binary files are supported up to a per-drop size limit defined in `@shared/config/files`.
+
+### How do I install the CLI?
+
+Run the one-line installer:
+
+```
+curl -fsSL deadrop.io/install.sh | sh
+```
+
+The script downloads the appropriate binary for your platform and places it in your home directory. You can inspect it at `deadrop.io/install.sh` before running. The CLI is also available on npm as `deadrop` if you'd rather install it through your package manager.
+
+## 🔐 Security & cryptography
+
+### What cryptographic standards are leveraged to secure the handoff?
+
+deadrop uses ECDH (Elliptic Curve Diffie-Hellman) for key exchange between dropper and grabber, AES-256-GCM for encrypting the payload, and SHA-256 for verifying transfer integrity. All operations run through the Web Crypto API in the browser, or Node.js's built-in `globalThis.crypto` in the CLI.
+
+### Can deadrop see my secret?
+
+No. Every cryptographic operation happens on the client. Encryption keys are never sent to a server. The only data our servers see is opaque: a drop ID, the dropper's peer ID, and a one-time session nonce. The encrypted payload itself flows directly between the two peers over WebRTC and never transits our infrastructure.
+
+### Where are keys stored or persisted during and after a drop?
+
+Neither public nor private keys are ever persisted on disk. Key pairs live in memory only for the lifetime of the session and are destroyed when the drop completes or the page is closed. They are never sent to our servers. Only the public ECDH key portions are transmitted over the secure peer-to-peer WebRTC connection.
+
+### What happens if someone intercepts the network traffic during a drop?
+
+The WebRTC connection between peers is encrypted at the transport layer (DTLS/SRTP). The payload inside is additionally encrypted end-to-end with AES-256-GCM using a key derived from the ECDH exchange. Even an attacker with access to both the signalling server and the network path would only see opaque session metadata and an encrypted blob.
+
+### Is the install script safe to run?
+
+The script is hosted at `deadrop.io/install.sh` and is served over HTTPS. It downloads the deadrop CLI binary, verifies its checksum, and installs it to your home directory. No `sudo` required. Before running, you can fetch it without executing to read it:
+
+```
+curl -fsSL deadrop.io/install.sh
+```
+
+## ⏱️ Drop lifecycle
+
+### How long does a drop session stay active?
+
+A drop session stays active for as long as the dropper's tab or process is open. Once the grabber connects and the transfer completes, the session ends and the encryption keys are discarded. There's no long-lived storage of the secret on our side.
+
+### Can I cancel a drop after starting it?
+
+Yes. Closing the dropper's tab (or terminating the CLI session) tears down the WebRTC connection. Once you've shared the drop ID though, anyone with that ID can still attempt to connect while the session is open. After the session ends, the drop ID becomes useless.
+
+### How many people can I drop a secret to at once?
+
+One. Each drop session is a 1:1 handoff between dropper and grabber. Multi-recipient drops are on the roadmap as a premium feature.
+
+### Can I send the same secret to multiple people?
+
+You can start a new drop for each recipient. Each gets a unique drop ID and fresh keys. We deliberately don't reuse drop sessions so that compromising one handoff doesn't expose others.
+
+## 💻 Surfaces
+
+### Is this service only available as a web application?
+
+No. deadrop has three surfaces:
+
+- **Web app**: `deadrop.io`, also installable as a PWA
+- **CLI**: `deadrop` on npm or via the install script. Runs on macOS, Linux, and Windows
+- **VS Code extension**: drop, grab, and browse vaults directly from your editor (experimental, Supporter+ plans)
+
+All three implement the same cryptographic protocol and can interoperate. For example, you can drop from the CLI and grab in the browser.
+
+### What's the difference between the web app, CLI, and VS Code extension?
+
+The web app is the easiest entry point and requires zero setup. The CLI is best for scripting, automation, and dropping files from your terminal. It also unlocks CI/CD service tokens on paid plans. The VS Code extension brings drop, grab, and vault access into your editor without context-switching.
+
+## 🗄️ Vaults
+
+### What is a vault?
+
+A vault is a collection of secrets organised by environment (e.g. `production`, `staging`, `development`). You can store API keys, connection strings, and config values, then reference them from the CLI or VS Code extension. Local vaults are free and stored on your machine. Cloud-synced vaults require a Supporter+ plan and sync across devices.
+
+### What's the difference between local and cloud vaults?
+
+Local vaults are stored as encrypted SQLite databases on the device you created them on. Cloud-synced vaults additionally back up the encrypted store to our managed Turso database so you can access the same secrets from multiple devices. In both cases, the contents are encrypted client-side, so we cannot read them.
+
+## 💳 Plans & pricing
+
+### What features require a paid plan?
+
+The free tier covers unlimited drops, grabs, local vaults, and the CLI. Paid plans add cloud-synced vaults, the VS Code extension, CI/CD service tokens, and (on Pro+) delegated access for collaborators. See the [pricing page](/pricing) for the full comparison.
+
+### Can I self-host deadrop?
+
+Not yet officially. The codebase is structured to run the Cloudflare Worker independently, but we don't currently publish self-hosting docs. Reach out if this is something you need.
