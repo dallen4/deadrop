@@ -4,14 +4,14 @@ import {
   Button,
   Card,
   Divider,
+  Group,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
-import { useUser } from '@clerk/nextjs';
+import { SignInButton, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/router';
 import { FeatureCheckmark } from 'atoms/FeatureCheckmark';
-import { PRICING_PATH } from '@shared/config/paths';
 import type { TierDef } from '@shared/config/tiers';
 import { SupporterCheckoutModal } from './SupporterCheckoutModal';
 import classes from './PricingTierCard.module.css';
@@ -31,6 +31,7 @@ export function PricingTierCard({
   tagline,
   price,
   priceSubLabel,
+  priceBadge,
   badge,
   highlighted,
   features,
@@ -38,7 +39,6 @@ export function PricingTierCard({
   ctaVariant,
   ctaType,
   ctaHref,
-  planId,
   compact,
 }: Props) {
   const router = useRouter();
@@ -46,15 +46,12 @@ export function PricingTierCard({
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const displayFeatures = compact ? features.slice(0, 3) : features;
 
+  const needsSignIn = ctaType === 'external' && !user;
+
   const handleCta = () => {
     if (ctaType === 'router' && ctaHref) {
       router.push(ctaHref);
     } else if (ctaType === 'external') {
-      // Supporter checkout: must be signed in so the API can attach userId for the webhook.
-      if (!user) {
-        router.push(`/sign-in?redirect_url=${encodeURIComponent(PRICING_PATH)}`);
-        return;
-      }
       setCheckoutOpen(true);
     } else if (ctaType === 'contact') {
       window.location.href = 'mailto:hello@deadrop.dev';
@@ -68,7 +65,11 @@ export function PricingTierCard({
       radius="md"
       padding="xl"
       className={highlighted ? classes.highlighted : undefined}
-      style={{ display: 'flex', flexDirection: 'column' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
     >
       <Stack gap="xs" style={{ flex: 1 }}>
         {badge && (
@@ -82,7 +83,14 @@ export function PricingTierCard({
           </Badge>
         )}
 
-        <Title order={3}>{tierName}</Title>
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <Title order={3}>{tierName}</Title>
+          {priceBadge && (
+            <Badge variant="light" color="gray" size="sm">
+              {priceBadge}
+            </Badge>
+          )}
+        </Group>
 
         <Text size="sm" c="dimmed">
           {tagline}
@@ -112,6 +120,12 @@ export function PricingTierCard({
         <Button variant={ctaVariant} fullWidth mt="xl" disabled>
           {ctaLabel} (coming soon)
         </Button>
+      ) : needsSignIn ? (
+        <SignInButton mode="modal">
+          <Button variant={ctaVariant} fullWidth mt="xl">
+            {ctaLabel}
+          </Button>
+        </SignInButton>
       ) : (
         <Button
           variant={ctaVariant}

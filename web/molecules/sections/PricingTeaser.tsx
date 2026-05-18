@@ -25,14 +25,10 @@ export function PricingTeaser() {
 
       <SimpleGrid
         cols={{ base: 1, sm: 3 }}
-        spacing={{ base: 'lg', md: 'xl' }}
+        spacing={{ base: 'lg', lg: 'xl' }}
       >
         {TEASER_TIERS.map((tier) => (
-          <PricingTierCard
-            key={tier.tierName}
-            {...tier}
-            compact
-          />
+          <PricingTierCard key={tier.tierName} {...tier} compact />
         ))}
       </SimpleGrid>
 
