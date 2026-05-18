@@ -123,7 +123,7 @@ export function PricingSection() {
 
       <SimpleGrid
         cols={{ base: 1, sm: 2, md: 4 }}
-        spacing="xl"
+        spacing="lg"
         mt="xl"
       >
         {TIERS.map((tier) => (

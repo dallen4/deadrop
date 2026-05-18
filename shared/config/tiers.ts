@@ -11,6 +11,7 @@ export type TierDef = {
   tagline: string
   price: string
   priceSubLabel?: string
+  priceBadge?: string
   badge?: 'founding' | 'most-popular' | 'best-value'
   highlighted?: boolean
   features: FeatureEntry[]
@@ -42,9 +43,8 @@ export const TIERS: TierDef[] = [
   {
     tierName: 'Supporter',
     price: '$15',
-    priceSubLabel: 'one-time',
+    priceBadge: 'one-time',
     tagline: 'Solo dev. Cloud vault + pipelines.',
-    badge: 'founding',
     features: [
       { label: '15 drops/day', included: true },
       { label: '1 cloud vault (3 environments)', included: true },
@@ -63,8 +63,6 @@ export const TIERS: TierDef[] = [
     price: '$8/mo',
     priceSubLabel: 'or $69/yr — save 28%',
     tagline: 'Delegate access to collaborators.',
-    badge: 'most-popular',
-    highlighted: true,
     features: [
       { label: 'Unlimited drops', included: true },
       { label: '3 cloud vaults (unlimited environments)', included: true },
