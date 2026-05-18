@@ -1,53 +1,224 @@
-import { BlockCode } from 'atoms/Code';
+import { InlineCode, BlockCode } from 'atoms/Code';
 
-# deadrop CLI
+# ⌨️ deadrop CLI
 
-## Prerequisites
+The CLI gives you everything the web app does (dropping and grabbing) plus local and cloud-synced vaults for secret storage and a `.env` sync workflow that fits into scripts and CI/CD pipelines.
 
-In order to run the CLI, you need the following: 
+## 📦 Installation
 
-- `node`: `>=20`
-- `npm`: `>=9` OR `yarn`: `^1`
+### One-line installer (recommended)
 
-## Installation
+Downloads the prebuilt binary for your platform into your home directory. No Node.js required.
 
-To install the CLI in a project:
+```
+curl -fsSL deadrop.io/install.sh | sh
+```
 
-`npm install deadrop`
+You can fetch the script without executing it to read it first:
 
-To install the CLI globally:
+```
+curl -fsSL deadrop.io/install.sh
+```
 
-`npm install -g deadrop`
+### Via npm
 
-## Configuration
+If you'd rather manage it with your package manager:
 
-To configure the CLI, simply run:
+```
+npm install deadrop
+```
 
-`deadrop init`
+Then invoke it through your package runner:
 
-<BlockCode data={`active_vault:
+```
+npx deadrop [command]
+```
+
+### Requirements
+
+For the npm install path: Node.js 20 or newer. The install.sh binary has no runtime dependencies.
+
+## 🚀 Quick start
+
+Share a secret in one terminal:
+
+```
+$ deadrop drop "my-database-password"
+```
+
+Grab it in another (using the drop ID printed by the dropper):
+
+```
+$ deadrop grab <drop_id>
+```
+
+That's it. The two sessions complete a peer-to-peer handoff, the secret prints in the grabber's terminal, and both sessions exit.
+
+## ⚙️ Configuration
+
+Run the setup wizard once after install:
+
+```
+deadrop init
+```
+
+This creates a config file (default location is `.deadrop/` in your home directory) and your first local vault. The config tracks which vault is active and stores per-vault metadata:
+
+```
+active_vault:
   name: default
   environment: dev
 vaults:
   default:
-    location: /<path-to-project-using-vault>/.deadrop/default.db
-    key: SVgZsSZgtMQbUz4kC83Lo6RqiCqLIYBIA3A1r3u+4s4=
-`}/>
+    location: /<path-to-vault>/default.db
+    key: <base64-key>
+```
 
-## Usage
+The `key` is the encryption key for the local SQLite vault file. Treat it like any other secret. Never commit your `.deadrop/` directory.
 
-To use the CLI and install on-demand:
+## 🔐 Authentication
 
-`npx deadrop [options] [command]`
+Authentication is only required for cloud-synced vaults and CI/CD service tokens. Drop and grab work without it.
 
-### drop
+```
+deadrop login    # opens a browser to sign in via Clerk
+deadrop logout
+```
 
-Start a drop session using the drop command and defining the input:
+Tokens are cached locally and refreshed automatically. The migration to OS keychain storage (macOS Keychain, Linux Secret Service, Windows Credential Vault) is in progress.
 
-`deadrop drop [options] [input]`
+## 📤 Commands
 
-### grab
+### `drop`
 
-Connect to an active drop session using the ID:
+Share a secret with a single recipient over an end-to-end encrypted P2P connection.
 
-`deadrop grab <drop_id>`
+```
+deadrop drop [options] [input]
+```
+
+| Argument | Description |
+|---|---|
+| `[input]` | The secret to drop. If omitted, you'll be prompted. |
+| `-i, --input <value>` | Pass the secret as a flag instead of a positional argument. |
+| `-f, --file` | Treat the input as a file path and drop the file's contents. |
+
+**Examples:**
+
+```
+# Drop a raw string
+deadrop drop "ghp_xxxxxxxxxxxxxxxx"
+
+# Drop the contents of a .env file
+deadrop drop -f ./.env.production
+
+# Drop a value piped from another command
+echo "$DATABASE_URL" | deadrop drop
+```
+
+### `grab`
+
+Connect to an active drop session using its ID.
+
+```
+deadrop grab <drop_id>
+```
+
+The grabbed secret is printed to stdout, so you can pipe or redirect:
+
+```
+deadrop grab abc123 > .env.local
+```
+
+### `vault`
+
+Manage local and cloud-synced encrypted vaults.
+
+#### `vault create <name> [location] [--cloud]`
+
+Create a new vault. Without `--cloud`, the vault is stored locally as an encrypted SQLite file. With `--cloud`, a synced replica is created (requires authentication and a Supporter+ plan).
+
+```
+deadrop vault create work
+deadrop vault create staging --cloud
+deadrop vault create scratch ~/projects/scratch
+```
+
+#### `vault use <name>`
+
+Switch the active vault. Subsequent `secret` and `drop` commands operate against this vault.
+
+```
+deadrop vault use staging
+```
+
+#### `vault sync`
+
+Sync the active vault to or from a `.env` file in the current directory. Useful for keeping a vault and a checked-in template in step during local development.
+
+#### `vault export <name>`
+
+Export the secrets in a vault to stdout in `.env` format.
+
+```
+deadrop vault export work > .env.work
+```
+
+#### `vault import <path>`
+
+Read a `.env` file and add its keys and values to the active vault.
+
+```
+deadrop vault import ./.env.production
+```
+
+#### `vault delete <name>`
+
+Remove a vault from config and delete its database file. This is destructive and cannot be undone.
+
+### `secret`
+
+Manage secrets in the active vault.
+
+#### `secret add [name] [value]`
+
+Add a secret. If `name` or `value` is omitted, you'll be prompted.
+
+```
+deadrop secret add API_KEY "sk-..."
+deadrop secret add    # interactive prompts for both
+```
+
+#### `secret remove [name]`
+
+Remove a secret by name. Omit the name to pick interactively.
+
+```
+deadrop secret remove API_KEY
+```
+
+## 💡 Patterns
+
+**Drop a file's contents safely.** Avoid copy-paste accidents by dropping the file directly:
+
+```
+deadrop drop -f ./.env.production
+```
+
+**Stream a vault into your shell.** Export to stdout and source it into your current process:
+
+```
+eval "$(deadrop vault export work)"
+```
+
+**Inline secrets in scripts without persisting them.** Grab a secret straight into an env var for the next command:
+
+```
+DB_URL=$(deadrop grab <drop_id>) ./deploy.sh
+```
+
+## 🔗 Related
+
+- [VS Code extension](/docs/features/vscode) for the same drop, grab, and vault flows inside your editor
+- [FAQs](/docs/faqs) for answers about security, accounts, and plans
+- [Pricing](/pricing) for which features need a paid plan
