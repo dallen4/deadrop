@@ -90,8 +90,29 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
     return true;
   };
 
+  const checkAndIncrementAuthUserDropCount = async (
+    userId: string,
+    limit: number,
+  ) => {
+    const currDate = new Date();
+    const dateStr = `${currDate.getFullYear()}-${currDate.getMonth() + 1}-${currDate.getDate()}`;
+    const key = `user:${userId}:drops:${dateStr}`;
+
+    const userDropCount = await client.get<number>(key);
+
+    if (!userDropCount) {
+      await client.setex(key, DAY_IN_SEC, 1);
+    } else {
+      if (limit !== Infinity && userDropCount >= limit) return false;
+      else await client.incr(key);
+    }
+
+    return true;
+  };
+
   return {
     checkAndIncrementUserDropCount,
+    checkAndIncrementAuthUserDropCount,
     createDrop,
     getDrop,
     deleteDrop,

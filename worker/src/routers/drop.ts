@@ -1,9 +1,11 @@
 import { getCookie } from 'hono/cookie';
+import { getAuth } from '@hono/clerk-auth';
 import { DropDetails } from '@shared/types/common';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { formatDropKey } from '@shared/lib/util';
 import { createCacheHandlers } from '../lib/cache';
+import { getPlanLimits, getUserPlan } from '../lib/billing';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { SessionNotFound } from '../lib/messages';
@@ -20,8 +22,11 @@ const dropRouter = hono()
 
       const testToken = getCookie(c, TEST_TOKEN_COOKIE);
 
-      const { createDrop, checkAndIncrementUserDropCount } =
-        createCacheHandlers(c);
+      const {
+        createDrop,
+        checkAndIncrementUserDropCount,
+        checkAndIncrementAuthUserDropCount,
+      } = createCacheHandlers(c);
 
       const verifyTestToken = async (token: string) => {
         const fetchedToken = await c
@@ -31,9 +36,19 @@ const dropRouter = hono()
         return fetchedToken ? fetchedToken === token : false;
       };
 
+      const auth = getAuth(c);
+      const sessionClaims = auth?.sessionClaims as
+        | Record<string, unknown>
+        | undefined;
+
       const canDrop = testToken
         ? await verifyTestToken(testToken)
-        : await checkAndIncrementUserDropCount(ipAddress!);
+        : sessionClaims && auth?.userId
+          ? await checkAndIncrementAuthUserDropCount(
+              auth.userId,
+              getPlanLimits(sessionClaims).dailyDrops,
+            )
+          : await checkAndIncrementUserDropCount(ipAddress!);
 
       if (!canDrop)
         return c.json({ message: 'Daily drop limit reached' }, 500);

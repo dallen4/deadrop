@@ -14,10 +14,13 @@ import {
 import { InlineCode } from 'atoms/Code';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { AnchorHTMLAttributes, DetailedHTMLProps } from 'react';
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
     const theme = useMantineTheme();
+    const { pathname } = useRouter();
+    const isDocs = pathname.startsWith('/docs');
 
     const LargeText = (props: any) => (
         <Text size={theme.fontSizes.lg} {...props} />
@@ -159,24 +162,39 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
                 {children}
             </List>
         ),
-        wrapper: ({ children }) => (
-            <Center
-                style={{
-                    marginBottom:
-                        'calc(var(--mantine-spacing-xl) * 1.25)',
-                    marginTop: 'var(--mantine-spacing-xl)',
-                }}
-            >
+        wrapper: ({ children }) =>
+            isDocs ? (
                 <Box
                     style={{
                         width: '100%',
                         maxWidth: MAX_MDX_CONTENT_WIDTH,
+                        paddingLeft: theme.spacing.xl,
+                        paddingRight: theme.spacing.xl,
+                        marginBottom:
+                            'calc(var(--mantine-spacing-xl) * 1.25)',
+                        marginTop: theme.spacing.md,
                     }}
                 >
                     {children}
                 </Box>
-            </Center>
-        ),
+            ) : (
+                <Center
+                    style={{
+                        marginBottom:
+                            'calc(var(--mantine-spacing-xl) * 1.25)',
+                        marginTop: 'var(--mantine-spacing-xl)',
+                    }}
+                >
+                    <Box
+                        style={{
+                            width: '100%',
+                            maxWidth: MAX_MDX_CONTENT_WIDTH,
+                        }}
+                    >
+                        {children}
+                    </Box>
+                </Center>
+            ),
     };
 
     return {
