@@ -7,6 +7,7 @@ jobs:
   test:
     timeout-minutes: 20
     runs-on: macos-latest
+    environment: ${{ github.event.deployment.environment }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -26,6 +27,11 @@ jobs:
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_SUPPORTER_LOOKUP_KEY: ${{ vars.STRIPE_SUPPORTER_LOOKUP_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
         run: |
           export STAGE=$STAGE
           echo "Running '$STAGE' environment tests..."
