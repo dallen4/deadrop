@@ -2,10 +2,11 @@ import { PlaywrightTestConfig, devices } from '@playwright/test';
 import path from 'path';
 import { baseURL, isLocal } from './tests/e2e/config';
 
-const server = {
+const server: PlaywrightTestConfig['webServer'] = {
   command: 'pnpm start',
   url: baseURL,
   timeout: 120_000,
+  reuseExistingServer: true,
 };
 
 type BrowserName = 'chromium' | 'firefox' | 'webkit';
@@ -15,7 +16,18 @@ const config: PlaywrightTestConfig<{
   dropBrowser: BrowserName;
   grabBrowser: BrowserName;
 }> = {
-  globalSetup: path.join(__dirname, 'tests', 'e2e', 'global-setup.ts'),
+  globalSetup: path.join(
+    __dirname,
+    'tests',
+    'e2e',
+    'global-setup.ts',
+  ),
+  globalTeardown: path.join(
+    __dirname,
+    'tests',
+    'e2e',
+    'global-teardown.ts',
+  ),
   timeout: 30_000,
   testDir: path.join(__dirname, 'tests', 'e2e'),
   retries: 2,
