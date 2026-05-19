@@ -8,16 +8,10 @@ export const config = { api: { bodyParser: false } };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-const PRICE_TO_PLAN: Record<string, string> = {
-  [process.env.STRIPE_SUPPORTER_PRICE_ID!]: 'supporter',
-  // [process.env.STRIPE_PRO_PRICE_ID!]: 'pro',
-  // [process.env.STRIPE_ORG_PRICE_ID!]: 'org',
-};
+const KNOWN_PLANS = ['supporter', 'pro', 'org'] as const;
+type Plan = (typeof KNOWN_PLANS)[number];
 
-async function grantPlan(userId: string, priceId: string) {
-  const plan = PRICE_TO_PLAN[priceId];
-  if (!plan) return;
-
+async function grantPlan(userId: string, plan: Plan) {
   const clerk = await clerkClient();
   await clerk.users.updateUserMetadata(userId, {
     publicMetadata: { plan },
@@ -67,8 +61,10 @@ export default async function handler(
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Checkout.Session;
     const userId = session.client_reference_id;
-    const priceId = session.metadata?.priceId;
-    if (userId && priceId) await grantPlan(userId, priceId);
+    const plan = session.metadata?.plan as Plan | undefined;
+    if (userId && plan && KNOWN_PLANS.includes(plan)) {
+      await grantPlan(userId, plan);
+    }
   }
 
   return res.status(200).json({ received: true });
