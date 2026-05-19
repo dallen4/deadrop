@@ -1,4 +1,4 @@
-import { getAuth } from '@clerk/nextjs/server';
+import { clerkClient, getAuth } from '@clerk/nextjs/server';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 
@@ -27,11 +27,17 @@ export default async function handler(
   const origin = req.headers.origin ?? `https://${req.headers.host}`;
 
   try {
+    const clerk = await clerkClient();
+    const user = await clerk.users.getUser(userId);
+    const email = user.emailAddresses[0].emailAddress;
+
     const session = await stripe.checkout.sessions.create({
       ui_mode: 'embedded_page',
       mode: 'payment',
       line_items: [{ price: priceId, quantity: 1 }],
       client_reference_id: userId,
+      customer_email: email,
+      metadata: { priceId },
       return_url: `${origin}/pricing?status=success&session_id={CHECKOUT_SESSION_ID}`,
     });
 

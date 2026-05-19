@@ -1,6 +1,6 @@
 import { clerkClient } from '@clerk/nextjs/server';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+import Stripe, { Checkout } from 'stripe';
 import { Event } from 'stripe/cjs/resources/Events';
 
 // Must be public — no Clerk auth middleware on this route
@@ -64,22 +64,10 @@ export default async function handler(
       .json({ error: `Webhook error: ${message}` });
   }
 
-  // One-time payment (Supporter)
-  if (event.type === 'payment_intent.succeeded') {
-    const intent = event.data.object;
-    const { userId, priceId } = intent.metadata ?? {};
-    if (userId && priceId) await grantPlan(userId, priceId);
-  }
-
-  // Subscription first payment + renewals (Pro, Org)
   if (event.type === 'checkout.session.completed') {
-    const checkoutSession = event.data.object;
-    const sub = checkoutSession.subscription
-      ? await stripe.subscriptions.retrieve(
-          checkoutSession.subscription as string,
-        )
-      : null;
-    const { userId, priceId } = sub?.metadata ?? {};
+    const session = event.data.object as Checkout.Session;
+    const userId = session.client_reference_id;
+    const priceId = session.metadata?.priceId;
     if (userId && priceId) await grantPlan(userId, priceId);
   }
 
