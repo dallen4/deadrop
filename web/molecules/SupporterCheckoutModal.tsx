@@ -6,6 +6,7 @@ import {
   EmbeddedCheckoutProvider,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { CHECKOUT_SECRET_KEY } from 'config/cookies';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -20,6 +21,9 @@ export function SupporterCheckoutModal({ opened, onClose }: Props) {
   const isMobile = useMobile();
 
   const fetchClientSecret = useCallback(async () => {
+    const cached = sessionStorage.getItem(CHECKOUT_SECRET_KEY);
+    if (cached) return cached;
+
     const res = await fetch('/api/stripe/checkout', {
       method: 'POST',
     });
@@ -30,8 +34,14 @@ export function SupporterCheckoutModal({ opened, onClose }: Props) {
       throw new Error(error ?? 'Failed to start checkout');
     }
     const { clientSecret } = await res.json();
+    sessionStorage.setItem(CHECKOUT_SECRET_KEY, clientSecret);
     return clientSecret as string;
   }, []);
+
+  const handleComplete = () => {
+    sessionStorage.removeItem(CHECKOUT_SECRET_KEY);
+    onClose();
+  };
 
   return (
     <Modal
@@ -47,7 +57,7 @@ export function SupporterCheckoutModal({ opened, onClose }: Props) {
           stripe={stripePromise}
           options={{
             fetchClientSecret,
-            onComplete: onClose,
+            onComplete: handleComplete,
           }}
         >
           <EmbeddedCheckout />
