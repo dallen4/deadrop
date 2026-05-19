@@ -8,10 +8,7 @@ const clerk = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY!,
 });
 
-const buildEvent = (overrides: {
-  userId: string;
-  priceId: string;
-}) => ({
+const buildEvent = (overrides: { userId: string; plan: string }) => ({
   id: `evt_test_${Date.now()}`,
   object: 'event',
   type: 'checkout.session.completed',
@@ -20,7 +17,7 @@ const buildEvent = (overrides: {
       id: `cs_test_${Date.now()}`,
       object: 'checkout.session',
       client_reference_id: overrides.userId,
-      metadata: { priceId: overrides.priceId },
+      metadata: { plan: overrides.plan },
     },
   },
 });
@@ -38,9 +35,10 @@ test.describe('stripe webhook', () => {
     request,
   }) => {
     const userId = process.env.CLERK_TEST_USER_ID!;
-    const priceId = process.env.STRIPE_SUPPORTER_PRICE_ID!;
 
-    const payload = JSON.stringify(buildEvent({ userId, priceId }));
+    const payload = JSON.stringify(
+      buildEvent({ userId, plan: 'supporter' }),
+    );
     const signature = stripe.webhooks.generateTestHeaderString({
       payload,
       secret: process.env.STRIPE_WEBHOOK_SECRET!,
@@ -53,6 +51,15 @@ test.describe('stripe webhook', () => {
         'stripe-signature': signature,
       },
     });
+
+    if (res.status() !== 200) {
+      // eslint-disable-next-line no-console
+      console.error(
+        'webhook failed:',
+        res.status(),
+        await res.text(),
+      );
+    }
 
     expect(res.status()).toBe(200);
     expect(await res.json()).toEqual({ received: true });
@@ -67,7 +74,7 @@ test.describe('stripe webhook', () => {
     const payload = JSON.stringify(
       buildEvent({
         userId: process.env.CLERK_TEST_USER_ID!,
-        priceId: process.env.STRIPE_SUPPORTER_PRICE_ID!,
+        plan: 'supporter',
       }),
     );
 
@@ -88,7 +95,7 @@ test.describe('stripe webhook', () => {
     const payload = JSON.stringify(
       buildEvent({
         userId: process.env.CLERK_TEST_USER_ID!,
-        priceId: process.env.STRIPE_SUPPORTER_PRICE_ID!,
+        plan: 'supporter',
       }),
     );
 
