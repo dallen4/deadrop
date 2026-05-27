@@ -1,7 +1,6 @@
 import { clerkClient } from '@clerk/nextjs/server';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe, { Checkout } from 'stripe';
-import { Event } from 'stripe/cjs/resources/Events';
+import Stripe from 'stripe';
 
 // Must be public — no Clerk auth middleware on this route
 export const config = { api: { bodyParser: false } };
@@ -42,7 +41,7 @@ export default async function handler(
       .json({ error: 'Missing stripe-signature header' });
   }
 
-  let event: Event;
+  let event: Stripe.Event;
   try {
     const rawBody = await getRawBody(req);
     event = stripe.webhooks.constructEvent(
@@ -59,7 +58,7 @@ export default async function handler(
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Checkout.Session;
+    const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.client_reference_id;
     const plan = session.metadata?.plan as Plan | undefined;
     if (userId && plan && KNOWN_PLANS.includes(plan)) {
