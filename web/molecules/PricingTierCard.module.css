@@ -6,3 +6,7 @@
 .badge {
   margin-bottom: var(--mantine-spacing-xs);
 }
+
+.price {
+  font-size: var(--mantine-font-size-xl) * 2;
+}
