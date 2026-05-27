@@ -21,11 +21,7 @@ test.describe('checkout — handler', () => {
     await page.goto('/');
     await clerk.signIn({
       page,
-      signInParams: {
-        strategy: 'password',
-        identifier: process.env.CLERK_TEST_EMAIL!,
-        password: process.env.CLERK_TEST_PASSWORD!,
-      },
+      emailAddress: process.env.CLERK_TEST_EMAIL!,
     });
 
     const res = await page.request.post(CHECKOUT_API_PATH);
@@ -41,11 +37,7 @@ test.describe('checkout — modal sessionStorage caching', () => {
     await page.goto('/');
     await clerk.signIn({
       page,
-      signInParams: {
-        strategy: 'password',
-        identifier: process.env.CLERK_TEST_EMAIL!,
-        password: process.env.CLERK_TEST_PASSWORD!,
-      },
+      emailAddress: process.env.CLERK_TEST_EMAIL!,
     });
   });
 
