@@ -55,11 +55,11 @@ test-results/
 # Sentry
 .sentryclirc
 
-# Sentry
-.vercel
-
 # generated files
 cli/lib/bun-inject.ts
+*.tsbuildinfo
+
+.playwright-cli
 
 # deadrop config & vaults
 .deadroprc

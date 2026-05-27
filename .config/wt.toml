@@ -44,7 +44,7 @@
 copy = "wt step copy-ignored"
 deps = "pnpm install --frozen-lockfile"
 plan = "sh ./scripts/copy-plan.sh {{ primary_worktree_path }} {{ worktree_path }} {{ branch | sanitize }}"
-# open = "windsurf ."
+open = "zed -n ."
 
 # Pre-Merge: run unit tests and type-check before merging
 [pre-merge]
