@@ -1,19 +1,26 @@
 .wrapper {
   position: relative;
-  padding-top: 75px;
-  padding-bottom: 64px;
+  min-height: 76vh;
+  padding-bottom: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 520px) {
   .wrapper {
-    padding-top: 65px;
-    padding-bottom: 50px;
+    min-height: 76svh;
   }
 }
 
 .inner {
   position: relative;
   z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .brandName {
@@ -26,6 +33,7 @@
 @media (max-width: 504px) {
   .brandName {
     display: block;
+    align-self: flex-start;
   }
 }
 
@@ -46,6 +54,7 @@
   .title {
     font-size: 28px;
     text-align: left;
+    align-self: flex-start;
   }
 }
 
@@ -69,6 +78,7 @@
   margin-top: calc(var(--mantine-spacing-xl) * 1.5);
   display: flex;
   justify-content: center;
+  width: 100%;
 }
 
 @media (max-width: 520px) {
@@ -90,5 +100,37 @@
   .control:not(:first-child) {
     margin-top: var(--mantine-spacing-md);
     margin-left: 0;
+  }
+}
+
+.learnMore {
+  position: absolute;
+  bottom: var(--mantine-spacing-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--mantine-color-gray-3);
+  transition: color 150ms ease;
+}
+
+.learnMore:hover {
+  color: var(--mantine-color-white);
+}
+
+.chevron {
+  color: var(--mantine-color-blue-4);
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
   }
 }

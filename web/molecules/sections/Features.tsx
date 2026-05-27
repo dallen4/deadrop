@@ -61,7 +61,7 @@ function Feature({
 
 export function Features() {
   return (
-    <Container pt={0} pb="xl" size="lg" className={classes.wrapper}>
+    <Container pt="sm" pb="xl" size="lg" className={classes.wrapper}>
       <div className={classes.triangle}>
         {features.map((f) => (
           <Feature key={f.title} {...f} />

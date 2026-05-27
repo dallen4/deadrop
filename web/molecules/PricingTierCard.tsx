@@ -5,11 +5,13 @@ import {
   Card,
   Divider,
   Group,
+  Switch,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
 import { SignInButton, useUser } from '@clerk/nextjs';
+import { CheckoutButton } from '@clerk/nextjs/experimental';
 import { useRouter } from 'next/router';
 import { FeatureCheckmark } from 'atoms/FeatureCheckmark';
 import type { TierDef } from '@shared/config/tiers';
@@ -44,9 +46,14 @@ export function PricingTierCard({
   const router = useRouter();
   const { user } = useUser();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [planPeriod, setPlanPeriod] = useState<'month' | 'annual'>(
+    'month',
+  );
   const displayFeatures = compact ? features.slice(0, 3) : features;
+  const clerkPlanId = process.env.NEXT_PUBLIC_CLERK_PRO_PLAN_ID;
 
-  const needsSignIn = ctaType === 'external' && !user;
+  const needsSignIn =
+    (ctaType === 'external' || ctaType === 'clerk-checkout') && !user;
 
   const handleCta = () => {
     if (ctaType === 'router' && ctaHref) {
@@ -96,14 +103,36 @@ export function PricingTierCard({
           {tagline}
         </Text>
 
-        <Text fw={700} size="xl" mt="xs">
-          {price}
-        </Text>
-        {priceSubLabel && (
-          <Text size="xs" c="dimmed" mt={-8}>
-            {priceSubLabel}
-          </Text>
-        )}
+        <Group
+          justify="space-between"
+          align="flex-start"
+          wrap="nowrap"
+          mt="xs"
+        >
+          <Stack gap={0}>
+            <Text fw={700} className={classes.price}>
+              {price}
+            </Text>
+            {priceSubLabel && (
+              <Text size="xs" c="dimmed">
+                {priceSubLabel}
+              </Text>
+            )}
+          </Stack>
+          {ctaType === 'clerk-checkout' && (
+            <Switch
+              size="sm"
+              label="Annual"
+              labelPosition="left"
+              checked={planPeriod === 'annual'}
+              onChange={(e) =>
+                setPlanPeriod(
+                  e.currentTarget.checked ? 'annual' : 'month',
+                )
+              }
+            />
+          )}
+        </Group>
 
         <Divider my="sm" />
 
@@ -114,12 +143,12 @@ export function PricingTierCard({
         </Stack>
       </Stack>
 
-      {ctaType === 'clerk-checkout' ? (
-        // Placeholder — wire up <CheckoutButton> from @clerk/nextjs/experimental
-        // once Clerk Billing is enabled in the dashboard
-        <Button variant={ctaVariant} fullWidth mt="xl" disabled>
-          {ctaLabel} (coming soon)
-        </Button>
+      {ctaType === 'clerk-checkout' && clerkPlanId && !needsSignIn ? (
+        <CheckoutButton planId={clerkPlanId} planPeriod={planPeriod}>
+          <Button variant={ctaVariant} fullWidth mt="xl">
+            {ctaLabel}
+          </Button>
+        </CheckoutButton>
       ) : needsSignIn ? (
         <SignInButton mode="modal">
           <Button variant={ctaVariant} fullWidth mt="xl">

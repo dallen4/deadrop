@@ -1,26 +1,30 @@
 export type FeatureEntry = {
-  label: string
-  included: boolean | 'partial'
-  tooltip?: string
-}
+  label: string;
+  included: boolean | 'partial';
+  tooltip?: string;
+};
 
-export type CtaType = 'router' | 'external' | 'clerk-checkout' | 'contact'
+export type CtaType =
+  | 'router'
+  | 'external'
+  | 'clerk-checkout'
+  | 'contact';
 
 export type TierDef = {
-  tierName: string
-  tagline: string
-  price: string
-  priceSubLabel?: string
-  priceBadge?: string
-  badge?: 'founding' | 'most-popular' | 'best-value'
-  highlighted?: boolean
-  features: FeatureEntry[]
-  ctaLabel: string
-  ctaVariant: 'filled' | 'outline' | 'light'
-  ctaType: CtaType
-  ctaHref?: string
-  planId?: string
-}
+  tierName: string;
+  tagline: string;
+  price: string;
+  priceSubLabel?: string;
+  priceBadge?: string;
+  badge?: 'founding' | 'most-popular' | 'best-value';
+  highlighted?: boolean;
+  features: FeatureEntry[];
+  ctaLabel: string;
+  ctaVariant: 'filled' | 'outline' | 'light';
+  ctaType: CtaType;
+  ctaHref?: string;
+  planId?: string;
+};
 
 export const TIERS: TierDef[] = [
   {
@@ -60,12 +64,15 @@ export const TIERS: TierDef[] = [
   },
   {
     tierName: 'Pro',
-    price: '$8/mo',
-    priceSubLabel: 'or $69/yr — save 28%',
+    price: '$7/mo',
+    priceSubLabel: 'or $60/yr — save $2/mo',
     tagline: 'Delegate access to collaborators.',
     features: [
       { label: 'Unlimited drops', included: true },
-      { label: '3 cloud vaults (unlimited environments)', included: true },
+      {
+        label: '3 cloud vaults (unlimited environments)',
+        included: true,
+      },
       { label: 'Unlimited CI/CD service tokens', included: true },
       { label: 'Read-only sharing for humans', included: true },
       { label: 'Write delegation (up to 5 humans)', included: true },
@@ -93,4 +100,4 @@ export const TIERS: TierDef[] = [
     ctaVariant: 'light',
     ctaType: 'contact',
   },
-]
+];
