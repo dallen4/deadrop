@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. deadrop@0.3.0)'
-        required: true
+        description: 'Override release tag (defaults to the dispatched ref, e.g. deadrop@0.3.0)'
+        required: false
 
 jobs:
   cli-compile-binaries:
