@@ -62,12 +62,12 @@ test.describe('checkout — modal sessionStorage caching', () => {
 
     expect(postCount).toBe(1);
 
-    // Cache is populated
-    const cached = await page.evaluate(
-      (key) => sessionStorage.getItem(key),
+    // Cache write happens after the response resolves (await res.json()),
+    // so wait for it rather than reading immediately.
+    await page.waitForFunction(
+      (key) => !!sessionStorage.getItem(key),
       CHECKOUT_SECRET_KEY,
     );
-    expect(cached).toBeTruthy();
 
     // Close + reopen
     await page.keyboard.press('Escape');
@@ -93,6 +93,13 @@ test.describe('checkout — modal sessionStorage caching', () => {
       (res) => isCheckoutPost(res.url(), res.request().method()),
     );
     expect(postCount).toBe(1);
+
+    // Ensure the secret is cached before reloading; otherwise the reload
+    // races the sessionStorage write and the cache would be lost.
+    await page.waitForFunction(
+      (key) => !!sessionStorage.getItem(key),
+      CHECKOUT_SECRET_KEY,
+    );
 
     await page.reload();
     await page
