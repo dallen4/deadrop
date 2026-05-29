@@ -1,4 +1,5 @@
 import { InlineCode, BlockCode } from 'atoms/Code';
+import { INSTALL_COMMAND } from '@/molecules/HeroBanner';
 
 # ⌨️ deadrop CLI
 
@@ -11,7 +12,7 @@ The CLI gives you everything the web app does (dropping and grabbing) plus local
 Downloads the prebuilt binary for your platform into your home directory. No Node.js required.
 
 ```
-curl -fsSL deadrop.io/install.sh | sh
+{INSTALL_COMMAND}
 ```
 
 You can fetch the script without executing it to read it first:

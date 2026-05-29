@@ -26,7 +26,8 @@ import { TypeAnimation } from 'react-type-animation';
 
 import classes from './HeroBanner.module.css';
 
-const INSTALL_COMMAND = 'curl -fsSL deadrop.io/install.sh | sh';
+export const INSTALL_COMMAND =
+  'curl -fsSL https://deadrop.io/install.sh | sh';
 
 export function HeroBanner() {
   const theme = useMantineTheme();

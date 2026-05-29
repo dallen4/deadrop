@@ -1,3 +1,5 @@
+import { INSTALL_COMMAND } from '@/molecules/HeroBanner';
+
 # FAQs
 
 Common questions about how deadrop works, what's stored, and how to use it.
@@ -17,7 +19,7 @@ Raw text strings, JSON payloads, and most plain-text configuration files (`.env`
 Run the one-line installer:
 
 ```
-curl -fsSL deadrop.io/install.sh | sh
+{INSTALL_COMMAND}
 ```
 
 The script downloads the appropriate binary for your platform and places it in your home directory. You can inspect it at `deadrop.io/install.sh` before running. The CLI is also available on npm as `deadrop` if you'd rather install it through your package manager.
