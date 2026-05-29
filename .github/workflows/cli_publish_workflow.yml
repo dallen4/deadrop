@@ -13,13 +13,14 @@ jobs:
   cli-compile-binaries:
     name: Compile binary (${{ matrix.bun-target }})
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
           - runner: macos-latest
             bun-target: bun-darwin-arm64
             artifact-name: deadrop-darwin-arm64
-          - runner: macos-13
+          - runner: macos-15-intel
             bun-target: bun-darwin-x64
             artifact-name: deadrop-darwin-x64
           - runner: ubuntu-latest

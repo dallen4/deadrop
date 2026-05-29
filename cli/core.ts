@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { description, version } from '../package.json';
+import { description, version } from './package.json';
 import init from 'actions/init';
 import login from 'actions/login';
 import { drop } from 'actions/drop';

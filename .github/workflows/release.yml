@@ -13,6 +13,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -24,6 +25,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Create release PR or publish
+        id: changesets
         uses: changesets/action@v1
         with:
           publish: pnpm changeset:publish
@@ -40,3 +42,16 @@ jobs:
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           DEADROP_APP_URL: ${{ secrets.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+      - name: Trigger CLI binary release
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}
+        run: |
+          version=$(echo "$PUBLISHED" | jq -r '.[] | select(.name == "deadrop") | .version')
+          if [ -n "$version" ]; then
+            echo "Dispatching CLI binary build for deadrop@${version}"
+            gh workflow run cli_publish_workflow.yml --ref "deadrop@${version}"
+          else
+            echo "deadrop package not in published set; skipping binary build"
+          fi

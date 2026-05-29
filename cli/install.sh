@@ -6,7 +6,7 @@ BINARY="deadrop"
 INSTALL_DIR="${DEADROP_INSTALL_DIR:-/usr/local/bin}"
 
 case "$(uname -s)" in
-  Darwin) OS="macos" ;;
+  Darwin) OS="darwin" ;;
   Linux)  OS="linux" ;;
   *) echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
 esac
@@ -17,13 +17,17 @@ case "$(uname -m)" in
   *) echo "Unsupported arch: $(uname -m)" >&2; exit 1 ;;
 esac
 
-VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" \
-  | grep '"tag_name"' | head -1 | sed 's/.*"cli-v\([^"]*\)".*/\1/')
-[ -z "$VERSION" ] && { echo "Could not determine latest version" >&2; exit 1; }
+RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest") || {
+  echo "No published deadrop release found (or network error)." >&2
+  echo "See https://github.com/${REPO}/releases" >&2
+  exit 1
+}
+TAG=$(printf '%s' "$RELEASE_JSON" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+[ -z "$TAG" ] && { echo "Could not determine latest release tag" >&2; exit 1; }
 
-URL="https://github.com/${REPO}/releases/download/cli-v${VERSION}/${BINARY}-${VERSION}-${OS}-${ARCH}"
+URL="https://github.com/${REPO}/releases/download/${TAG}/${BINARY}-${OS}-${ARCH}"
 
-echo "Downloading deadrop v${VERSION} (${OS}/${ARCH})..."
+echo "Downloading deadrop ${TAG} (${OS}/${ARCH})..."
 
 TMP=$(mktemp -d)
 trap "rm -rf $TMP" EXIT
@@ -38,7 +42,7 @@ else
   sudo chmod +x "$INSTALL_DIR/$BINARY"
 fi
 
-echo "deadrop v${VERSION} installed to ${INSTALL_DIR}/${BINARY}"
+echo "deadrop ${TAG} installed to ${INSTALL_DIR}/${BINARY}"
 
 if ! command -v deadrop &>/dev/null; then
   SHELL_RC=""
