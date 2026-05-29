@@ -3,6 +3,7 @@ packages:
   - web
   - worker
   - cli
+  - vscode-extension
 
 onlyBuiltDependencies:
   - '@sentry/cli'

@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm/expressions';
 import { VaultDBConfig } from '../types/config';
-import { DBClient } from './init';
+import { DBClient, syncWithRetry } from './init';
 import { SecretsInput, secretsTable } from './schema';
 import { unwrapSecret, wrapSecret } from '../lib/secrets';
 
@@ -8,6 +8,10 @@ export function createSecretsHelpers(
   vault: VaultDBConfig,
   db: DBClient,
 ) {
+  const sync = async () => {
+    if (vault.cloud) await syncWithRetry(db.$client);
+  };
+
   const addSecrets = async (inputs: SecretsInput[]) => {
     const secretsToAdd: SecretsInput[] = await Promise.all(
       inputs.map(async ({ name, value, environment }) => ({
@@ -20,7 +24,12 @@ export function createSecretsHelpers(
       })),
     );
 
-    return db.insert(secretsTable).values(secretsToAdd).returning();
+    const result = await db
+      .insert(secretsTable)
+      .values(secretsToAdd)
+      .returning();
+    await sync();
+    return result;
   };
 
   const updateSecret = async (input: SecretsInput) => {
@@ -40,6 +49,7 @@ export function createSecretsHelpers(
       )
       .returning();
 
+    await sync();
     return updatedSecret;
   };
 
@@ -59,8 +69,62 @@ export function createSecretsHelpers(
     return unwrapSecret(decryptionKey, secret.value);
   };
 
-  const removeSecret = async (name: string) =>
-    db.delete(secretsTable).where(eq(secretsTable.name, name));
+  const listSecretNames = async (): Promise<
+    Array<{ name: string; environment: string }>
+  > => {
+    return db
+      .select({
+        name: secretsTable.name,
+        environment: secretsTable.environment,
+      })
+      .from(secretsTable)
+      .all();
+  };
+
+  const getEncryptedSecret = async (
+    name: string,
+    environment: string,
+  ): Promise<string | null> => {
+    const [row] = await db
+      .select({ value: secretsTable.value })
+      .from(secretsTable)
+      .where(
+        and(
+          eq(secretsTable.name, name),
+          eq(secretsTable.environment, environment),
+        ),
+      );
+    return row?.value ?? null;
+  };
+
+  const renameSecret = async (
+    oldName: string,
+    newName: string,
+    environment: string,
+  ) => {
+    await db
+      .update(secretsTable)
+      .set({ name: newName })
+      .where(
+        and(
+          eq(secretsTable.name, oldName),
+          eq(secretsTable.environment, environment),
+        ),
+      );
+    await sync();
+  };
+
+  const removeSecret = async (name: string, environment?: string) => {
+    const conditions = [eq(secretsTable.name, name)];
+    if (environment)
+      conditions.push(eq(secretsTable.environment, environment));
+
+    const result = await db
+      .delete(secretsTable)
+      .where(and(...conditions));
+    await sync();
+    return result;
+  };
 
   const getAllSecrets = async (
     environment: string,
@@ -92,6 +156,9 @@ export function createSecretsHelpers(
     addSecrets,
     updateSecret,
     getSecret,
+    getEncryptedSecret,
+    listSecretNames,
+    renameSecret,
     removeSecret,
     getAllSecrets,
   };

@@ -66,11 +66,7 @@ export async function addEnvToVault(
     }),
   );
 
-  const db = await initDBClient(
-    vault.location,
-    vault.key,
-    vault.cloud,
-  );
+  const db = await initDBClient(vault.location, vault.cloud);
 
   const { addSecrets } = createSecretsHelpers(vault, db);
 

@@ -1,0 +1,844 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background: var(--vscode-sideBar-background);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border, transparent);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--vscode-sideBarSectionHeader-background);
+  color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-foreground));
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+}
+
+.section-header:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.chevron {
+  display: inline-block;
+  font-size: 14px;
+  line-height: 1;
+  transform: rotate(0deg);
+  transition: transform 0.1s;
+  color: var(--vscode-descriptionForeground);
+}
+
+.chevron.open {
+  transform: rotate(90deg);
+}
+
+.section-body {
+  padding: 8px;
+}
+
+.pane {
+  padding: 0;
+}
+
+.loading {
+  padding: 16px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.mode-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.mode-toggle button {
+  flex: 1;
+  padding: 4px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: var(--vscode-font-size);
+}
+
+.mode-toggle button.active {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.content-input,
+.id-input {
+  width: 100%;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 6px 8px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-font-size);
+  border-radius: 2px;
+  resize: vertical;
+  margin-bottom: 8px;
+}
+
+.content-input:focus,
+.id-input:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+}
+
+.action-btn {
+  width: 100%;
+  padding: 6px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: var(--vscode-font-size);
+}
+
+.action-btn:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.status {
+  padding: 8px 0;
+}
+
+.status-label {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.status-label.error {
+  color: var(--vscode-errorForeground);
+}
+
+.drop-id,
+.secret-output {
+  margin-top: 8px;
+}
+
+.drop-id span,
+.secret-output span {
+  display: block;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.drop-id code {
+  display: block;
+  padding: 6px 8px;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 2px;
+  font-size: 12px;
+  user-select: all;
+}
+
+.secret-output pre {
+  padding: 8px;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 2px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: all;
+}
+
+.coming-soon {
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  padding: 4px 0;
+}
+
+/* ── Sidebar vault pane ────────────────────────────────── */
+.vault-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vault-pane-empty {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  padding: 2px 0 6px;
+}
+
+.vault-pane-list {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vault-pane-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  color: var(--vscode-foreground);
+  padding: 4px 6px;
+  border-radius: 2px;
+}
+
+.vault-pane-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-pane-cloud-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.7;
+}
+
+.vault-pane-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.vault-pane-item.active {
+  color: var(--vscode-textLink-foreground);
+}
+
+.vault-pane-new-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-descriptionForeground);
+  padding: 3px 0;
+  text-align: left;
+}
+
+.vault-pane-new-btn:hover {
+  color: var(--vscode-foreground);
+}
+
+.copy-btn {
+  margin-top: 6px;
+  padding: 4px 10px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: 11px;
+}
+
+.copy-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* ── Vault tab root ────────────────────────────────────── */
+.vault-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+}
+
+/* ── Create vault screen ───────────────────────────────── */
+.vault-create-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px 24px;
+}
+
+.vault-create-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vault-create-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.vault-create-desc {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.vault-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Two-column layout ─────────────────────────────────── */
+.vault-layout-outer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 40px 28px;
+  font-family: var(--vscode-font-family);
+  font-size: 14px;
+  color: var(--vscode-foreground);
+}
+
+.vault-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 680px;
+  overflow: hidden;
+}
+
+/* ── Vault header ──────────────────────────────────────── */
+.vault-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 22px;
+  gap: 12px;
+}
+
+.vault-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.vault-header-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--vscode-foreground);
+  flex-shrink: 0;
+}
+
+.vault-header-name {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  cursor: help;
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vault-header-name[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 6px;
+  background: var(--vscode-editorHoverWidget-background, #2d2d2d);
+  color: var(--vscode-editorHoverWidget-foreground, #ccc);
+  border: 1px solid var(--vscode-editorHoverWidget-border, #454545);
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 3px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── Cloud sync status button ──────────────────────────── */
+.vault-cloud-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--vscode-input-border, transparent);
+  border-radius: 3px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-descriptionForeground);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.vault-cloud-status:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+.vault-cloud-status.synced {
+  color: var(--vscode-textLink-foreground);
+  border-color: var(--vscode-textLink-foreground);
+}
+
+.vault-cloud-status.synced:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+/* ── Cloud toggle (create form) ────────────────────────── */
+.vault-cloud-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.vault-cloud-toggle input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.vault-cloud-toggle svg {
+  flex-shrink: 0;
+}
+
+/* ── Body (sidebar + main) ─────────────────────────────── */
+.vault-body {
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Left sidebar ──────────────────────────────────────── */
+.vault-sidebar {
+  width: 150px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--vscode-panel-border, var(--vscode-input-border, transparent));
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 18px;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.vault-sidebar-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--vscode-descriptionForeground);
+  padding: 0 14px 8px;
+}
+
+.vault-env-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+.vault-env-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-foreground);
+  text-align: left;
+  border-radius: 0;
+  gap: 8px;
+}
+
+.vault-env-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.vault-env-item.active {
+  background: var(--vscode-list-activeSelectionBackground);
+  color: var(--vscode-list-activeSelectionForeground);
+}
+
+.vault-env-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-transform: capitalize;
+}
+
+.vault-env-count {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 8px;
+  padding: 0 5px;
+  font-size: 10px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 16px;
+  flex-shrink: 0;
+}
+
+.vault-add-env-form {
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vault-add-env-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.vault-new-env-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-descriptionForeground);
+  text-align: left;
+  width: 100%;
+}
+
+.vault-new-env-btn:hover {
+  color: var(--vscode-foreground);
+  background: var(--vscode-list-hoverBackground);
+}
+
+/* ── Right main panel ──────────────────────────────────── */
+.vault-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.vault-main-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 24px 12px;
+  flex-shrink: 0;
+}
+
+.vault-main-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.vault-main-count {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* ── Secret list ───────────────────────────────────────── */
+.vault-secret-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.vault-empty-msg {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  padding: 10px 0;
+  line-height: 1.5;
+}
+
+/* ── Secret row ────────────────────────────────────────── */
+.secret-row {
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.secret-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.secret-field-name .secret-name-text {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--vscode-editor-font-family, monospace);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: text;
+}
+
+.secret-field-input {
+  flex: 1;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 13px;
+}
+
+.secret-value-display {
+  flex: 1;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  letter-spacing: 0.1em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.secret-value-display.revealed {
+  color: var(--vscode-foreground);
+  letter-spacing: 0;
+  user-select: all;
+}
+
+.secret-row-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Icon buttons ──────────────────────────────────────── */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--vscode-descriptionForeground);
+  border-radius: 3px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.icon-btn-subtle {
+  opacity: 0.5;
+}
+
+.icon-btn-subtle:hover {
+  opacity: 1;
+}
+
+.icon-btn-danger:hover:not(:disabled) {
+  background: var(--vscode-inputValidation-errorBackground, rgba(255, 0, 0, 0.12));
+  color: var(--vscode-errorForeground);
+}
+
+/* Legacy alias (used by env add form + vault-create) */
+.vault-ghost-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--vscode-font-family);
+  color: var(--vscode-descriptionForeground);
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.vault-ghost-btn:hover:not(:disabled) {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+.vault-ghost-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Add secret form ───────────────────────────────────── */
+.vault-add-form {
+  padding: 12px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.vault-add-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--vscode-descriptionForeground);
+}
+
+.vault-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vault-add-row .vault-input {
+  flex: 1;
+}
+
+/* ── Shared inputs & buttons ───────────────────────────── */
+.vault-input {
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  color: var(--vscode-input-foreground);
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 2px;
+  font-family: var(--vscode-font-family);
+  min-width: 0;
+  width: 100%;
+}
+
+.vault-input:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+}
+
+.vault-btn {
+  padding: 6px 14px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.vault-btn:hover:not(:disabled) {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.vault-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vault-btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ── Premium / locked state ── */
+
+.vault-cloud-status.locked,
+.vault-cloud-toggle.locked {
+  opacity: 0.5;
+}
+
+/* ── Toast notifications ── */
+
+.vault-toast-container {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.vault-toast {
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  max-width: 320px;
+  animation: vault-toast-in 200ms ease-out, vault-toast-out 300ms ease-in 2700ms forwards;
+  pointer-events: auto;
+}
+
+.vault-toast-success {
+  background: var(--vscode-testing-iconPassed, #388a34);
+  color: #fff;
+}
+
+.vault-toast-error {
+  background: var(--vscode-testing-iconFailed, #f14c4c);
+  color: #fff;
+}
+
+@keyframes vault-toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vault-toast-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

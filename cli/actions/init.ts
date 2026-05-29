@@ -29,10 +29,10 @@ export default async function () {
   if (!existsSync(STORAGE_DIR_NAME))
     await mkdir(STORAGE_DIR_NAME, { recursive: true });
 
-  const { location, key } = config.vaults.default;
+  const { location } = config.vaults.default;
 
   // TODO consider writing NODE_ENV to vault
-  const db = await initDBClient(location, key);
+  const db = await initDBClient(location);
 
   logInfo(`Default vault initalized & config created at '${defaultConfigPath}'!
 We recommend adding the following to your .gitignore:

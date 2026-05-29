@@ -1,0 +1,57 @@
+import React from 'react';
+import type { ExtensionConfig } from '@ext/types';
+import { ExtensionMessageType } from '@ext/types';
+import { postMessage } from '../vscode';
+
+type Props = { config: ExtensionConfig };
+
+export default function VaultPane({ config }: Props) {
+  const vaults = config.vaults ?? {};
+  const vaultNames = Object.keys(vaults);
+  const activeVault = config.vaultName ?? null;
+
+  return (
+    <div className="vault-pane">
+      {vaultNames.length === 0 ? (
+        <p className="vault-pane-empty">No vaults yet.</p>
+      ) : (
+        <ul className="vault-pane-list">
+          {vaultNames.map((name) => (
+            <li key={name}>
+              <button
+                className={`vault-pane-item${name === activeVault ? ' active' : ''}`}
+                onClick={() =>
+                  postMessage({ type: ExtensionMessageType.SwitchVault, name })
+                }
+              >
+                <span className="vault-pane-item-name">{name}</span>
+                {vaults[name]?.cloud && (
+                  <span className="vault-pane-cloud-icon" title="Cloud synced">
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+                    </svg>
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button
+        className="vault-pane-new-btn"
+        onClick={() => postMessage({ type: ExtensionMessageType.OpenVault })}
+      >
+        + New vault
+      </button>
+    </div>
+  );
+}

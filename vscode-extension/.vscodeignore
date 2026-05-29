@@ -1,0 +1,9 @@
+node_modules/**
+src/**
+views/src/**
+scripts/**
+*.ts
+tsconfig*.json
+vite.config.ts
+.env
+.env.example
