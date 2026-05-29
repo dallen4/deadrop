@@ -64,6 +64,16 @@ jobs:
         run: |
           cd cli/dist
           mv deadrop ${{ matrix.artifact-name }} 2>/dev/null || mv deadrop.exe ${{ matrix.artifact-name }}.exe 2>/dev/null || true
+      - name: Generate checksum
+        shell: bash
+        run: |
+          cd cli/dist
+          f=$(ls ${{ matrix.artifact-name }}* | grep -v '\.sha256$')
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$f" > "$f.sha256"
+          else
+            shasum -a 256 "$f" > "$f.sha256"
+          fi
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:

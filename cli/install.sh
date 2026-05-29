@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO="dallen4/deadrop"
 BINARY="deadrop"
-INSTALL_DIR="${DEADROP_INSTALL_DIR:-/usr/local/bin}"
+INSTALL_DIR="${DEADROP_INSTALL_DIR:-$HOME/.local/bin}"
 
 case "$(uname -s)" in
   Darwin) OS="darwin" ;;
@@ -30,17 +30,29 @@ URL="https://github.com/${REPO}/releases/download/${TAG}/${BINARY}-${OS}-${ARCH}
 echo "Downloading deadrop ${TAG} (${OS}/${ARCH})..."
 
 TMP=$(mktemp -d)
-trap "rm -rf $TMP" EXIT
+trap 'rm -rf "$TMP"' EXIT
 
 curl -fsSL "$URL" -o "$TMP/$BINARY"
-chmod +x "$TMP/$BINARY"
+curl -fsSL "${URL}.sha256" -o "$TMP/$BINARY.sha256" || {
+  echo "Could not download checksum for verification" >&2
+  exit 1
+}
 
-if [ -w "$INSTALL_DIR" ]; then
-  mv "$TMP/$BINARY" "$INSTALL_DIR/$BINARY"
+EXPECTED=$(awk '{print $1}' "$TMP/$BINARY.sha256")
+if command -v sha256sum >/dev/null 2>&1; then
+  ACTUAL=$(sha256sum "$TMP/$BINARY" | awk '{print $1}')
 else
-  sudo mv "$TMP/$BINARY" "$INSTALL_DIR/$BINARY"
-  sudo chmod +x "$INSTALL_DIR/$BINARY"
+  ACTUAL=$(shasum -a 256 "$TMP/$BINARY" | awk '{print $1}')
 fi
+if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then
+  echo "Checksum verification failed (expected ${EXPECTED:-<none>}, got ${ACTUAL})" >&2
+  exit 1
+fi
+echo "Checksum verified."
+
+chmod +x "$TMP/$BINARY"
+mkdir -p "$INSTALL_DIR"
+mv "$TMP/$BINARY" "$INSTALL_DIR/$BINARY"
 
 echo "deadrop ${TAG} installed to ${INSTALL_DIR}/${BINARY}"
 
