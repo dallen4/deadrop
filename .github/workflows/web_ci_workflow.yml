@@ -6,7 +6,7 @@ on:
 jobs:
   test:
     timeout-minutes: 20
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     environment: ${{ github.event.deployment.environment }}
     steps:
       - uses: actions/checkout@v4
