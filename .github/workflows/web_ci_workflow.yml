@@ -22,6 +22,7 @@ jobs:
       - name: Run Playwright Tests
         shell: bash
         env:
+          HOME: /root
           STAGE: ${{ github.event.deployment.environment }}
           BASE_URL: ${{ github.event.deployment_status.target_url }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
