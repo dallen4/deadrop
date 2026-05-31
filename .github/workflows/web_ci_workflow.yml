@@ -25,7 +25,14 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm -F web exec playwright install --with-deps
+        timeout-minutes: 15
+        env:
+          DEBUG: 'pw:install*'
+        run: |
+          set -x
+          pnpm -F web exec playwright install chromium
+          pnpm -F web exec playwright install firefox
+          pnpm -F web exec playwright install webkit
       - name: Run Playwright Tests
         shell: bash
         env:
