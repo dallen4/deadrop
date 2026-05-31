@@ -6,7 +6,9 @@ on:
 jobs:
   test:
     timeout-minutes: 20
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
     environment: ${{ github.event.deployment.environment }}
     steps:
       - uses: actions/checkout@v4
@@ -17,22 +19,6 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-      - name: Install Playwright Browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 15
-        env:
-          DEBUG: 'pw:install*'
-        run: |
-          set -x
-          pnpm -F web exec playwright install chromium
-          pnpm -F web exec playwright install firefox
-          pnpm -F web exec playwright install webkit
       - name: Run Playwright Tests
         shell: bash
         env:
