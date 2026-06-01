@@ -1,7 +1,20 @@
 import 'dotenv/config';
 import { createClerkClient } from '@clerk/nextjs/server';
+import { getRedis } from 'api/redis';
+import { testTokenKey } from '@shared/tests/http';
 
 export default async function globalTeardown() {
+  // Remove the seeded test token so it can't outlive the run. The TTL
+  // in global-setup is only a fallback in case teardown doesn't fire.
+  try {
+    await getRedis().del(testTokenKey);
+  } catch (err) {
+    console.warn(
+      'Failed to delete test token from Redis:',
+      err instanceof Error ? err.message : err,
+    );
+  }
+
   const userId = process.env.CLERK_TEST_USER_ID;
   if (!userId) return;
 

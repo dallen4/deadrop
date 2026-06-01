@@ -11,11 +11,13 @@ const REQUIRED_ENV = [
   'STRIPE_WEBHOOK_SECRET',
   'STRIPE_SUPPORTER_LOOKUP_KEY',
   'CLERK_SECRET_KEY',
+  // TODO add after webhook is registered
+  // 'CLERK_WEBHOOK_SIGNING_SECRET',
 ] as const;
 
 export default async function globalSetup() {
   const token = randomBytes(32).toString('base64');
-  await getRedis().setex(testTokenKey, 60 * 10, token);
+  await getRedis().setex(testTokenKey, 60 * 60, token);
   process.env.TEST_TOKEN = token;
 
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
