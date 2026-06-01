@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { setupClerkTestingToken } from '@clerk/testing/playwright';
 import { CHECKOUT_SECRET_KEY } from '../../config/cookies';
 import { PRICING_PATH } from '@shared/config/paths';
 import { authFile } from './config';
@@ -8,11 +9,23 @@ const CHECKOUT_API_PATH = '/api/stripe/checkout';
 const isCheckoutPost = (url: string, method: string) =>
   url.includes(CHECKOUT_API_PATH) && method === 'POST';
 
-// Tests load the signed-in session saved by global-setup (storageState), but
-// clerk-js still rehydrates window.Clerk.user from those cookies on load.
-// Until it does, the pricing CTA renders wrapped in a SignInButton with the
-// *same* label, so a too-early click opens the sign-in modal instead of
-// checkout. Wait for the hydrated client before interacting.
+// storageState logs us in, but clerk-js still calls the Frontend API on every
+// page load to verify/refresh that session. From CI (datacenter IPs) those
+// calls are bot-challenged unless the testing token is injected — without it
+// clerk-js hangs and window.Clerk.user never resolves. So every authenticated
+// page must run setupClerkTestingToken before navigating. The token comes from
+// clerkSetup() in the setup project (propagated to all workers).
+const useAuthSession = () => {
+  test.use({ storageState: authFile });
+  test.beforeEach(async ({ page }) => {
+    await setupClerkTestingToken({ page });
+  });
+};
+
+// Until clerk-js rehydrates window.Clerk.user from the session cookies, the
+// pricing CTA renders wrapped in a SignInButton with the *same* label, so a
+// too-early click opens the sign-in modal instead of checkout. Wait for the
+// hydrated client before interacting.
 const waitForSignedIn = (page: Page) =>
   page.waitForFunction(
     () => {
@@ -34,7 +47,7 @@ test.describe('checkout — handler', () => {
   });
 
   test.describe('authenticated', () => {
-    test.use({ storageState: authFile });
+    useAuthSession();
 
     test('POST returns a clientSecret', async ({ page }) => {
       // Load a page first so clerk-js refreshes the session cookie from the
@@ -51,7 +64,7 @@ test.describe('checkout — handler', () => {
 });
 
 test.describe('checkout — modal sessionStorage caching', () => {
-  test.use({ storageState: authFile });
+  useAuthSession();
 
   test('only calls checkout API once across modal re-opens', async ({
     page,
