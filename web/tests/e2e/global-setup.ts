@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { randomBytes } from 'crypto';
-import { test as setup } from '@playwright/test';
 import { createClerkClient } from '@clerk/nextjs/server';
 import { clerkSetup } from '@clerk/testing/playwright';
 import Stripe from 'stripe';
@@ -16,12 +15,20 @@ const REQUIRED_ENV = [
   // 'CLERK_WEBHOOK_SIGNING_SECRET',
 ] as const;
 
-setup.describe.configure({ mode: 'serial' });
-
-setup('global setup', async () => {
+// Runs as Playwright `globalSetup` (config option). This executes in the
+// main runner process *before* worker processes are forked, so every
+// `process.env` value set here is inherited by all test workers. (A setup
+// *project* runs inside a single worker and would NOT propagate env to the
+// others — which is why the Clerk testing token went missing per-worker.)
+export default async function globalSetup() {
   const token = randomBytes(32).toString('base64');
   await getRedis().setex(testTokenKey, 60 * 60, token);
   process.env.TEST_TOKEN = token;
+
+  // Auth-dependent specs (stripe/clerk) only run on alpha/main, where a
+  // stable custom domain makes Clerk reliable. Elsewhere, skip the Clerk +
+  // Stripe setup entirely — the token above is all the drop specs need.
+  if (!process.env.RUN_AUTH_TESTS) return;
 
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
   if (missing.length > 0) {
@@ -76,4 +83,4 @@ setup('global setup', async () => {
   process.env.CLERK_TEST_PASSWORD = testPassword;
 
   await clerkSetup();
-});
+}

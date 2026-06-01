@@ -25,6 +25,8 @@ jobs:
           HOME: /root
           STAGE: ${{ github.event.deployment.environment }}
           BASE_URL: ${{ github.event.deployment_status.target_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
@@ -43,13 +45,28 @@ jobs:
           export REDIS_REST_URL=$REDIS_REST_URL
           export REDIS_REST_TOKEN=$REDIS_REST_TOKEN
 
-          if [ ${{ github.event.deployment.environment }} == 'Production' ]; then
+          # Vercel deployments carry only the commit SHA, so resolve which
+          # branch that commit is the head of to choose the test domain.
+          # Clerk auth is only reliable on a stable custom domain, so auth
+          # specs (RUN_AUTH_TESTS) run only on alpha/main.
+          BRANCHES=$(curl -s \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$DEPLOY_SHA/branches-where-head" \
+            | node -e "const d=require('fs').readFileSync(0,'utf8');try{console.log(JSON.parse(d).map(b=>b.name).join(' '))}catch{}")
+          echo "Deployment commit is head of: [$BRANCHES]"
+
+          if [ "$STAGE" = 'Production' ]; then
             export TEST_URI="https://deadrop.io/"
+            export RUN_AUTH_TESTS=1
+          elif printf '%s' " $BRANCHES " | grep -q ' alpha '; then
+            export TEST_URI="https://alpha.deadrop.io/"
+            export RUN_AUTH_TESTS=1
           else
-            export TEST_URI=$BASE_URL
+            export TEST_URI="$BASE_URL"
           fi
 
-          echo $TEST_URI
+          echo "TEST_URI=$TEST_URI  RUN_AUTH_TESTS=${RUN_AUTH_TESTS:-0}"
           CI=true pnpm test:e2e --trace on
       - uses: actions/upload-artifact@v4
         if: always()

@@ -1,10 +1,11 @@
 import 'dotenv/config';
-import { test as teardown } from '@playwright/test';
 import { createClerkClient } from '@clerk/nextjs/server';
 import { getRedis } from 'api/redis';
 import { testTokenKey } from '@shared/tests/http';
 
-teardown('global teardown', async () => {
+// Runs as Playwright `globalTeardown` (config option), i.e. in the main
+// runner process — the counterpart to global-setup.
+export default async function globalTeardown() {
   // Remove the seeded test token so it can't outlive the run. The TTL
   // in global-setup is only a fallback in case teardown doesn't fire.
   try {
@@ -31,4 +32,4 @@ teardown('global teardown', async () => {
       err instanceof Error ? err.message : err,
     );
   }
-});
+}

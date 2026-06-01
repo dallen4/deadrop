@@ -16,8 +16,26 @@ const config: PlaywrightTestConfig<{
   dropBrowser: BrowserName;
   grabBrowser: BrowserName;
 }> = {
+  globalSetup: path.join(
+    __dirname,
+    'tests',
+    'e2e',
+    'global-setup.ts',
+  ),
+  globalTeardown: path.join(
+    __dirname,
+    'tests',
+    'e2e',
+    'global-teardown.ts',
+  ),
   timeout: 30_000,
   testDir: path.join(__dirname, 'tests', 'e2e'),
+  // Auth-dependent specs need a stable custom domain for Clerk, so they
+  // only run on alpha/main (RUN_AUTH_TESTS set by CI). Everywhere else
+  // they're ignored — the preview *.vercel.app domain breaks Clerk.
+  testIgnore: process.env.RUN_AUTH_TESTS
+    ? []
+    : ['**/stripe-*.spec.ts', '**/clerk-*.spec.ts'],
   retries: 2,
   outputDir: 'test-results/',
   expect: {},
@@ -29,42 +47,27 @@ const config: PlaywrightTestConfig<{
     bypassCSP: true,
   },
   projects: [
-    /* setup scripts */
-    {
-      name: 'setup',
-      testMatch: /global-setup\.ts/,
-      teardown: 'cleanup',
-    },
-    {
-      name: 'cleanup',
-      testMatch: /global-teardown\.ts/,
-    },
     /* Test against desktop browsers */
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      dependencies: ['setup'],
     },
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      dependencies: ['setup'],
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      dependencies: ['setup'],
     },
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
-      dependencies: ['setup'],
     },
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
-      dependencies: ['setup'],
     },
     {
       name: 'Chrome to Firefox',
@@ -72,7 +75,6 @@ const config: PlaywrightTestConfig<{
         dropBrowser: 'chromium',
         grabBrowser: 'firefox',
       },
-      dependencies: ['setup'],
     },
     {
       name: 'Firefox to Chrome',
@@ -80,7 +82,6 @@ const config: PlaywrightTestConfig<{
         dropBrowser: 'firefox',
         grabBrowser: 'chromium',
       },
-      dependencies: ['setup'],
     },
     // WebKit cross-browser projects disabled due to Playwright
     // limitation: WebRTC ICE negotiation fails when WebKit runs
