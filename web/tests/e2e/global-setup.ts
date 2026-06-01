@@ -1,10 +1,18 @@
 import 'dotenv/config';
 import { randomBytes } from 'crypto';
+import { mkdirSync } from 'fs';
+import { dirname } from 'path';
+import { test as setup } from '@playwright/test';
+import {
+  clerk,
+  clerkSetup,
+  setupClerkTestingToken,
+} from '@clerk/testing/playwright';
 import { createClerkClient } from '@clerk/nextjs/server';
-import { clerkSetup } from '@clerk/testing/playwright';
 import Stripe from 'stripe';
 import { getRedis } from 'api/redis';
 import { testTokenKey } from '@shared/tests/http';
+import { authFile } from './config';
 
 const REQUIRED_ENV = [
   'STRIPE_SECRET_KEY',
@@ -15,25 +23,29 @@ const REQUIRED_ENV = [
   // 'CLERK_WEBHOOK_SIGNING_SECRET',
 ] as const;
 
-// Runs as Playwright `globalSetup` (config option). This executes in the
-// main runner process *before* worker processes are forked, so every
-// `process.env` value set here is inherited by all test workers. (A setup
-// *project* runs inside a single worker and would NOT propagate env to the
-// others — which is why the Clerk testing token went missing per-worker.)
-export default async function globalSetup() {
+const TEST_EMAIL = 'clerk_test@deadrop.io';
+
+// Runs as a Playwright setup *project* (not a globalSetup function), per
+// Clerk's official guidance: the testing token clerkSetup() obtains is only
+// needed here, for the single interactive sign-in below. That sign-in is
+// saved to `authFile` via storageState; every auth spec then replays those
+// session cookies instead of signing in again. Replaying an existing session
+// is not bot-challenged, which is what makes this reliable from CI IPs.
+setup.describe.configure({ mode: 'serial' });
+
+setup('seed test token + clerk user', async () => {
   const token = randomBytes(32).toString('base64');
   await getRedis().setex(testTokenKey, 60 * 60, token);
   process.env.TEST_TOKEN = token;
 
-  // Auth-dependent specs (stripe/clerk) only run on alpha/main, where a
-  // stable custom domain makes Clerk reliable. Elsewhere, skip the Clerk +
-  // Stripe setup entirely — the token above is all the drop specs need.
+  // Auth specs only run on alpha/main (stable custom domain). Elsewhere the
+  // token above is all the drop specs need — skip the Clerk/Stripe setup.
   if (!process.env.RUN_AUTH_TESTS) return;
 
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
   if (missing.length > 0) {
     throw new Error(
-      `Webhook e2e tests require env vars: ${missing.join(', ')}`,
+      `Auth e2e tests require env vars: ${missing.join(', ')}`,
     );
   }
 
@@ -48,25 +60,23 @@ export default async function globalSetup() {
   }
   process.env.STRIPE_SUPPORTER_PRICE_ID = prices.data[0].id;
 
-  const clerk = createClerkClient({
+  const clerkClient = createClerkClient({
     secretKey: process.env.CLERK_SECRET_KEY!,
   });
 
-  const testEmail = 'clerk_test@deadrop.io';
-
   // Clean up leftover users from prior runs where teardown didn't fire
-  const existing = await clerk.users.getUserList({
-    emailAddress: [testEmail],
+  const existing = await clerkClient.users.getUserList({
+    emailAddress: [TEST_EMAIL],
   });
   for (const user of existing.data) {
-    await clerk.users.deleteUser(user.id);
+    await clerkClient.users.deleteUser(user.id);
   }
 
   const testPassword = randomBytes(16).toString('base64url');
   let user;
   try {
-    user = await clerk.users.createUser({
-      emailAddress: [testEmail],
+    user = await clerkClient.users.createUser({
+      emailAddress: [TEST_EMAIL],
       username: 'clerk_test',
       password: testPassword,
       skipPasswordChecks: true,
@@ -79,8 +89,27 @@ export default async function globalSetup() {
     throw err;
   }
   process.env.CLERK_TEST_USER_ID = user.id;
-  process.env.CLERK_TEST_EMAIL = testEmail;
+  process.env.CLERK_TEST_EMAIL = TEST_EMAIL;
   process.env.CLERK_TEST_PASSWORD = testPassword;
 
   await clerkSetup();
-}
+});
+
+setup('authenticate and save session', async ({ page }) => {
+  if (!process.env.RUN_AUTH_TESTS) return;
+
+  // The one sign-in that uses the testing token to bypass bot detection.
+  await setupClerkTestingToken({ page });
+  await page.goto('/');
+  await clerk.signIn({ page, emailAddress: TEST_EMAIL });
+  await page.waitForFunction(
+    () =>
+      !!(window as unknown as { Clerk?: { user?: unknown } }).Clerk
+        ?.user,
+    undefined,
+    { timeout: 15_000 },
+  );
+
+  mkdirSync(dirname(authFile), { recursive: true });
+  await page.context().storageState({ path: authFile });
+});

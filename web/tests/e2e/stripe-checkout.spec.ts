@@ -1,17 +1,18 @@
 import { expect, test, type Page } from '@playwright/test';
-import { clerk, setupClerkTestingToken } from '@clerk/testing/playwright';
 import { CHECKOUT_SECRET_KEY } from '../../config/cookies';
 import { PRICING_PATH } from '@shared/config/paths';
+import { authFile } from './config';
 
 const CHECKOUT_API_PATH = '/api/stripe/checkout';
 
 const isCheckoutPost = (url: string, method: string) =>
   url.includes(CHECKOUT_API_PATH) && method === 'POST';
 
-// Until Clerk finishes hydrating, useUser() reports no user, so the
-// pricing CTA renders wrapped in a SignInButton with the *same* label.
-// Clicking it then opens the sign-in modal instead of checkout and the
-// API call never fires. Wait for the signed-in client before interacting.
+// Tests load the signed-in session saved by global-setup (storageState), but
+// clerk-js still rehydrates window.Clerk.user from those cookies on load.
+// Until it does, the pricing CTA renders wrapped in a SignInButton with the
+// *same* label, so a too-early click opens the sign-in modal instead of
+// checkout. Wait for the hydrated client before interacting.
 const waitForSignedIn = (page: Page) =>
   page.waitForFunction(
     () => {
@@ -23,38 +24,34 @@ const waitForSignedIn = (page: Page) =>
   );
 
 test.describe('checkout — handler', () => {
-  test('unauthenticated POST returns 401', async ({ request }) => {
-    const res = await request.post(CHECKOUT_API_PATH);
-    expect(res.status()).toBe(401);
+  test.describe('unauthenticated', () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
+
+    test('POST returns 401', async ({ request }) => {
+      const res = await request.post(CHECKOUT_API_PATH);
+      expect(res.status()).toBe(401);
+    });
   });
 
-  test('authenticated POST returns a clientSecret', async ({
-    page,
-  }) => {
-    await setupClerkTestingToken({ page });
-    await page.goto('/');
-    await clerk.signIn({
-      page,
-      emailAddress: process.env.CLERK_TEST_EMAIL!,
-    });
-    await waitForSignedIn(page);
+  test.describe('authenticated', () => {
+    test.use({ storageState: authFile });
 
-    const res = await page.request.post(CHECKOUT_API_PATH);
-    expect(res.status()).toBe(200);
-    const { clientSecret } = await res.json();
-    expect(clientSecret).toMatch(/^cs_test_/);
+    test('POST returns a clientSecret', async ({ page }) => {
+      // Load a page first so clerk-js refreshes the session cookie from the
+      // saved state before we hit the API with page.request.
+      await page.goto('/');
+      await waitForSignedIn(page);
+
+      const res = await page.request.post(CHECKOUT_API_PATH);
+      expect(res.status()).toBe(200);
+      const { clientSecret } = await res.json();
+      expect(clientSecret).toMatch(/^cs_test_/);
+    });
   });
 });
 
 test.describe('checkout — modal sessionStorage caching', () => {
-  test.beforeEach(async ({ page }) => {
-    await setupClerkTestingToken({ page });
-    await page.goto('/');
-    await clerk.signIn({
-      page,
-      emailAddress: process.env.CLERK_TEST_EMAIL!,
-    });
-  });
+  test.use({ storageState: authFile });
 
   test('only calls checkout API once across modal re-opens', async ({
     page,
@@ -72,8 +69,12 @@ test.describe('checkout — modal sessionStorage caching', () => {
       name: /become a supporter/i,
     });
     await supporterCta.first().click();
+    // Explicit sub-timeout so a missing POST fails here (with a finalized
+    // trace + screenshot) instead of getting hard-killed at the 30s test
+    // timeout, which truncates the trace.
     await page.waitForResponse(
       (res) => isCheckoutPost(res.url(), res.request().method()),
+      { timeout: 15_000 },
     );
 
     expect(postCount).toBe(1);
@@ -108,6 +109,7 @@ test.describe('checkout — modal sessionStorage caching', () => {
       .click();
     await page.waitForResponse(
       (res) => isCheckoutPost(res.url(), res.request().method()),
+      { timeout: 15_000 },
     );
     expect(postCount).toBe(1);
 
