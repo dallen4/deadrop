@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { randomBytes } from 'crypto';
+import { test as setup } from '@playwright/test';
 import { createClerkClient } from '@clerk/nextjs/server';
 import { clerkSetup } from '@clerk/testing/playwright';
 import Stripe from 'stripe';
@@ -15,7 +16,9 @@ const REQUIRED_ENV = [
   // 'CLERK_WEBHOOK_SIGNING_SECRET',
 ] as const;
 
-export default async function globalSetup() {
+setup.describe.configure({ mode: 'serial' });
+
+setup('global setup', async () => {
   const token = randomBytes(32).toString('base64');
   await getRedis().setex(testTokenKey, 60 * 60, token);
   process.env.TEST_TOKEN = token;
@@ -73,4 +76,4 @@ export default async function globalSetup() {
   process.env.CLERK_TEST_PASSWORD = testPassword;
 
   await clerkSetup();
-}
+});
