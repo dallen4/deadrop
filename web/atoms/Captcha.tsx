@@ -19,14 +19,21 @@ export const Captcha = ({ onSuccess, onExpire }: CaptchaProps) => {
 
   const { isLoaded, isSignedIn } = useUser();
 
+  // e2e test-mode bypass. Deliberately independent of Clerk: the drop/grab
+  // flow is public and must not be held hostage by clerk-js load state. If
+  // this waited on `isLoaded`, any Clerk hiccup (CI bot detection, handshake)
+  // would block the entire drop suite. Runs once on mount.
   useEffect(() => {
-    if (isLoaded) {
-      if (isSignedIn) {
-        onSuccess();
-        setShow(false);
-      } else if (getCookie(TEST_FLAG_COOKIE)) onVerify();
+    if (getCookie(TEST_FLAG_COOKIE)) onVerify();
+  }, []);
+
+  // Signed-in users skip the captcha.
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      onSuccess();
+      setShow(false);
     }
-  }, [isLoaded]);
+  }, [isLoaded, isSignedIn]);
 
   const onVerify = async (token?: string) => {
     const resp = await post<{ success: boolean }, { token?: string }>(
