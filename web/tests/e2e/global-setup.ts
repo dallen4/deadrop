@@ -12,7 +12,7 @@ import { createClerkClient } from '@clerk/nextjs/server';
 import Stripe from 'stripe';
 import { getRedis } from 'api/redis';
 import { testTokenKey } from '@shared/tests/http';
-import { authFile } from './config';
+import { authFile, runAuthTests } from './config';
 
 const REQUIRED_ENV = [
   'STRIPE_SECRET_KEY',
@@ -40,7 +40,7 @@ setup('seed test token + clerk user', async () => {
 
   // Auth specs only run on alpha/main (stable custom domain). Elsewhere the
   // token above is all the drop specs need — skip the Clerk/Stripe setup.
-  if (!process.env.RUN_AUTH_TESTS) return;
+  if (!runAuthTests) return;
 
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
   if (missing.length > 0) {
@@ -96,7 +96,7 @@ setup('seed test token + clerk user', async () => {
 });
 
 setup('authenticate and save session', async ({ page }) => {
-  if (!process.env.RUN_AUTH_TESTS) return;
+  if (!runAuthTests) return;
 
   // The one sign-in that uses the testing token to bypass bot detection.
   await setupClerkTestingToken({ page });

@@ -23,3 +23,11 @@ export const isLocal = baseURL.includes('localhost');
 export const apiURL = process.env.DEADROP_API_URL!;
 
 export const isPreviewEnv = process.env.STAGE === 'Preview';
+
+// Single source of truth for whether the Clerk/Stripe auth specs run.
+// They only run where a stable custom domain makes Clerk reliable
+// (RUN_AUTH_TESTS, set by CI on alpha/main). `SKIP_AUTH_TESTS` is a hard
+// kill switch to short-circuit every auth test regardless of branch — set
+// it to get a fast, Clerk-free drop-flow run across all engines.
+export const runAuthTests =
+  !!process.env.RUN_AUTH_TESTS && !process.env.SKIP_AUTH_TESTS;

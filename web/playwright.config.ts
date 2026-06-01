@@ -1,6 +1,6 @@
 import { PlaywrightTestConfig, devices } from '@playwright/test';
 import path from 'path';
-import { baseURL, isLocal } from './tests/e2e/config';
+import { baseURL, isLocal, runAuthTests } from './tests/e2e/config';
 
 const server: PlaywrightTestConfig['webServer'] = {
   command: 'pnpm start',
@@ -18,10 +18,10 @@ const config: PlaywrightTestConfig<{
 }> = {
   timeout: 30_000,
   testDir: path.join(__dirname, 'tests', 'e2e'),
-  // Auth-dependent specs need a stable custom domain for Clerk, so they
-  // only run on alpha/main (RUN_AUTH_TESTS set by CI). Everywhere else
-  // they're ignored — the preview *.vercel.app domain breaks Clerk.
-  testIgnore: process.env.RUN_AUTH_TESTS
+  // Auth-dependent specs only run when runAuthTests (alpha/main, and not
+  // hard-disabled via SKIP_AUTH_TESTS). Everywhere else they're ignored so
+  // the drop-flow suite runs Clerk-free
+  testIgnore: runAuthTests
     ? []
     : ['**/stripe-*.spec.ts', '**/clerk-*.spec.ts'],
   retries: 2,

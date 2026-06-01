@@ -3,6 +3,7 @@ import { test as teardown } from '@playwright/test';
 import { createClerkClient } from '@clerk/nextjs/server';
 import { getRedis } from 'api/redis';
 import { testTokenKey } from '@shared/tests/http';
+import { runAuthTests } from './config';
 
 const TEST_EMAIL = 'clerk_test@deadrop.io';
 
@@ -19,7 +20,7 @@ teardown('clean up test token + clerk user', async () => {
     );
   }
 
-  if (!process.env.RUN_AUTH_TESTS || !process.env.CLERK_SECRET_KEY) {
+  if (!runAuthTests || !process.env.CLERK_SECRET_KEY) {
     return;
   }
 
