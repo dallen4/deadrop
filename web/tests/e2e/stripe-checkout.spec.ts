@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { clerk, setupClerkTestingToken } from '@clerk/testing/playwright';
 import { CHECKOUT_SECRET_KEY } from '../../config/cookies';
 import { PRICING_PATH } from '@shared/config/paths';
@@ -7,6 +7,20 @@ const CHECKOUT_API_PATH = '/api/stripe/checkout';
 
 const isCheckoutPost = (url: string, method: string) =>
   url.includes(CHECKOUT_API_PATH) && method === 'POST';
+
+// Until Clerk finishes hydrating, useUser() reports no user, so the
+// pricing CTA renders wrapped in a SignInButton with the *same* label.
+// Clicking it then opens the sign-in modal instead of checkout and the
+// API call never fires. Wait for the signed-in client before interacting.
+const waitForSignedIn = (page: Page) =>
+  page.waitForFunction(
+    () => {
+      const c = (window as unknown as { Clerk?: { loaded?: boolean; user?: unknown } }).Clerk;
+      return !!(c && c.loaded && c.user);
+    },
+    undefined,
+    { timeout: 15_000 },
+  );
 
 test.describe('checkout — handler', () => {
   test('unauthenticated POST returns 401', async ({ request }) => {
@@ -23,6 +37,7 @@ test.describe('checkout — handler', () => {
       page,
       emailAddress: process.env.CLERK_TEST_EMAIL!,
     });
+    await waitForSignedIn(page);
 
     const res = await page.request.post(CHECKOUT_API_PATH);
     expect(res.status()).toBe(200);
@@ -50,6 +65,7 @@ test.describe('checkout — modal sessionStorage caching', () => {
     });
 
     await page.goto(PRICING_PATH);
+    await waitForSignedIn(page);
 
     // First open
     const supporterCta = page.getByRole('button', {
@@ -85,6 +101,7 @@ test.describe('checkout — modal sessionStorage caching', () => {
     });
 
     await page.goto(PRICING_PATH);
+    await waitForSignedIn(page);
     await page
       .getByRole('button', { name: /become a supporter/i })
       .first()
@@ -102,6 +119,7 @@ test.describe('checkout — modal sessionStorage caching', () => {
     );
 
     await page.reload();
+    await waitForSignedIn(page);
     await page
       .getByRole('button', { name: /become a supporter/i })
       .first()
