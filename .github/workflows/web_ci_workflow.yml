@@ -7,29 +7,20 @@ jobs:
   test:
     timeout-minutes: 20
     runs-on: macos-latest
-    environment: ${{ github.event.deployment.environment }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Caches/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
       - name: Install Playwright Browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm -F web exec playwright install --with-deps
       - name: Run Playwright Tests
         shell: bash
         env:
-          HOME: /root
           STAGE: ${{ github.event.deployment.environment }}
           BASE_URL: ${{ github.event.deployment_status.target_url }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
