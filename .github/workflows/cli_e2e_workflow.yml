@@ -21,8 +21,10 @@ jobs:
     # (same constraint as the web Playwright suite) — must be macOS.
     runs-on: macos-latest
     timeout-minutes: 15
-    # The drop-flow secrets (DEADROP_API_URL, PEER_SERVER_URL, REDIS_REST_*,
-    # TURN_*) are repo-level, so they're available regardless of environment.
+    # Repo-level secrets (DEADROP_API_URL, PEER_SERVER_URL, REDIS_REST_*,
+    # TURN_*) resolve in any environment. Preview is deliberate, not arbitrary:
+    # the Production environment's key is expired, and we don't want this run
+    # coupled to Production (the web e2e suite keys off that environment).
     environment: Preview
     permissions:
       contents: read
