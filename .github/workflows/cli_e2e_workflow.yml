@@ -21,9 +21,9 @@ jobs:
     # (same constraint as the web Playwright suite) — must be macOS.
     runs-on: macos-latest
     timeout-minutes: 15
-    # DEADROP_API_URL / REDIS_REST_* are environment-scoped secrets (the web
-    # suite reads them under `environment:`). Adjust if they live elsewhere.
-    environment: Production
+    # The drop-flow secrets (DEADROP_API_URL, PEER_SERVER_URL, REDIS_REST_*,
+    # TURN_*) are repo-level, so they're available regardless of environment.
+    environment: Preview
     permissions:
       contents: read
     steps:
@@ -37,9 +37,15 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run CLI e2e tests
         env:
+          # Build-time: esbuild bakes DEADROP_API_URL + PEER_SERVER_URL into the
+          # bundle (and guards on both), so they must be present for `pnpm build`.
+          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
+          # Runtime: initPeer reads the TURN creds from the env at run time.
+          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          TURN_PWD: ${{ secrets.TURN_PWD }}
           # Seeds the drop test token into the same Upstash the worker reads,
           # then the dropper rides it past captcha/rate-limits.
-          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
         # test:e2e builds dist/deadrop.js, then runs the Vitest e2e config.
