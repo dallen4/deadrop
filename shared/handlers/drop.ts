@@ -39,9 +39,10 @@ export const createDropHandlers = <
   onRetryExceeded,
   cleanupSession,
   apiUri = '',
+  apiHeaders,
   initPeer,
 }: DropHandlerInputs<FileType>) => {
-  const client = createClient(apiUri);
+  const client = createClient(apiUri, { headers: apiHeaders });
   const timers = new Map<MessageType, NodeJS.Timeout>();
 
   const clearTimer = (msgType: MessageType) => {

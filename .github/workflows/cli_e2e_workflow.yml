@@ -1,0 +1,46 @@
+name: CLI E2E Tests
+
+# CLI-to-CLI drop/grab e2e (Vitest). Two `deadrop` processes establish a real
+# node-datachannel WebRTC connection against the deployed worker. The worker is
+# untouched by this suite, so it runs against whatever DEADROP_API_URL points
+# at (the production worker); no worker deploy is gated on it.
+on:
+  push:
+    branches: [main, alpha]
+    paths:
+      - 'cli/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/cli_e2e_workflow.yml'
+  workflow_dispatch:
+
+jobs:
+  cli-e2e:
+    # Two local WebRTC peers cannot complete ICE in the GitHub Linux container
+    # (same constraint as the web Playwright suite) — must be macOS.
+    runs-on: macos-latest
+    timeout-minutes: 15
+    # DEADROP_API_URL / REDIS_REST_* are environment-scoped secrets (the web
+    # suite reads them under `environment:`). Adjust if they live elsewhere.
+    environment: Production
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run CLI e2e tests
+        env:
+          # Seeds the drop test token into the same Upstash the worker reads,
+          # then the dropper rides it past captcha/rate-limits.
+          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
+          REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
+        # test:e2e builds dist/deadrop.js, then runs the Vitest e2e config.
+        run: CI=true pnpm -F cli test:e2e

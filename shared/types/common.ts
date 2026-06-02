@@ -66,6 +66,9 @@ export type BaseHandlerInputs<Context, Event> = {
   initPeer: () => Promise<Peer>;
   cleanupSession: (ctx: Context) => void;
   apiUri?: string;
+  // Extra headers applied to API requests this handler makes (e.g. the CLI
+  // e2e test token, which has no cookie jar to ride on).
+  apiHeaders?: Record<string, string>;
 
   // events
   onRetryExceeded?: (msgType: MessageType) => void;
