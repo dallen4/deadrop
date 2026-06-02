@@ -55,10 +55,15 @@ test.describe('checkout — handler', () => {
       await page.goto('/');
       await waitForSignedIn(page);
 
-      const res = await page.request.post(CHECKOUT_API_PATH);
-      expect(res.status()).toBe(200);
-      const { clientSecret } = await res.json();
-      expect(clientSecret).toMatch(/^cs_test_/);
+      // window.Clerk.user resolving doesn't guarantee the refreshed __session
+      // cookie has landed yet, so the first POST can 401 (flaky on slower
+      // engines). Retry until the session settles.
+      await expect(async () => {
+        const res = await page.request.post(CHECKOUT_API_PATH);
+        expect(res.status()).toBe(200);
+        const { clientSecret } = await res.json();
+        expect(clientSecret).toMatch(/^cs_test_/);
+      }).toPass({ timeout: 15_000 });
     });
   });
 });
