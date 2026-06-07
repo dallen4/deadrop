@@ -20,7 +20,8 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 24
+          # node 24 hangs Playwright's browser install
+          node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
