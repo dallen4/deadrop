@@ -3,6 +3,13 @@ name: Playwright Tests
 on:
   deployment_status:
 
+concurrency:
+  # Vercel fires a deployment_status per deploy; a burst of pushes spawns
+  # several. Cancel superseded runs so only the latest deploy per environment
+  # survives (and resolves to the stable domain, not a stale preview URL).
+  group: ${{ github.workflow }}-${{ github.event.deployment.environment }}
+  cancel-in-progress: true
+
 jobs:
   test:
     timeout-minutes: 20
@@ -67,8 +74,18 @@ jobs:
           elif printf '%s' " $BRANCHES " | grep -q ' alpha '; then
             export TEST_URI="https://alpha.deadrop.io/"
             export RUN_AUTH_TESTS=1
-          else
+          elif [ -n "$BRANCHES" ]; then
+            # Deploy SHA is the head of a non-alpha/main branch — a live PR/
+            # feature preview. Test it at its own preview URL. Auth specs stay
+            # off (Clerk is unreliable on *.vercel.app). Preview-protection
+            # bypass is a separate follow-up.
             export TEST_URI="$BASE_URL"
+          else
+            # SHA is head of no branch — a superseded deploy (alpha/main, or a
+            # branch, moved past it). The stable domain already points at a newer
+            # deploy, so testing this stale one is pointless. Skip.
+            echo "Deploy SHA is head of no branch — superseded, skipping."
+            exit 0
           fi
 
           echo "TEST_URI=$TEST_URI  RUN_AUTH_TESTS=${RUN_AUTH_TESTS:-0}"
