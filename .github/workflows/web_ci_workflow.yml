@@ -9,11 +9,11 @@ jobs:
     runs-on: macos-latest
     environment: ${{ github.event.deployment.environment }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -73,7 +73,7 @@ jobs:
 
           echo "TEST_URI=$TEST_URI  RUN_AUTH_TESTS=${RUN_AUTH_TESTS:-0}"
           CI=true pnpm test:e2e --trace on
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
