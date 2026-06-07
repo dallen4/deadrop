@@ -1,8 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import { onTestFinished } from 'vitest';
-import { testTokenKey } from '@shared/tests/http';
 import { apiURL, cliEntry, dropTimeout, grabTimeout } from './config';
-import { getRedis } from './redis';
 
 // chalk wraps CLI output in ANSI color codes (and figlet/QR add decoration);
 // strip them so we match against plain text.
@@ -10,22 +8,18 @@ import { getRedis } from './redis';
 const ANSI = /\[[0-9;]*m/g;
 const stripAnsi = (s: string) => s.replace(ANSI, '');
 
-let cachedToken: string | null = null;
-
-// The token is seeded by globalSetup, which runs in the main process; Vitest
-// workers don't reliably inherit its env mutation, so read from Redis (the
-// source of truth). Mirrors web util's fallback.
-export const getOrCreateTestToken = async (): Promise<string> => {
-  if (cachedToken) return cachedToken;
-  cachedToken =
-    process.env.TEST_TOKEN ??
-    (await getRedis().get<string>(testTokenKey));
-  if (!cachedToken)
+// The drop test token is a stable value persisted in Redis under `test_tkn`
+// (the worker verifies against it). It does not rotate per run, so suites just
+// read it from the env — no seeding, no teardown, no cross-suite races. See
+// DROP_TEST_TOKEN in cli/.env / the repo secret.
+export const getTestToken = (): string => {
+  const token = process.env.DROP_TEST_TOKEN;
+  if (!token)
     throw new Error(
-      'No test token available (globalSetup did not seed it, and ' +
-        'Redis has none). Check REDIS_REST_URL/REDIS_REST_TOKEN.',
+      'DROP_TEST_TOKEN is not set (expected in cli/.env locally or the ' +
+        'repo secret in CI).',
     );
-  return cachedToken;
+  return token;
 };
 
 /**
@@ -113,7 +107,7 @@ export type DropResult = {
 
 /** Spawn `deadrop drop <secret>`, return the parsed grab id + link. */
 export const dropCli = async (secret: string): Promise<DropResult> => {
-  const token = await getOrCreateTestToken();
+  const token = getTestToken();
   const cli = new CliProcess(['drop', secret], {
     DEADROP_API_URL: apiURL,
     TEST_TOKEN: token,

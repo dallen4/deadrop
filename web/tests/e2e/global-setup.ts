@@ -10,8 +10,6 @@ import {
 } from '@clerk/testing/playwright';
 import { createClerkClient } from '@clerk/nextjs/server';
 import Stripe from 'stripe';
-import { getRedis } from 'api/redis';
-import { testTokenKey } from '@shared/tests/http';
 import { authFile, runAuthTests } from './config';
 
 const REQUIRED_ENV = [
@@ -33,13 +31,10 @@ const TEST_EMAIL = 'clerk_test@deadrop.io';
 // is not bot-challenged, which is what makes this reliable from CI IPs.
 setup.describe.configure({ mode: 'serial' });
 
-setup('seed test token + clerk user', async () => {
-  const token = randomBytes(32).toString('base64');
-  await getRedis().setex(testTokenKey, 60 * 60, token);
-  process.env.TEST_TOKEN = token;
-
-  // Auth specs only run on alpha/main (stable custom domain). Elsewhere the
-  // token above is all the drop specs need — skip the Clerk/Stripe setup.
+setup('seed clerk user', async () => {
+  // The drop test token is a stable value persisted in Redis (read via util),
+  // so there's nothing to seed here. Auth specs only run on alpha/main (stable
+  // custom domain); elsewhere there's no Clerk/Stripe setup to do.
   if (!runAuthTests) return;
 
   const missing = REQUIRED_ENV.filter((k) => !process.env[k]);

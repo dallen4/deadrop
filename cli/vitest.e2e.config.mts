@@ -10,11 +10,10 @@ export default defineConfig({
     include: ['tests/e2e/**/*.spec.ts'],
     environment: 'node',
     // Load cli/.env into each forked worker (CI passes these as real env vars,
-    // so this is a no-op there). globalSetup loads its own copy for the main
-    // process. dotenv does not override already-set vars, so CI/explicit env
-    // wins.
+    // so this is a no-op there). dotenv does not override already-set vars, so
+    // CI/explicit env wins. No globalSetup needed: the drop test token is a
+    // stable value read from the env (DROP_TEST_TOKEN), not seeded per run.
     setupFiles: ['dotenv/config'],
-    globalSetup: ['./tests/e2e/global-setup.ts'],
     testTimeout: 90_000,
     hookTimeout: 30_000,
     // One flow at a time: the drop token is a single shared Redis key and
