@@ -10,7 +10,6 @@
     "build": "next build",
     "start:prod": "next build && next start",
     "test:e2e": "playwright test",
-    "posttest:e2e": "tsx ./scripts/clearTestToken.ts",
     "postversion": "git add ./package.json && git push --follow-tags"
   },
   "dependencies": {
