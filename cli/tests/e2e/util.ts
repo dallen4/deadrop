@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from 'child_process';
+import { execa, type ResultPromise } from 'execa';
 import { onTestFinished } from 'vitest';
 import { apiURL, cliEntry, dropTimeout, grabTimeout } from './config';
 
@@ -30,13 +30,19 @@ export const getTestToken = (): string => {
  * read it from the buffer rather than depend on process lifetime.
  */
 export class CliProcess {
-  readonly proc: ChildProcess;
+  readonly proc: ResultPromise;
   private buffer = '';
 
   constructor(args: string[], env: NodeJS.ProcessEnv) {
-    this.proc = spawn(process.execPath, [cliEntry, ...args], {
-      env: { ...process.env, ...env },
-      stdio: ['ignore', 'pipe', 'pipe'],
+    // execa extends process.env with `env` by default, doesn't throw on a
+    // non-zero exit (reject: false), and cleans up the child if the parent
+    // exits. buffer: false so we own the streams for incremental matching.
+    this.proc = execa(process.execPath, [cliEntry, ...args], {
+      env,
+      reject: false,
+      buffer: false,
+      stdout: 'pipe',
+      stderr: 'pipe',
     });
     const collect = (chunk: Buffer) => {
       this.buffer += stripAnsi(chunk.toString());
@@ -48,54 +54,56 @@ export class CliProcess {
   /** Resolve with the first regex match once it appears in stdout. */
   waitFor(pattern: RegExp, timeout: number): Promise<RegExpMatchArray> {
     return new Promise((resolve, reject) => {
-      const tryMatch = () => {
-        const m = this.buffer.match(pattern);
-        if (m) {
-          cleanup();
-          resolve(m);
-        }
-      };
-      const onData = () => tryMatch();
-      // Use 'close' (not 'exit'): it fires after stdio has flushed, so the
-      // grabber's final "Secret:" line is in the buffer even though it calls
-      // process.exit() right after logging it. Do a final match before giving
-      // up.
-      const onClose = (code: number | null) => {
-        const m = this.buffer.match(pattern);
-        cleanup();
-        if (m) resolve(m);
-        else
-          reject(
-            new Error(
-              `deadrop process closed (code ${code}) before matching ` +
-                `${pattern}. Output:\n${this.buffer}`,
-            ),
-          );
-      };
-      const timer = setTimeout(() => {
-        cleanup();
-        reject(
-          new Error(
-            `Timed out after ${timeout}ms waiting for ${pattern}. ` +
-              `Output:\n${this.buffer}`,
-          ),
-        );
-      }, timeout);
-      const cleanup = () => {
+      let done = false;
+      const finish = (cb: () => void) => {
+        if (done) return;
+        done = true;
         clearTimeout(timer);
         this.proc.stdout?.off('data', onData);
         this.proc.stderr?.off('data', onData);
-        this.proc.off('close', onClose);
+        cb();
       };
+      const tryMatch = () => {
+        const m = this.buffer.match(pattern);
+        if (m) finish(() => resolve(m));
+      };
+      const onData = () => tryMatch();
+      const timer = setTimeout(
+        () =>
+          finish(() =>
+            reject(
+              new Error(
+                `Timed out after ${timeout}ms waiting for ${pattern}. ` +
+                  `Output:\n${this.buffer}`,
+              ),
+            ),
+          ),
+        timeout,
+      );
+      // execa (reject: false) settles once the process ends and stdio has
+      // flushed — do a final match before giving up, since the grabber prints
+      // "Secret:" then immediately process.exit()s.
+      const onEnd = () =>
+        finish(() => {
+          const m = this.buffer.match(pattern);
+          if (m) resolve(m);
+          else
+            reject(
+              new Error(
+                `deadrop process ended before matching ${pattern}. ` +
+                  `Output:\n${this.buffer}`,
+              ),
+            );
+        });
       this.proc.stdout?.on('data', onData);
       this.proc.stderr?.on('data', onData);
-      this.proc.on('close', onClose);
+      this.proc.then(onEnd, onEnd);
       tryMatch(); // in case the line already arrived
     });
   }
 
   kill() {
-    if (!this.proc.killed) this.proc.kill('SIGKILL');
+    this.proc.kill('SIGKILL');
   }
 }
 
