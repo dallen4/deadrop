@@ -12,6 +12,7 @@
     "dotenv": "^16.0.3",
     "execa": "^9.6.1",
     "playwright": "^1.58.2",
+    "vite": "^5.4.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.8"
   }
