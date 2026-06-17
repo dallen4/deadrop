@@ -15,12 +15,14 @@ jobs:
     # deployment_status fires per state transition (pending, building, success,
     # error). Only run once the deploy succeeds, AND only for real Vercel
     # deploys: jobs that declare `environment:` make GitHub create their own
-    # deployment, which fires deployment_status and would re-trigger this
-    # workflow in a loop. Skipping non-vercel deploys breaks that loop before
-    # `environment:` activates (a skipped job creates no deployment).
+    # deployment status, which re-triggers this workflow in a loop. The status
+    # CREATOR is the right discriminator (the deployment.creator is always the
+    # repo owner; Vercel posts its statuses as vercel[bot] while the Actions
+    # loop statuses come from the repo owner). Skipping non-vercel statuses
+    # breaks the loop before `environment:` activates.
     if: >-
       github.event.deployment_status.state == 'success' &&
-      github.event.deployment.creator.login == 'vercel[bot]'
+      github.event.deployment_status.creator.login == 'vercel[bot]'
     timeout-minutes: 20
     runs-on: macos-latest
     environment: ${{ github.event.deployment.environment }}
