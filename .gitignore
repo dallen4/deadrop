@@ -52,6 +52,7 @@ pnpm-debug.log*
 
 # playwright
 test-results/
+web/tests/e2e/.clerk/
 
 # Sentry
 .sentryclirc

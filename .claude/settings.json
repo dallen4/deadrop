@@ -1,10 +1,12 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "Bash(gh issue:*)",
-      "Bash(gh run view:*)",
       "Bash(gh pr list:*)",
       "Bash(gh pr view:*)",
+      "Bash(gh run view:*)",
       "Bash(git add *)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
