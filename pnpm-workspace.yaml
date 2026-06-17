@@ -4,6 +4,7 @@ packages:
   - worker
   - cli
   - vscode-extension
+  - tests
 
 onlyBuiltDependencies:
   - '@sentry/cli'
