@@ -21,10 +21,17 @@ export class CliProcess {
   private buffer = '';
 
   constructor(args: string[], env: NodeJS.ProcessEnv) {
+    // A .js entry is a plain bundle we run through the host node; anything else
+    // (e.g. the Bun-compiled `dist/deadrop`) is a self-contained executable we
+    // invoke directly — its embedded runtime is independent of the host node.
+    const [file, fileArgs] = cliEntry.endsWith('.js')
+      ? [process.execPath, [cliEntry, ...args]]
+      : [cliEntry, args];
+
     // execa extends process.env with `env` by default, doesn't throw on a
     // non-zero exit (reject: false), and cleans up the child if the parent
     // exits. buffer: false so we own the streams for incremental matching.
-    this.proc = execa(process.execPath, [cliEntry, ...args], {
+    this.proc = execa(file, fileArgs, {
       env,
       reject: false,
       buffer: false,
@@ -39,7 +46,10 @@ export class CliProcess {
   }
 
   /** Resolve with the first regex match once it appears in stdout. */
-  waitFor(pattern: RegExp, timeout: number): Promise<RegExpMatchArray> {
+  waitFor(
+    pattern: RegExp,
+    timeout: number,
+  ): Promise<RegExpMatchArray> {
     return new Promise((resolve, reject) => {
       let done = false;
       const finish = (cb: () => void) => {

@@ -56,24 +56,27 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          # The deadrop CLI hard-requires node >=24 (engines.node + a runtime
-          # guard in cli/lib/util.ts), so this suite must run on 24 — node 22
-          # makes every CLI-spawning case exit immediately. The web Playwright
-          # suite stays on 22 because older Playwright hung its browser install
-          # on 24; tests/ uses Playwright 1.58, which installs clean here.
-          node-version: 24
+          # node 22: the host only runs vitest + Playwright (which hangs its
+          # browser install on node 24/macOS). The CLI is a Bun-compiled binary
+          # with its own embedded runtime, so the host node version is moot for
+          # it — and checkNodeVersion() is skipped under Bun.
+          node-version: 22
           cache: 'pnpm'
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build CLI
+      - name: Build CLI binary (Bun)
+        # bun-build.ts bakes these via `define`; it asserts API + PEER. Pass them
+        # all so none resolve to undefined at define time. TURN is a runtime var
+        # (set on the test step), not baked.
         env:
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
-          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          TURN_PWD: ${{ secrets.TURN_PWD }}
-        run: pnpm -F cli build
+          DEADROP_APP_URL: ${{ secrets.DEADROP_APP_URL }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+        run: pnpm -F cli compile
 
       - name: Install Playwright browsers
         run: pnpm -F tests exec playwright install chromium --with-deps
@@ -121,6 +124,9 @@ jobs:
           TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
           TURN_PWD: ${{ secrets.TURN_PWD }}
           DROP_TEST_TOKEN: ${{ secrets.DROP_TEST_TOKEN }}
-        # test:e2e:run skips the CLI build (already done in the Build CLI step
-        # with the required build-time env vars)
+          # Point the harness at the Bun binary (absolute: the test runs with
+          # cwd=tests/). CliProcess invokes a non-.js entry directly.
+          CLI_ENTRY: ${{ github.workspace }}/cli/dist/deadrop
+        # test:e2e:run runs vitest only — no CLI rebuild (the binary is built
+        # in the Build CLI binary step above).
         run: CI=true pnpm -F tests test:e2e:run

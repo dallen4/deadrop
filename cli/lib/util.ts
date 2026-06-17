@@ -6,6 +6,9 @@ export const generateGrabUrl = (id: string) =>
   baseGenerateGrabUrl(process.env.DEADROP_API_URL!, id);
 
 export const checkNodeVersion = () => {
+  // Under a Bun-compiled binary - Node.js is not needed
+  if (typeof Bun !== 'undefined') return;
+
   const neededVersion = engines.node;
   const currVersion = process.versions.node;
 
@@ -21,9 +24,12 @@ export const checkNodeVersion = () => {
 };
 
 export const checkBunVersion = () => {
-  if (typeof Bun === 'undefined') return; // running under Node (JS build) — skip
+  // running under Node (JS build) — skip
+  if (typeof Bun === 'undefined') return;
+
   const needed = '>=1.0.0';
   const curr = Bun.version;
+
   if (!isValidVersion(curr, needed)) {
     console.error(`Requires Bun ${needed}, found ${curr}`);
     process.exit(1);
