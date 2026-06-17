@@ -29,8 +29,15 @@ concurrency:
 jobs:
   cross-platform-e2e:
     # deployment_status fires for every state change (pending, error, failure,
-    # success). Only run on a successful deploy.
-    if: github.event_name != 'deployment_status' || github.event.deployment_status.state == 'success'
+    # success). Only run on a successful deploy, AND only for real Vercel
+    # deploys: jobs that declare `environment:` make GitHub create their own
+    # deployment, which fires deployment_status and would re-trigger this
+    # workflow in a loop. Skipping non-vercel deploys breaks that loop before
+    # `environment:` activates (a skipped job creates no deployment).
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.creator.login == 'vercel[bot]')
     runs-on: macos-latest
     timeout-minutes: 20
     # Preview environment — same rationale as cli_e2e: Production key is expired
