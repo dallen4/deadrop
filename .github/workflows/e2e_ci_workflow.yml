@@ -56,9 +56,12 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
-          # node 24 hangs Playwright browser install on macOS (chromium stalls
-          # silently after download completes).
-          node-version: 22
+          # The deadrop CLI hard-requires node >=24 (engines.node + a runtime
+          # guard in cli/lib/util.ts), so this suite must run on 24 — node 22
+          # makes every CLI-spawning case exit immediately. The web Playwright
+          # suite stays on 22 because older Playwright hung its browser install
+          # on 24; tests/ uses Playwright 1.58, which installs clean here.
+          node-version: 24
           cache: 'pnpm'
 
       - name: Install dependencies
