@@ -21,9 +21,13 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # For deployment_status, cancel superseded runs per environment (same as web_ci).
-  # For PRs, cancel per ref so a new push cancels an in-flight run.
-  group: ${{ github.workflow }}-${{ github.event.deployment.environment || github.ref }}
+  # Include the deployment_status state in the group: Vercel can emit several
+  # deployments per commit (some error, some succeed), all in the same
+  # environment. Without the state, an error/in_progress event would cancel the
+  # legitimate success run via cancel-in-progress. Keying on state isolates the
+  # success run while still superseding an older success run on a newer deploy.
+  # For PRs the state is empty, so it groups per ref as before.
+  group: ${{ github.workflow }}-${{ github.event.deployment.environment || github.ref }}-${{ github.event.deployment_status.state }}
   cancel-in-progress: true
 
 jobs:
