@@ -12,6 +12,9 @@ concurrency:
 
 jobs:
   test:
+    # deployment_status fires per state transition (pending, building, success,
+    # error). Only run once the deploy actually succeeds.
+    if: github.event.deployment_status.state == 'success'
     timeout-minutes: 20
     runs-on: macos-latest
     environment: ${{ github.event.deployment.environment }}

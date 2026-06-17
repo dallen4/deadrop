@@ -4,18 +4,13 @@ name: Cross-Platform E2E Tests
 # against the deployed stack.
 #
 # Triggered three ways:
-#   1. push/PR on cli, shared, or tests paths → BASE_URL defaults to alpha.deadrop.io
-#   2. deployment_status (Vercel fires this) → resolves URL the same way web_ci does
+#   1. pull_request on cli/shared/tests paths → catches CLI/shared code changes
+#      that don't trigger a web redeploy. BASE_URL defaults to alpha.deadrop.io
+#   2. deployment_status success (Vercel fires this) → resolves URL like web_ci.
+#      This already covers every alpha/main/PR-preview deploy, so there is no
+#      `push:` trigger — it would just double-count alpha against deployment_status.
 #   3. workflow_dispatch → manual run against alpha.deadrop.io
 on:
-  push:
-    branches: [main, alpha]
-    paths:
-      - 'cli/**'
-      - 'shared/**'
-      - 'tests/**'
-      - 'pnpm-lock.yaml'
-      - '.github/workflows/e2e_ci_workflow.yml'
   pull_request:
     branches: [main, alpha]
     paths:
@@ -27,7 +22,7 @@ on:
 
 concurrency:
   # For deployment_status, cancel superseded runs per environment (same as web_ci).
-  # For push/PR, cancel per ref so a new push cancels an in-flight run.
+  # For PRs, cancel per ref so a new push cancels an in-flight run.
   group: ${{ github.workflow }}-${{ github.event.deployment.environment || github.ref }}
   cancel-in-progress: true
 
