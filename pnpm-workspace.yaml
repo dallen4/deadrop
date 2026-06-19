@@ -8,6 +8,9 @@ packages:
 
 onlyBuiltDependencies:
   - '@sentry/cli'
+  # bun's postinstall (node install.js) materializes the platform binary from
+  # its @oven/bun-* optional deps; without it `pnpm -F cli compile` has no bun.
+  - bun
   - bufferutil
   - esbuild
   - esbuild-plugin-define
