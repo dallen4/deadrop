@@ -1,7 +1,10 @@
-import { formatDropKey, generateIV } from '@shared/lib/util';
+import {
+  formatDropKey,
+  generateId,
+  generateIV,
+} from '@shared/lib/util';
 import { DropDetails } from '@shared/types/common';
 import { Context } from 'hono';
-import { nanoid } from 'nanoid';
 import { hash } from './crypto';
 import { HonoCtx } from './http/core';
 
@@ -45,7 +48,9 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
     peerId: string,
     disableIncrement = false,
   ) => {
-    const dropId = nanoid();
+    // 22 alphanumeric chars: ~131 bits (OWASP 128-bit min) and no `-`/`_` that
+    // would parse as a flag in `deadrop grab <id>`.
+    const dropId = generateId(22);
     const nonce = generateIV();
 
     const key = formatDropKey(dropId);

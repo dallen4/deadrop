@@ -6,7 +6,8 @@ import { alphanumeric } from 'nanoid-dictionary';
 export const bufferFromString = (input: string) =>
   Uint8Array.from(input, (char) => char.charCodeAt(0));
 
-export const generateId = () => customAlphabet(alphanumeric, 12)();
+export const generateId = (size = 12) =>
+  customAlphabet(alphanumeric, size)();
 
 export const generateIV = () => {
   // Generate 12 random bytes
