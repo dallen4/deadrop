@@ -31,3 +31,7 @@ export const isPreviewEnv = process.env.STAGE === 'Preview';
 // it to get a fast, Clerk-free drop-flow run across all engines.
 export const runAuthTests =
   !!process.env.RUN_AUTH_TESTS && !process.env.SKIP_AUTH_TESTS;
+
+// begin-drop's WebRTC peer init is slow on Mobile Safari (WebKit); use for the
+// post-begin-drop visibility waits.
+export const peerInitVisible = { timeout: 20_000 };
