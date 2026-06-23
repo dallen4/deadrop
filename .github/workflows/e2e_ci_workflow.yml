@@ -21,34 +21,20 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # Include the deployment_status state in the group: Vercel can emit several
-  # deployments per commit (some error, some succeed), all in the same
-  # environment. Without the state, an error/in_progress event would cancel the
-  # legitimate success run via cancel-in-progress. Keying on state isolates the
-  # success run while still superseding an older success run on a newer deploy.
-  # For PRs the state is empty, so it groups per ref as before.
-  group: ${{ github.workflow }}-${{ github.event.deployment.environment || github.ref }}-${{ github.event.deployment_status.state }}
+  # Per deploy-environment (or per ref for PRs); a newer run supersedes an older.
+  group: ${{ github.workflow }}-${{ github.event.deployment.environment || github.ref }}
   cancel-in-progress: true
 
 jobs:
   cross-platform-e2e:
-    # deployment_status fires for every state change (pending, error, failure,
-    # success). Only run on a successful deploy, AND only for real Vercel
-    # deploys: jobs that declare `environment:` make GitHub create their own
-    # deployment status, which re-triggers this workflow in a loop. The status
-    # CREATOR is the right discriminator (the deployment.creator is always the
-    # repo owner; Vercel posts its statuses as vercel[bot] while the Actions
-    # loop statuses come from the repo owner). Skipping non-vercel statuses
-    # breaks the loop before `environment:` activates.
+    # On deployment_status, only run for successful deploys. Deliberately NO
+    # `environment:`: it would make GitHub mint a deployment that re-triggers
+    # this workflow in a loop. Every secret used here is repo-level.
     if: >-
       github.event_name != 'deployment_status' ||
-      (github.event.deployment_status.state == 'success' &&
-       github.event.deployment_status.creator.login == 'vercel[bot]')
+      github.event.deployment_status.state == 'success'
     runs-on: macos-latest
     timeout-minutes: 20
-    # Preview environment — same rationale as cli_e2e: Production key is expired
-    # and we don't want this coupled to Production deploys.
-    environment: Preview
     permissions:
       contents: read
     steps:

@@ -21,11 +21,8 @@ jobs:
     # (same constraint as the web Playwright suite) — must be macOS.
     runs-on: macos-latest
     timeout-minutes: 15
-    # Repo-level secrets (DEADROP_API_URL, PEER_SERVER_URL, REDIS_REST_*,
-    # TURN_*) resolve in any environment. Preview is deliberate, not arbitrary:
-    # the Production environment's key is expired, and we don't want this run
-    # coupled to Production (the web e2e suite keys off that environment).
-    environment: Preview
+    # No `environment:`: it would make GitHub mint a deployment that feeds the
+    # deployment_status loop. Every secret this job uses is repo-level.
     permissions:
       contents: read
     steps:

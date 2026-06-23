@@ -3,31 +3,15 @@ name: Playwright Tests
 on:
   deployment_status:
 
-concurrency:
-  # Include the deployment_status state in the group: Vercel can emit several
-  # deployments per commit (some error, some succeed), all in the same
-  # environment. Without the state, an error/in_progress event would cancel the
-  # legitimate success run via cancel-in-progress. Keying on state isolates the
-  # success run while still superseding an older success run on a newer deploy.
-  group: ${{ github.workflow }}-${{ github.event.deployment.environment }}-${{ github.event.deployment_status.state }}
-  cancel-in-progress: true
-
 jobs:
   test:
-    # deployment_status fires per state transition (pending, building, success,
-    # error). Only run once the deploy succeeds, AND only for real Vercel
-    # deploys: jobs that declare `environment:` make GitHub create their own
-    # deployment status, which re-triggers this workflow in a loop. The status
-    # CREATOR is the right discriminator (the deployment.creator is always the
-    # repo owner; Vercel posts its statuses as vercel[bot] while the Actions
-    # loop statuses come from the repo owner). Skipping non-vercel statuses
-    # breaks the loop before `environment:` activates.
-    if: >-
-      github.event.deployment_status.state == 'success' &&
-      github.event.deployment_status.creator.login == 'vercel[bot]'
+    # Only test successful deploys. Deliberately NO `environment:` on this job:
+    # declaring one makes GitHub mint a deployment, which fires its own
+    # deployment_status and re-triggers this workflow in a loop. Secrets are read
+    # at repo level instead (see TEST_* below).
+    if: github.event.deployment_status.state == 'success'
     timeout-minutes: 20
     runs-on: macos-latest
-    environment: ${{ github.event.deployment.environment }}
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -50,10 +34,12 @@ jobs:
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          # Payment/Clerk test creds: repo-level TEST_* secrets holding the
+          # Preview values (auth specs run on Preview/alpha only — see below).
+          STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.TEST_STRIPE_WEBHOOK_SECRET }}
           STRIPE_SUPPORTER_LOOKUP_KEY: ${{ vars.STRIPE_SUPPORTER_LOOKUP_KEY }}
-          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.TEST_CLERK_SECRET_KEY }}
           CLERK_WEBHOOK_SIGNING_SECRET: ${{ secrets.CLERK_WEBHOOK_SIGNING_SECRET }}
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
         run: |
@@ -73,8 +59,9 @@ jobs:
 
           # Vercel deployments carry only the commit SHA, so resolve which
           # branch that commit is the head of to choose the test domain.
-          # Clerk auth is only reliable on a stable custom domain, so auth
-          # specs (RUN_AUTH_TESTS) run only on alpha/main.
+          # Payment/Clerk specs (RUN_AUTH_TESTS) run on Preview (alpha) ONLY:
+          # never Production (don't fire test webhooks at live Stripe) and not on
+          # *.vercel.app PR previews (Clerk unreliable there).
           BRANCHES=$(curl -s \
             -H "Authorization: Bearer $GITHUB_TOKEN" \
             -H "Accept: application/vnd.github+json" \
@@ -84,7 +71,6 @@ jobs:
 
           if [ "$STAGE" = 'Production' ]; then
             export TEST_URI="https://deadrop.io/"
-            export RUN_AUTH_TESTS=1
           elif printf '%s' " $BRANCHES " | grep -q ' alpha '; then
             export TEST_URI="https://alpha.deadrop.io/"
             export RUN_AUTH_TESTS=1
