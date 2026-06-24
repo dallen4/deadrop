@@ -5,16 +5,11 @@ import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { formatDropKey } from '@shared/lib/util';
 import { createCacheHandlers } from '../lib/cache';
-<<<<<<< HEAD
-import { getPlanLimits, getUserPlan } from '../lib/billing';
-=======
 import { checkMaxGrabbers } from '../lib/billing';
->>>>>>> aa2fa55 (Squash commits from multidrop)
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { SessionNotFound, PermissionDenied } from '../lib/messages';
 import { TEST_TOKEN_COOKIE, testTokenKey } from '@shared/tests/http';
-import { getAuth } from '@hono/clerk-auth';
 
 const dropIdSchema = z.object({ id: z.string() });
 
@@ -41,7 +36,26 @@ const dropRouter = hono()
       const { id: peerId, maxGrabbers: requestedMaxGrabbers } =
         c.req.valid('json');
 
-      if (requestedMaxGrabbers && requestedMaxGrabbers > 1) {
+      const verifyTestToken = async (token: string) => {
+        const fetchedToken = await c
+          .get('redis')
+          .get<string>(testTokenKey);
+
+        return fetchedToken ? fetchedToken === token : false;
+      };
+
+      // a valid CI test token acts as the experimental bypass (same as
+      // the captcha / drop-count bypass) so multidrop caps can be
+      // exercised end-to-end without a Clerk session
+      const isTestSession = testToken
+        ? await verifyTestToken(testToken)
+        : false;
+
+      if (
+        requestedMaxGrabbers &&
+        requestedMaxGrabbers > 1 &&
+        !isTestSession
+      ) {
         const claims = getAuth(c)?.sessionClaims;
 
         const { allowed } = checkMaxGrabbers(
@@ -52,27 +66,9 @@ const dropRouter = hono()
         if (!allowed) return c.json(PermissionDenied, 403);
       }
 
-      const verifyTestToken = async (token: string) => {
-        const fetchedToken = await c
-          .get('redis')
-          .get<string>(testTokenKey);
-
-        return fetchedToken ? fetchedToken === token : false;
-      };
-
-      const auth = getAuth(c);
-      const sessionClaims = auth?.sessionClaims as
-        | Record<string, unknown>
-        | undefined;
-
-      const canDrop = testToken
-        ? await verifyTestToken(testToken)
-        : sessionClaims && auth?.userId
-          ? await checkAndIncrementAuthUserDropCount(
-              auth.userId,
-              getPlanLimits(sessionClaims).dailyDrops,
-            )
-          : await checkAndIncrementUserDropCount(ipAddress!);
+      const canDrop = isTestSession
+        ? true
+        : await checkAndIncrementUserDropCount(ipAddress!);
 
       if (!canDrop)
         return c.json({ message: 'Daily drop limit reached' }, 500);
