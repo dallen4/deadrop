@@ -181,9 +181,21 @@ export const createDropHandlers = <
     ctx.message = content;
     ctx.mode = mode;
 
-    logger.info('Payload staged, ready to start session...');
+    logger.info('Payload staged, opening session for grabbers...');
+
+    // staging the payload also opens the session (Ready -> Accepting),
+    // matching the machine's documented behavior and the single-grabber
+    // flow where confirming the payload starts accepting grabbers
+    const wrap: WrapEvent = {
+      type: DropEventType.Wrap,
+      integrity,
+    };
+
+    sendEvent(wrap);
   };
 
+  // explicit start, kept for the contract surface; a no-op once staging
+  // has already opened the session (Wrap is ignored outside Ready)
   const startSession = async () => {
     logger.info('Starting drop session, now accepting grabbers...');
 
