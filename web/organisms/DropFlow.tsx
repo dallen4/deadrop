@@ -19,8 +19,10 @@ import StepCard from 'molecules/steps/StepCard';
 import { SharePane } from 'molecules/SharePane';
 import { GrabbersList } from 'molecules/GrabbersList';
 import { SecretInputCard } from 'molecules/steps/SecretInputCard';
+import { getCookie } from 'cookies-next';
+import { TEST_FLAG_COOKIE } from '@shared/tests/http';
 import { isExperimental } from 'lib/billing';
-import { BEGIN_DROP_BTN_ID, DROP_SECRET_BTN_ID } from 'lib/constants';
+import { BEGIN_DROP_BTN_ID } from 'lib/constants';
 
 export const DropFlow = () => {
   const theme = useMantineTheme();
@@ -28,7 +30,11 @@ export const DropFlow = () => {
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
   const { sessionClaims } = useAuth();
-  const experimental = isExperimental(sessionClaims);
+  // a valid CI test session (test-mode cookie) unlocks the experimental
+  // controls too, mirroring the captcha bypass, so multidrop can be
+  // exercised end-to-end without a Clerk session
+  const experimental =
+    isExperimental(sessionClaims) || !!getCookie(TEST_FLAG_COOKIE);
 
   const [cap, setCap] = useState<number | ''>(1);
 
@@ -36,7 +42,6 @@ export const DropFlow = () => {
     status,
     init,
     dropLink,
-    startSession,
     stopAccepting,
     setMaxGrabbers,
     getLogs,
@@ -60,9 +65,9 @@ export const DropFlow = () => {
         // TODO start 5 min timer
         return 1;
       case DropState.Accepting:
-        return 3;
+        return 2;
       case DropState.Completed:
-        return 4;
+        return 3;
       default:
         return 0;
     }
@@ -116,7 +121,7 @@ export const DropFlow = () => {
         </Stepper.Step>
         <Stepper.Step
           label={'Share'}
-          description={isMobile && 'Share your secrets'}
+          description={isMobile && 'Share with your grabbers'}
         >
           <StepCard title={'share'}>
             {dropLink() && (
@@ -130,16 +135,6 @@ export const DropFlow = () => {
                 experimental={experimental}
               />
             )}
-          </StepCard>
-        </Stepper.Step>
-        <Stepper.Step
-          label={'Drop'}
-          description={isMobile && 'Drop your message'}
-        >
-          <StepCard title={'finish your deadrop'}>
-            <Button id={DROP_SECRET_BTN_ID} onClick={startSession}>
-              Drop
-            </Button>
             {status === DropState.Accepting && (
               <Box style={{ marginTop: theme.spacing.md }}>
                 <Text fw={'bold'}>
