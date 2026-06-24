@@ -46,6 +46,7 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
 
   const createDrop = async (
     peerId: string,
+    maxGrabbers = 1,
     disableIncrement = false,
   ) => {
     // 22 alphanumeric chars: ~131 bits (OWASP 128-bit min) and no `-`/`_` that
@@ -55,7 +56,7 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
 
     const key = formatDropKey(dropId);
 
-    await client.hset(key, { peerId, nonce });
+    await client.hset(key, { peerId, nonce, maxGrabbers });
     await client.expire(key, FIVE_MINS_IN_SEC);
 
     if (!disableIncrement) await incrementDailyDropCount();

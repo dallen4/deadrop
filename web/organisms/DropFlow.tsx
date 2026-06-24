@@ -23,7 +23,16 @@ export const DropFlow = () => {
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
 
-  const { status, init, dropLink, drop, getLogs } = useDropContext();
+  const {
+    status,
+    init,
+    dropLink,
+    startSession,
+    stopAccepting,
+    getLogs,
+    grabbers,
+    accepting,
+  } = useDropContext();
 
   const currentStep = useMemo(() => {
     switch (status) {
@@ -32,11 +41,7 @@ export const DropFlow = () => {
       case DropState.Ready:
         // TODO start 5 min timer
         return 1;
-      case DropState.Waiting:
-      case DropState.AwaitingHandshake:
-        // TODO clear timer
-        return 2;
-      case DropState.Acknowledged:
+      case DropState.Accepting:
         return 3;
       case DropState.Completed:
         return 4;
@@ -44,6 +49,11 @@ export const DropFlow = () => {
         return 0;
     }
   }, [status]);
+
+  const grabberList = useMemo(
+    () => Array.from(grabbers?.values() ?? []),
+    [grabbers],
+  );
 
   return (
     <Box>
@@ -81,9 +91,35 @@ export const DropFlow = () => {
           description={isMobile && 'Drop your message'}
         >
           <StepCard title={'finish your deadrop'}>
-            <Button id={DROP_SECRET_BTN_ID} onClick={drop}>
+            <Button id={DROP_SECRET_BTN_ID} onClick={startSession}>
               Drop
             </Button>
+            {status === DropState.Accepting && (
+              <Box style={{ marginTop: theme.spacing.md }}>
+                <Text fw={'bold'}>Grabbers</Text>
+                {grabberList.length === 0 && (
+                  <Text size={'sm'}>
+                    Waiting for a grabber to connect...
+                  </Text>
+                )}
+                <ul>
+                  {grabberList.map((grabber) => (
+                    <li key={grabber.peerId}>
+                      {grabber.peerId} - {grabber.status}
+                    </li>
+                  ))}
+                </ul>
+                {accepting && (
+                  <Button
+                    color={'red'}
+                    variant={'outline'}
+                    onClick={stopAccepting}
+                  >
+                    Stop accepting grabbers
+                  </Button>
+                )}
+              </Box>
+            )}
           </StepCard>
         </Stepper.Step>
         <Stepper.Completed>

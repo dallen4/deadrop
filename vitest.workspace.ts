@@ -3,6 +3,7 @@ import { defineWorkspace } from 'vitest/config';
 export default defineWorkspace([
   'cli/vitest.config.mts',
   'web/vitest.config.mts',
+  'worker/vitest.config.mts',
   {
     extends: './vitest.config.mts',
     test: {

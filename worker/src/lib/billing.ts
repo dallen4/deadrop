@@ -3,51 +3,94 @@ import {
   PLAN_SLUGS,
   SUPPORTER_FEATURES,
   type PlanKey,
-} from '@shared/config/plans'
+} from '@shared/config/plans';
 
-export { PlanKey }
+export { PlanKey };
 
 export function getUserPlan(
   claims: Record<string, unknown>,
 ): PlanKey {
-  const pla = claims.pla as string | undefined
+  const pla = claims.pla as string | undefined;
 
   if (pla?.startsWith('u:')) {
-    const slug = pla.slice(2)
-    if (slug === PLAN_SLUGS.PRO) return 'pro'
+    const slug = pla.slice(2);
+    if (slug === PLAN_SLUGS.PRO) return 'pro';
   }
 
   if (pla?.startsWith('o:')) {
     // All org-level plans map to 'org' limits
-    return 'org'
+    return 'org';
   }
 
   const metadata = claims.public_metadata as
     | { plan?: string }
-    | undefined
-  if (metadata?.plan === PLAN_SLUGS.SUPPORTER) return 'supporter'
+    | undefined;
+  if (metadata?.plan === PLAN_SLUGS.SUPPORTER) return 'supporter';
 
-  return 'free'
+  return 'free';
 }
 
 export function getPlanLimits(claims: Record<string, unknown>) {
-  return PLAN_LIMITS[getUserPlan(claims)]
+  return PLAN_LIMITS[getUserPlan(claims)];
 }
 
 export function hasFeature(
   claims: Record<string, unknown>,
   feature: string,
 ): boolean {
-  const plan = getUserPlan(claims)
+  const plan = getUserPlan(claims);
 
   // Pro/Org: Clerk embeds active features in the `fea` JWT claim
-  const fea = claims.fea as string | undefined
-  if (fea?.includes(feature)) return true
+  const fea = claims.fea as string | undefined;
+  if (fea?.includes(feature)) return true;
 
   // Supporter: check against hardcoded feature list since it's not a Clerk plan
   if (plan === 'supporter') {
-    return (SUPPORTER_FEATURES as readonly string[]).includes(feature)
+    return (SUPPORTER_FEATURES as readonly string[]).includes(
+      feature,
+    );
   }
 
-  return false
+  return false;
 }
+export type Plan = 'free' | 'supporter' | 'pro' | 'org';
+
+export const DEFAULT_PLAN: Plan = 'free';
+
+// loosely typed: Clerk's sessionClaims shape is whatever the JWT carries,
+// and plan/early_access/internal are custom claims we add on top of it
+type SessionClaims = any;
+
+export const planFromClaims = (claims: SessionClaims): Plan => {
+  const plan = claims?.plan;
+
+  return plan && plan in PLAN_LIMITS ? (plan as Plan) : DEFAULT_PLAN;
+};
+
+// experimental users (early access / internal) may unlock caps above
+// their plan's default
+export const isExperimental = (claims: SessionClaims): boolean =>
+  !!(claims?.early_access || claims?.internal);
+
+export const maxGrabbersPerDrop = (plan: Plan): number =>
+  PLAN_LIMITS[plan].dailyDrops;
+
+export type MaxGrabbersCheck = {
+  allowed: boolean;
+  cap: number;
+};
+
+export const checkMaxGrabbers = (
+  requested: number,
+  claims: SessionClaims,
+): MaxGrabbersCheck => {
+  const plan = planFromClaims(claims);
+  const planCap = maxGrabbersPerDrop(plan);
+
+  if (requested <= planCap) return { allowed: true, cap: planCap };
+
+  if (isExperimental(claims))
+    return { allowed: true, cap: requested };
+
+  return { allowed: false, cap: planCap };
+};
