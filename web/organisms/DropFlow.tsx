@@ -1,8 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useAuth } from '@clerk/nextjs';
 import { DropState } from '@shared/lib/constants';
+import { GrabberStatus } from '@shared/types/drop';
 import {
   Box,
   Button,
+  NumberInput,
   Text,
   Stepper,
   useMantineTheme,
@@ -14,7 +17,9 @@ import { useDropContext } from 'contexts/DropContext';
 import DropLog from 'molecules/DropLog';
 import StepCard from 'molecules/steps/StepCard';
 import { SharePane } from 'molecules/SharePane';
+import { GrabbersList } from 'molecules/GrabbersList';
 import { SecretInputCard } from 'molecules/steps/SecretInputCard';
+import { isExperimental } from 'lib/billing';
 import { BEGIN_DROP_BTN_ID, DROP_SECRET_BTN_ID } from 'lib/constants';
 
 export const DropFlow = () => {
@@ -22,6 +27,10 @@ export const DropFlow = () => {
   const isMobile = useMediaQuery(
     `(max-width: ${theme.breakpoints.sm}px)`,
   );
+  const { sessionClaims } = useAuth();
+  const experimental = isExperimental(sessionClaims);
+
+  const [cap, setCap] = useState<number | ''>(1);
 
   const {
     status,
@@ -29,10 +38,19 @@ export const DropFlow = () => {
     dropLink,
     startSession,
     stopAccepting,
+    setMaxGrabbers,
     getLogs,
     grabbers,
     accepting,
+    maxGrabbers,
   } = useDropContext();
+
+  const onCapChange = (value: number | string) => {
+    const next = value === '' ? '' : Number(value);
+
+    setCap(next);
+    setMaxGrabbers(next === '' ? null : next);
+  };
 
   const currentStep = useMemo(() => {
     switch (status) {
@@ -55,6 +73,14 @@ export const DropFlow = () => {
     [grabbers],
   );
 
+  const confirmedCount = useMemo(
+    () =>
+      grabberList.filter(
+        (grabber) => grabber.status === GrabberStatus.Confirmed,
+      ).length,
+    [grabberList],
+  );
+
   return (
     <Box>
       <Stepper
@@ -67,6 +93,16 @@ export const DropFlow = () => {
         >
           <StepCard title={'starting a session'}>
             <Text>ready to start a drop?</Text>
+            {experimental && (
+              <NumberInput
+                label={'Max grabbers'}
+                description={'How many people can grab this drop'}
+                min={1}
+                value={cap}
+                onChange={onCapChange}
+                style={{ marginBottom: theme.spacing.sm }}
+              />
+            )}
             <Button id={BEGIN_DROP_BTN_ID} onClick={init}>
               Begin
             </Button>
@@ -83,7 +119,17 @@ export const DropFlow = () => {
           description={isMobile && 'Share your secrets'}
         >
           <StepCard title={'share'}>
-            {dropLink() && <SharePane link={dropLink()!} />}
+            {dropLink() && (
+              <SharePane
+                link={dropLink()!}
+                accepting={
+                  status === DropState.Accepting && accepting
+                }
+                confirmedCount={confirmedCount}
+                maxGrabbers={maxGrabbers}
+                experimental={experimental}
+              />
+            )}
           </StepCard>
         </Stepper.Step>
         <Stepper.Step
@@ -96,24 +142,16 @@ export const DropFlow = () => {
             </Button>
             {status === DropState.Accepting && (
               <Box style={{ marginTop: theme.spacing.md }}>
-                <Text fw={'bold'}>Grabbers</Text>
-                {grabberList.length === 0 && (
-                  <Text size={'sm'}>
-                    Waiting for a grabber to connect...
-                  </Text>
-                )}
-                <ul>
-                  {grabberList.map((grabber) => (
-                    <li key={grabber.peerId}>
-                      {grabber.peerId} - {grabber.status}
-                    </li>
-                  ))}
-                </ul>
+                <Text fw={'bold'}>
+                  Grabbers ({confirmedCount} confirmed)
+                </Text>
+                <GrabbersList grabbers={grabberList} />
                 {accepting && (
                   <Button
                     color={'red'}
                     variant={'outline'}
                     onClick={stopAccepting}
+                    style={{ marginTop: theme.spacing.sm }}
                   >
                     Stop accepting grabbers
                   </Button>
