@@ -73,7 +73,7 @@ export const isExperimental = (claims: SessionClaims): boolean =>
   !!(claims?.early_access || claims?.internal);
 
 export const maxGrabbersPerDrop = (plan: Plan): number =>
-  PLAN_LIMITS[plan].dailyDrops;
+  PLAN_LIMITS[plan].maxGrabbers;
 
 export type MaxGrabbersCheck = {
   allowed: boolean;

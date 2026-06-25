@@ -24,24 +24,28 @@ export const PLAN_LIMITS = {
     cloudVaults: 0,
     envsPerVault: 0,
     ciTokens: 0,
+    maxGrabbers: 1,
   },
   supporter: {
     dailyDrops: 15,
     cloudVaults: 1,
     envsPerVault: 3,
     ciTokens: 10,
+    maxGrabbers: 5,
   },
   pro: {
     dailyDrops: Infinity,
     cloudVaults: 3,
     envsPerVault: Infinity,
     ciTokens: Infinity,
+    maxGrabbers: 25,
   },
   org: {
     dailyDrops: Infinity,
     cloudVaults: Infinity,
     envsPerVault: Infinity,
     ciTokens: Infinity,
+    maxGrabbers: 100,
   },
 } as const
 
