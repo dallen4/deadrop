@@ -83,7 +83,10 @@ export const listenForStopKey = (
   };
 };
 
-export async function dropSecret(ctx: DropContext) {
+export async function dropSecret(
+  ctx: DropContext,
+  token?: string | null,
+) {
   let resolveCompletion: () => void;
 
   const completion = new Promise<void>((resolve) => {
@@ -108,6 +111,9 @@ export async function dropSecret(ctx: DropContext) {
       },
       cleanupSession,
       apiUri: process.env.DEADROP_API_URL!,
+      apiHeaders: token
+        ? { Authorization: `Bearer ${token}` }
+        : undefined,
       initPeer,
     });
 

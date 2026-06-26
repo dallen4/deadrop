@@ -1,5 +1,6 @@
 import { input as prompt, number } from '@inquirer/prompts';
 import { initDropContext } from '@shared/lib/machines/drop';
+import { getToken as readCachedToken } from 'lib/auth/cache';
 import { createClerkClient } from 'lib/auth/clerk';
 import { displayWelcomeMessage, logInfo } from 'lib/log';
 import { dropSecret } from 'logic/drop';
@@ -9,12 +10,17 @@ type DropOptions = {
   file?: boolean;
 };
 
-// the worker enforces this same flag server-side (early_access/internal
-// session claims) when a cap above the user's plan is requested
-const isExperimentalUser = async (): Promise<boolean> => {
-  const clerkClient = await createClerkClient();
-  const token = await clerkClient.session?.getToken();
+// Fetch a fresh, server-verifiable session token
+const getSessionToken = async (): Promise<string | null> => {
+  if (!(await readCachedToken())) return null;
 
+  const clerkClient = await createClerkClient();
+
+  return (await clerkClient.session?.getToken()) ?? null;
+};
+
+// UX gate only. The worker re-verifies the token
+const isExperimentalUser = (token: string | null): boolean => {
   if (!token) return false;
 
   try {
@@ -31,8 +37,7 @@ const isExperimentalUser = async (): Promise<boolean> => {
 
 const promptMaxGrabbers = async (): Promise<number | null> => {
   const cap = await number({
-    message:
-      'Max grabbers (leave blank for unbounded, default 1):',
+    message: 'Max grabbers (leave blank for unbounded, default 1):',
     required: false,
     min: 1,
   });
@@ -57,8 +62,10 @@ export const drop = async (
     ctx.message = await prompt({ message: 'Input here: ' });
   }
 
-  if (await isExperimentalUser())
+  const token = await getSessionToken();
+
+  if (isExperimentalUser(token))
     ctx.maxGrabbers = await promptMaxGrabbers();
 
-  await dropSecret(ctx);
+  await dropSecret(ctx, token);
 };
