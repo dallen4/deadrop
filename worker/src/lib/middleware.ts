@@ -4,6 +4,7 @@ import { AppHeaders } from '../constants';
 import { HonoCtx, Middleware } from './http/core';
 import { Redis } from '@upstash/redis/cloudflare';
 import { NotAuthenticated, PermissionDenied } from './messages';
+import { TEST_TOKEN_HEADER } from '@shared/tests/http';
 
 export const tracing = () =>
   createMiddleware<HonoCtx>(async (c, next) => {
@@ -35,7 +36,12 @@ export const cors = (): Middleware =>
 
       else return null;
     },
-    allowHeaders: ['Content-Type', 'Authorization', 'Set-Cookie'],
+    allowHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Set-Cookie',
+      TEST_TOKEN_HEADER,
+    ],
     allowMethods: ['GET', 'POST', 'DELETE', 'HEAD', 'OPTIONS'],
     credentials: true,
   });

@@ -15,7 +15,7 @@ import {
 import { initPeer } from 'lib/peer';
 import { cleanupSession } from 'lib/session';
 import { generateGrabUrl } from 'lib/util';
-import { TEST_TOKEN_COOKIE } from '@shared/tests/http';
+import { TEST_TOKEN_HEADER } from '@shared/tests/http';
 import QRCode from 'qrcode';
 
 const GRABBER_EVENT_TYPES = new Set<DropEventType>([
@@ -111,9 +111,13 @@ export async function dropSecret(
       },
       cleanupSession,
       apiUri: process.env.DEADROP_API_URL!,
-      apiHeaders: token
-        ? { Authorization: `Bearer ${token}` }
-        : undefined,
+      apiHeaders: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        // e2e: the worker's test-token bypass
+        ...(process.env.TEST_TOKEN
+          ? { [TEST_TOKEN_HEADER]: process.env.TEST_TOKEN }
+          : {}),
+      },
       initPeer,
     });
 

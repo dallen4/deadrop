@@ -9,7 +9,11 @@ import { checkMaxGrabbers } from '../lib/billing';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { SessionNotFound, PermissionDenied } from '../lib/messages';
-import { TEST_TOKEN_COOKIE, testTokenKey } from '@shared/tests/http';
+import {
+  TEST_TOKEN_COOKIE,
+  TEST_TOKEN_HEADER,
+  testTokenKey,
+} from '@shared/tests/http';
 
 const dropIdSchema = z.object({ id: z.string() });
 
@@ -25,7 +29,10 @@ const dropRouter = hono()
     async (c) => {
       const ipAddress = c.get('ipAddress');
 
-      const testToken = getCookie(c, TEST_TOKEN_COOKIE);
+      // fallback to the test token header
+      const testToken =
+        getCookie(c, TEST_TOKEN_COOKIE) ??
+        c.req.header(TEST_TOKEN_HEADER);
 
       const {
         createDrop,
