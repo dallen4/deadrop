@@ -16,6 +16,7 @@ export type BaseContext = {
 export type DropDetails = {
   peerId: string;
   nonce: string;
+  maxGrabbers: number;
 };
 
 export type InitDropResult = {

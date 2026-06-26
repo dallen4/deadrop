@@ -4,13 +4,29 @@ import {
     Text,
     CopyButton,
     Button,
+    Badge,
+    Group,
     useMantineTheme,
     Anchor,
 } from '@mantine/core';
 import { IconCopy } from '@tabler/icons-react';
 import { QRCode } from 'atoms/QRCode';
 
-export const SharePane = ({ link }: { link: string }) => {
+export type SharePaneProps = {
+    link: string;
+    accepting?: boolean;
+    confirmedCount?: number;
+    maxGrabbers?: number | null;
+    experimental?: boolean;
+};
+
+export const SharePane = ({
+    link,
+    accepting,
+    confirmedCount = 0,
+    maxGrabbers,
+    experimental,
+}: SharePaneProps) => {
     const theme = useMantineTheme();
 
     return (
@@ -24,6 +40,22 @@ export const SharePane = ({ link }: { link: string }) => {
                 alignItems: 'center',
             }}
         >
+            {accepting !== undefined && (
+                <Group gap={'xs'}>
+                    <Badge color={accepting ? 'green' : 'gray'}>
+                        {accepting
+                            ? `Accepting (${confirmedCount} confirmed)`
+                            : `Not accepting (${confirmedCount} confirmed)`}
+                    </Badge>
+                    {experimental && (
+                        <Badge variant={'outline'} color={'blue'}>
+                            {maxGrabbers == null
+                                ? 'Unbounded cap'
+                                : `Cap: ${maxGrabbers}`}
+                        </Badge>
+                    )}
+                </Group>
+            )}
             <Text size={'sm'}>Invite a friend with a scan</Text>
             <QRCode link={link} />
             <Text size={'sm'}>

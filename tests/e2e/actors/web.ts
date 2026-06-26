@@ -1,7 +1,21 @@
-import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
-import { TEST_FLAG_COOKIE, TEST_TOKEN_COOKIE } from '@shared/tests/http';
+import {
+  chromium,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from 'playwright';
+import {
+  TEST_FLAG_COOKIE,
+  TEST_TOKEN_COOKIE,
+  TEST_TOKEN_HEADER,
+} from '@shared/tests/http';
 import { DROP_PATH } from '@shared/config/paths';
-import { apiURL, baseURL, grabTimeout, testToken } from '../../utils/config';
+import {
+  apiURL,
+  baseURL,
+  getTestToken,
+  grabTimeout,
+} from '../../utils/config';
 import { ActorKind } from './types';
 import type { DropActor, GrabActor } from './types';
 
@@ -15,7 +29,7 @@ const DROP_SECRET_VALUE = '#drop-secret-value';
 
 async function newContext(browser: Browser): Promise<BrowserContext> {
   const ctx = await browser.newContext({ bypassCSP: true });
-  const token = testToken();
+  const token = await getTestToken();
   // Mirror what web/tests/e2e/util.ts does: plant the test token cookie so the
   // worker's captcha-bypass path accepts the drop without a real hCaptcha solve.
   await ctx.addCookies([
@@ -44,6 +58,18 @@ async function newContext(browser: Browser): Promise<BrowserContext> {
       secure: true,
     },
   ]);
+  // The `test-tkn` cookie is blocked on cross-site requests to the worker
+  const apiOrigin = apiURL.replace(/\/$/, '');
+  await ctx.route(
+    (url) => url.href.startsWith(apiOrigin),
+    (route) =>
+      route.continue({
+        headers: {
+          ...route.request().headers(),
+          [TEST_TOKEN_HEADER]: token,
+        },
+      }),
+  );
   return ctx;
 }
 
@@ -64,14 +90,17 @@ export const webDropActor = (): DropActor => {
       await page.getByPlaceholder('Your secret').fill(secret);
       await page.locator(CONFIRM_PAYLOAD_BTN).click();
 
-      const link = await page.locator(DROP_LINK).getAttribute('href', {
-        timeout: grabTimeout,
-      });
+      const link = await page
+        .locator(DROP_LINK)
+        .getAttribute('href', {
+          timeout: grabTimeout,
+        });
       if (!link) throw new Error('Drop link not found after confirm');
 
       // Extract the drop id from the grab link (?drop=<id>)
       const id = new URL(link, baseURL).searchParams.get('drop');
-      if (!id) throw new Error(`Could not parse drop id from link: ${link}`);
+      if (!id)
+        throw new Error(`Could not parse drop id from link: ${link}`);
 
       return { id, link };
     },
@@ -97,7 +126,9 @@ export const webGrabActor = (): GrabActor => {
       page = await ctx.newPage();
 
       // Navigate to the grab link directly using the drop id
-      await page.goto(`${baseURL.replace(/\/$/, '')}/grab?drop=${id}`);
+      await page.goto(
+        `${baseURL.replace(/\/$/, '')}/grab?drop=${id}`,
+      );
       await page.locator(BEGIN_GRAB_BTN).click();
 
       await page.locator(DROP_SECRET_VALUE).waitFor({

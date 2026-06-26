@@ -1,11 +1,48 @@
-import { input as prompt } from '@inquirer/prompts';
+import { input as prompt, number } from '@inquirer/prompts';
 import { initDropContext } from '@shared/lib/machines/drop';
+import { getToken as readCachedToken } from 'lib/auth/cache';
+import { createClerkClient } from 'lib/auth/clerk';
 import { displayWelcomeMessage, logInfo } from 'lib/log';
 import { dropSecret } from 'logic/drop';
 
 type DropOptions = {
   input?: string;
   file?: boolean;
+};
+
+// Fetch a fresh, server-verifiable session token
+const getSessionToken = async (): Promise<string | null> => {
+  if (!(await readCachedToken())) return null;
+
+  const clerkClient = await createClerkClient();
+
+  return (await clerkClient.session?.getToken()) ?? null;
+};
+
+// UX gate only. The worker re-verifies the token
+const isExperimentalUser = (token: string | null): boolean => {
+  if (!token) return false;
+
+  try {
+    const [, payload] = token.split('.');
+    const claims = JSON.parse(
+      Buffer.from(payload, 'base64url').toString('utf8'),
+    );
+
+    return !!(claims.early_access || claims.internal);
+  } catch {
+    return false;
+  }
+};
+
+const promptMaxGrabbers = async (): Promise<number | null> => {
+  const cap = await number({
+    message: 'Max grabbers (leave blank for unbounded, default 1):',
+    required: false,
+    min: 1,
+  });
+
+  return cap ?? null;
 };
 
 export const drop = async (
@@ -25,5 +62,10 @@ export const drop = async (
     ctx.message = await prompt({ message: 'Input here: ' });
   }
 
-  await dropSecret(ctx);
+  const token = await getSessionToken();
+
+  if (isExperimentalUser(token))
+    ctx.maxGrabbers = await promptMaxGrabbers();
+
+  await dropSecret(ctx, token);
 };

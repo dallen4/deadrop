@@ -25,5 +25,6 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
 }

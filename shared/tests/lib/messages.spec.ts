@@ -1,5 +1,10 @@
 import { MessageType } from 'lib/constants';
-import { createMessageMutex, withMessageLock } from 'lib/messages';
+import {
+  createMessageMutex,
+  withMessageLock,
+  withGrabberMessageLock,
+  GrabberMessageHandler,
+} from 'lib/messages';
 import { BaseMessage, MessageHandler } from 'types/messages';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -137,6 +142,87 @@ describe('message mutex locking', () => {
     await wrappedHandler(sampleMessage2);
 
     // handler shouldn't run b/c lock failed to acquire
+    expect(mockedHandler).toHaveBeenCalledTimes(2);
+    expect(handlerState).toBe(2);
+  });
+});
+
+describe('per-grabber message lock isolation', () => {
+  it('does not serialize concurrent grabbers against one another', async () => {
+    const calls: Array<string> = [];
+
+    const mocks: { handler: GrabberMessageHandler } = {
+      handler: async () => {},
+    };
+
+    vi.spyOn(mocks, 'handler').mockImplementation(
+      async (grabberId, _msg) => {
+        calls.push(grabberId);
+      },
+    );
+
+    const wrappedHandler = withGrabberMessageLock(mocks.handler);
+
+    const sampleMessage: BaseMessage = {
+      type: MessageType.Handshake,
+    };
+
+    // grabber A's Handshake locks grabber A only; grabber B's Handshake
+    // (same MessageType) must still be allowed through immediately
+    await Promise.all([
+      wrappedHandler('grabber-a', sampleMessage),
+      wrappedHandler('grabber-b', sampleMessage),
+    ]);
+
+    expect(calls).toContain('grabber-a');
+    expect(calls).toContain('grabber-b');
+    expect(calls).toHaveLength(2);
+  });
+
+  it('still blocks a repeated MessageType for the same grabber', async () => {
+    let handlerState = 0;
+
+    const mocks: { handler: GrabberMessageHandler } = {
+      handler: async () => {},
+    };
+
+    const mockedHandler = vi
+      .spyOn(mocks, 'handler')
+      .mockImplementation(async (_grabberId, _msg) => {
+        handlerState++;
+      });
+
+    const wrappedHandler = withGrabberMessageLock(mocks.handler);
+
+    const sampleMessage: BaseMessage = {
+      type: MessageType.Handshake,
+    };
+
+    await wrappedHandler('grabber-a', sampleMessage);
+    await wrappedHandler('grabber-a', sampleMessage);
+
+    expect(mockedHandler).toHaveBeenCalledTimes(1);
+    expect(handlerState).toBe(1);
+  });
+
+  it('allows a new MessageType from a grabber that already handled a prior type', async () => {
+    let handlerState = 0;
+
+    const mocks: { handler: GrabberMessageHandler } = {
+      handler: async () => {},
+    };
+
+    const mockedHandler = vi
+      .spyOn(mocks, 'handler')
+      .mockImplementation(async (_grabberId, _msg) => {
+        handlerState++;
+      });
+
+    const wrappedHandler = withGrabberMessageLock(mocks.handler);
+
+    await wrappedHandler('grabber-a', { type: MessageType.Handshake });
+    await wrappedHandler('grabber-a', { type: MessageType.Verify });
+
     expect(mockedHandler).toHaveBeenCalledTimes(2);
     expect(handlerState).toBe(2);
   });

@@ -32,7 +32,7 @@
     "cli:build": "pnpm -F cli build",
     "cli:compile": "pnpm -F cli compile",
     "cli:release": "cd cli && pnpm install --frozen-lockfile && pnpm release",
-    "worker:deploy": "pnpm -F worker deploy",
+    "worker:deploy": "pnpm -F worker run deploy",
     "vscode": "pnpm -F deadrop-vsc",
     "vscode:build": "pnpm -F deadrop-vsc build",
     "vscode:dev": "pnpm -F deadrop-vsc dev",

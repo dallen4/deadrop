@@ -1,5 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Redis } from '@upstash/redis';
+import { testTokenKey } from '@shared/tests/http';
 
 // ESM-safe __dirname (this file lives at tests/utils/, so ../../ is the repo root)
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -21,19 +23,39 @@ export const cliEntry =
   process.env.CLI_ENTRY ||
   path.join(here, '..', '..', 'cli', 'dist', 'deadrop.js');
 
-export const dropTimeout = Number(process.env.XPLAT_DROP_TIMEOUT || 45_000);
-export const grabTimeout = Number(process.env.XPLAT_GRAB_TIMEOUT || 45_000);
+export const dropTimeout = Number(
+  process.env.XPLAT_DROP_TIMEOUT || 45_000,
+);
+export const grabTimeout = Number(
+  process.env.XPLAT_GRAB_TIMEOUT || 45_000,
+);
 
-// The stable drop test token persisted in Redis under `test_tkn` (the worker +
-// web /api/captcha verify against it). It does not rotate per run; suites read
-// it — never seed or delete it. See DROP_TEST_TOKEN in tests/.env / the repo
-// secret.
-export const testToken = (): string => {
-  const t = process.env.DROP_TEST_TOKEN;
-  if (!t)
+// The drop test token lives in Redis under `test_tkn` — the worker and the
+// web /api/captcha both verify against it
+let cachedToken: string | null = null;
+let redis: Redis | undefined;
+
+const getRedis = () =>
+  (redis ??= new Redis({
+    url: process.env.REDIS_REST_URL!,
+    token: process.env.REDIS_REST_TOKEN!,
+  }));
+
+export const getTestToken = async (): Promise<string> => {
+  if (cachedToken) return cachedToken;
+
+  if (process.env.REDIS_REST_URL && process.env.REDIS_REST_TOKEN) {
+    const fromRedis = await getRedis().get<string>(testTokenKey);
+    if (typeof fromRedis === 'string' && fromRedis)
+      return (cachedToken = fromRedis);
+  }
+
+  const fromEnv = process.env.DROP_TEST_TOKEN;
+  if (!fromEnv)
     throw new Error(
-      'DROP_TEST_TOKEN is not set (expected in tests/.env locally or the ' +
-        'repo secret in CI).',
+      'No test token: set REDIS_REST_URL + REDIS_REST_TOKEN (CI/Redis) ' +
+        'or DROP_TEST_TOKEN (tests/.env) for local runs.',
     );
-  return t;
+
+  return (cachedToken = fromEnv);
 };

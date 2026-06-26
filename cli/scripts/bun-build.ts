@@ -36,8 +36,13 @@ const env = {
   CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY!,
 };
 
-if (!env.DEADROP_API_URL || !env.PEER_SERVER_URL) {
-  console.error('Invalid environment configuration');
+const missing = Object.entries(env)
+  .filter(([, v]) => !v)
+  .map(([k]) => k);
+if (missing.length) {
+  console.error(
+    `Invalid environment configuration, missing: ${missing.join(', ')}`,
+  );
   process.exit(1);
 }
 
