@@ -2,8 +2,8 @@ import { CliProcess } from '../../utils/cli-process'; // ported from cli/tests/e
 import {
   apiURL,
   dropTimeout,
+  getTestToken,
   grabTimeout,
-  testToken,
 } from '../../utils/config';
 import { ActorKind } from './types';
 import type { DropActor, GrabActor } from './types';
@@ -11,9 +11,9 @@ import type { DropActor, GrabActor } from './types';
 // The dropper rides the stable test token past captcha/rate-limits. logic/drop.ts
 // reads TEST_TOKEN and sends it as the cookie. PEER_SERVER_URL is baked into the
 // CLI build; TURN_* are inherited from process.env (CI env / tests/.env).
-const cliEnv = (): NodeJS.ProcessEnv => ({
+const cliEnv = async (): Promise<NodeJS.ProcessEnv> => ({
   DEADROP_API_URL: apiURL,
-  TEST_TOKEN: testToken(),
+  TEST_TOKEN: await getTestToken(),
 });
 
 export const cliDropActor = (): DropActor => {
@@ -21,7 +21,7 @@ export const cliDropActor = (): DropActor => {
   return {
     kind: ActorKind.Cli,
     async drop(secret) {
-      proc = new CliProcess(['drop', secret], cliEnv());
+      proc = new CliProcess(['drop', secret], await cliEnv());
       const m = await proc.waitFor(/grab\?drop=([^\s&]+)/, dropTimeout);
       return { id: m[1], link: m[0] };
     },

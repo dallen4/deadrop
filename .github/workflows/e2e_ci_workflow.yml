@@ -111,6 +111,9 @@ jobs:
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
           TURN_PWD: ${{ secrets.TURN_PWD }}
+          # Source of truth for the test token: read it from Redis, fallback to local
+          REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
+          REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
           DROP_TEST_TOKEN: ${{ secrets.DROP_TEST_TOKEN }}
           # Point the harness at the Bun binary (absolute: the test runs with
           # cwd=tests/). CliProcess invokes a non-.js entry directly.

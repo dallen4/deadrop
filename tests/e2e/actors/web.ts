@@ -13,8 +13,8 @@ import { DROP_PATH } from '@shared/config/paths';
 import {
   apiURL,
   baseURL,
+  getTestToken,
   grabTimeout,
-  testToken,
 } from '../../utils/config';
 import { ActorKind } from './types';
 import type { DropActor, GrabActor } from './types';
@@ -29,7 +29,7 @@ const DROP_SECRET_VALUE = '#drop-secret-value';
 
 async function newContext(browser: Browser): Promise<BrowserContext> {
   const ctx = await browser.newContext({ bypassCSP: true });
-  const token = testToken();
+  const token = await getTestToken();
   // Mirror what web/tests/e2e/util.ts does: plant the test token cookie so the
   // worker's captcha-bypass path accepts the drop without a real hCaptcha solve.
   await ctx.addCookies([
