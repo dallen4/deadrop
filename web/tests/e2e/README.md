@@ -91,14 +91,31 @@ the test-mode bypass Clerk-free.
 
 ## The test token (drop/grab bypass)
 
-`global-setup` seeds a random token into Redis (`testTokenKey`, 1h TTL) and
-`global-teardown` deletes it. `util.ts` sets it as the `test-tkn` cookie (plus
-the `test-mode` flag). The Next API (`/api/captcha`) and the worker (`/drop`)
-verify it against Redis to skip the captcha and rate limits. The token lives
-exactly as long as the run; the TTL is only a fallback if teardown doesn't fire.
+The token is a **stable** value persisted in Redis (`test_tkn` key) — it is
+not seeded or torn down per run. `global-setup` does nothing for it (see the
+comment there); `util.ts` reads the live value straight from Redis and sets it
+as the `test-tkn` cookie (plus the `test-mode` flag). The Next API
+(`/api/captcha`) and the worker (`/drop`) verify it against Redis to skip the
+captcha and rate limits.
+
+The value is rotated daily by `.github/workflows/hydrate_test_token_workflow.yml`
+(`pnpm hydrate:test-token`, runs `shared/scripts/hydrate-test-token.ts`).
+Rotation is safe to run anytime, including mid-suite — nothing caches the
+token across requests, every check reads Redis fresh — but the workflow still
+queues behind any in-flight e2e run via a shared concurrency group rather than
+relying on that.
 
 > The CI `REDIS_REST_URL` secret must point at the **same** Upstash instance the
-> deployed app reads, or `verifyTestToken` fails and the dropper stalls.
+> deployed app reads, or `verifyTestToken` fails and the dropper stalls. Note
+> this is a different env var name than the worker's own Redis client uses
+> (`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`) — same instance, two
+> naming conventions depending on which client reads it.
+
+**Coverage gap:** none of these specs exercise an *authenticated* drop/grab
+call — `drop-flow`/`drop-text-init`/`multidrop` all use this anonymous
+test-token bypass, and `stripe-checkout` only covers billing. The
+cross-origin bearer-token attachment (`use-api-headers.tsx` →
+`Authorization: Bearer <token>`) is currently verified manually, not by CI.
 
 ## Required env (auth runs)
 

@@ -72,6 +72,7 @@ worker/
 - `c.get('redis')` (set by the `redis()` middleware) — `@upstash/redis/cloudflare`, `Redis.fromEnv(c.env)`
 - Drop details are an HSET keyed by `formatDropKey(dropId)`; no separate KV/DO needed for drop metadata
 - `maxGrabbers` defaults to `1` for drops created before the field existed (lazy default in the GET handler)
+- **Env var naming differs from the rest of the monorepo**: `Redis.fromEnv()` (the cloudflare adapter) only reads `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` — these are the actual deployed secret names (`wrangler secret list`). `shared/lib/redis.ts` (used by `web`/`tests`/the hydrate-test-token script) reads `REDIS_REST_URL`/`REDIS_REST_TOKEN` instead. Same Upstash instance, two different env var names depending on which client reads it — a local `worker/.dev.vars` needs the `UPSTASH_` prefixed names or `c.get('redis')` silently goes unauthenticated.
 
 ### Durable Objects — PeerServerDO
 - Each peer gets its own Durable Object instance (actor per peer ID)
