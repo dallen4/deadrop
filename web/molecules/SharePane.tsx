@@ -52,14 +52,21 @@ export const SharePane = ({
                 Invite a friend with a scan
             </Text>
             <Box
-                p={'sm'}
+                p={'xs'}
                 style={{
                     border: `2px solid ${theme.colors.blue[6]}`,
                     borderRadius: theme.radius.md,
-                    backgroundColor: theme.white,
                 }}
             >
-                <QRCode link={link} />
+                <Box
+                    p={4}
+                    style={{
+                        borderRadius: theme.radius.sm,
+                        backgroundColor: theme.white,
+                    }}
+                >
+                    <QRCode link={link} />
+                </Box>
             </Box>
             <Text size={'sm'}>
                 or copy the{' '}
