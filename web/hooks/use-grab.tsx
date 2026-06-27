@@ -13,9 +13,11 @@ import { IconX } from '@tabler/icons-react';
 import { createGrabHandlers } from '@shared/handlers/grab';
 import { cleanupSession } from 'lib/session';
 import { initPeer } from 'lib/peer';
+import { useApiHeaders } from 'hooks/use-api-headers';
 
 export const useGrab = () => {
   const router = useRouter();
+  const apiHeaders = useApiHeaders();
 
   const logsRef = useRef<Array<string>>([]);
   const contextRef = useRef<GrabContext>(initGrabContext());
@@ -68,6 +70,7 @@ export const useGrab = () => {
           hash: hashFile,
         },
         apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
+        apiHeaders,
         initPeer,
         cleanupSession,
         onRetryExceeded,

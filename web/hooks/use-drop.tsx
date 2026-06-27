@@ -14,9 +14,11 @@ import { initPeer } from 'lib/peer';
 import { createDropHandlers } from '@shared/handlers/drop';
 import { cleanupSession } from 'lib/session';
 import { useRouter } from 'next/router';
+import { useApiHeaders } from 'hooks/use-api-headers';
 
 export const useDrop = () => {
   const router = useRouter();
+  const apiHeaders = useApiHeaders();
 
   const logsRef = useRef<Array<string>>([]);
   const contextRef = useRef<DropContext>(initDropContext());
@@ -75,6 +77,7 @@ export const useDrop = () => {
         },
         cleanupSession,
         apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
+        apiHeaders,
         initPeer,
         onRetryExceeded,
       }),
