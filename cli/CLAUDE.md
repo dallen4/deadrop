@@ -38,19 +38,24 @@ cli/
 ├── logic/
 │   └── drop.ts           # Drop session workflow helpers
 ├── lib/
-│   ├── api.ts            # createClient() with Clerk token injection
+│   ├── api.ts            # deadropFactory singleton client (not used by drop/grab — see below)
 │   ├── auth/
-│   │   ├── clerk.ts      # Clerk client for Node.js
-│   │   └── cache.ts      # Token caching (filesystem)
-│   ├── peer.ts           # PeerJS init with @roamhq/wrtc (Node.js WebRTC)
-│   ├── session.ts        # Session management helpers
-│   ├── crypto.ts         # CLI-specific crypto utilities
+│   │   ├── clerk.ts       # Clerk client for Node.js + getSessionToken() (shared by drop/grab actions)
+│   │   ├── cache.ts       # Token caching (filesystem)
+│   │   ├── localhostServer.tsx # Loopback HTTP server for the `login` OAuth callback
+│   │   └── snippets.tsx
+│   ├── peer.ts            # PeerJS init with @roamhq/wrtc (Node.js WebRTC)
+│   ├── session.ts         # Session management helpers
+│   ├── crypto.ts          # CLI-specific crypto utilities
+│   ├── env.ts             # Env var resolution
+│   ├── config.ts          # CLI config file (~/.deadrop)
+│   ├── files.ts           # File read/write helpers (file-mode drop/grab)
 │   ├── log/
-│   │   ├── index.ts      # Logger setup
-│   │   ├── text.ts       # chalk text formatting
-│   │   └── loader.ts     # Ora spinners
+│   │   ├── index.ts       # Logger setup
+│   │   ├── text.ts        # chalk text formatting
+│   │   └── loader.ts      # Ora spinners
 │   ├── constants.ts
-│   └── util.ts           # Node.js utilities
+│   └── util.ts            # Node.js utilities
 ├── db/
 │   ├── init.ts           # Drizzle schema init + migrations
 │   ├── vaults.ts         # Vault table schema
@@ -63,6 +68,7 @@ cli/
 │   └── postpublish.sh
 ├── tests/
 │   ├── unit/             # Vitest unit tests (crypto.spec.ts)
+│   ├── e2e/              # CLI-to-CLI drop/grab e2e (vitest.e2e.config.mts), run via `tests/` workspace too
 │   ├── runLocal.ts       # Local integration test helper
 │   └── injectDryrun.ts   # Dry-run injection for tests
 ├── drizzle.config.ts
@@ -96,8 +102,9 @@ deadrop secret remove
 - Use `interpret()` + `machine.send()` to advance machine state
 - Use Inquirer.js prompts for user input at each machine state transition
 
-### API Client
-- `lib/api.ts` calls `createClient()` from `shared/client.ts` with Clerk token injected
+### API Client & Auth
+- `actions/drop.ts` and `actions/grab.ts` call `createDropHandlers`/`createGrabHandlers` (`shared/handlers/`) directly with their own `apiUri`/`apiHeaders` — they don't go through `lib/api.ts`'s singleton client
+- `lib/auth/clerk.ts`'s `getSessionToken()` is the single source for fetching a fresh, server-verifiable Clerk token; returns `null` when signed out so callers degrade to anonymous requests — both `drop` and `grab` send `Authorization: Bearer <token>` when present, since the Worker can't rely on a cookie jar that doesn't exist in Node.js
 - All API calls go through the typed Hono RPC client — never use raw `fetch`
 
 ### Database (Drizzle + libsql)

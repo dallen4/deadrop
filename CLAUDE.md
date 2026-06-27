@@ -8,12 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Monorepo Structure
 
-pnpm Workspaces with four packages:
+pnpm Workspaces (see `pnpm-workspace.yaml`):
 
-- `shared/` — Core crypto primitives, XState state machines, PeerJS utilities, shared types. Consumed by `web` and `cli`.
+- `shared/` — Core crypto primitives, XState state machines, PeerJS utilities, the Hono RPC client, billing/plan config, and shared types. Consumed by `web`, `cli`, and `vscode-extension`.
 - `web/` — Next.js 14 (Pages Router) PWA deployed on Vercel.
-- `worker/` — Cloudflare Worker (Hono framework) providing the backend API, KV-backed drop session storage, and PeerJS signaling via Durable Objects.
+- `worker/` — Cloudflare Worker (Hono framework) providing the backend API, Redis-backed (Upstash) drop session storage, Turso-backed vaults, and PeerJS signaling via Durable Objects.
 - `cli/` — Node.js CLI published to npm as `deadrop`.
+- `vscode-extension/` — VS Code extension (`deadrop-vsc`), see its own `CLAUDE.md`.
+- `tests/` — Cross-platform e2e suite that drives web + CLI actors against the same live drop (see `specs/cross-platform-e2e-design.md`).
 
 ## Commands
 
@@ -50,9 +52,11 @@ pnpm analyze:unused     # Find unused TS exports (ts-prune)
 ### Data Flow
 
 1. **Dropper** creates a PeerJS peer → Cloudflare Durable Object (`PeerServerDO`) handles signaling
-2. Drop ID + peer ID + nonce stored in Cloudflare KV (`DROP_STORE`) via the Worker API
+2. Drop ID + peer ID + nonce + maxGrabbers stored in Upstash Redis via the Worker API
 3. **Grabber** fetches drop metadata → WebRTC P2P connection established directly between peers
 4. ECDH key exchange + AES-256-GCM encryption over WebRTC DataChannel; SHA-256 hash verifies transfer integrity
+
+Both `web` and `cli` send a Clerk bearer token on every Worker API call when the caller is signed in (see `web/hooks/use-api-headers.tsx` and `cli/lib/auth/clerk.ts`'s `getSessionToken`) — the Worker lives cross-origin from `web`, so session cookies never transmit and the CLI has no cookie jar at all. Drop and grab both work anonymously; identity is attached opportunistically when present.
 
 ### Key Architectural Patterns
 
@@ -65,6 +69,10 @@ pnpm analyze:unused     # Find unused TS exports (ts-prune)
 - `@config/*` → `config/*` (web only)
 
 **Crypto layer** (`shared/lib/crypto/`): Thin wrappers around Web Crypto API. ECDH for key exchange, AES-256-GCM for encryption, SHA-256 for integrity hashing. The same crypto code runs in browsers (web) and Node.js (cli via `@roamhq/wrtc` for WebRTC).
+
+**Shared handler factories** (`shared/handlers/drop.ts`, `shared/handlers/grab.ts`): `createDropHandlers`/`createGrabHandlers` build a Hono client from `apiUri`/`apiHeaders` and own all drop/grab session orchestration. `web/hooks/use-drop.tsx`/`use-grab.tsx` and `cli/actions/drop.ts`/`grab.ts` are thin platform adapters around these — never duplicate orchestration logic in either platform.
+
+**Billing/plans** (`shared/config/plans.ts`, `shared/config/tiers.ts`): plan limits (free/supporter/pro/org) and feature slugs are defined once in `shared/` and read by both the Worker (`worker/src/lib/billing.ts`, enforcement) and `web` (`lib/billing.ts`, UI gating) from Clerk session claims / publicMetadata.
 
 ### Web App (`web/`)
 
@@ -80,8 +88,8 @@ pnpm analyze:unused     # Find unused TS exports (ts-prune)
 Hono routes:
 - `/auth` — Clerk auth middleware
 - `/peers` — PeerJS signaling (backed by `PeerServerDO` Durable Object)
-- `/drop` — Drop session management (KV-backed)
-- `/vault` — Vault management
+- `/drop` — Drop session management (Redis-backed, Upstash)
+- `/vault` — Vault management (Turso-backed, gated by `restricted()` — requires `early_access`/`internal` Clerk claims)
 
 ### CLI (`cli/`)
 
@@ -97,9 +105,10 @@ Hono routes:
 | Auth | Clerk |
 | P2P | PeerJS + WebRTC (browser: native, Node.js: `@roamhq/wrtc`) |
 | Crypto | Web Crypto API (ECDH, AES-256-GCM, SHA-256) |
-| Backend | Cloudflare Workers, Hono, Cloudflare KV + Durable Objects |
+| Backend | Cloudflare Workers, Hono, Upstash Redis, Durable Objects, Turso (vaults) |
+| Billing | Clerk Billing + Stripe (`web/pages/api/stripe`, `web/pages/api/webhooks`) |
 | CLI DB | Drizzle ORM + SQLite (libsql) |
-| Testing | Vitest 2 + Istanbul, Playwright (11 browser configs) |
+| Testing | Vitest 2 + Istanbul, Playwright (11 browser configs), cross-platform e2e (`tests/`) |
 | Tooling | pnpm Workspaces, TypeScript 5.7, esbuild, Husky |
 
 ## TypeScript
@@ -136,7 +145,9 @@ Prettier config (`.prettierrc`): 70-char print width, 2-space indent, single quo
 ## Workspace-Specific Guidance
 
 Each workspace has its own `CLAUDE.md` with package-specific context:
-- `shared/CLAUDE.md` — crypto primitives, XState machines, types
+- `shared/CLAUDE.md` — crypto primitives, XState machines, handler factories, billing config, types
 - `web/CLAUDE.md` — Next.js Pages Router, Mantine UI, Playwright e2e
-- `worker/CLAUDE.md` — Hono routes, Durable Objects, KV patterns
+- `worker/CLAUDE.md` — Hono routes, Durable Objects, Redis/Turso patterns
 - `cli/CLAUDE.md` — Commander.js commands, Drizzle ORM, esbuild
+- `vscode-extension/CLAUDE.md` — extension host + webview architecture
+- `tests/CLAUDE.md` — cross-platform (web↔cli) e2e actors, run against a live deployment

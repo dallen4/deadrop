@@ -1,6 +1,6 @@
 # CLAUDE.md — worker/
 
-Cloudflare Worker using Hono framework. Provides the backend API, KV-backed drop session storage, and PeerJS signaling via Durable Objects.
+Cloudflare Worker using Hono framework. Provides the backend API: Redis-backed (Upstash) drop session storage, Turso-backed vaults, and PeerJS signaling via Durable Objects.
 
 ## Commands
 
@@ -15,27 +15,28 @@ pnpm deploy     # wrangler deploy to production (deadrop.nieky.dev)
 worker/
 ├── src/
 │   ├── index.ts              # Entry: exports default fetch handler + PeerServerDO
-│   ├── app.ts                # Hono app: all routes + DeadropWorkerApi type export
-│   ├── constants.ts          # AppRoutes enum
+│   ├── app.ts                # Hono app: middleware stack + all routes + DeadropWorkerApi type export
+│   ├── constants.ts          # AppRoutes / AppRouteParts enums
 │   ├── routers/
-│   │   ├── auth.ts           # Clerk auth middleware + endpoints
+│   │   ├── auth.ts           # Clerk auth endpoints
 │   │   ├── peers.ts          # PeerJS signaling (upgrades to WebSocket → Durable Object)
-│   │   ├── drop.ts           # Drop CRUD (KV-backed)
-│   │   └── vault.ts          # Vault management
+│   │   ├── drop.ts           # Drop CRUD (Redis-backed)
+│   │   └── vault.ts          # Vault create/share (Turso-backed, restricted())
 │   └── lib/
-│       ├── http/core.ts      # Hono instance + custom middleware types
-│       ├── middleware.ts      # CORS, request ID, Clerk auth, Redis caching, tracing
-│       ├── messages.ts        # Message validation helpers
+│       ├── http/core.ts      # Hono instance + custom context/middleware types
+│       ├── middleware.ts     # cors, tracing, redis, authenticated(), restricted()
+│       ├── billing.ts        # getUserPlan/getPlanLimits/hasFeature from Clerk claims
+│       ├── messages.ts       # Message validation helpers
 │       ├── durable_objects/
-│       │   ├── PeerServer.ts  # PeerJS signaling actor (WebSocket per peer)
-│       │   ├── DropSession.ts # Drop session state DO (not active in current flow)
+│       │   ├── PeerServer.ts # PeerJS signaling actor (WebSocket per peer)
+│       │   ├── DropSession.ts# Drop session state DO (not active in current flow)
 │       │   └── index.ts
-│       ├── crypto.ts          # Validation-side crypto utilities
-│       ├── vault.ts           # Vault business logic
-│       └── cache.ts           # Redis caching layer
+│       ├── crypto.ts         # Validation-side crypto utilities
+│       ├── vault.ts          # Turso vault provisioning (createVault, createVaultToken)
+│       └── cache.ts          # Redis caching helpers
 ├── client.ts                  # Re-exports DeadropWorkerApi type (consumed by shared/client.ts)
 ├── types/
-│   ├── global.d.ts            # Cloudflare env bindings (DROP_STORE KV, PEER_SERVER DO)
+│   ├── global.d.ts            # Cloudflare env bindings
 │   └── worker-configuration.d.ts
 ├── wrangler.toml
 ├── tsconfig.json
@@ -47,42 +48,53 @@ worker/
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/` | Health check (API metadata) |
-| `*` | `/auth/*` | Clerk auth middleware + endpoints |
+| `*` | `/auth/*` | Clerk auth endpoints |
 | `*` | `/peers/*` | PeerJS signaling — upgrades to WebSocket via `PeerServerDO` |
-| GET/POST/DELETE | `/drop/*` | Drop session CRUD (Cloudflare KV) |
-| GET/POST/DELETE | `/vault/*` | Vault management |
+| GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
+| POST | `/vault` | Create a Turso vault database (`restricted()`) |
+| POST | `/vault/share` | Share a vault with another user (`restricted()`) |
 
 ## Key Patterns
+
+### Middleware Stack (applied in `src/app.ts`, in order)
+1. `cors()` — origin allowlist (`deadrop.io`, Vercel preview subdomains, `vscode-webview://`); always allows `Authorization` header
+2. `tracing()` — captures request IP
+3. `requestId()`
+4. `clerkMiddleware()` — decodes `Authorization: Bearer <token>` *or* the Clerk session cookie into `c.var.clerkAuth()`; never throws on missing/anonymous auth
+5. `redis()` — attaches an Upstash client to `c.get('redis')`
+
+### Auth gates (`src/lib/middleware.ts`)
+- `authenticated()` — 401s if no `clerkAuth().userId`
+- `restricted()` — 401s unless `sessionClaims.early_access` or `sessionClaims.internal` is set (Clerk publicMetadata, configured per-user in the Clerk dashboard — not in app code)
+- Routes with neither gate (e.g. `/drop`) work anonymously; if a caller *is* authenticated, `clerkAuth()` still resolves so the route can read identity opportunistically
+
+### Drop storage — Redis (Upstash)
+- `c.get('redis')` (set by the `redis()` middleware) — `@upstash/redis/cloudflare`, `Redis.fromEnv(c.env)`
+- Drop details are an HSET keyed by `formatDropKey(dropId)`; no separate KV/DO needed for drop metadata
+- `maxGrabbers` defaults to `1` for drops created before the field existed (lazy default in the GET handler)
 
 ### Durable Objects — PeerServerDO
 - Each peer gets its own Durable Object instance (actor per peer ID)
 - Handles WebSocket upgrades for long-lived PeerJS signaling connections
-- Class exported from `src/index.ts` as `PeerServerDO`
-- DO must be bound in `wrangler.toml` — already configured as `PEER_SERVER`
+- Class exported from `src/index.ts` as `PeerServerDO`; bound in `wrangler.toml` as `PEER_SERVER`
 
-### KV Store — DROP_STORE
-- Drop session metadata stored with TTL (auto-cleanup)
-- Binding defined in `wrangler.toml` as `DROP_STORE`
-- Access via `c.env.DROP_STORE` in route handlers
+### Vaults — Turso
+- `src/lib/vault.ts` provisions a per-user Turso database + access token via the Turso Platform API
+- Gated by `restricted()` — vaults are an early-access/internal feature, not generally available
+
+### Billing/plans (`src/lib/billing.ts`)
+- Plan limits and feature slugs are defined once in `shared/config/plans.ts`; the Worker derives `getUserPlan`/`getPlanLimits`/`hasFeature` from Clerk session claims (`pla` claim, `public_metadata.plan`) — this is the source of truth for enforcement, mirrored client-side in `web/lib/billing.ts` for UI gating only
 
 ### Typed Hono RPC
 - `src/app.ts` exports `DeadropWorkerApi` type
 - `client.ts` re-exports it for consumption by `shared/client.ts`
 - Never import `worker/` types directly from `web/` or `cli/` — use `shared/client.ts`
 
-### Middleware Stack (applied in `src/lib/middleware.ts`)
-1. Request ID injection
-2. CORS headers
-3. Clerk auth (where needed)
-4. Redis caching (optional)
-5. Distributed tracing
-
 ## Cloudflare Config (wrangler.toml)
 
 - Main: `src/index.ts`
 - Domain: `deadrop.nieky.dev`
-- KV: `DROP_STORE` namespace
-- DO: `PeerServerDO` class
+- DO: `PeerServerDO` class (binding `PEER_SERVER`)
 - Vars: `DAILY_DROP_LIMIT=5`, `TURSO_ORGANIZATION=dallen4`
 - Observability: logs + invocation logs enabled
 
@@ -101,5 +113,5 @@ worker/
 
 1. Create router in `src/routers/<name>.ts`
 2. Register in `src/app.ts` with `app.route('/path', router)`
-3. Add route constant to `src/constants.ts` `AppRoutes` enum
+3. Add route constants to `src/constants.ts` (`AppRoutes`/`AppRouteParts`)
 4. The `DeadropWorkerApi` type in `src/app.ts` will automatically include the new route for typed RPC
