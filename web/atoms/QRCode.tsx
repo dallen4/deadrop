@@ -9,5 +9,14 @@ export const QRCode = ({ link }: { link: string | undefined }) => {
         link && generateQR(link).then(setSrc);
     }, [link]);
 
-    return <Image radius={'sm'} src={src} width={200} height={200} />;
+    return (
+        <Image
+            radius={'sm'}
+            src={src}
+            w={200}
+            h={200}
+            fit={'contain'}
+            style={{ flexShrink: 0 }}
+        />
+    );
 };

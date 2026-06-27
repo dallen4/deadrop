@@ -11,6 +11,7 @@ import {
   useMantineTheme,
   Title,
   Card,
+  Stack,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { useDropContext } from 'contexts/DropContext';
@@ -97,20 +98,22 @@ export const DropFlow = () => {
           description={isMobile && 'Get started with a new drop'}
         >
           <StepCard title={'starting a session'}>
-            <Text>ready to start a drop?</Text>
-            {experimental && (
-              <NumberInput
-                label={'Max grabbers'}
-                description={'How many people can grab this drop'}
-                min={1}
-                value={cap}
-                onChange={onCapChange}
-                style={{ marginBottom: theme.spacing.sm }}
-              />
-            )}
-            <Button id={BEGIN_DROP_BTN_ID} onClick={init}>
-              Begin
-            </Button>
+            <Stack gap={'md'} align={'flex-start'}>
+              <Text c={'dimmed'}>ready to start a drop?</Text>
+              {experimental && (
+                <NumberInput
+                  label={'Max grabbers'}
+                  description={'How many people can grab this drop'}
+                  min={1}
+                  value={cap}
+                  onChange={onCapChange}
+                  w={140}
+                />
+              )}
+              <Button id={BEGIN_DROP_BTN_ID} onClick={init}>
+                Begin
+              </Button>
+            </Stack>
           </StepCard>
         </Stepper.Step>
         <Stepper.Step

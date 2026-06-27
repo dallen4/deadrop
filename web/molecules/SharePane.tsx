@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+    Stack,
     Box,
     Text,
     CopyButton,
@@ -30,16 +31,7 @@ export const SharePane = ({
     const theme = useMantineTheme();
 
     return (
-        <Box
-            style={{
-                width: '100%',
-                height: '300px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-            }}
-        >
+        <Stack align={'center'} gap={'sm'}>
             {accepting !== undefined && (
                 <Group gap={'xs'}>
                     <Badge color={accepting ? 'green' : 'gray'}>
@@ -56,8 +48,19 @@ export const SharePane = ({
                     )}
                 </Group>
             )}
-            <Text size={'sm'}>Invite a friend with a scan</Text>
-            <QRCode link={link} />
+            <Text size={'sm'} c={'dimmed'}>
+                Invite a friend with a scan
+            </Text>
+            <Box
+                p={'sm'}
+                style={{
+                    border: `2px solid ${theme.colors.blue[6]}`,
+                    borderRadius: theme.radius.md,
+                    backgroundColor: theme.white,
+                }}
+            >
+                <QRCode link={link} />
+            </Box>
             <Text size={'sm'}>
                 or copy the{' '}
                 <Anchor
@@ -92,6 +95,6 @@ export const SharePane = ({
                     </Button>
                 )}
             </CopyButton>
-        </Box>
+        </Stack>
     );
 };
