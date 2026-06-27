@@ -7,9 +7,11 @@ import { GrabSection } from 'molecules/sections/GrabSection';
 import { Tools } from 'molecules/sections/Tools';
 import { useRouter } from 'next/router';
 import classes from './index.module.css';
+import { usePricingTiersActive } from '@config/flags';
 
 const Home = () => {
   const router = useRouter();
+  const pricingTiersActive = usePricingTiersActive();
 
   return (
     <>
@@ -17,7 +19,7 @@ const Home = () => {
       <Features />
       <GrabSection />
       <Tools />
-      <PricingTeaser />
+      {pricingTiersActive && <PricingTeaser />}
       <Faq />
       <Center pb="xl">
         <Button
