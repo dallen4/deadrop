@@ -26,6 +26,9 @@ jobs:
           - runner: ubuntu-latest
             bun-target: bun-linux-x64
             artifact-name: deadrop-linux-x64
+          - runner: ubuntu-24.04-arm
+            bun-target: bun-linux-arm64
+            artifact-name: deadrop-linux-arm64
           - runner: windows-latest
             bun-target: bun-windows-x64
             artifact-name: deadrop-windows-x64
