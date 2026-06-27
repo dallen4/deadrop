@@ -15,6 +15,7 @@ import {
 } from 'lib/log';
 import { initPeer } from 'lib/peer';
 import { cleanupSession } from 'lib/session';
+import { getSessionToken } from 'lib/auth/clerk';
 
 export const grab = async (id: string) => {
   const ctx = initGrabContext();
@@ -46,6 +47,8 @@ export const grab = async (id: string) => {
 
   displayWelcomeMessage();
 
+  const token = await getSessionToken();
+
   const { init } = createGrabHandlers({
     ctx,
     sendEvent,
@@ -61,6 +64,7 @@ export const grab = async (id: string) => {
     initPeer,
     cleanupSession: cleanup,
     apiUri: process.env.DEADROP_API_URL!,
+    apiHeaders: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
   await init();

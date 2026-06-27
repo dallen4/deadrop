@@ -37,3 +37,14 @@ const clerkFactory = () => {
 };
 
 export const createClerkClient = clerkFactory();
+
+// Fetch a fresh, server-verifiable session token for an already-logged-in
+// CLI user. Returns null when signed out, so callers degrade to
+// anonymous/unauthenticated requests.
+export const getSessionToken = async (): Promise<string | null> => {
+  if (!(await getToken())) return null;
+
+  const clerkClient = await createClerkClient();
+
+  return (await clerkClient.session?.getToken()) ?? null;
+};

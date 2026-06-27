@@ -1,22 +1,12 @@
 import { input as prompt, number } from '@inquirer/prompts';
 import { initDropContext } from '@shared/lib/machines/drop';
-import { getToken as readCachedToken } from 'lib/auth/cache';
-import { createClerkClient } from 'lib/auth/clerk';
+import { getSessionToken } from 'lib/auth/clerk';
 import { displayWelcomeMessage, logInfo } from 'lib/log';
 import { dropSecret } from 'logic/drop';
 
 type DropOptions = {
   input?: string;
   file?: boolean;
-};
-
-// Fetch a fresh, server-verifiable session token
-const getSessionToken = async (): Promise<string | null> => {
-  if (!(await readCachedToken())) return null;
-
-  const clerkClient = await createClerkClient();
-
-  return (await clerkClient.session?.getToken()) ?? null;
 };
 
 // UX gate only. The worker re-verifies the token
