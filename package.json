@@ -33,6 +33,7 @@
     "cli:compile": "pnpm -F cli compile",
     "cli:release": "cd cli && pnpm install --frozen-lockfile && pnpm release",
     "worker:deploy": "pnpm -F worker run deploy",
+    "hydrate:test-token": "tsx shared/scripts/hydrate-test-token.ts",
     "vscode": "pnpm -F deadrop-vsc",
     "vscode:build": "pnpm -F deadrop-vsc build",
     "vscode:dev": "pnpm -F deadrop-vsc dev",
