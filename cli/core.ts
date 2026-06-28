@@ -74,12 +74,15 @@ vaultRoot
 vaultRoot
   .command('sync')
   .description('sync the current active vault with .env file')
+  .argument('<name>', 'name of the vault to sync')
+  .argument('[destination]', 'path to write the .env file to')
   .action(vaultSync);
 
 vaultRoot
   .command('export')
   .description('export all the secrets of the specified vault')
   .argument('<name>', 'name of the vault to export')
+  .argument('<destination>', 'path to write the exported .env file to')
   .action(vaultExport);
 
 vaultRoot
