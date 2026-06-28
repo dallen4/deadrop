@@ -121,20 +121,6 @@ const headers = [
 const baseConfig = {
   swcMinify: true,
   poweredByHeader: false,
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // async_hooks is Node-only; flags/next only needs it server-side.
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        async_hooks: false,
-      };
-    }
-
-    // Vercel-generated package, absent outside Vercel builds
-    // ref: https://github.com/vercel/flags/issues/384
-    config.resolve.alias['@vercel/flags-definitions'] = false;
-    return config;
-  },
   async rewrites() {
     return [
       {
