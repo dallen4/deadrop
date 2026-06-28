@@ -1,5 +1,9 @@
 import { createClient } from '@libsql/client';
-import { initDBConfig } from '@shared/db/init';
+import {
+  ensureSecretsSchema,
+  initDBConfig,
+  syncWithRetry,
+} from '@shared/db/init';
 import { CloudVaultConfig } from '@shared/types/config';
 import { drizzle } from 'drizzle-orm/libsql/node';
 
@@ -14,7 +18,10 @@ export const initDBClient = async (
 
   const client = drizzle(createClient(config), drizzleConfig);
 
-  await client.$client.sync();
+  // Cloud vaults sync their schema from Turso; local file dbs can't sync.
+  if (cloudConfig) await syncWithRetry(client.$client);
+
+  await ensureSecretsSchema(client.$client);
 
   return client;
 };

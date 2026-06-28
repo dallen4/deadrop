@@ -37,6 +37,19 @@ const RETRYABLE_SYNC_ERRORS = [
   'Unavailable',
 ];
 
+export async function ensureSecretsSchema(
+  client: Client,
+): Promise<void> {
+  await client.execute(
+    `CREATE TABLE IF NOT EXISTS secrets (
+      name TEXT NOT NULL,
+      value TEXT NOT NULL,
+      environment TEXT NOT NULL,
+      PRIMARY KEY (name, environment)
+    )`,
+  );
+}
+
 export async function syncWithRetry(
   client: { sync: () => Promise<unknown> },
   attemptsLeft = 8,
