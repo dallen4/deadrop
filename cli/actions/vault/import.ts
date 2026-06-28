@@ -27,4 +27,6 @@ export async function vaultImport(envPath: string) {
   logInfo(
     `${newSecrets.length} secrets added to vault from '${envPath}'!`,
   );
+
+  return exit(0);
 }

@@ -4,7 +4,7 @@ import { loadConfig } from 'lib/config';
 import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
-import { cwd } from 'process';
+import { cwd, exit } from 'process';
 
 // TODO format support (.env, JSON files)
 export async function vaultExport(
@@ -35,4 +35,6 @@ export async function vaultExport(
   logInfo(
     `Secrets successfully exported to '${envDestinationPath}'!`,
   );
+
+  return exit(0);
 }

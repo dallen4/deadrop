@@ -3,6 +3,7 @@ import { createSecretsHelpers } from '@shared/db/secrets';
 import { loadConfig } from 'lib/config';
 import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
+import { exit } from 'process';
 
 export async function vaultSync(
   vaultNameInput: string,
@@ -23,7 +24,11 @@ export async function vaultSync(
 
   const secrets = await getAllSecrets(active_vault.environment);
 
-  await syncEnv('./.env', secrets);
+  const destination = envDestinationPath ?? './.env';
 
-  logInfo(`Secrets synced to ./.env for '${active_vault}' vault!`);
+  await syncEnv(destination, secrets);
+
+  logInfo(`Secrets synced to ${destination} for '${vaultNameInput}' vault!`);
+
+  return exit(0);
 }

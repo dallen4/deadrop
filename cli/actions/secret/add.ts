@@ -2,6 +2,7 @@ import { initDBClient } from 'db/init';
 import { createSecretsHelpers } from '@shared/db/secrets';
 import { loadConfig } from 'lib/config';
 import { logInfo } from 'lib/log';
+import { exit } from 'process';
 
 export async function secretAdd(name: string, value: string) {
   logInfo('adding secret to vault...');
@@ -24,4 +25,6 @@ export async function secretAdd(name: string, value: string) {
   ]);
 
   logInfo('secret added successfully!');
+
+  return exit(0);
 }
