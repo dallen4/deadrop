@@ -42,7 +42,7 @@
     "analyze:dup": "jscpd",
     "analyze:unused": "ts-prune",
     "changeset": "changeset",
-    "changeset:version": "changeset version",
+    "changeset:version": "node scripts/changeset-version.js",
     "changeset:publish": "node scripts/changeset-publish.js",
     "changeset:status": "changeset status",
     "postversion": "git push --tags",
