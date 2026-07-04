@@ -7,44 +7,39 @@ import {
 
 export { PlanKey };
 
-export function getUserPlan(
-  claims: Record<string, unknown>,
-): PlanKey {
-  const pla = claims.pla as string | undefined;
+// Clerk's sessionClaims shape is whatever the JWT template carries; pla/fea are
+// Clerk Billing system claims, plan/early_access/internal are custom claims we
+// project from public_metadata via the session-token template.
+type SessionClaims = Record<string, unknown> | null | undefined;
 
-  if (pla?.startsWith('u:')) {
-    const slug = pla.slice(2);
-    if (slug === PLAN_SLUGS.PRO) return 'pro';
-  }
+export function getUserPlan(claims: SessionClaims): PlanKey {
+  if (!claims) return 'free';
 
-  if (pla?.startsWith('o:')) {
-    // All org-level plans map to 'org' limits
-    return 'org';
-  }
+  // Pro (and future org) come from Clerk Billing's `pla` claim (e.g. `u:pro`)
+  if (claims.pla === `u:${PLAN_SLUGS.PRO}`) return 'pro';
 
-  const metadata = claims.public_metadata as
-    | { plan?: string }
-    | undefined;
-  if (metadata?.plan === PLAN_SLUGS.SUPPORTER) return 'supporter';
+  // Supporter is a one-time Stripe license, not a Clerk Billing plan; grantPlan
+  // writes it to public_metadata.plan, flattened into a `plan` claim by the template
+  if (claims.plan === PLAN_SLUGS.SUPPORTER) return 'supporter';
 
   return 'free';
 }
 
-export function getPlanLimits(claims: Record<string, unknown>) {
+export function getPlanLimits(claims: SessionClaims) {
   return PLAN_LIMITS[getUserPlan(claims)];
 }
 
 export function hasFeature(
-  claims: Record<string, unknown>,
+  claims: SessionClaims,
   feature: string,
 ): boolean {
   const plan = getUserPlan(claims);
 
-  // Pro/Org: Clerk embeds active features in the `fea` JWT claim
-  const fea = claims.fea as string | undefined;
-  if (fea?.includes(feature)) return true;
+  // Pro/Org: Clerk embeds active features as a comma-joined `fea` JWT claim
+  const fea = (claims?.fea as string | undefined) ?? '';
+  if (fea.split(',').includes(feature)) return true;
 
-  // Supporter: check against hardcoded feature list since it's not a Clerk plan
+  // Supporter: check the hardcoded list since it's not a Clerk Billing plan
   if (plan === 'supporter') {
     return (SUPPORTER_FEATURES as readonly string[]).includes(
       feature,
@@ -53,26 +48,13 @@ export function hasFeature(
 
   return false;
 }
-export type Plan = 'free' | 'supporter' | 'pro' | 'org';
-
-export const DEFAULT_PLAN: Plan = 'free';
-
-// loosely typed: Clerk's sessionClaims shape is whatever the JWT carries,
-// and plan/early_access/internal are custom claims we add on top of it
-type SessionClaims = any;
-
-export const planFromClaims = (claims: SessionClaims): Plan => {
-  const plan = claims?.plan;
-
-  return plan && plan in PLAN_LIMITS ? (plan as Plan) : DEFAULT_PLAN;
-};
 
 // experimental users (early access / internal) may unlock caps above
 // their plan's default
 export const isExperimental = (claims: SessionClaims): boolean =>
   !!(claims?.early_access || claims?.internal);
 
-export const maxGrabbersPerDrop = (plan: Plan): number =>
+export const maxGrabbersPerDrop = (plan: PlanKey): number =>
   PLAN_LIMITS[plan].maxGrabbers;
 
 export type MaxGrabbersCheck = {
@@ -84,7 +66,7 @@ export const checkMaxGrabbers = (
   requested: number,
   claims: SessionClaims,
 ): MaxGrabbersCheck => {
-  const plan = planFromClaims(claims);
+  const plan = getUserPlan(claims);
   const planCap = maxGrabbersPerDrop(plan);
 
   if (requested <= planCap) return { allowed: true, cap: planCap };
