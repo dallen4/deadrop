@@ -109,6 +109,43 @@ describe('stripe webhook handler', () => {
     expect(res.status).toHaveBeenCalledWith(200);
   });
 
+  it('verifies the signature against the raw request body', async () => {
+    vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_test');
+    constructEvent.mockReturnValue(
+      checkoutCompletedEvent({
+        client_reference_id: 'user_123',
+        metadata: { plan: 'supporter' },
+      }),
+    );
+    const req = makeReq('{"raw":"body"}');
+    const res = makeRes();
+
+    await handler(req, res);
+
+    expect(constructEvent).toHaveBeenCalledWith(
+      Buffer.from('{"raw":"body"}'),
+      'sig_test',
+      'whsec_test',
+    );
+    vi.unstubAllEnvs();
+  });
+
+  it('returns 500 so Stripe retries when grantPlan fails', async () => {
+    constructEvent.mockReturnValue(
+      checkoutCompletedEvent({
+        client_reference_id: 'user_123',
+        metadata: { plan: 'supporter' },
+      }),
+    );
+    updateUserMetadata.mockRejectedValue(new Error('clerk down'));
+    const req = makeReq('{}');
+    const res = makeRes();
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+  });
+
   it('does not grant a plan when client_reference_id is missing', async () => {
     constructEvent.mockReturnValue(
       checkoutCompletedEvent({ metadata: { plan: 'supporter' } }),

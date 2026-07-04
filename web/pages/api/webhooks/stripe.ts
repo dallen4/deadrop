@@ -62,7 +62,17 @@ export default async function handler(
     const userId = session.client_reference_id;
     const plan = session.metadata?.plan as Plan | undefined;
     if (userId && plan && KNOWN_PLANS.includes(plan)) {
-      await grantPlan(userId, plan);
+      try {
+        await grantPlan(userId, plan);
+      } catch (err) {
+        // Return 500 so Stripe retries the delivery rather than dropping the grant
+        const message =
+          err instanceof Error ? err.message : 'Unknown error';
+        console.error('grantPlan failed:', message);
+        return res
+          .status(500)
+          .json({ error: 'Failed to grant plan' });
+      }
     }
   }
 
