@@ -61,6 +61,18 @@
       "skillPath": "skills/features/clerk-webhooks/SKILL.md",
       "computedHash": "1e64996a3993027a25dcf1032a4ed13f0aa8607801fb2d1d27d653666aa9b929"
     },
+    "code-quality": {
+      "source": "tursodatabase/turso",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/code-quality/SKILL.md",
+      "computedHash": "4bd34c624734d588f607750ab1c5aa2de6f8255bb1dd572529d5a1906f6ea155"
+    },
+    "debugging": {
+      "source": "tursodatabase/turso",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/debugging/SKILL.md",
+      "computedHash": "bfad506025171d04a381a58043f63f8ad571f6fea03eed64a9fb6621e4445392"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
@@ -94,6 +106,18 @@
       "source": "docs.stripe.com",
       "sourceType": "well-known",
       "computedHash": "5f82f044d22f5d23b5ddd8cf0370d173e05d9d82345176e388eb49deeac3af0e"
+    },
+    "testing": {
+      "source": "tursodatabase/turso",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/testing/SKILL.md",
+      "computedHash": "8a56f437a837f6900f931ac5de481fc3d99b40b88df4cc787c63fcb9d1a83758"
+    },
+    "turso-db": {
+      "source": "tursodatabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/turso-db/SKILL.md",
+      "computedHash": "d1aa5693c437b9bb848642fe04d613097fe54200c8190f09e7351f7d473c6b83"
     },
     "upgrade-stripe": {
       "source": "docs.stripe.com",
