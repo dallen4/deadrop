@@ -4,6 +4,7 @@
   "permissions": {
     "allow": [
       "Bash(gh issue:*)",
+      "Bash(gh pr diff:*)",
       "Bash(gh pr list:*)",
       "Bash(gh pr view:*)",
       "Bash(gh run view:*)",
@@ -29,6 +30,7 @@
       "WebFetch(domain:*.cloudflare.com)",
       "WebFetch(domain:clerk.com)",
       "WebFetch(domain:docs.clerk.com)",
+      "WebFetch(domain:docs.turso.tech)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:hono.dev)",
       "WebFetch(domain:mantine.dev)",
