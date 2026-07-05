@@ -2,13 +2,18 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
-import { createVaultUtils, vaultNameFromUserId } from '../lib/vault';
-import { authenticated, restricted } from '../lib/middleware';
+import { createVaultUtils, vaultNameFromUserId } from '@shared/lib/turso';
+import {
+  authenticated,
+  restricted,
+  service,
+} from '../lib/middleware';
 
 const VaultNameSchema = z.object({ name: z.string() });
 const CreateVaultSchema = VaultNameSchema.partial().extend({
   seed: z.enum(['database_upload']).optional(),
 });
+const VaultOwnerSchema = z.object({ userId: z.string() });
 
 const vaultRouter = hono()
   .post(

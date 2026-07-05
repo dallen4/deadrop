@@ -29,3 +29,7 @@ export type CreateDatabaseResponse = {
 export type GetDatabaseResponse = {
   database: TursoDatabase;
 };
+
+export type ListDatabasesResponse = {
+  databases: TursoDatabase[];
+};

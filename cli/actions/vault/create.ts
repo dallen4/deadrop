@@ -1,6 +1,6 @@
 import { createClient } from '@shared/client';
 import { vault } from '@shared/lib/vault';
-import { syncUrl } from '@shared/lib/turso';
+import { syncUrl } from '@shared/lib/turso/utils';
 import { migrateToCloudSync } from '@shared/db/migrate';
 import type { CloudVaultConfig } from '@shared/types/config';
 import type { CreateVaultResponse } from '@shared/types/fetch';

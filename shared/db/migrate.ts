@@ -2,7 +2,7 @@ import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql/node';
 import { initDBConfig, syncWithRetry } from './init';
 import { secretsTable } from './schema';
-import { fileUrl, tursoUploadUrl } from '../lib/turso';
+import { fileUrl, tursoUploadUrl } from '../lib/turso/utils';
 import type { VaultDBConfig } from '../types/config';
 import { readFile, unlink } from 'fs/promises';
 
