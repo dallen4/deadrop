@@ -126,6 +126,69 @@ const vaultRouter = hono()
 
       return c.json({ success: deleted }, 200);
     },
+  )
+  // Service-to-service: lock every cloud vault owned by `userId` (billing
+  // cancellation). Auth is the service token, not a Clerk session — the
+  // subject is supplied in the body.
+  .post(
+    AppRouteParts.Lock,
+    service(),
+    zValidator('json', VaultOwnerSchema),
+    async (c) => {
+      const { userId } = c.req.valid('json');
+
+      const { listVaults, suspendVault } = createVaultUtils(
+        c.env.TURSO_ORGANIZATION,
+        c.env.TURSO_PLATFORM_API_TOKEN,
+      );
+
+      try {
+        const prefix = await vaultNameFromUserId(userId);
+        const vaults = await listVaults(prefix);
+
+        await Promise.all(
+          vaults.map((vault) => suspendVault(vault.Name)),
+        );
+
+        return c.json({ locked: vaults.length }, 200);
+      } catch (error) {
+        return c.json(
+          { error: `Unexpected error: ${(error as Error).message}` },
+          500,
+        );
+      }
+    },
+  )
+  // Service-to-service: restore every cloud vault owned by `userId`
+  // (subscription reactivated).
+  .post(
+    AppRouteParts.Unlock,
+    service(),
+    zValidator('json', VaultOwnerSchema),
+    async (c) => {
+      const { userId } = c.req.valid('json');
+
+      const { listVaults, restoreVault } = createVaultUtils(
+        c.env.TURSO_ORGANIZATION,
+        c.env.TURSO_PLATFORM_API_TOKEN,
+      );
+
+      try {
+        const prefix = await vaultNameFromUserId(userId);
+        const vaults = await listVaults(prefix);
+
+        await Promise.all(
+          vaults.map((vault) => restoreVault(vault.Name)),
+        );
+
+        return c.json({ unlocked: vaults.length }, 200);
+      } catch (error) {
+        return c.json(
+          { error: `Unexpected error: ${(error as Error).message}` },
+          500,
+        );
+      }
+    },
   );
 
 export default vaultRouter;

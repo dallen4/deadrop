@@ -3,8 +3,26 @@ import { createMiddleware } from 'hono/factory';
 import { AppHeaders } from '../constants';
 import { HonoCtx, Middleware } from './http/core';
 import { Redis } from '@upstash/redis/cloudflare';
-import { NotAuthenticated, PermissionDenied } from './messages';
+import {
+  NotAuthenticated,
+  PermissionDenied,
+  ServiceForbidden,
+} from './messages';
 import { TEST_TOKEN_HEADER } from '@shared/tests/http';
+import { SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
+
+// Constant-time string comparison so token validation doesn't leak
+// timing information. Length is allowed to short-circuit.
+const timingSafeEqual = (a: string, b: string) => {
+  if (a.length !== b.length) return false;
+
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return mismatch === 0;
+};
 
 export const tracing = () =>
   createMiddleware<HonoCtx>(async (c, next) => {
@@ -33,7 +51,6 @@ export const cors = (): Middleware =>
 
       // VS Code webview panels use a vscode-webview:// origin
       if (origin.startsWith('vscode-webview://')) return origin;
-
       else return null;
     },
     allowHeaders: [
@@ -81,6 +98,23 @@ export const restricted = () =>
 
     if (!canAccess) {
       return c.json(PermissionDenied, 401);
+    }
+
+    await next();
+  });
+
+// First-party service-to-service auth
+export const service = () =>
+  createMiddleware<HonoCtx>(async (c, next) => {
+    const expected = c.env.WORKER_SERVICE_TOKEN;
+    const provided = c.req.header(SERVICE_TOKEN_HEADER);
+
+    if (
+      !expected ||
+      !provided ||
+      !timingSafeEqual(provided, expected)
+    ) {
+      return c.json(ServiceForbidden, 401);
     }
 
     await next();

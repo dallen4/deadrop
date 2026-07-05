@@ -21,10 +21,10 @@ worker/
 │   │   ├── auth.ts           # Clerk auth endpoints
 │   │   ├── peers.ts          # PeerJS signaling (upgrades to WebSocket → Durable Object)
 │   │   ├── drop.ts           # Drop CRUD (Redis-backed)
-│   │   └── vault.ts          # Vault create/share (Turso-backed, restricted())
+│   │   └── vault.ts          # Vault create/share/get/delete/lock/unlock (Turso via @shared/lib/turso)
 │   └── lib/
 │       ├── http/core.ts      # Hono instance + custom context/middleware types
-│       ├── middleware.ts     # cors, tracing, redis, authenticated(), restricted()
+│       ├── middleware.ts     # cors, tracing, redis, authenticated(), restricted(), service()
 │       ├── billing.ts        # getUserPlan/getPlanLimits/hasFeature from Clerk claims
 │       ├── messages.ts       # Message validation helpers
 │       ├── durable_objects/
@@ -32,8 +32,8 @@ worker/
 │       │   ├── DropSession.ts# Drop session state DO (not active in current flow)
 │       │   └── index.ts
 │       ├── crypto.ts         # Validation-side crypto utilities
-│       ├── vault.ts          # Turso vault provisioning (createVault, createVaultToken)
 │       └── cache.ts          # Redis caching helpers
+│  # Turso vault provisioning/lifecycle now lives in shared/lib/turso/ (see its CLAUDE.md)
 ├── client.ts                  # Re-exports DeadropWorkerApi type (consumed by shared/client.ts)
 ├── types/
 │   ├── global.d.ts            # Cloudflare env bindings
@@ -53,6 +53,10 @@ worker/
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
 | POST | `/vault` | Create a Turso vault database (`restricted()`) |
 | POST | `/vault/share` | Share a vault with another user (`restricted()`) |
+| GET | `/vault/:name` | Get vault metadata (`authenticated()`) |
+| DELETE | `/vault/:name` | Delete a vault (`restricted()`) |
+| POST | `/vault/lock` | Lock all of a user's vaults on cancel (`service()`, `{ userId }`) |
+| POST | `/vault/unlock` | Restore all of a user's vaults on reactivate (`service()`, `{ userId }`) |
 
 ## Key Patterns
 
@@ -66,6 +70,7 @@ worker/
 ### Auth gates (`src/lib/middleware.ts`)
 - `authenticated()` — 401s if no `clerkAuth().userId`
 - `restricted()` — 401s unless `sessionClaims.early_access` or `sessionClaims.internal` is set (Clerk publicMetadata, configured per-user in the Clerk dashboard — not in app code)
+- `service()` — first-party service-to-service auth (no Clerk session): constant-time checks `SERVICE_TOKEN_HEADER` against `WORKER_SERVICE_TOKEN`. Used by `/vault/lock` and `/vault/unlock`, which billing webhooks call. Authenticates the *caller*; the subject `userId` is in the request body — treat the token as high-value.
 - Routes with neither gate (e.g. `/drop`) work anonymously; if a caller *is* authenticated, `clerkAuth()` still resolves so the route can read identity opportunistically
 
 ### Drop storage — Redis (Upstash)
@@ -80,8 +85,9 @@ worker/
 - Class exported from `src/index.ts` as `PeerServerDO`; bound in `wrangler.toml` as `PEER_SERVER`
 
 ### Vaults — Turso
-- `src/lib/vault.ts` provisions a per-user Turso database + access token via the Turso Platform API
-- Gated by `restricted()` — vaults are an early-access/internal feature, not generally available
+- Provisioning + lifecycle live in `shared/lib/turso/` (`createVaultUtils`) — see `shared/lib/turso/CLAUDE.md`. The former `worker/src/lib/vault.ts` was collapsed into it.
+- `vault.ts` router: create/share/get are `restricted()`/`authenticated()` (early-access/internal, per-user Clerk claim); `lock`/`unlock` are `service()`-gated for billing webhooks
+- Cancel-on-billing fans out over **all** of a user's vaults via `listVaults(<hash13>)`; org-payer cancellations are a known gap (vaults are named per user, not per org)
 
 ### Billing/plans (`src/lib/billing.ts`)
 - Plan limits and feature slugs are defined once in `shared/config/plans.ts`; the Worker derives `getUserPlan`/`getPlanLimits`/`hasFeature` from Clerk session claims (`pla` claim, `public_metadata.plan`) — this is the source of truth for enforcement, mirrored client-side in `web/lib/billing.ts` for UI gating only

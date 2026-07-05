@@ -9,3 +9,7 @@ export const NotAuthenticated = {
 export const PermissionDenied = {
   message: 'Permission denied!',
 };
+
+export const ServiceForbidden = {
+  message: 'Invalid service token!',
+};

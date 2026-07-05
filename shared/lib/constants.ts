@@ -69,3 +69,7 @@ export const STORAGE_DIR_NAME = '.deadrop';
 export const DEFAULT_VAULT_NAME = 'default.db';
 
 export const SECRET_VALUE_DELIMITER = ' | ';
+
+// Shared secret header for first-party service-to-service calls
+// (e.g. web billing webhooks → Worker vault lock/unlock)
+export const SERVICE_TOKEN_HEADER = 'x-deadrop-service-token';

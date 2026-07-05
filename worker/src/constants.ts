@@ -29,6 +29,8 @@ export const AppRouteParts = {
   VaultRoot: '/vault',
   NameParam: '/:name',
   Share: '/:name/share',
+  Lock: '/lock',
+  Unlock: '/unlock',
 
   // TODO not implemented
   VaultExists: '/:name/exists',
@@ -52,4 +54,6 @@ export const AppRoutes = {
   // vault paths
   VaultRoot: AppRouteParts.VaultRoot,
   ShareVault: `${AppRouteParts.VaultRoot}${AppRouteParts.NameParam}${AppRouteParts.Share}` as const,
+  LockVault: `${AppRouteParts.VaultRoot}${AppRouteParts.Lock}` as const,
+  UnlockVault: `${AppRouteParts.VaultRoot}${AppRouteParts.Unlock}` as const,
 } as const;
