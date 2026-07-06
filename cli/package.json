@@ -43,6 +43,7 @@
     "open": "^10.1.0",
     "ora": "^6.1.2",
     "semver": "^7.7.4",
+    "shared": "workspace:*",
     "yaml": "^2.5.0"
   },
   "optionalDependencies": {

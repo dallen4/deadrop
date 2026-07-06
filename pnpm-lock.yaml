@@ -166,6 +166,9 @@ importers:
       semver:
         specifier: ^7.7.4
         version: 7.7.4
+      shared:
+        specifier: workspace:*
+        version: link:../shared
       yaml:
         specifier: ^2.5.0
         version: 2.8.3
@@ -270,6 +273,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      shared:
+        specifier: workspace:*
+        version: link:../shared
       yaml:
         specifier: ^2.8.3
         version: 2.8.3
@@ -500,6 +506,9 @@ importers:
       hono:
         specifier: 4.12.18
         version: 4.12.18
+      shared:
+        specifier: workspace:*
+        version: link:../shared
       zod:
         specifier: ^3.25.76
         version: 3.25.76
