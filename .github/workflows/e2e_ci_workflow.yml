@@ -54,16 +54,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build CLI binary (Bun)
-        # bun-build.ts bakes these via `define` and asserts all four are set.
+        # bun-build.ts bakes all six via `define` and asserts all six are set.
         # URLs + the Clerk publishable key are non-secret, so they live as
         # repo-level vars (the env-scoped NEXT_PUBLIC_* copies aren't readable
-        # here — this job deliberately has no `environment:`). TURN is a runtime
-        # var (set on the test step), not baked.
+        # here — this job deliberately has no `environment:`).
         env:
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
           DEADROP_APP_URL: ${{ vars.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          TURN_PWD: ${{ secrets.TURN_PWD }}
         run: pnpm -F cli compile
 
       - name: Install Playwright browsers

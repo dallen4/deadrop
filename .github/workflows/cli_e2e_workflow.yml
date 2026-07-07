@@ -40,6 +40,8 @@ jobs:
           # bundle (and guards on both), so they must be present for `pnpm build`.
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
+          DEADROP_APP_URL: ${{ vars.DEADROP_APP_URL }}
+          CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
           # Runtime: initPeer reads the TURN creds from the env at run time.
           TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
           TURN_PWD: ${{ secrets.TURN_PWD }}
