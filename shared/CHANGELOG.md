@@ -1,4 +1,4 @@
-# cli
+# shared
 
 ## 1.0.0
 
@@ -11,14 +11,3 @@
   it reactivates, driven by the Clerk billing webhook through a service-authed
   Worker endpoint. Turso provisioning + lifecycle helpers are consolidated into
   a single `shared/lib/turso` module.
-
-### Patch Changes
-
-- Updated dependencies [3c4ef57]
-  - shared@1.0.0
-
-## 0.3.0
-
-### Minor Changes
-
-- 059f4f9: Refactor to Bun binary compilation patterns
