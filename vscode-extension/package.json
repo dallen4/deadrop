@@ -2,7 +2,7 @@
   "name": "deadrop-vsc",
   "displayName": "deadrop",
   "description": "e2e encrypted secret sharing",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "publisher": "n1eky",
   "author": "Nieky Allen <nieky.allen@gmail.com>",
