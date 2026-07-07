@@ -6,10 +6,11 @@
   "private": true,
   "scripts": {
     "start": "next dev",
+    "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe",
     "build": "next build",
     "start:prod": "next build && next start",
     "test:e2e": "playwright test",
-    "posttest:e2e": "tsx ./scripts/clearTestToken.ts",
+    "clear-test-token": "tsx ./scripts/clearTestToken.ts",
     "postversion": "git add ./package.json && git push --follow-tags"
   },
   "dependencies": {
@@ -19,7 +20,7 @@
     "@emotion/react": "^11.10.0",
     "@emotion/server": "^11.10.0",
     "@hcaptcha/react-hcaptcha": "^1.4.4",
-    "@libsql/client-wasm": "^0.14.0",
+    "@libsql/client-wasm": "^0.17.3",
     "@mantine/core": "^8.0.0",
     "@mantine/dropzone": "^8.0.0",
     "@mantine/form": "^8.0.0",
@@ -30,6 +31,8 @@
     "@next/mdx": "^14.2.13",
     "@sentry/nextjs": "^7.46.0",
     "@sentry/react": "^7.46.0",
+    "@stripe/react-stripe-js": "^6.3.0",
+    "@stripe/stripe-js": "^9.5.0",
     "@tabler/icons-react": "^3.0.0",
     "@vercel/analytics": "^1.3.1",
     "@vercel/edge-config": "^1.3.0",
@@ -50,12 +53,16 @@
     "request-ip": "^3.3.0",
     "shared": "workspace:*",
     "sharp": "^0.32.0",
+    "stripe": "^22.1.1",
     "ua-parser-js": "^1.0.32"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.0.31",
     "@next/bundle-analyzer": "^14.2.13",
     "@next/eslint-plugin-next": "^13.1.1",
     "@playwright/test": "^1.58.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/react-hooks": "^8.0.1",
     "@types/cors": "^2.8.13",
     "@types/mdx": "^2.0.13",
@@ -68,7 +75,8 @@
     "@typescript-eslint/parser": "^5.48.0",
     "eslint-config-next": "^15.1.3",
     "eslint-plugin-react": "^7.31.11",
-    "next-transpile-modules": "^10.0.1"
+    "next-transpile-modules": "^10.0.1",
+    "standardwebhooks": "^1.0.0"
   },
   "browser": {
     "tls": false,

@@ -5,13 +5,19 @@ on:
 
 jobs:
   test:
+    # Only test successful deploys. Deliberately NO `environment:` on this job:
+    # declaring one makes GitHub mint a deployment, which fires its own
+    # deployment_status and re-triggers this workflow in a loop. Secrets are read
+    # at repo level instead (see TEST_* below).
+    if: github.event.deployment_status.state == 'success'
     timeout-minutes: 20
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
+          # node 24 hangs Playwright's browser install
           node-version: 22
           cache: 'pnpm'
       - name: Install dependencies
@@ -23,9 +29,19 @@ jobs:
         env:
           STAGE: ${{ github.event.deployment.environment }}
           BASE_URL: ${{ github.event.deployment_status.target_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
+          # Payment/Clerk test creds: repo-level TEST_* secrets holding the
+          # Preview values (auth specs run on Preview/alpha only — see below).
+          STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.TEST_STRIPE_WEBHOOK_SECRET }}
+          STRIPE_SUPPORTER_LOOKUP_KEY: ${{ vars.STRIPE_SUPPORTER_LOOKUP_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.TEST_CLERK_SECRET_KEY }}
+          CLERK_WEBHOOK_SIGNING_SECRET: ${{ secrets.CLERK_WEBHOOK_SIGNING_SECRET }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
         run: |
           export STAGE=$STAGE
           echo "Running '$STAGE' environment tests..."
@@ -35,16 +51,46 @@ jobs:
 
           export REDIS_REST_URL=$REDIS_REST_URL
           export REDIS_REST_TOKEN=$REDIS_REST_TOKEN
+          export STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
+          export STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET
+          export STRIPE_SUPPORTER_LOOKUP_KEY=$STRIPE_SUPPORTER_LOOKUP_KEY
+          export CLERK_WEBHOOK_SIGNING_SECRET=$CLERK_WEBHOOK_SIGNING_SECRET
+          export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
-          if [ ${{ github.event.deployment.environment }} == 'Production' ]; then
+          # Vercel deployments carry only the commit SHA, so resolve which
+          # branch that commit is the head of to choose the test domain.
+          # Payment/Clerk specs (RUN_AUTH_TESTS) run on Preview (alpha) ONLY:
+          # never Production (don't fire test webhooks at live Stripe) and not on
+          # *.vercel.app PR previews (Clerk unreliable there).
+          BRANCHES=$(curl -s \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$DEPLOY_SHA/branches-where-head" \
+            | node -e "const d=require('fs').readFileSync(0,'utf8');try{console.log(JSON.parse(d).map(b=>b.name).join(' '))}catch{}")
+          echo "Deployment commit is head of: [$BRANCHES]"
+
+          if [ "$STAGE" = 'Production' ]; then
             export TEST_URI="https://deadrop.io/"
+          elif printf '%s' " $BRANCHES " | grep -q ' alpha '; then
+            export TEST_URI="https://alpha.deadrop.io/"
+            export RUN_AUTH_TESTS=1
+          elif [ -n "$BRANCHES" ]; then
+            # Deploy SHA is the head of a non-alpha/main branch — a live PR/
+            # feature preview. Test it at its own preview URL. Auth specs stay
+            # off (Clerk is unreliable on *.vercel.app). Preview-protection
+            # bypass is a separate follow-up.
+            export TEST_URI="$BASE_URL"
           else
-            export TEST_URI=$BASE_URL
+            # SHA is head of no branch — a superseded deploy (alpha/main, or a
+            # branch, moved past it). The stable domain already points at a newer
+            # deploy, so testing this stale one is pointless. Skip.
+            echo "Deploy SHA is head of no branch — superseded, skipping."
+            exit 0
           fi
 
-          echo $TEST_URI
+          echo "TEST_URI=$TEST_URI  RUN_AUTH_TESTS=${RUN_AUTH_TESTS:-0}"
           CI=true pnpm test:e2e --trace on
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report

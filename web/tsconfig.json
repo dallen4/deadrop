@@ -12,28 +12,28 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
     "paths": {
       "@config/*": ["config/*"],
       "@api/*": ["../worker/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
     },
     "typeRoots": [
       "./node_modules/@types/",
       "../node_modules/@types/",
       "./types/",
-      "../shared/types/"
-    ]
+      "../shared/types/",
+    ],
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     "**/*.mdx",
-    "vitest.config.mts"
+    "vitest.config.mts",
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
 }

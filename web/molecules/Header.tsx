@@ -28,7 +28,9 @@ const Header = () => {
     <div
       style={{
         height: 102,
-        padding: isMobile ? 'var(--mantine-spacing-md)' : 'var(--mantine-spacing-xl)',
+        padding: isMobile
+          ? 'var(--mantine-spacing-md)'
+          : 'var(--mantine-spacing-lg)',
       }}
     >
       <Flex direction={'row'} justify={'space-between'}>

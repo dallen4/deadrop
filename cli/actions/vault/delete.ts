@@ -4,6 +4,7 @@ import { unlink } from 'fs/promises';
 import { createDeadropClient } from 'lib/api';
 import { loadConfig, saveConfig } from 'lib/config';
 import { logError, logInfo, logWarning } from 'lib/log';
+import { dirname } from 'path';
 import { exit } from 'process';
 
 export async function vaultDelete(vaultNameInput: string) {
@@ -57,7 +58,11 @@ export async function vaultDelete(vaultNameInput: string) {
 
     delete vaults[vaultNameInput];
 
-    await saveConfig(configPath, { active_vault, vaults }, true);
+    await saveConfig(
+      dirname(configPath),
+      { active_vault, vaults },
+      true,
+    );
 
     logInfo(`Vault '${vaultNameInput}' deleted succesfully!`);
   }

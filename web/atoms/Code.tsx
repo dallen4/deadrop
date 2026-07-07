@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 import { Code, MantineSize, useMantineTheme } from '@mantine/core';
 
-export const BlockCode = ({ data }: { data: string }) => {
+export const BlockCode = ({ children }: PropsWithChildren) => {
   const theme = useMantineTheme();
 
   return (
     <Code
       block
       style={{
-        padding: theme.spacing.md,
+        fontSize: theme.fontSizes.md,
+        padding: theme.spacing.sm,
         marginTop: theme.spacing.xs,
         marginBottom: theme.spacing.md,
         marginLeft: theme.spacing.xs,
@@ -16,7 +17,7 @@ export const BlockCode = ({ data }: { data: string }) => {
         borderLeft: `2px solid ${theme.colors.blue[9]}a8`,
       }}
     >
-      {data}
+      {children}
     </Code>
   );
 };

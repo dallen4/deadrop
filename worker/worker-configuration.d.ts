@@ -16,4 +16,7 @@ interface Env {
 
   TURSO_ORGANIZATION: string;
   TURSO_PLATFORM_API_TOKEN: string;
+
+  // Shared secret for first-party service-to-service calls
+  WORKER_SERVICE_TOKEN: string;
 }

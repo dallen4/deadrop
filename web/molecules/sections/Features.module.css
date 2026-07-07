@@ -1,30 +1,86 @@
+.wrapper {
+  position: relative;
+}
+
+.triangle {
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: var(--mantine-spacing-md);
+  align-items: start;
+}
+
 .feature {
   position: relative;
-  padding-top: var(--mantine-spacing-xl);
-  padding-left: var(--mantine-spacing-xl);
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-.overlay {
-  position: absolute;
-  height: 100px;
-  width: 160px;
-  top: 0;
-  left: 0;
-  background-color: light-dark(var(--mantine-primary-color-1), var(--mantine-primary-color-9));
-  z-index: 1;
-}
-
-.content {
-  position: relative;
+  text-align: center;
+  padding: var(--mantine-spacing-md);
   z-index: 2;
 }
 
-.icon {
-  color: light-dark(var(--mantine-primary-color-6), var(--mantine-primary-color-4));
+.apex {
+  grid-column: 1 / -1;
+  justify-self: center;
+  max-width: 380px;
+}
+
+.bottomLeft {
+  grid-column: 1 / 2;
+  justify-self: end;
+  max-width: 340px;
+}
+
+.bottomRight {
+  grid-column: 2 / 3;
+  justify-self: start;
+  max-width: 340px;
+}
+
+.iconWrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: light-dark(
+    var(--mantine-color-blue-0),
+    rgba(34, 139, 230, 0.12)
+  );
+  color: light-dark(
+    var(--mantine-color-blue-6),
+    var(--mantine-color-blue-4)
+  );
+  border: 1px solid
+    light-dark(var(--mantine-color-blue-2), rgba(34, 139, 230, 0.25));
+  margin-bottom: var(--mantine-spacing-md);
 }
 
 .title {
-  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+  color: light-dark(
+    var(--mantine-color-black),
+    var(--mantine-color-white)
+  );
+}
+
+.description {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+@media (max-width: 720px) {
+  .triangle {
+    grid-template-columns: 1fr;
+    gap: var(--mantine-spacing-xl);
+  }
+
+  .apex,
+  .bottomLeft,
+  .bottomRight {
+    grid-column: 1 / -1;
+    justify-self: center;
+    max-width: 420px;
+  }
 }

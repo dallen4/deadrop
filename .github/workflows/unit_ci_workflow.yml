@@ -1,12 +1,20 @@
 name: Unit Tests
 
 on:
-  pull_request:
   push:
-    branches: [main, alpha]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    # Every branch runs via the push event; only run on pull_request for forks
+    # (which can't fire push), so same-repo PRs don't run twice.
+    if: >-
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name != github.repository
     runs-on: macos-latest
 
     permissions:
@@ -16,9 +24,9 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: 'pnpm'

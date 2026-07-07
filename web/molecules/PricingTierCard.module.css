@@ -1,0 +1,12 @@
+.highlighted {
+  outline: 2px solid var(--mantine-color-blue-6);
+  outline-offset: -1px;
+}
+
+.badge {
+  margin-bottom: var(--mantine-spacing-xs);
+}
+
+.price {
+  font-size: var(--mantine-font-size-xl) * 2;
+}

@@ -4,13 +4,9 @@ export enum ConfirmationEvent {
 }
 
 export enum DropState {
-  Initial = 'idle',
+  Initial = 'initial',
   Ready = 'ready',
-  Waiting = 'waiting',
-  Connected = 'connected',
-  AwaitingHandshake = 'awaiting::handshake',
-  Acknowledged = 'acknowledged',
-  AwaitingConfirmation = 'awaiting::confirmation',
+  Accepting = 'accepting', // stable; grabbers come and go here
   Completed = 'completed',
   Error = 'error',
 }
@@ -18,11 +14,12 @@ export enum DropState {
 export enum DropEventType {
   Init = 'INITIALIZE',
   Wrap = 'WRAP',
-  Connect = 'CONNECT',
-  Handshake = 'HANDSHAKE',
-  HandshakeComplete = 'HANDSHAKE_COMPLETE',
-  Drop = 'DROP',
-  Confirm = 'CONFIRM',
+  Ready = 'READY',
+  GrabberConnected = 'GRABBER_CONNECTED', // { grabberId }
+  GrabberProgress = 'GRABBER_PROGRESS', // { grabberId, status }
+  GrabberConfirmed = 'GRABBER_CONFIRMED', // { grabberId }
+  GrabberFailed = 'GRABBER_FAILED', // { grabberId }
+  StopAccepting = 'STOP_ACCEPTING',
 }
 
 export enum GrabState {
@@ -72,3 +69,7 @@ export const STORAGE_DIR_NAME = '.deadrop';
 export const DEFAULT_VAULT_NAME = 'default.db';
 
 export const SECRET_VALUE_DELIMITER = ' | ';
+
+// Shared secret header for first-party service-to-service calls
+// (e.g. web billing webhooks → Worker vault lock/unlock)
+export const SERVICE_TOKEN_HEADER = 'x-deadrop-service-token';

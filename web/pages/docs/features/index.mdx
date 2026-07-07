@@ -1,8 +1,97 @@
-# Features
+# 🚧 Features & Roadmap
 
-The goal of deadrop is to provide platform and device agnostic secret sharing in a steamlined and easy-to-use fashion.
+The goal of deadrop is to provide platform and device agnostic secret sharing in a streamlined and easy-to-use fashion. This page tracks what's shipped, what's in experimental rollout, and what's coming next.
 
-## Current Features
+Status key:
 
+- ✅ **Shipped**: stable and supported
+- 🧪 **Experimental**: live and usable, expect breaking changes between releases
+- 🛠️ **In progress**: actively being built
+- 📋 **Planned**: in the backlog, accepting input
 
-## Roadmap
+For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/features/vscode) docs.
+
+## ✅ Shipped
+
+### Sharing & handoff
+
+- **Raw text drops**: paste or pipe a string, drop it to a single recipient
+- **JSON payloads**: structured key/value drops with the same protocol
+- **File drops**: drop the contents of a file up to the per-drop size limit
+- **End-to-end encryption**: ECDH key exchange, AES-256-GCM payloads, SHA-256 integrity verification
+- **WebRTC peer-to-peer transport**: secrets never transit our servers, only opaque session IDs
+
+### Authentication & abuse prevention
+
+- **Account-optional usage**: drop and grab work without an account
+- **Clerk-backed sign-in**: required for premium features
+- **hCaptcha**: lightweight abuse protection on anonymous drops
+
+### Surfaces
+
+- **Web app**: `deadrop.io`, installable as a PWA
+- **CLI**: drop, grab, vault, secret commands. Available on npm and via the install script
+
+## 🧪 Experimental
+
+### Editor integration
+
+- **VS Code extension** (Supporter+): live on the [VS Code Marketplace](https://marketplace.visualstudio.com/search?term=deadrop&target=VSCode). Drop, grab, and browse vaults without leaving your editor. Actively iterating, so expect breaking changes between releases. <br/>[Track on GitHub →](https://github.com/dallen4/deadrop/issues)
+
+### Vaults
+
+- **Local vaults** (web): browser-based encrypted vault using OPFS. CLI version is stable. [#58](https://github.com/dallen4/deadrop/issues/58)
+- **Cloud-synced vaults** (Supporter+): encrypted Turso replica for cross-device access. [#58](https://github.com/dallen4/deadrop/issues/58)
+
+### Multidrop
+
+- **Multi-recipient drops** (Supporter+): send the same secret to multiple grabbers in one session. Free plan is capped at 1 grabber. [#6](https://github.com/dallen4/deadrop/issues/6)
+
+### CLI authentication
+
+- **`deadrop login` / `logout`**: Clerk-backed CLI auth flow. Token cache currently lives on disk. [#25](https://github.com/dallen4/deadrop/issues/25)
+
+## 🛠️ In progress
+
+> Items here are actively being built and should land in the next release or two.
+
+- **OS keychain credential storage**: replace plaintext token cache with macOS Keychain, Linux Secret Service, Windows Credential Vault. [#25](https://github.com/dallen4/deadrop/issues/25)
+
+## 📋 Planned
+
+> Backlog items we've committed to building. Open or upvote an issue if your use case would benefit from prioritising one of these.
+
+### Sharing
+
+- **Configurable drop options**: expiry, file size limits, and other per-drop settings. [#4](https://github.com/dallen4/deadrop/issues/4)
+- **Drop passcode protection**: require a passphrase or 2FA confirmation to grab, in addition to the drop ID. [#5](https://github.com/dallen4/deadrop/issues/5)
+- **Dynamic drop links**: shareable short links that auto-generate a drop session. [#61](https://github.com/dallen4/deadrop/issues/61)
+- **Dynamic QR codes**: rotating QR for short-lived in-person handoffs.
+
+### Collaboration
+
+- **Read-only sharing for humans** (Pro+): grant collaborators view-only access to vault entries.
+- **Write delegation** (Pro+): allow named collaborators to update specific vault entries.
+
+### CI/CD
+
+- **Service tokens** (Supporter+): non-interactive vault access for build pipelines. [#62](https://github.com/dallen4/deadrop/issues/62) [#25](https://github.com/dallen4/deadrop/issues/25)
+- **Pipeline injection helpers**: drop-in actions/steps for GitHub Actions, GitLab CI, CircleCI.
+
+### Distribution
+
+- **Homebrew formula**: `brew install deadrop` for macOS users. [#21](https://github.com/dallen4/deadrop/issues/21)
+
+### Integrations
+
+- **Slack app**: drop and grab from Slack without leaving your workspace. [#11](https://github.com/dallen4/deadrop/issues/11)
+
+### Enterprise
+
+- **SSO (SAML / OIDC)** (Org): enterprise identity provider integration.
+- **Role-based env access** (Org): per-environment RBAC.
+- **Audit log + export** (Org): full activity log with CSV/JSON export.
+
+## 🗣️ Suggest a feature
+
+Open an issue on [GitHub](https://github.com/dallen4/deadrop/issues/new) and we'll triage it. Bugs and feature requests welcome.

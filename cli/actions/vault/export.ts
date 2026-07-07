@@ -4,7 +4,7 @@ import { loadConfig } from 'lib/config';
 import { syncEnv } from 'lib/env';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
-import { cwd } from 'process';
+import { cwd, exit } from 'process';
 
 // TODO format support (.env, JSON files)
 export async function vaultExport(
@@ -17,11 +17,7 @@ export async function vaultExport(
 
   const activeVault = vaults[active_vault.name];
 
-  const db = await initDBClient(
-    activeVault.location,
-    activeVault.key,
-    activeVault.cloud,
-  );
+  const db = await initDBClient(activeVault.location, activeVault.cloud);
 
   const { getAllSecrets } = createSecretsHelpers(
     vaults[active_vault.name],
@@ -39,4 +35,6 @@ export async function vaultExport(
   logInfo(
     `Secrets successfully exported to '${envDestinationPath}'!`,
   );
+
+  return exit(0);
 }

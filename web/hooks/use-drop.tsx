@@ -14,14 +14,16 @@ import { initPeer } from 'lib/peer';
 import { createDropHandlers } from '@shared/handlers/drop';
 import { cleanupSession } from 'lib/session';
 import { useRouter } from 'next/router';
+import { useApiHeaders } from 'hooks/use-api-headers';
 
 export const useDrop = () => {
   const router = useRouter();
+  const apiHeaders = useApiHeaders();
 
   const logsRef = useRef<Array<string>>([]);
   const contextRef = useRef<DropContext>(initDropContext());
 
-  const [{ value: state }, send] = useMachine(dropMachine);
+  const [{ value: state, context }, send] = useMachine(dropMachine);
 
   const pushLog = (message: string) => logsRef.current.push(message);
 
@@ -30,7 +32,7 @@ export const useDrop = () => {
       throw 'Cannot navigate away, peer active';
     };
 
-    if (state === DropState.Ready) {
+    if (state === DropState.Ready || state === DropState.Accepting) {
       router.events.on('routeChangeStart', onLeaveAttempt);
     } else if (
       [DropState.Completed, DropState.Error].includes(
@@ -57,8 +59,8 @@ export const useDrop = () => {
   const {
     init: initDrop,
     stagePayload,
-    startHandshake,
-    drop,
+    startSession,
+    stopAccepting,
   } = useMemo(
     () =>
       createDropHandlers({
@@ -75,6 +77,7 @@ export const useDrop = () => {
         },
         cleanupSession,
         apiUri: process.env.NEXT_PUBLIC_DEADROP_API_URL!,
+        apiHeaders,
         initPeer,
         onRetryExceeded,
       }),
@@ -95,6 +98,12 @@ export const useDrop = () => {
     }
   };
 
+  // must be called before init() - the requested cap is sent when the
+  // drop session is created
+  const setMaxGrabbers = (maxGrabbers: number | null) => {
+    contextRef.current.maxGrabbers = maxGrabbers;
+  };
+
   const dropLink = () => {
     const dropId = contextRef.current.id!;
     return typeof window !== 'undefined'
@@ -108,9 +117,13 @@ export const useDrop = () => {
     init,
     setPayload: stagePayload,
     dropLink,
-    startHandshake,
-    drop,
+    startSession,
+    stopAccepting,
+    setMaxGrabbers,
     getLogs,
     status: state as DropState,
+    grabbers: context.grabbers,
+    accepting: context.accepting,
+    maxGrabbers: context.maxGrabbers,
   };
 };

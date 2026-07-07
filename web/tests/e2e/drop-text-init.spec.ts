@@ -5,6 +5,7 @@ import {
   CONFIRM_PAYLOAD_BTN_ID,
   DROP_LINK_ID,
 } from '../../lib/constants';
+import { peerInitVisible } from './config';
 import { createContextForBrowser, test } from './util';
 
 test('should start the drop session successfully', async ({
@@ -21,9 +22,7 @@ test('should start the drop session successfully', async ({
 
   await expect(
     page.getByRole('heading', { name: 'add your secret' }),
-  ).toBeVisible({
-    timeout: 10_000,
-  });
+  ).toBeVisible(peerInitVisible);
 
   await page.getByPlaceholder('Your secret').fill(secretValue);
 

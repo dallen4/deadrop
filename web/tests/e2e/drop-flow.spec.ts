@@ -6,6 +6,7 @@ import {
   DROP_LINK_ID,
   DROP_SECRET_VALUE_ID,
 } from '../../lib/constants';
+import { peerInitVisible } from './config';
 import {
   createContextForBrowser,
   createPageForBrowser,
@@ -35,9 +36,7 @@ test('should drop a text secret from one page session to another', async ({
 
     await expect(
       dropperPage.getByRole('heading', { name: 'add your secret' }),
-    ).toBeVisible({
-      timeout: 10_000,
-    });
+    ).toBeVisible(peerInitVisible);
 
     await dropperPage
       .getByPlaceholder('Your secret')

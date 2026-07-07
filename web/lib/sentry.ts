@@ -5,7 +5,7 @@ export const reportError = (err: Error) =>
   captureException(err, {
     contexts: {
       app: {
-        app_version: require('../../package.json').version,
+        app_version: require('../package.json').version,
       },
     },
   });

@@ -2,6 +2,7 @@ import { initDBClient } from 'db/init';
 import { createSecretsHelpers } from '@shared/db/secrets';
 import { loadConfig } from 'lib/config';
 import { logInfo } from 'lib/log';
+import { exit } from 'process';
 
 export async function secretRemove(name: string) {
   logInfo('removing secret to vault...');
@@ -12,11 +13,7 @@ export async function secretRemove(name: string) {
 
   const activeVault = vaults[active_vault.name];
 
-  const db = await initDBClient(
-    activeVault.location,
-    activeVault.key,
-    activeVault.cloud,
-  );
+  const db = await initDBClient(activeVault.location, activeVault.cloud);
 
   const { removeSecret } = createSecretsHelpers(
     vaults[active_vault.name],
@@ -26,4 +23,6 @@ export async function secretRemove(name: string) {
   await removeSecret(name);
 
   logInfo('secret removed successfully!');
+
+  return exit(0);
 }

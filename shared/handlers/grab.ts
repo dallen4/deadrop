@@ -37,9 +37,10 @@ export const createGrabHandlers = <
   initPeer,
   cleanupSession,
   apiUri = '',
+  apiHeaders,
   onRetryExceeded,
 }: GrabHandlerInputs<FileType>) => {
-  const client = createClient(apiUri);
+  const client = createClient(apiUri, { headers: apiHeaders });
   const timers = new Map<MessageType, NodeJS.Timeout>();
 
   const clearTimer = (msgType: MessageType) => {

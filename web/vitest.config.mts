@@ -5,7 +5,7 @@ export default mergeConfig(
   configShared,
   defineProject({
     test: {
-      include: ['tests/unit/**/*.spec.ts'],
+      include: ['tests/unit/**/*.spec.{ts,tsx}'],
       environment: 'happy-dom',
     },
   }),

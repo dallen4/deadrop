@@ -18,6 +18,8 @@ export type TursoDatabase = {
 export type CreateDatabaseRequest = {
   name: string;
   group: string;
+  schema?: string;
+  seed?: { type: 'database_upload' };
 };
 
 export type CreateDatabaseResponse = {
@@ -26,4 +28,8 @@ export type CreateDatabaseResponse = {
 
 export type GetDatabaseResponse = {
   database: TursoDatabase;
+};
+
+export type ListDatabasesResponse = {
+  databases: TursoDatabase[];
 };

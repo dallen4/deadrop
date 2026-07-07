@@ -1,81 +1,72 @@
 import React from 'react';
-import { Text, SimpleGrid, Container } from '@mantine/core';
-import clsx from 'clsx';
-import { IconLock, IconKey, IconUsers, type Icon } from '@tabler/icons-react';
-
-// based off of: https://ui.mantine.dev/category/features
+import { Container, Text } from '@mantine/core';
+import {
+  IconLock,
+  IconKey,
+  IconUsers,
+  type Icon,
+} from '@tabler/icons-react';
 
 import classes from './Features.module.css';
 
-interface FeatureProps extends React.ComponentPropsWithoutRef<'div'> {
-    icon: Icon;
-    title: string;
-    description: string;
-}
+type FeatureDef = {
+  icon: Icon;
+  title: string;
+  description: string;
+  position: 'apex' | 'bottomLeft' | 'bottomRight';
+};
 
-function Feature({
-    icon: Icon,
-    title,
-    description,
-    className,
-    ...others
-}: FeatureProps) {
-
-    return (
-        <div className={clsx(classes.feature, className)} {...others}>
-            <div className={classes.overlay} />
-
-            <div className={classes.content}>
-                <Icon size={38} className={classes.icon} />
-                <Text
-                    fw={700}
-                    size={'lg'}
-                    mb={'xs'}
-                    mt={5}
-                    className={classes.title}
-                >
-                    {title}
-                </Text>
-                <Text color={'dimmed'} size={'sm'}>
-                    {description}
-                </Text>
-            </div>
-        </div>
-    );
-}
-
-const features = [
-    {
-        icon: IconLock,
-        title: 'End-to-end encryption',
-        description: `Your secrets are encrypted within your device's browser and can only decrypted when received.`,
-    },
-    {
-        icon: IconKey,
-        title: 'Ephemeral credentials',
-        description:
-            'None of the key pairs, nonces, or secret metadata are stored on-disk and are destroyed when drop is complete.',
-    },
-    {
-        icon: IconUsers,
-        title: 'Peer-to-peer handoff',
-        description: `Secrets are never handled by a server and are sent directly to the receiving user's device via WebRTC.`,
-    },
+const features: FeatureDef[] = [
+  {
+    icon: IconLock,
+    title: 'End-to-end encryption',
+    description: `Your secrets are encrypted on device & can only be decrypted when received.`,
+    position: 'apex',
+  },
+  {
+    icon: IconKey,
+    title: 'Ephemeral credentials',
+    description:
+      'None of the key pairs, nonces, or secret metadata are stored on-disk and are destroyed when the drop is complete.',
+    position: 'bottomLeft',
+  },
+  {
+    icon: IconUsers,
+    title: 'Peer-to-peer handoff',
+    description: `Secrets are never handled by a server and are sent directly to the receiving user's device via WebRTC.`,
+    position: 'bottomRight',
+  },
 ];
 
-export function Features() {
-    const items = features.map((item) => (
-        <Feature {...item} key={item.title} />
-    ));
+function Feature({
+  icon: Icon,
+  title,
+  description,
+  position,
+}: FeatureDef) {
+  return (
+    <div className={`${classes.feature} ${classes[position]}`}>
+      <div className={classes.iconWrap}>
+        <Icon size={32} stroke={1.75} />
+      </div>
+      <Text fw={700} size="lg" mb="xs" className={classes.title}>
+        {title}
+      </Text>
+      <Text c="dimmed" size="sm" className={classes.description}>
+        {description}
+      </Text>
+    </div>
+  );
+}
 
-    return (
-        <Container mt={30} mb={30} size={'lg'}>
-            <SimpleGrid
-                cols={{ base: 1, sm: 3 }}
-                spacing={50}
-            >
-                {items}
-            </SimpleGrid>
-        </Container>
-    );
+export function Features() {
+  return (
+    <Container pt="sm" pb="xl" size="lg" className={classes.wrapper}>
+      <div className={classes.triangle}>
+        {features.map((f) => (
+          <Feature key={f.title} {...f} />
+        ))}
+      </div>
+    </Container>
+  );
 }

@@ -6,25 +6,29 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g. deadrop@0.3.0)'
-        required: true
+        description: 'Override release tag (defaults to the dispatched ref, e.g. deadrop@0.3.0)'
+        required: false
 
 jobs:
   cli-compile-binaries:
     name: Compile binary (${{ matrix.bun-target }})
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
           - runner: macos-latest
             bun-target: bun-darwin-arm64
             artifact-name: deadrop-darwin-arm64
-          - runner: macos-13
+          - runner: macos-15-intel
             bun-target: bun-darwin-x64
             artifact-name: deadrop-darwin-x64
           - runner: ubuntu-latest
             bun-target: bun-linux-x64
             artifact-name: deadrop-linux-x64
+          - runner: ubuntu-24.04-arm
+            bun-target: bun-linux-arm64
+            artifact-name: deadrop-linux-arm64
           - runner: windows-latest
             bun-target: bun-windows-x64
             artifact-name: deadrop-windows-x64
@@ -63,6 +67,16 @@ jobs:
         run: |
           cd cli/dist
           mv deadrop ${{ matrix.artifact-name }} 2>/dev/null || mv deadrop.exe ${{ matrix.artifact-name }}.exe 2>/dev/null || true
+      - name: Generate checksum
+        shell: bash
+        run: |
+          cd cli/dist
+          f=$(ls ${{ matrix.artifact-name }}* | grep -v '\.sha256$')
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$f" > "$f.sha256"
+          else
+            shasum -a 256 "$f" > "$f.sha256"
+          fi
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:

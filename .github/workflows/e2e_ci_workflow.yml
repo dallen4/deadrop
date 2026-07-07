@@ -1,0 +1,123 @@
+name: Cross-Platform E2E Tests
+
+# Runs the 4-way CLI×Web drop/grab matrix (cli→cli, cli→web, web→cli, web→web)
+# against the deployed stack.
+#
+# Triggered three ways:
+#   1. pull_request on cli/shared/tests paths → catches CLI/shared code changes
+#      that don't trigger a web redeploy. BASE_URL defaults to alpha.deadrop.io
+#   2. deployment_status success (Vercel fires this) → resolves URL like web_ci.
+#      This already covers every alpha/main/PR-preview deploy, so there is no
+#      `push:` trigger — it would just double-count alpha against deployment_status.
+#   3. workflow_dispatch → manual run against alpha.deadrop.io
+on:
+  pull_request:
+    branches: [main, alpha]
+    paths:
+      - 'cli/**'
+      - 'shared/**'
+      - 'tests/**'
+  deployment_status:
+  workflow_dispatch:
+
+concurrency:
+  # Per deploy-environment (or per ref for PRs); a newer run supersedes an older.
+  group: ${{ github.workflow }}-${{ github.event.deployment.environment || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cross-platform-e2e:
+    # On deployment_status, only run for successful deploys. Deliberately NO
+    # `environment:`: it would make GitHub mint a deployment that re-triggers
+    # this workflow in a loop. Every secret used here is repo-level.
+    if: >-
+      github.event_name != 'deployment_status' ||
+      github.event.deployment_status.state == 'success'
+    runs-on: macos-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          # node 22: the host only runs vitest + Playwright (which hangs its
+          # browser install on node 24/macOS). The CLI is a Bun-compiled binary
+          # with its own embedded runtime, so the host node version is moot for
+          # it — and checkNodeVersion() is skipped under Bun.
+          node-version: 22
+          cache: 'pnpm'
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build CLI binary (Bun)
+        # bun-build.ts bakes these via `define` and asserts all four are set.
+        # URLs + the Clerk publishable key are non-secret, so they live as
+        # repo-level vars (the env-scoped NEXT_PUBLIC_* copies aren't readable
+        # here — this job deliberately has no `environment:`). TURN is a runtime
+        # var (set on the test step), not baked.
+        env:
+          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
+          DEADROP_APP_URL: ${{ vars.DEADROP_APP_URL }}
+          CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+        run: pnpm -F cli compile
+
+      - name: Install Playwright browsers
+        run: pnpm -F tests exec playwright install chromium --with-deps
+
+      - name: Resolve XPLAT_BASE_URL
+        id: resolve-url
+        shell: bash
+        # Namespaced as XPLAT_ because Vitest/Vite reserves BASE_URL for its own
+        # base path and would clobber it (see tests/utils/config.ts).
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_SHA: ${{ github.event.deployment.sha }}
+          DEPLOY_ENV: ${{ github.event.deployment.environment }}
+          RAW_URL: ${{ github.event.deployment_status.target_url }}
+        run: |
+          if [ "${{ github.event_name }}" != "deployment_status" ]; then
+            # push / pull_request / workflow_dispatch — always test alpha
+            echo "XPLAT_BASE_URL=https://alpha.deadrop.io/" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          BRANCHES=$(curl -s \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/commits/$DEPLOY_SHA/branches-where-head" \
+            | node -e "const d=require('fs').readFileSync(0,'utf8');try{console.log(JSON.parse(d).map(b=>b.name).join(' '))}catch{}")
+          echo "Deployment commit is head of: [$BRANCHES]"
+
+          if [ "$DEPLOY_ENV" = "Production" ]; then
+            echo "XPLAT_BASE_URL=https://deadrop.io/" >> "$GITHUB_ENV"
+          elif printf '%s' " $BRANCHES " | grep -q ' alpha '; then
+            echo "XPLAT_BASE_URL=https://alpha.deadrop.io/" >> "$GITHUB_ENV"
+          elif [ -n "$BRANCHES" ]; then
+            # Live PR/feature preview — test at its own Vercel URL
+            echo "XPLAT_BASE_URL=$RAW_URL" >> "$GITHUB_ENV"
+          else
+            echo "Deploy SHA is head of no branch — superseded, skipping."
+            exit 0
+          fi
+
+      - name: Run cross-platform e2e tests
+        env:
+          XPLAT_BASE_URL: ${{ env.XPLAT_BASE_URL }}
+          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          TURN_PWD: ${{ secrets.TURN_PWD }}
+          # Source of truth for the test token: read it from Redis, fallback to local
+          REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
+          REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
+          DROP_TEST_TOKEN: ${{ secrets.DROP_TEST_TOKEN }}
+          # Point the harness at the Bun binary (absolute: the test runs with
+          # cwd=tests/). CliProcess invokes a non-.js entry directly.
+          CLI_ENTRY: ${{ github.workspace }}/cli/dist/deadrop
+        # test:e2e:run runs vitest only — no CLI rebuild (the binary is built
+        # in the Build CLI binary step above).
+        run: CI=true pnpm -F tests test:e2e:run

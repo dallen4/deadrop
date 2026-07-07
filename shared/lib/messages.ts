@@ -48,3 +48,57 @@ export function withMessageLock(
     }
   };
 }
+
+export type GrabberMessageHandler = (
+  grabberId: string,
+  msg: BaseMessage,
+) => Promise<void>;
+
+/**
+ * Multidrop variant of {@link withMessageLock}. Each grabber gets its own
+ * message mutex (keyed by grabberId), so concurrent grabbers never serialize
+ * against one another — a Handshake from grabber A does not block a Handshake
+ * from grabber B.
+ */
+export function withGrabberMessageLock(
+  handler: GrabberMessageHandler,
+  log = console.log,
+): GrabberMessageHandler {
+  const mutexes = new Map<
+    string,
+    ReturnType<typeof createMessageMutex>
+  >();
+
+  const getMutex = (grabberId: string) => {
+    let mutex = mutexes.get(grabberId);
+
+    if (!mutex) {
+      mutex = createMessageMutex();
+      mutexes.set(grabberId, mutex);
+    }
+
+    return mutex;
+  };
+
+  return async (grabberId: string, msg: BaseMessage) => {
+    const { lock, unlock } = getMutex(grabberId);
+
+    const lockAcquired = lock(msg.type);
+
+    if (!lockAcquired) {
+      console.info(
+        `${msg.type} received & ignored for grabber ${grabberId}...`,
+      );
+      return;
+    }
+
+    try {
+      await handler(grabberId, msg);
+    } catch (err) {
+      log('Potentially fatal error occurred');
+      console.error(err);
+    } finally {
+      unlock();
+    }
+  };
+}

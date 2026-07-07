@@ -1,0 +1,128 @@
+{
+  "name": "deadrop-vsc",
+  "displayName": "deadrop",
+  "description": "e2e encrypted secret sharing",
+  "version": "0.1.2",
+  "private": true,
+  "publisher": "n1eky",
+  "author": "Nieky Allen <nieky.allen@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "repository": {
+    "url": "https://github.com/dallen4/deadrop.git"
+  },
+  "icon": "media/icon.png",
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "deadrop.drop",
+        "title": "deadrop: Start Drop"
+      },
+      {
+        "command": "deadrop.dropFile",
+        "title": "deadrop: Drop File"
+      },
+      {
+        "command": "deadrop.dropExplorerFile",
+        "title": "deadrop: Drop File"
+      },
+      {
+        "command": "deadrop.grab",
+        "title": "deadrop: Grab Secret"
+      },
+      {
+        "command": "deadrop.login",
+        "title": "deadrop: Login",
+        "shortTitle": "Login"
+      },
+      {
+        "command": "deadrop.logout",
+        "title": "deadrop: Logout",
+        "shortTitle": "Logout"
+      },
+      {
+        "command": "deadrop.openVault",
+        "title": "deadrop: Open Vault"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "deadrop.drop",
+          "when": "editorHasSelection",
+          "group": "deadrop"
+        },
+        {
+          "command": "deadrop.dropFile",
+          "group": "deadrop"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "deadrop.dropExplorerFile",
+          "when": "!explorerResourceIsFolder",
+          "group": "deadrop"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "deadrop.login",
+          "when": "view == deadropSidebar && !deadrop.loggedIn"
+        },
+        {
+          "command": "deadrop.logout",
+          "when": "view == deadropSidebar && deadrop.loggedIn"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "deadrop",
+          "title": "deadrop",
+          "icon": "media/handshake.svg"
+        }
+      ]
+    },
+    "views": {
+      "deadrop": [
+        {
+          "type": "webview",
+          "id": "deadropSidebar",
+          "name": "deadrop"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/esbuild.js --production && vite build --config vite.config.ts",
+    "dev": "node scripts/esbuild.js --watch",
+    "views:build": "vite build --config vite.config.ts",
+    "views:dev": "vite dev --config vite.config.ts",
+    "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.views.json",
+    "test": "vscode-test",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
+  },
+  "dependencies": {
+    "cosmiconfig": "^9.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "shared": "workspace:*",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@types/vscode": "^1.110.0",
+    "@vitejs/plugin-react-swc": "^4.3.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "dotenv": "^16.6.1",
+    "vite": "^8.0.3"
+  }
+}

@@ -16,12 +16,9 @@ When changesets are merged into `main`, the release workflow opens (or updates) 
 
 ## Scope in this monorepo
 
-Only packages that ship externally are tracked. Per `.changeset/config.json`:
+Every publishable/deployable workspace is tracked independently: `cli` (npm), `vscode-extension` (VS Code marketplace), `web` (Vercel), `worker` (Cloudflare), and `shared`. Only `tests` is ignored — it never publishes or deploys.
 
-- **Tracked**: `cli` (publishes to npm as `deadrop`)
-- **Ignored**: `web`, `worker`, `shared` — internal/deployable workspaces that don't publish to a registry
-
-When `vscode-extension` lands in this repo, remove it from the `ignore` list and add it as a tracked package.
+There's no `fixed`/`linked` grouping. Packages that declare `"shared": "workspace:*"` as a real dependency (currently `cli`, `web`, `worker`, `vscode-extension`) get an automatic patch bump whenever a changeset touches `shared`, via `updateInternalDependencies: "patch"`. A package only bumps when it — or something it depends on — actually changed. To bump several packages together deliberately (e.g. a joint release), just list them all in one changeset.
 
 ## Useful commands
 

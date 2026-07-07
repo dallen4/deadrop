@@ -16,6 +16,7 @@ export type BaseContext = {
 export type DropDetails = {
   peerId: string;
   nonce: string;
+  maxGrabbers: number;
 };
 
 export type InitDropResult = {
@@ -66,6 +67,13 @@ export type BaseHandlerInputs<Context, Event> = {
   initPeer: () => Promise<Peer>;
   cleanupSession: (ctx: Context) => void;
   apiUri?: string;
+  // Extra headers applied to API requests this handler makes (e.g. the CLI
+  // e2e test token, which has no cookie jar to ride on, or a Clerk bearer
+  // token fetched lazily per-request since the worker lives cross-origin
+  // and can't rely on session cookies).
+  apiHeaders?:
+    | Record<string, string>
+    | (() => Record<string, string> | Promise<Record<string, string>>);
 
   // events
   onRetryExceeded?: (msgType: MessageType) => void;

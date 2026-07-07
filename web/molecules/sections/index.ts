@@ -1,5 +1,6 @@
 import { Faq } from './Faq';
 import { Features } from './Features';
-import { Premium } from './Premium';
+import { PricingSection } from './PricingSection';
+import { PricingTeaser } from './PricingTeaser';
 
-export { Faq, Features, Premium };
+export { Faq, Features, PricingSection, PricingTeaser };

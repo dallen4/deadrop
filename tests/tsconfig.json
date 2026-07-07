@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "paths": {
+      "@api/*": ["../worker/*"],
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "include": ["utils", "e2e", "integration", "vitest.e2e.config.mts"],
+  "exclude": ["node_modules"]
+}

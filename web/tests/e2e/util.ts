@@ -30,7 +30,8 @@ let testToken: string | null = null;
 const getTestToken = async () => getRedis().get<string>(testTokenKey);
 
 export const getOrCreateTestToken = async () => {
-  if (!testToken) testToken = process.env.TEST_TOKEN ?? await getTestToken();
+  if (!testToken)
+    testToken = process.env.TEST_TOKEN ?? (await getTestToken());
 
   return testToken;
 };

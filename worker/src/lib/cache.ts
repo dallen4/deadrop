@@ -1,7 +1,10 @@
-import { formatDropKey, generateIV } from '@shared/lib/util';
+import {
+  formatDropKey,
+  generateId,
+  generateIV,
+} from '@shared/lib/util';
 import { DropDetails } from '@shared/types/common';
 import { Context } from 'hono';
-import { nanoid } from 'nanoid';
 import { hash } from './crypto';
 import { HonoCtx } from './http/core';
 
@@ -43,14 +46,17 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
 
   const createDrop = async (
     peerId: string,
+    maxGrabbers = 1,
     disableIncrement = false,
   ) => {
-    const dropId = nanoid();
+    // 22 alphanumeric chars: ~131 bits (OWASP 128-bit min) and no `-`/`_` that
+    // would parse as a flag in `deadrop grab <id>`.
+    const dropId = generateId(22);
     const nonce = generateIV();
 
     const key = formatDropKey(dropId);
 
-    await client.hset(key, { peerId, nonce });
+    await client.hset(key, { peerId, nonce, maxGrabbers });
     await client.expire(key, FIVE_MINS_IN_SEC);
 
     if (!disableIncrement) await incrementDailyDropCount();
@@ -90,8 +96,29 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
     return true;
   };
 
+  const checkAndIncrementAuthUserDropCount = async (
+    userId: string,
+    limit: number,
+  ) => {
+    const currDate = new Date();
+    const dateStr = `${currDate.getFullYear()}-${currDate.getMonth() + 1}-${currDate.getDate()}`;
+    const key = `user:${userId}:drops:${dateStr}`;
+
+    const userDropCount = await client.get<number>(key);
+
+    if (!userDropCount) {
+      await client.setex(key, DAY_IN_SEC, 1);
+    } else {
+      if (limit !== Infinity && userDropCount >= limit) return false;
+      else await client.incr(key);
+    }
+
+    return true;
+  };
+
   return {
     checkAndIncrementUserDropCount,
+    checkAndIncrementAuthUserDropCount,
     createDrop,
     getDrop,
     deleteDrop,

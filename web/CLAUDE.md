@@ -21,19 +21,21 @@ web/
 │   ├── drop.tsx        # Drop page → organisms/DropFlow
 │   ├── grab.tsx        # Grab page → organisms/GrabFlow
 │   ├── vault.tsx       # Vault management
+│   ├── pricing.tsx     # Pricing tiers page
 │   ├── index.tsx       # Landing page
 │   ├── auth/           # Clerk auth pages
-│   ├── api/            # API routes (captcha.ts only — hCaptcha verification)
+│   ├── api/            # captcha.ts (hCaptcha), stripe/checkout.ts, webhooks/{stripe,clerk-billing}.ts
 │   └── docs/           # MDX documentation pages
 ├── atoms/              # Primitive UI components (QRCode, Captcha, Footer, etc.)
-├── molecules/          # Composite components (Header, Layout, HeroBanner, etc.)
+├── molecules/          # Composite components (Header, Layout, HeroBanner, SharePane, PricingTierCard, etc.)
 ├── organisms/          # Feature orchestrators (DropFlow.tsx, GrabFlow.tsx)
 ├── hooks/              # Custom React hooks
-│   ├── use-drop.tsx    # Drives dropMachine from shared
-│   ├── use-grab.tsx    # Drives grabMachine from shared
-│   ├── use-vault.tsx   # Vault state
-│   ├── use-worker.tsx  # Web Worker communication
-│   └── use-mobile.tsx  # Mobile detection
+│   ├── use-drop.tsx       # Drives dropMachine from shared
+│   ├── use-grab.tsx       # Drives grabMachine from shared
+│   ├── use-api-headers.tsx# Builds Authorization header from Clerk token; shared by use-drop/use-grab
+│   ├── use-vault.tsx      # Vault state
+│   ├── use-worker.tsx     # Web Worker communication
+│   └── use-mobile.tsx     # Mobile detection
 ├── contexts/           # React contexts (DropContext.tsx)
 ├── config/             # Environment & feature flags
 ├── types/              # Web-specific types (contexts, captcha, peerjs.d.ts, etc.)
@@ -105,7 +107,8 @@ Never manage drop/grab session state with local React state — use the XState m
 Clerk (`@clerk/nextjs`) handles authentication:
 - Provider wraps the app in `pages/_app.tsx`
 - Next.js middleware at `middleware.ts` protects routes
-- Vault page requires auth; drop/grab are public
+- Vault page requires auth; drop/grab are public, but signed-in identity is still attached to Worker API calls when present (see `hooks/use-api-headers.tsx`)
+- The Worker lives on a different origin (`NEXT_PUBLIC_DEADROP_API_URL`), so Clerk session cookies never transmit cross-origin — every API-calling hook must source its `Authorization` header from `useApiHeaders()` rather than calling `getToken()` directly
 
 ## UI Library
 
@@ -117,5 +120,5 @@ Mantine v8 + `@tabler/icons-react`:
 ## Important Constraints
 
 - All crypto happens client-side via `shared/lib/crypto/` — never server-side in API routes
-- hCaptcha verification is the only API route (`pages/api/captcha.ts`)
+- `pages/api/` is otherwise limited to hCaptcha verification and Stripe checkout/webhook handling — never add drop/grab business logic here
 - Do not add `unsafe-inline` or `unsafe-eval` to CSP headers
