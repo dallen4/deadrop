@@ -60,6 +60,12 @@ const figletFontPath = resolve(figletPkgDir, 'fonts', 'Standard.flf');
 const figletFontData = readFileSync(figletFontPath, 'utf8');
 envVars['FIGLET_STANDARD_FONT'] = JSON.stringify(figletFontData);
 
+// Baked in at build time so `deadrop update` can tell which pipeline
+// produced this artifact without a runtime check (typeof Bun would
+// misfire if Bun ever ends up interpreting the plain npm/esbuild build).
+envVars['process.env.DEADROP_INSTALL_METHOD'] =
+  JSON.stringify('binary');
+
 // Plugin: rewrite the `libsql` package's requireNative() so it loads the
 // .node file via a static absolute path instead of a dynamic
 // require(`@libsql/${target}`) that Bun's bundler can't trace.
