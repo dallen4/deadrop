@@ -1,7 +1,7 @@
 {
   "name": "cli",
   "description": "deadrop CLI",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "main": "dist/deadrop.js",
   "bin": {
     "deadrop": "./dist/deadrop.js"
