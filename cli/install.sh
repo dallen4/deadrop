@@ -32,7 +32,7 @@ echo "Downloading deadrop ${TAG} (${OS}/${ARCH})..."
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 
-curl -fsSL "$URL" -o "$TMP/$BINARY"
+curl -fsSL --progress-bar "$URL" -o "$TMP/$BINARY"
 curl -fsSL "${URL}.sha256" -o "$TMP/$BINARY.sha256" || {
   echo "Could not download checksum for verification" >&2
   exit 1

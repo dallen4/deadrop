@@ -24,6 +24,7 @@ cli/
 │   ├── init.ts           # init: CLI setup wizard
 │   ├── login.ts          # login: Clerk auth
 │   ├── logout.ts
+│   ├── update.ts         # update: self-update (npm or binary path via lib/update/)
 │   ├── vault/            # vault subcommands
 │   │   ├── create.ts
 │   │   ├── use.ts
@@ -54,6 +55,12 @@ cli/
 │   │   ├── index.ts       # Logger setup
 │   │   ├── text.ts        # chalk text formatting
 │   │   └── loader.ts      # Ora spinners
+│   ├── update/
+│   │   ├── version.ts     # GitHub release / npm registry latest-version lookups
+│   │   ├── binary.ts      # Binary-install self-update (download, checksum, atomic replace)
+│   │   ├── npm.ts         # npm-install update (package manager detection + global install)
+│   │   ├── download.ts    # Streamed download + progress bar rendering
+│   │   └── checksum.ts    # SHA-256 verification helpers
 │   ├── constants.ts
 │   └── util.ts            # Node.js utilities
 ├── db/
@@ -82,6 +89,7 @@ cli/
 deadrop init            # First-time setup
 deadrop login           # Authenticate with Clerk
 deadrop logout
+deadrop update           # Update to the latest version (npm or standalone binary)
 deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
 deadrop vault create    # Create a local vault

@@ -15,6 +15,7 @@ import {
   vaultUse,
 } from 'actions/vault';
 import logout from 'actions/logout';
+import update from 'actions/update';
 import { displayWelcomeMessage } from 'lib/log';
 
 const deadrop = new Command();
@@ -33,6 +34,11 @@ deadrop.command('init').action(init);
 deadrop.command('login').action(login);
 
 deadrop.command('logout').action(logout);
+
+deadrop
+  .command('update')
+  .description('update deadrop to the latest version')
+  .action(update);
 
 deadrop
   .command('drop')
