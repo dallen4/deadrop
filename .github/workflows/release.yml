@@ -57,3 +57,6 @@ jobs:
           else
             echo "deadrop package not in published set; skipping binary build"
           fi
+      - name: Restore cli/package.json name
+        if: always()
+        run: git checkout -- cli/package.json

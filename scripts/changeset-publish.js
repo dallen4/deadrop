@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-// Changesets uses the `name` field for npm version checks and tag creation.
-// Since our workspace is named "cli" but publishes as "deadrop", we patch the
-// name before changeset publish runs, then restore it after.
+// Patches the name to "deadrop" for publish and leaves it patched — changesets/action reads this file again after we exit to resolve publishedPackages, and release.yml restores it via `git checkout` once that's done.
 
 const fs = require('fs');
 const { execSync } = require('child_process');
@@ -13,9 +11,4 @@ const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 pkg.name = 'deadrop';
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
-try {
-    execSync('changeset publish', { stdio: 'inherit' });
-} finally {
-    pkg.name = 'cli';
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-}
+execSync('changeset publish', { stdio: 'inherit' });
