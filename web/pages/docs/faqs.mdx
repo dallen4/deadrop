@@ -1,3 +1,4 @@
+import { BlockCode } from 'atoms/Code';
 import { INSTALL_COMMAND } from 'molecules/HeroBanner';
 
 # FAQs
@@ -18,9 +19,7 @@ Raw text strings, JSON payloads, and most plain-text configuration files (`.env`
 
 Run the one-line installer:
 
-```
-{INSTALL_COMMAND}
-```
+<BlockCode>{INSTALL_COMMAND}</BlockCode>
 
 The script downloads the appropriate binary for your platform and places it in your home directory. You can inspect it at `deadrop.io/install.sh` before running. The CLI is also available on npm as `deadrop` if you'd rather install it through your package manager.
 
