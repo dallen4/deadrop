@@ -4,6 +4,7 @@ import init from 'actions/init';
 import login from 'actions/login';
 import { drop } from 'actions/drop';
 import { grab } from 'actions/grab';
+import { inject } from 'actions/inject';
 import { secretAdd } from 'actions/secret/add';
 import { secretRemove } from 'actions/secret/remove';
 import {
@@ -53,6 +54,17 @@ deadrop
   .description('grab a secret with a drop ID')
   .argument('<id>', 'drop session ID')
   .action(grab);
+
+deadrop
+  .command('inject')
+  .description('run a command with vault secrets injected as env vars')
+  .argument('<command...>', 'command to run (after --)')
+  .option('-v, --vault <name>', 'vault to inject')
+  .option('-e, --environment <env>', 'environment to inject')
+  .option('-c, --config <path>', 'explicit config file (JSON or YAML)')
+  .option('--no-override', 'let existing env vars win over vault values')
+  .option('--verbose', 'log injected variable names (never values)')
+  .action(inject);
 
 // vault commands
 

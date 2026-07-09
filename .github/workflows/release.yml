@@ -32,6 +32,7 @@ jobs:
           version: pnpm changeset:version
           commit: 'chore: version packages'
           title: 'chore: version packages'
+          # Disabled: races cli_publish_workflow.yml's release creation after changeset-publish.js renames cli -> deadrop
           createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
