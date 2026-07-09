@@ -33,9 +33,9 @@ jobs:
             bun-target: bun-windows-x64
             artifact-name: deadrop-windows-x64
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: 'pnpm'
@@ -78,7 +78,7 @@ jobs:
             shasum -a 256 "$f" > "$f.sha256"
           fi
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.artifact-name }}
           path: cli/dist/${{ matrix.artifact-name }}*
@@ -89,7 +89,7 @@ jobs:
     needs: cli-compile-binaries
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           path: dist/
           merge-multiple: true
