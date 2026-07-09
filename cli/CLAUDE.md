@@ -21,6 +21,7 @@ cli/
 ├── actions/              # Command handler implementations
 │   ├── drop.ts           # drop command → drives dropMachine (XState)
 │   ├── grab.ts           # grab command → drives grabMachine (XState)
+│   ├── inject.ts         # inject: run <cmd> with vault secrets as env vars, no file on disk
 │   ├── init.ts           # init: CLI setup wizard
 │   ├── login.ts          # login: Clerk auth
 │   ├── logout.ts
@@ -49,7 +50,8 @@ cli/
 │   ├── session.ts         # Session management helpers
 │   ├── crypto.ts          # CLI-specific crypto utilities
 │   ├── env.ts             # Env var resolution
-│   ├── config.ts          # CLI config file (~/.deadrop)
+│   ├── config.ts          # CLI config file (~/.deadrop); loadConfigFromPath for --config
+│   ├── process.ts         # runWithEnv: spawn a child with injected env, forward signals/exit code
 │   ├── files.ts           # File read/write helpers (file-mode drop/grab)
 │   ├── log/
 │   │   ├── index.ts       # Logger setup
@@ -92,6 +94,7 @@ deadrop logout
 deadrop update           # Update to the latest version (npm or standalone binary)
 deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
+deadrop inject           # Run a command with vault secrets injected as env vars
 deadrop vault create    # Create a local vault
 deadrop vault use       # Switch active vault
 deadrop vault sync      # Sync vault ↔ .env file
