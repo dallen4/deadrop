@@ -2,8 +2,9 @@ import { CONFIG_FILE_NAME } from '@shared/lib/constants';
 import { DeadropConfig } from '@shared/types/config';
 import { cosmiconfig, CosmiconfigResult } from 'cosmiconfig';
 import { existsSync } from 'fs';
-import { writeFile } from 'fs/promises';
-import { stringify } from 'yaml';
+import { readFile, writeFile } from 'fs/promises';
+import { extname } from 'path';
+import { parse, stringify } from 'yaml';
 import { displayWelcomeMessage, logError, logInfo } from './log';
 import { initConfig as baseInitConfig } from '@shared/lib/vault';
 
@@ -27,6 +28,21 @@ export const loadConfig = async (): Promise<CustomConfigResult> => {
   }
 
   return configFile;
+};
+
+export const loadConfigFromPath = async (
+  path: string,
+): Promise<{ config: DeadropConfig }> => {
+  const raw = await readFile(path, 'utf-8');
+  const config: DeadropConfig =
+    extname(path) === '.json' ? JSON.parse(raw) : parse(raw);
+
+  if (!config?.active_vault || !config?.vaults) {
+    logError(`Config at '${path}' is missing 'active_vault' or 'vaults'.`);
+    process.exit(1);
+  }
+
+  return { config };
 };
 
 export const initConfig = async (defaultVaultPath: string) =>

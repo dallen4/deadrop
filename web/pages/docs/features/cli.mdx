@@ -3,7 +3,7 @@ import { INSTALL_COMMAND } from 'molecules/HeroBanner';
 
 # ⌨️ deadrop CLI
 
-The CLI gives you everything the web app does (dropping and grabbing) plus local and cloud-synced vaults for secret storage and a `.env` sync workflow that fits into scripts and CI/CD pipelines.
+The CLI gives you everything the web app does (dropping and grabbing) plus local and cloud-synced vaults for secret storage, a `.env` sync workflow, and `inject` for running scripts and CI/CD jobs with vault secrets in their environment, no file on disk.
 
 ## 📦 Installation
 
@@ -177,6 +177,32 @@ deadrop vault import ./.env.production
 
 Remove a vault from config and delete its database file. This is destructive and cannot be undone.
 
+### `inject`
+
+Run a command with a vault's secrets injected directly into its environment. Secrets are decrypted in memory and never written to disk, so there's no `.env` file to clean up.
+
+```
+deadrop inject [options] -- <command...>
+```
+
+| Option | Description |
+|---|---|
+| `-v, --vault <name>` | Vault to inject (default: the active vault). |
+| `-e, --environment <env>` | Environment to inject (default: the active vault's environment). |
+| `-c, --config <path>` | Load an explicit config file (JSON or YAML) instead of the auto-discovered config, for CI. |
+| `--no-override` | Let pre-existing environment variables win over vault values (default: vault values win). |
+| `--verbose` | Log the names of injected variables. Values are never logged. |
+
+The `--` separator is required. Everything after it is passed straight through to your command, so its own flags are safe:
+
+```
+deadrop inject -- pnpm build
+deadrop inject -v prod -e production -- node server.js
+deadrop inject -- pnpm build --watch   # --watch reaches pnpm, not deadrop
+```
+
+The child process exits with the wrapped command's exit code, and Ctrl-C/SIGTERM are forwarded to it. `deadrop login` isn't required as long as your config already has what it needs (the CI case, via `--config`).
+
 ### `secret`
 
 Manage secrets in the active vault.
@@ -216,6 +242,12 @@ eval "$(deadrop vault export work)"
 
 ```
 DB_URL=$(deadrop grab <drop_id>) ./deploy.sh
+```
+
+**Run CI/CD steps with vault secrets, no file on disk.** `inject` replaces the export-to-`.env`-then-source pattern:
+
+```
+deadrop inject --config ./deadrop-ci.json -- pnpm build
 ```
 
 ## 🔗 Related
