@@ -30,7 +30,11 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 ### Surfaces
 
 - **Web app**: `deadrop.io`, installable as a PWA
-- **CLI**: drop, grab, vault, secret commands. Available on npm and via the install script
+- **CLI**: drop, grab, vault, secret, inject commands. Available on npm and via the install script
+
+### CI/CD
+
+- **`deadrop inject`**: run a command with a vault's secrets injected into its environment, no file on disk. See the [CLI docs](/docs/features/cli) for usage.
 
 ## 🧪 Experimental
 
@@ -75,8 +79,8 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 ### CI/CD
 
-- **Service tokens** (Supporter+): non-interactive vault access for build pipelines. [#62](https://github.com/dallen4/deadrop/issues/62) [#25](https://github.com/dallen4/deadrop/issues/25)
-- **Pipeline injection helpers**: drop-in actions/steps for GitHub Actions, GitLab CI, CircleCI.
+- **Service tokens** (Supporter+): short-lived, revocable non-interactive vault access for build pipelines, replacing the long-lived token in a CI config. [#62](https://github.com/dallen4/deadrop/issues/62) [#25](https://github.com/dallen4/deadrop/issues/25)
+- **GitHub Action**: composite action wrapping `deadrop inject`, with masked log output. GitLab CI template and CircleCI orb to follow.
 
 ### Distribution
 
