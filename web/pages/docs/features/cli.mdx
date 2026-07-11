@@ -1,3 +1,4 @@
+import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
 import { BlockCode } from 'atoms/Code';
 import { INSTALL_COMMAND } from 'molecules/HeroBanner';
 
@@ -5,7 +6,10 @@ import { INSTALL_COMMAND } from 'molecules/HeroBanner';
 
 The CLI gives you everything the web app does (dropping and grabbing) plus local and cloud-synced vaults for secret storage, a `.env` sync workflow, and `inject` for running scripts and CI/CD jobs with vault secrets in their environment, no file on disk.
 
-## 📦 Installation
+<DocsSectionTitle
+  id={'installation'}
+  label={'📦 Installation'}
+/>
 
 ### One-line installer (recommended)
 
@@ -33,7 +37,10 @@ npx deadrop [command]
 
 For the npm install path: Node.js 20 or newer. The install.sh binary has no runtime dependencies.
 
-## 🚀 Quick start
+<DocsSectionTitle
+  id={'quick-start'}
+  label={'🚀 Quick start'}
+/>
 
 Share a secret in one terminal:
 
@@ -49,7 +56,10 @@ $ deadrop grab <drop_id>
 
 That's it. The two sessions complete a peer-to-peer handoff, the secret prints in the grabber's terminal, and both sessions exit.
 
-## ⚙️ Configuration
+<DocsSectionTitle
+  id={'configuration'}
+  label={'⚙️ Configuration'}
+/>
 
 Run the setup wizard once after install:
 
@@ -71,7 +81,10 @@ vaults:
 
 The `key` is the encryption key for the local SQLite vault file. Treat it like any other secret. Never commit your `.deadrop/` directory.
 
-## 🔐 Authentication
+<DocsSectionTitle
+  id={'authentication'}
+  label={'🔐 Authentication'}
+/>
 
 Authentication is only required for cloud-synced vaults and CI/CD service tokens. Drop and grab work without it.
 
@@ -82,7 +95,10 @@ deadrop logout
 
 Tokens are cached locally and refreshed automatically. The migration to OS keychain storage (macOS Keychain, Linux Secret Service, Windows Credential Vault) is in progress.
 
-## 📤 Commands
+<DocsSectionTitle
+  id={'commands'}
+  label={'📤 Commands'}
+/>
 
 ### `drop`
 
@@ -92,11 +108,11 @@ Share a secret with a single recipient over an end-to-end encrypted P2P connecti
 deadrop drop [options] [input]
 ```
 
-| Argument | Description |
-|---|---|
-| `[input]` | The secret to drop. If omitted, you'll be prompted. |
-| `-i, --input <value>` | Pass the secret as a flag instead of a positional argument. |
-| `-f, --file` | Treat the input as a file path and drop the file's contents. |
+| Argument              | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| `[input]`             | The secret to drop. If omitted, you'll be prompted.          |
+| `-i, --input <value>` | Pass the secret as a flag instead of a positional argument.  |
+| `-f, --file`          | Treat the input as a file path and drop the file's contents. |
 
 **Examples:**
 
@@ -179,13 +195,13 @@ Run a command with a vault's secrets injected directly into its environment. Sec
 deadrop inject [options] -- <command...>
 ```
 
-| Option | Description |
-|---|---|
-| `-v, --vault <name>` | Vault to inject (default: the active vault). |
-| `-e, --environment <env>` | Environment to inject (default: the active vault's environment). |
-| `-c, --config <path>` | Load an explicit config file (JSON or YAML) instead of the auto-discovered config, for CI. |
-| `--no-override` | Let pre-existing environment variables win over vault values (default: vault values win). |
-| `--verbose` | Log the names of injected variables. Values are never logged. |
+| Option                    | Description                                                                                |
+| ------------------------- | ------------------------------------------------------------------------------------------ |
+| `-v, --vault <name>`      | Vault to inject (default: the active vault).                                               |
+| `-e, --environment <env>` | Environment to inject (default: the active vault's environment).                           |
+| `-c, --config <path>`     | Load an explicit config file (JSON or YAML) instead of the auto-discovered config, for CI. |
+| `--no-override`           | Let pre-existing environment variables win over vault values (default: vault values win).  |
+| `--verbose`               | Log the names of injected variables. Values are never logged.                              |
 
 The `--` separator is required. Everything after it is passed straight through to your command, so its own flags are safe:
 
@@ -218,7 +234,10 @@ Remove a secret by name. Omit the name to pick interactively.
 deadrop secret remove API_KEY
 ```
 
-## 💡 Patterns
+<DocsSectionTitle
+  id={'patterns'}
+  label={'💡 Patterns'}
+/>
 
 **Drop a file's contents safely.** Avoid copy-paste accidents by dropping the file directly:
 
@@ -244,7 +263,10 @@ DB_URL=$(deadrop grab <drop_id>) ./deploy.sh
 deadrop inject --config ./deadrop-ci.json -- pnpm build
 ```
 
-## 🔗 Related
+<DocsSectionTitle
+  id={'related'}
+  label={'🔗 Related'}
+/>
 
 - [VS Code extension](/docs/features/vscode) for the same drop, grab, and vault flows inside your editor
 - [FAQs](/docs/faqs) for answers about security, accounts, and plans

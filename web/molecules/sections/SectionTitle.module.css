@@ -1,3 +1,30 @@
 .title {
   margin-bottom: calc(var(--mantine-spacing-xl) * 1.5);
 }
+
+.docsTitle {
+  padding-top: var(--mantine-spacing-xl);
+  padding-bottom: var(--mantine-spacing-sm);
+  border-bottom: 1px solid
+    light-dark(
+      var(--mantine-color-gray-2),
+      var(--mantine-color-dark-4)
+    );
+  margin-bottom: var(--mantine-spacing-sm);
+}
+
+.linkIcon {
+  display: none;
+  padding: 0;
+  margin: 0;
+  height: unset;
+}
+
+.docsTitle:hover {
+  color: var(--mantine-color-blue-4);
+  cursor: pointer;
+
+  .linkIcon {
+    display: inline-block;
+  }
+}
