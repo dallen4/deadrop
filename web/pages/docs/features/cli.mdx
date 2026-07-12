@@ -91,9 +91,10 @@ Authentication is only required for cloud-synced vaults and CI/CD service tokens
 ```
 deadrop login    # opens a browser to sign in via Clerk
 deadrop logout
+deadrop whoami   # check whether you're signed in
 ```
 
-Tokens are cached locally and refreshed automatically. The migration to OS keychain storage (macOS Keychain, Linux Secret Service, Windows Credential Vault) is in progress.
+Tokens are stored in your OS keychain (macOS Keychain, Linux Secret Service via libsecret, Windows Credential Vault) and refreshed automatically — never written to disk in plaintext.
 
 <DocsSectionTitle
   id={'commands'}
