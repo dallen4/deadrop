@@ -67,7 +67,7 @@ export function useMDXComponents(
     ),
     code: ({ children }) =>
       typeof children === 'string' && !children.includes('\n') ? (
-        <InlineCode size={'md'}>{children}</InlineCode>
+        <InlineCode>{children}</InlineCode>
       ) : (
         <BlockCode>{children}</BlockCode>
       ),

@@ -1,10 +1,15 @@
+import { BlockCode } from 'atoms/Code';
 import { INSTALL_COMMAND } from 'molecules/HeroBanner';
+import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
 
 # FAQs
 
 Common questions about how deadrop works, what's stored, and how to use it.
 
-## 🚀 Getting started
+<DocsSectionTitle
+  id={'getting-started'}
+  label={'🚀 Getting started'}
+/>
 
 ### Do I need an account to use deadrop?
 
@@ -18,13 +23,14 @@ Raw text strings, JSON payloads, and most plain-text configuration files (`.env`
 
 Run the one-line installer:
 
-```
-{INSTALL_COMMAND}
-```
+<BlockCode>{INSTALL_COMMAND}</BlockCode>
 
 The script downloads the appropriate binary for your platform and places it in your home directory. You can inspect it at `deadrop.io/install.sh` before running. The CLI is also available on npm as `deadrop` if you'd rather install it through your package manager.
 
-## 🔐 Security & cryptography
+<DocsSectionTitle
+  id={'security-and-cryptography'}
+  label={'🔐 Security & cryptography'}
+/>
 
 ### What cryptographic standards are leveraged to secure the handoff?
 
@@ -50,7 +56,10 @@ The script is hosted at `deadrop.io/install.sh` and is served over HTTPS. It dow
 curl -fsSL deadrop.io/install.sh
 ```
 
-## ⏱️ Drop lifecycle
+<DocsSectionTitle
+  id={'drop-lifecycle'}
+  label={'⏱️ Drop lifecycle'}
+/>
 
 ### How long does a drop session stay active?
 
@@ -68,7 +77,10 @@ One. Each drop session is a 1:1 handoff between dropper and grabber. Multi-recip
 
 You can start a new drop for each recipient. Each gets a unique drop ID and fresh keys. We deliberately don't reuse drop sessions so that compromising one handoff doesn't expose others.
 
-## 💻 Surfaces
+<DocsSectionTitle
+  id={'surfaces'}
+  label={'💻 Surfaces'}
+/>
 
 ### Is this service only available as a web application?
 
@@ -84,7 +96,10 @@ All three implement the same cryptographic protocol and can interoperate. For ex
 
 The web app is the easiest entry point and requires zero setup. The CLI is best for scripting, automation, dropping files from your terminal, and injecting vault secrets into CI/CD jobs (`deadrop inject`). It also unlocks CI/CD service tokens on paid plans. The VS Code extension brings drop, grab, and vault access into your editor without context-switching.
 
-## 🗄️ Vaults
+<DocsSectionTitle
+  id={'vaults'}
+  label={'🗄️ Vaults'}
+/>
 
 ### What is a vault?
 
@@ -94,7 +109,10 @@ A vault is a collection of secrets organised by environment (e.g. `production`, 
 
 Local vaults are stored as encrypted SQLite databases on the device you created them on. Cloud-synced vaults additionally back up the encrypted store to our managed Turso database so you can access the same secrets from multiple devices. In both cases, the contents are encrypted client-side, so we cannot read them.
 
-## 💳 Plans & pricing
+<DocsSectionTitle
+  id={'plans-and-pricing'}
+  label={'💳 Plans & pricing'}
+/>
 
 ### What features require a paid plan?
 

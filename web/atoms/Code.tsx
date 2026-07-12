@@ -8,11 +8,11 @@ export const BlockCode = ({ children }: PropsWithChildren) => {
     <Code
       block
       style={{
-        fontSize: theme.fontSizes.md,
-        padding: theme.spacing.sm,
+        fontSize: theme.spacing.md,
+        padding: theme.spacing.xs,
         marginTop: theme.spacing.xs,
         marginBottom: theme.spacing.md,
-        marginLeft: theme.spacing.xs,
+        marginLeft: '8px',
         marginRight: theme.spacing.xs,
         borderLeft: `2px solid ${theme.colors.blue[9]}a8`,
       }}
@@ -35,7 +35,7 @@ export const InlineCode = ({
     <Code
       block={false}
       style={{
-        fontSize: size && theme.fontSizes[size],
+        fontSize: size ? theme.fontSizes[size] : '15px',
         padding: '2px 6px',
       }}
     >

@@ -1,9 +1,6 @@
-import { existsSync } from 'fs';
-import { unlink } from 'fs/promises';
 import { createClerkClient } from 'lib/auth/clerk';
-import { STORAGE_DIR_NAME } from '@shared/lib/constants';
+import { clearSession } from 'lib/auth/cache';
 import { logInfo } from 'lib/log';
-import { cwd } from 'process';
 
 export default async function logout() {
   const clerkClient = await createClerkClient();
@@ -18,9 +15,7 @@ export default async function logout() {
 
   await clerkClient.signOut();
 
-  const authCachePath = `${cwd()}/${STORAGE_DIR_NAME}/creds`;
-
-  if (existsSync(authCachePath)) await unlink(authCachePath);
+  await clearSession();
 
   logInfo('Successfully signed out!');
 

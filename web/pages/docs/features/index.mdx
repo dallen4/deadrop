@@ -1,3 +1,5 @@
+import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
+
 # 🚧 Features & Roadmap
 
 The goal of deadrop is to provide platform and device agnostic secret sharing in a streamlined and easy-to-use fashion. This page tracks what's shipped, what's in experimental rollout, and what's coming next.
@@ -11,7 +13,10 @@ Status key:
 
 For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/features/vscode) docs.
 
-## ✅ Shipped
+<DocsSectionTitle
+  id={'shipped'}
+  label={'✅ Shipped'}
+/>
 
 ### Sharing & handoff
 
@@ -36,7 +41,10 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 - **`deadrop inject`**: run a command with a vault's secrets injected into its environment, no file on disk. See the [CLI docs](/docs/features/cli) for usage.
 
-## 🧪 Experimental
+<DocsSectionTitle
+  id={'experimental'}
+  label={'🧪 Experimental'}
+/>
 
 ### Editor integration
 
@@ -55,13 +63,19 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 - **`deadrop login` / `logout`**: Clerk-backed CLI auth flow. Token cache currently lives on disk. [#25](https://github.com/dallen4/deadrop/issues/25)
 
-## 🛠️ In progress
+<DocsSectionTitle
+  id={'in-progress'}
+  label={'🛠️ In progress'}
+/>
 
 > Items here are actively being built and should land in the next release or two.
 
 - **OS keychain credential storage**: replace plaintext token cache with macOS Keychain, Linux Secret Service, Windows Credential Vault. [#25](https://github.com/dallen4/deadrop/issues/25)
 
-## 📋 Planned
+<DocsSectionTitle
+  id={'planned'}
+  label={'📋 Planned'}
+/>
 
 > Backlog items we've committed to building. Open or upvote an issue if your use case would benefit from prioritising one of these.
 
@@ -96,6 +110,9 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 - **Role-based env access** (Org): per-environment RBAC.
 - **Audit log + export** (Org): full activity log with CSV/JSON export.
 
-## 🗣️ Suggest a feature
+<DocsSectionTitle
+  id={'suggestion-a-feature'}
+  label={'🗣️ Suggest a feature'}
+/>
 
 Open an issue on [GitHub](https://github.com/dallen4/deadrop/issues/new) and we'll triage it. Bugs and feature requests welcome.

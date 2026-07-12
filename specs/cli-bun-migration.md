@@ -314,7 +314,7 @@ jobs:
           - os: windows-latest  target: win32-x64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
       - run: pnpm install --frozen-lockfile
       - run: pnpm cli:build
@@ -323,7 +323,7 @@ jobs:
           # ... other env vars
       - name: Rename binary for release
         run: mv cli/dist/deadrop cli/dist/deadrop-${{ matrix.target }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: deadrop-${{ matrix.target }}
           path: cli/dist/deadrop-${{ matrix.target }}
@@ -332,7 +332,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
       - uses: softprops/action-gh-release@v2
         with:
           files: deadrop-*/deadrop-*

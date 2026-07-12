@@ -3,9 +3,11 @@ import './scripts/bun-inject';
 import 'dotenv/config';
 import { deadrop } from 'core';
 import { checkNodeVersion, checkBunVersion } from 'lib/util';
+import { migrateLegacyCreds } from 'lib/auth/cache';
 
 checkBunVersion();
 checkNodeVersion();
+migrateLegacyCreds();
 
 deadrop.parse();
 
