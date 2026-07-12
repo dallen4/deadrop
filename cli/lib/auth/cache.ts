@@ -23,6 +23,17 @@ function isMissingEntry(err: unknown): boolean {
   return msg.includes('no matching entry') || msg.includes('no entry');
 }
 
+// Linux failures are almost always the missing libsecret shared lib;
+// macOS/Windows failures are almost always the user denying the
+// keychain/Credential Manager access prompt. Point at the fix for each,
+// since "install libsecret" is meaningless (and confusing) on a Mac.
+function keychainUnavailableMessage(): string {
+  if (process.platform === 'linux') {
+    return 'Secure credential storage is unavailable. Install libsecret (e.g. `sudo apt-get install -y libsecret-1-0`) and run `deadrop login` again.';
+  }
+  return 'Secure credential storage is unavailable. If your OS just prompted for keychain access, allow it and run `deadrop login` again.';
+}
+
 // Never throws: missing entry is silent, backend failure warns once
 export async function getToken(): Promise<string> {
   try {
@@ -53,9 +64,7 @@ export async function setSession(token: string): Promise<void> {
     const { Entry } = require('@napi-rs/keyring');
     new Entry(SERVICE, ACCOUNT).setPassword(token);
   } catch {
-    throw new Error(
-      'Secure credential storage is unavailable. On Linux, install libsecret (e.g. `sudo apt-get install -y libsecret-1-0`).',
-    );
+    throw new Error(keychainUnavailableMessage());
   }
 }
 

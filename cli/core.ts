@@ -16,6 +16,7 @@ import {
   vaultUse,
 } from 'actions/vault';
 import logout from 'actions/logout';
+import whoami from 'actions/whoami';
 import update from 'actions/update';
 import { displayWelcomeMessage } from 'lib/log';
 
@@ -35,6 +36,11 @@ deadrop.command('init').action(init);
 deadrop.command('login').action(login);
 
 deadrop.command('logout').action(logout);
+
+deadrop
+  .command('whoami')
+  .description('check whether you are signed in')
+  .action(whoami);
 
 deadrop
   .command('update')

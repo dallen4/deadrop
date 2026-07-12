@@ -59,3 +59,55 @@ describe('getToken', () => {
     expect(await getToken()).toEqual('a-token');
   });
 });
+
+describe('setSession', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    delete process.env.DEADROP_INSTALL_METHOD;
+  });
+
+  const mockSetPasswordFailure = () => {
+    const setPassword = vi.fn().mockImplementation(() => {
+      throw new Error('access denied');
+    });
+    vi.spyOn(keyring, 'Entry').mockImplementation(
+      () => ({ setPassword }) as any,
+    );
+  };
+
+  it('points Linux users at libsecret', async () => {
+    vi.stubGlobal('process', { ...process, platform: 'linux' });
+    mockSetPasswordFailure();
+    const { setSession } = await import('lib/auth/cache');
+
+    await expect(setSession('token')).rejects.toThrow(/libsecret/);
+  });
+
+  it('points macOS/Windows users at their keychain prompt, not libsecret', async () => {
+    vi.stubGlobal('process', { ...process, platform: 'darwin' });
+    mockSetPasswordFailure();
+    const { setSession } = await import('lib/auth/cache');
+
+    await expect(setSession('token')).rejects.toThrow(
+      /keychain access/,
+    );
+    await expect(setSession('token')).rejects.not.toThrow(/libsecret/);
+  });
+
+  it('writes the token when the backend succeeds', async () => {
+    const setPassword = vi.fn();
+    vi.spyOn(keyring, 'Entry').mockImplementation(
+      () => ({ setPassword }) as any,
+    );
+    const { setSession } = await import('lib/auth/cache');
+
+    await setSession('a-token');
+
+    expect(setPassword).toHaveBeenCalledWith('a-token');
+  });
+});
