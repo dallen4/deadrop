@@ -11,6 +11,16 @@ case "$(uname -s)" in
   *) echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
 esac
 
+if [ "$OS" = "linux" ] && command -v ldconfig >/dev/null 2>&1; then
+  if ! ldconfig -p | grep -q libsecret-1; then
+    echo "deadrop requires libsecret for secure credential storage."
+    echo "Install it with:"
+    echo "  Ubuntu/Debian: sudo apt-get install -y libsecret-1-0"
+    echo "  Fedora/RHEL:   sudo dnf install -y libsecret"
+    echo "  Arch:          sudo pacman -S libsecret"
+  fi
+fi
+
 case "$(uname -m)" in
   arm64|aarch64) ARCH="arm64" ;;
   x86_64)        ARCH="x64" ;;

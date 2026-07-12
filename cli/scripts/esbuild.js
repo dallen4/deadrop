@@ -26,9 +26,10 @@ if (missing.length) {
     outfile: 'dist/deadrop.js',
     platform: 'node',
     bundle: true,
+    minifySyntax: true,
     inject: ['./scripts/inject.js'],
     loader: { '.node': 'file' },
-    external: ['libsql', 'node-datachannel'],
+    external: ['libsql', 'node-datachannel', '@napi-rs/keyring'],
     plugins: [
       environmentPlugin({
         DEADROP_API_URL: process.env.DEADROP_API_URL,
