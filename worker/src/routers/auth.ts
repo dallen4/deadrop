@@ -13,7 +13,7 @@ const authRouter = hono().get(
     const { token } =
       await clerkClient.signInTokens.createSignInToken({
         userId,
-        expiresInSeconds: 25,
+        expiresInSeconds: 60,
       });
 
     return c.json({ token }, 200);

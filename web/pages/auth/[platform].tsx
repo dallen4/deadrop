@@ -19,16 +19,19 @@ const PlatformAuth = () => {
   const platformKey = typeof platform === 'string' ? platform : '';
   const label = PLATFORMS[platformKey] ?? platformKey;
 
+  const notifyError = (message: string) =>
+    showNotification({
+      message,
+      color: 'red',
+      icon: <IconX />,
+      autoClose: 4500,
+    });
+
   const getTokenAndRedirect = async () => {
     const sessionToken = await clerk.session!.getToken();
 
     if (!sessionToken) {
-      showNotification({
-        message: 'Tried to authenticate without a session!',
-        color: 'red',
-        icon: <IconX />,
-        autoClose: 4500,
-      });
+      notifyError('Tried to authenticate without a session!');
       return;
     }
 
@@ -42,14 +45,29 @@ const PlatformAuth = () => {
       },
     });
 
-    const payload = await res.json();
+    const payload = await res.json().catch(() => null);
 
-    if (typeof redirectUrl === 'string') {
-      const localhostRedirect = new URL(redirectUrl);
-      localhostRedirect.searchParams.set('token', payload.token);
-
-      window.location.href = localhostRedirect.href;
+    if (!res.ok || !payload?.token) {
+      notifyError('Failed to generate a sign-in token, please try again.');
+      return;
     }
+
+    if (typeof redirectUrl !== 'string') {
+      notifyError('Missing redirect URL, restart the sign-in from your device.');
+      return;
+    }
+
+    let localhostRedirect: URL;
+    try {
+      localhostRedirect = new URL(redirectUrl);
+    } catch {
+      notifyError(`Invalid redirect URL: ${redirectUrl}`);
+      return;
+    }
+
+    localhostRedirect.searchParams.set('token', payload.token);
+
+    window.location.href = localhostRedirect.href;
   };
 
   return (

@@ -20,7 +20,7 @@ export default async function login() {
   const newUrl = new URL(LOGIN_URL);
   newUrl.searchParams.set('redirectUrl', LOCALHOST_AUTH_URL);
 
-  const url = encodeURI(newUrl.toString());
+  const url = newUrl.toString();
 
   loader.start('Opening webpage for authentication...');
 
