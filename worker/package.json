@@ -11,7 +11,7 @@
     "wrangler": "^3.99.0"
   },
   "dependencies": {
-    "@hono/clerk-auth": "^3.1.1",
+    "@clerk/hono": "^0.1.51",
     "@hono/zod-validator": "^0.4.3",
     "hono": "^4.12.18",
     "shared": "workspace:*",
