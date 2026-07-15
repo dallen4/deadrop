@@ -25,6 +25,7 @@ cli/
 │   ├── init.ts           # init: CLI setup wizard
 │   ├── login.ts          # login: Clerk auth
 │   ├── logout.ts
+│   ├── whoami.ts         # whoami: check signed-in identity
 │   ├── update.ts         # update: self-update (npm or binary path via lib/update/)
 │   ├── vault/            # vault subcommands
 │   │   ├── create.ts
@@ -43,7 +44,7 @@ cli/
 │   ├── api.ts            # deadropFactory singleton client (not used by drop/grab — see below)
 │   ├── auth/
 │   │   ├── clerk.ts       # Clerk client for Node.js + getSessionToken() (shared by drop/grab actions)
-│   │   ├── cache.ts       # Token caching (filesystem)
+│   │   ├── cache.ts       # Token caching (OS keychain via keytar/Bun.secrets, not plaintext)
 │   │   ├── localhostServer.tsx # Loopback HTTP server for the `login` OAuth callback
 │   │   └── snippets.tsx
 │   ├── peer.ts            # PeerJS init with @roamhq/wrtc (Node.js WebRTC)
