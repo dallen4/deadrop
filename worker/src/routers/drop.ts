@@ -1,5 +1,5 @@
 import { getCookie } from 'hono/cookie';
-import { getAuth } from '@hono/clerk-auth';
+import { getAuth } from '@clerk/hono';
 import { DropDetails } from '@shared/types/common';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';

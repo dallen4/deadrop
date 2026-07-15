@@ -1,4 +1,4 @@
-import { clerkMiddleware } from '@hono/clerk-auth';
+import { clerkMiddleware } from '@clerk/hono';
 import { requestId } from 'hono/request-id';
 import { AppRoutes } from './constants';
 import { hono, Middleware } from './lib/http/core';
