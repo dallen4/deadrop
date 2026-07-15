@@ -1,26 +1,17 @@
 import React from 'react';
 import {
-  ActionIcon,
-  Box,
   Button,
-  Code,
   Container,
-  CopyButton,
   Divider,
   Text,
   Title,
-  Tooltip,
   UnstyledButton,
-  useMantineTheme,
 } from '@mantine/core';
-import {
-  IconCheck,
-  IconChevronDown,
-  IconCopy,
-} from '@tabler/icons-react';
+import { IconChevronDown } from '@tabler/icons-react';
 import { useRouter } from 'next/router';
 import { DROP_PATH } from '@shared/config/paths';
 import { TypeAnimation } from 'react-type-animation';
+import { CopyableCode } from 'atoms/Code';
 
 // based off of: https://ui.mantine.dev/category/hero
 
@@ -30,7 +21,6 @@ export const INSTALL_COMMAND =
   'curl -fsSL https://deadrop.io/install.sh | sh';
 
 export function HeroBanner() {
-  const theme = useMantineTheme();
   const router = useRouter();
 
   const scrollToId = (id: string) => {
@@ -96,54 +86,10 @@ export function HeroBanner() {
             labelPosition={'center'}
             mb={'sm'}
           />
-          <Box
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Code
-              block
-              style={{
-                flex: 1,
-                fontSize: theme.fontSizes.sm,
-                padding: `${theme.spacing.sm} calc(${theme.spacing.xl} + ${theme.spacing.sm}) ${theme.spacing.sm} ${theme.spacing.sm}`,
-                borderLeft: `2px solid ${theme.colors.blue[9]}a8`,
-              }}
-            >
-              <span style={{ opacity: 0.5 }}>$ </span>
-              {INSTALL_COMMAND}
-            </Code>
-            <CopyButton value={INSTALL_COMMAND} timeout={2000}>
-              {({ copied, copy }) => (
-                <Tooltip
-                  label={copied ? 'Copied' : 'Copy'}
-                  withArrow
-                  position={'right'}
-                >
-                  <ActionIcon
-                    variant={'subtle'}
-                    color={copied ? 'teal' : 'gray'}
-                    onClick={copy}
-                    style={{
-                      position: 'absolute',
-                      right: theme.spacing.xs,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                    }}
-                    aria-label={'Copy install command'}
-                  >
-                    {copied ? (
-                      <IconCheck size={16} />
-                    ) : (
-                      <IconCopy size={16} />
-                    )}
-                  </ActionIcon>
-                </Tooltip>
-              )}
-            </CopyButton>
-          </Box>
+          <CopyableCode
+            value={INSTALL_COMMAND}
+            ariaLabel={'Copy install command'}
+          />
         </Container>
       </div>
 

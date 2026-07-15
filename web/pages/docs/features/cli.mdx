@@ -1,5 +1,5 @@
 import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
-import { BlockCode } from 'atoms/Code';
+import { CopyableCode } from 'atoms/Code';
 import { INSTALL_COMMAND } from 'molecules/HeroBanner';
 
 # ⌨️ deadrop CLI
@@ -15,7 +15,10 @@ The CLI gives you everything the web app does (dropping and grabbing) plus local
 
 Downloads the prebuilt binary for your platform into your home directory. No Node.js required.
 
-<BlockCode>{INSTALL_COMMAND}</BlockCode>
+<CopyableCode
+  value={INSTALL_COMMAND}
+  ariaLabel={'Copy install command'}
+/>
 
 If you are interested in the logic of the script, you can view it at `deadrop.io/install.sh`. It handles installing the appropriate binary for your platform and places it in your home directory for you.
 
@@ -45,13 +48,13 @@ For the npm install path: Node.js 20 or newer. The install.sh binary has no runt
 Share a secret in one terminal:
 
 ```
-$ deadrop drop "my-database-password"
+deadrop drop "my-database-password"
 ```
 
 Grab it in another (using the drop ID printed by the dropper):
 
 ```
-$ deadrop grab <drop_id>
+deadrop grab <drop_id>
 ```
 
 That's it. The two sessions complete a peer-to-peer handoff, the secret prints in the grabber's terminal, and both sessions exit.
@@ -69,15 +72,17 @@ deadrop init
 
 This creates a config file (default location is `.deadrop/` in your home directory) and your first local vault. The config tracks which vault is active and stores per-vault metadata:
 
-```
-active_vault:
+<CopyableCode
+  value={`active_vault:
   name: default
   environment: dev
 vaults:
   default:
     location: /<path-to-vault>/default.db
-    key: <base64-key>
-```
+    key: <base64-key>`}
+  prompt={false}
+  ariaLabel={'Copy config'}
+/>
 
 The `key` is the encryption key for the local SQLite vault file. Treat it like any other secret. Never commit your `.deadrop/` directory.
 
@@ -105,9 +110,11 @@ Tokens are stored in your OS keychain (macOS Keychain, Linux Secret Service via 
 
 Share a secret with a single recipient over an end-to-end encrypted P2P connection.
 
-```
-deadrop drop [options] [input]
-```
+<CopyableCode
+  value={'deadrop drop [options] [input]'}
+  prompt={false}
+  ariaLabel={'Copy usage'}
+/>
 
 | Argument              | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
@@ -192,9 +199,11 @@ Remove a vault from config and delete its database file. This is destructive and
 
 Run a command with a vault's secrets injected directly into its environment. Secrets are decrypted in memory and never written to disk, so there's no `.env` file to clean up.
 
-```
-deadrop inject [options] -- <command...>
-```
+<CopyableCode
+  value={'deadrop inject [options] -- <command...>'}
+  prompt={false}
+  ariaLabel={'Copy usage'}
+/>
 
 | Option                    | Description                                                                                |
 | ------------------------- | ------------------------------------------------------------------------------------------ |

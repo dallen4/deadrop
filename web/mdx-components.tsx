@@ -7,12 +7,13 @@ import {
   Divider,
   List,
   PolymorphicComponentProps,
+  Table,
   Text,
   TextProps,
   Title,
   useMantineTheme,
 } from '@mantine/core';
-import { BlockCode, InlineCode } from 'atoms/Code';
+import { CopyableCode, InlineCode } from 'atoms/Code';
 import { useMobile } from 'hooks/use-mobile';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
@@ -69,7 +70,10 @@ export function useMDXComponents(
       typeof children === 'string' && !children.includes('\n') ? (
         <InlineCode>{children}</InlineCode>
       ) : (
-        <BlockCode>{children}</BlockCode>
+        <CopyableCode
+          value={String(children)}
+          ariaLabel={'Copy code'}
+        />
       ),
     em: ({ children }) => (
       <LargeText component={'span'} fs={'italic'}>
@@ -176,6 +180,24 @@ export function useMDXComponents(
         {children}
       </LargeText>
     ),
+    table: ({ children }) => (
+      <Table.ScrollContainer minWidth={480} my={'md'}>
+        <Table
+          withTableBorder
+          withRowBorders
+          withColumnBorders
+          verticalSpacing={'sm'}
+          horizontalSpacing={'md'}
+        >
+          {children}
+        </Table>
+      </Table.ScrollContainer>
+    ),
+    thead: ({ children }) => <Table.Thead>{children}</Table.Thead>,
+    tbody: ({ children }) => <Table.Tbody>{children}</Table.Tbody>,
+    tr: ({ children }) => <Table.Tr>{children}</Table.Tr>,
+    th: ({ children }) => <Table.Th>{children}</Table.Th>,
+    td: ({ children }) => <Table.Td>{children}</Table.Td>,
     ul: ({ children }) => (
       <List mb={'md'} type={'unordered'}>
         {children}
