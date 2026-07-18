@@ -1,6 +1,6 @@
 # CLAUDE.md — worker/
 
-Cloudflare Worker using Hono framework. Provides the backend API: Redis-backed (Upstash) drop session storage, Turso-backed vaults, and PeerJS signaling via Durable Objects.
+Cloudflare Worker using Hono framework. Provides the backend API: Redis-backed (Upstash) drop session storage, Turso-backed vaults, and a `PeerServerDO` Durable Object for PeerJS signaling — **not yet live in production**. `wrangler.toml` only routes `deadrop.nieky.dev` to this Worker; the actual production signaling host, `peers.deadrop.io` (`NEXT_PUBLIC_PEER_SERVER_URL`/`PEER_SERVER_URL`), is a separate standalone PeerJS server on Render. `PeerServerDO` is a parked experiment — the DO pattern isn't considered production-ready yet. Don't assume it's handling real traffic just because it's implemented and bound.
 
 ## Commands
 
@@ -49,7 +49,7 @@ worker/
 |--------|------|-------------|
 | GET | `/` | Health check (API metadata) |
 | `*` | `/auth/*` | Clerk auth endpoints |
-| `*` | `/peers/*` | PeerJS signaling — upgrades to WebSocket via `PeerServerDO` |
+| `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
 | POST | `/vault` | Create a Turso vault database (`restricted()`) |
 | POST | `/vault/share` | Share a vault with another user (`restricted()`) |
@@ -81,6 +81,7 @@ worker/
 - **Env var naming differs from the rest of the monorepo**: `Redis.fromEnv()` (the cloudflare adapter) only reads `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` — these are the actual deployed secret names (`wrangler secret list`). `shared/lib/redis.ts` (used by `web`/`tests`/the hydrate-test-token script) reads `REDIS_REST_URL`/`REDIS_REST_TOKEN` instead. Same Upstash instance, two different env var names depending on which client reads it — a local `worker/.dev.vars` needs the `UPSTASH_` prefixed names or `c.get('redis')` silently goes unauthenticated.
 
 ### Durable Objects — PeerServerDO
+- **Not live in production** — clients signal through a separate Render-hosted PeerJS server at `peers.deadrop.io` instead (see top of this file). This is implemented and bound but parked until the DO pattern is proven out.
 - Each peer gets its own Durable Object instance (actor per peer ID)
 - Handles WebSocket upgrades for long-lived PeerJS signaling connections
 - Class exported from `src/index.ts` as `PeerServerDO`; bound in `wrangler.toml` as `PEER_SERVER`

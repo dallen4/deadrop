@@ -20,48 +20,21 @@ Press **F5** from the monorepo root to launch the Extension Development Host (ru
 
 ```
 vscode-extension/
-├── src/                          # Extension host (Node.js, CJS)
-│   ├── extension.ts              # activate() — registers all providers + commands
-│   ├── SidebarProvider.ts        # WebviewViewProvider for the sidebar panel
-│   ├── VaultPanel.ts             # WebviewPanel (editor tab) for vault management
-│   ├── types.ts                  # Enums + message type unions + ExtensionConfig
-│   ├── lib/
-│   │   ├── nonce.ts              # getNonce() — shared CSP nonce generator
-│   │   ├── config.ts             # loadConfig / saveConfig via cosmiconfig (.deadroprc)
-│   │   └── vault.ts              # DB ops: listSecretNames / fetchEncryptedSecret /
-│   │                             #   addSecret / updateSecret / deleteSecret / createVaultDB
-│   ├── auth/
-│   │   └── clerk.ts              # getToken/storeToken/deleteToken (SecretStorage)
-│   └── commands/
-│       ├── drop.ts               # deadrop.drop — drops editor selection
-│       ├── dropFile.ts           # deadrop.dropFile — drops active editor document
-│       ├── dropExplorerFile.ts   # deadrop.dropExplorerFile — drops explorer file
-│       ├── grab.ts               # deadrop.grab — prompts for drop ID
-│       ├── openVault.ts          # deadrop.openVault — opens vault editor tab
-│       ├── login.ts              # deadrop.login — OAuth flow
-│       └── logout.ts             # deadrop.logout — clears token
-├── views/                        # Webview source (browser, ESM/React)
-│   ├── index.html                # Sidebar app Vite entry
-│   ├── vault.html                # Vault tab Vite entry
+├── src/                # Extension host (Node.js, CJS) — activate() in extension.ts registers everything below
+│   ├── SidebarProvider.ts / VaultPanel.ts   # the two webview hosts — see Message Protocol / Vault Architecture below
+│   ├── types.ts        # enums + message unions — see Enums Pattern below
+│   ├── lib/             # nonce.ts (CSP, see below), config.ts (.deadroprc, see below), vault.ts (DB ops, see Vault Architecture)
+│   ├── auth/clerk.ts    # getToken/storeToken/deleteToken via VS Code SecretStorage
+│   └── commands/        # one file per `deadrop.*` command (drop, dropFile, dropExplorerFile, grab, openVault, login, logout) — see "How to Add a New Command" for the pattern
+├── views/              # Webview source (browser, ESM/React) — two Vite entries, index.html (sidebar) and vault.html (vault tab)
 │   └── src/
-│       ├── main.tsx              # Sidebar React entry point
-│       ├── vault.tsx             # Vault tab React entry point
-│       ├── App.tsx               # Sidebar root (sections, mode toggle)
-│       ├── index.css             # VS Code token-based styles (sidebar + vault)
-│       ├── vscode.ts             # postMessage/onMessage wrappers (typed, generic)
-│       ├── components/
-│       │   ├── DropPane.tsx      # XState drop machine + UI
-│       │   ├── GrabPane.tsx      # XState grab machine + UI
-│       │   ├── VaultPane.tsx     # Sidebar vault section ("Open Vault" button)
-│       │   └── VaultApp.tsx      # Full vault editor tab UI (two-column layout)
-│       └── lib/
-│           ├── peer.ts           # initPeerFromConfig() → createPeer()
-│           └── session.ts        # cleanupSession()
-├── scripts/
-│   └── esbuild.js                # Extension host build config (env baking)
-├── vite.config.ts                # Webview build config (two inputs: index + vault)
-├── tsconfig.json                 # Extension host TS config (CommonJS)
-└── tsconfig.views.json           # Webview TS config (ESM, jsx: react-jsx)
+│       ├── components/  # DropPane/GrabPane (XState + UI), VaultPane (sidebar entry point), VaultApp (full vault editor, see Vault Architecture)
+│       ├── vscode.ts    # typed postMessage/onMessage wrappers
+│       └── lib/          # peer.ts (initPeerFromConfig), session.ts (cleanupSession)
+├── scripts/esbuild.js   # Extension host build config — see Build System below
+├── vite.config.ts       # Webview build config — see Build System below
+├── tsconfig.json        # Extension host (CommonJS)
+└── tsconfig.views.json  # Webview (ESM, jsx: react-jsx)
 ```
 
 ## Build System
