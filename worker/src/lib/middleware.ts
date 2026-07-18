@@ -77,24 +77,33 @@ type AuthOptions = {
   allowApiKey?: boolean;
 };
 
+// getAuth's array-typed acceptsToken overload can't narrow to just the
+// token types we actually push (TS infers TokenType[] broadly, pulling
+// m2m_token — never used anywhere in this app — into the return union,
+// and m2m_token's auth object has no userId at all). Request 'any' and
+// gate on auth.tokenType ourselves so each branch narrows cleanly.
 export const authenticated = (
   { allowApiKey }: AuthOptions = { allowApiKey: false },
 ) =>
   createMiddleware<HonoCtx>(async (c, next) => {
-    const acceptsTokens: TokenType[] = [
-      TokenType.SessionToken,
-      TokenType.OAuthToken,
-    ];
+    const auth = getAuth(c, { acceptsToken: 'any' });
 
-    if (allowApiKey) acceptsTokens.push(TokenType.ApiKey);
+    if (!auth.isAuthenticated) return c.json(NotAuthenticated, 401);
 
-    const auth = getAuth(c, { acceptsToken: acceptsTokens });
+    let userId: string | null = null;
 
-    if (!auth?.userId) {
-      return c.json(NotAuthenticated, 401);
+    if (
+      auth.tokenType === TokenType.SessionToken ||
+      auth.tokenType === TokenType.OAuthToken
+    ) {
+      userId = auth.userId;
+    } else if (allowApiKey && auth.tokenType === TokenType.ApiKey) {
+      userId = auth.userId;
     }
 
-    c.set('userId', auth.userId);
+    if (!userId) return c.json(NotAuthenticated, 401);
+
+    c.set('userId', userId);
 
     await next();
   });
@@ -104,39 +113,38 @@ export const restricted = (
   { allowApiKey }: AuthOptions = { allowApiKey: false },
 ) =>
   createMiddleware<HonoCtx>(async (c, next) => {
-    const acceptsToken: TokenType[] = [
-      TokenType.SessionToken,
-      TokenType.OAuthToken,
-    ];
-
-    if (allowApiKey) acceptsToken.push(TokenType.ApiKey);
-
-    const auth = getAuth(c, { acceptsToken });
+    const auth = getAuth(c, { acceptsToken: 'any' });
 
     if (!auth.isAuthenticated) return c.json(NotAuthenticated, 401);
 
+    let userId: string | null = null;
     let canAccess = false;
 
-    if (auth.tokenType === TokenType.ApiKey) {
-      // API keys carry no session claims — resolve early_access/internal
-      // from the owning user's live Clerk metadata instead. Org-scoped
-      // keys (auth.userId null) have no user to resolve against; vaults
-      // are per-user, so deny.
-      if (auth.userId) {
-        const user = await c.var.clerk.users.getUser(auth.userId);
+    if (auth.tokenType === TokenType.SessionToken) {
+      userId = auth.userId;
+      const claims = auth.sessionClaims;
+      canAccess = !!(claims.early_access || claims.internal);
+    } else if (
+      auth.tokenType === TokenType.OAuthToken ||
+      (allowApiKey && auth.tokenType === TokenType.ApiKey)
+    ) {
+      // Machine tokens (API key, OAuth) carry no session claims — resolve
+      // early_access/internal from the owning user's live Clerk metadata
+      // instead. Org-scoped API keys (auth.userId null) have no user to
+      // resolve against; vaults are per-user, so deny.
+      userId = auth.userId;
+      if (userId) {
+        const user = await c.var.clerk.users.getUser(userId);
         canAccess = !!(
           user.publicMetadata.early_access ||
           user.publicMetadata.internal
         );
       }
-    } else {
-      const claims = auth.sessionClaims;
-      canAccess = !!(claims.early_access || claims.internal);
     }
 
     if (!canAccess) return c.json(PermissionDenied, 401);
 
-    c.set('userId', auth.userId!);
+    c.set('userId', userId!);
 
     await next();
   });
