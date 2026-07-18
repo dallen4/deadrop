@@ -42,9 +42,13 @@ export const createClerkClient = clerkFactory();
 // CLI user. Returns null when signed out, so callers degrade to
 // anonymous/unauthenticated requests.
 export const getSessionToken = async (): Promise<string | null> => {
-  if (!(await getToken())) return null;
+  const apiKey = process.env.DEADROP_API_KEY ?? null;
+
+  if (!(await getToken())) return apiKey;
 
   const clerkClient = await createClerkClient();
 
-  return (await clerkClient.session?.getToken()) ?? null;
+  const accessToken = await clerkClient.session?.getToken();
+
+  return accessToken ?? apiKey;
 };
