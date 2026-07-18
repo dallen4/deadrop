@@ -68,8 +68,9 @@ worker/
 5. `redis()` — attaches an Upstash client to `c.get('redis')`
 
 ### Auth gates (`src/lib/middleware.ts`)
-- `authenticated()` — 401s if no `clerkAuth().userId`
-- `restricted()` — 401s unless `sessionClaims.early_access` or `sessionClaims.internal` is set (Clerk publicMetadata, configured per-user in the Clerk dashboard — not in app code)
+- Both gates take `{ allowApiKey?: boolean }` and call `getAuth(c, { acceptsToken })` directly (not `c.var.clerkAuth()`, which defaults to session-tokens-only) so API keys are actually accepted when opted in. On success they `c.set('userId', ...)` — route handlers read `c.get('userId')!`, never `c.var.clerkAuth().userId!`, so the resolved identity always matches whichever token type actually authenticated.
+- `authenticated()` — 401s if no `userId` on the resolved auth object
+- `restricted()` — 401s unless early_access/internal is set. For session/OAuth tokens that's `sessionClaims.early_access`/`.internal` (Clerk publicMetadata via the JWT template). For API keys (`allowApiKey: true`) there's no session claims — it looks up the owning user's *live* Clerk metadata instead (`c.var.clerk.users.getUser(auth.userId)`); org-scoped API keys (no `userId`) are denied since vaults are per-user.
 - `service()` — first-party service-to-service auth (no Clerk session): constant-time checks `SERVICE_TOKEN_HEADER` against `WORKER_SERVICE_TOKEN`. Used by `/vault/lock` and `/vault/unlock`, which billing webhooks call. Authenticates the *caller*; the subject `userId` is in the request body — treat the token as high-value.
 - Routes with neither gate (e.g. `/drop`) work anonymously; if a caller *is* authenticated, `clerkAuth()` still resolves so the route can read identity opportunistically
 

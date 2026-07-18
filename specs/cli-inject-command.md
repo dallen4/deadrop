@@ -457,7 +457,7 @@ conditional itself.
     restricted({ allowApiKey: true }),
     zValidator('json', VaultTokenSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { createVaultToken, getVault } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
