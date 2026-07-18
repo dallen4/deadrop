@@ -10,6 +10,8 @@ import {
 } from './messages';
 import { TEST_TOKEN_HEADER } from '@shared/tests/http';
 import { SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
+import { getAuth } from '@clerk/hono';
+import { TokenType } from '@clerk/backend/internal';
 
 // Constant-time string comparison so token validation doesn't leak
 // timing information. Length is allowed to short-circuit.
@@ -71,34 +73,70 @@ export const redis = () =>
     await next();
   });
 
-export const authenticated = () =>
+type AuthOptions = {
+  allowApiKey?: boolean;
+};
+
+export const authenticated = (
+  { allowApiKey }: AuthOptions = { allowApiKey: false },
+) =>
   createMiddleware<HonoCtx>(async (c, next) => {
-    const auth = c.var.clerkAuth();
+    const acceptsTokens: TokenType[] = [
+      TokenType.SessionToken,
+      TokenType.OAuthToken,
+    ];
+
+    if (allowApiKey) acceptsTokens.push(TokenType.ApiKey);
+
+    const auth = getAuth(c, { acceptsToken: acceptsTokens });
 
     if (!auth?.userId) {
       return c.json(NotAuthenticated, 401);
     }
+
+    c.set('userId', auth.userId);
 
     await next();
   });
 
 // only allowed if user has been granted early_access or marked as internal
-export const restricted = () =>
+export const restricted = (
+  { allowApiKey }: AuthOptions = { allowApiKey: false },
+) =>
   createMiddleware<HonoCtx>(async (c, next) => {
-    const auth = c.var.clerkAuth();
+    const acceptsToken: TokenType[] = [
+      TokenType.SessionToken,
+      TokenType.OAuthToken,
+    ];
 
-    if (!auth?.userId) {
-      return c.json(NotAuthenticated, 401);
+    if (allowApiKey) acceptsToken.push(TokenType.ApiKey);
+
+    const auth = getAuth(c, { acceptsToken });
+
+    if (!auth.isAuthenticated) return c.json(NotAuthenticated, 401);
+
+    let canAccess = false;
+
+    if (auth.tokenType === TokenType.ApiKey) {
+      // API keys carry no session claims — resolve early_access/internal
+      // from the owning user's live Clerk metadata instead. Org-scoped
+      // keys (auth.userId null) have no user to resolve against; vaults
+      // are per-user, so deny.
+      if (auth.userId) {
+        const user = await c.var.clerk.users.getUser(auth.userId);
+        canAccess = !!(
+          user.publicMetadata.early_access ||
+          user.publicMetadata.internal
+        );
+      }
+    } else {
+      const claims = auth.sessionClaims;
+      canAccess = !!(claims.early_access || claims.internal);
     }
 
-    const claims = auth.sessionClaims;
+    if (!canAccess) return c.json(PermissionDenied, 401);
 
-    const canAccess =
-      claims.early_access || claims.internal ? true : false;
-
-    if (!canAccess) {
-      return c.json(PermissionDenied, 401);
-    }
+    c.set('userId', auth.userId!);
 
     await next();
   });

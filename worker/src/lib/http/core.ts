@@ -7,6 +7,7 @@ export type HonoCtx = {
   Variables: {
     ipAddress?: string;
     error?: boolean;
+    userId?: string;
 
     redis: Redis;
   } & RequestIdVariables;

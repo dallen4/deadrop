@@ -2,7 +2,10 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
-import { createVaultUtils, vaultNameFromUserId } from '@shared/lib/turso';
+import {
+  createVaultUtils,
+  vaultNameFromUserId,
+} from '@shared/lib/turso';
 import {
   authenticated,
   restricted,
@@ -21,7 +24,7 @@ const vaultRouter = hono()
     restricted(),
     zValidator('json', CreateVaultSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { createVault, createVaultToken } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -59,10 +62,10 @@ const vaultRouter = hono()
   )
   .post(
     AppRouteParts.Share,
-    restricted(),
+    restricted({ allowApiKey: true }),
     zValidator('json', VaultNameSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { createVaultToken } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -90,7 +93,7 @@ const vaultRouter = hono()
     authenticated(),
     zValidator('param', VaultNameSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { name } = c.req.valid('param');
 
@@ -111,7 +114,7 @@ const vaultRouter = hono()
     restricted(),
     zValidator('param', VaultNameSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { name } = c.req.valid('param');
 
