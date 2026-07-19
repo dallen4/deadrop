@@ -67,18 +67,23 @@ mv "$TMP/$BINARY" "$INSTALL_DIR/$BINARY"
 echo "deadrop ${TAG} installed to ${INSTALL_DIR}/${BINARY}"
 
 if ! command -v deadrop &>/dev/null; then
-  SHELL_RC=""
-  case "${SHELL:-}" in
-    */zsh)  SHELL_RC="$HOME/.zshrc" ;;
-    */bash) SHELL_RC="$HOME/.bashrc" ;;
-    *)      SHELL_RC="$HOME/.profile" ;;
-  esac
-  printf "\n%s is not in your PATH. Add it now? [y/N] " "$INSTALL_DIR" >/dev/tty
-  read -r REPLY </dev/tty
-  if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-    echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "$SHELL_RC"
-    echo "Added to ${SHELL_RC}. Run: source ${SHELL_RC}"
+  if [ -t 1 ] && [ -z "${CI:-}" ] && [ -r /dev/tty ]; then
+    SHELL_RC=""
+    case "${SHELL:-}" in
+      */zsh)  SHELL_RC="$HOME/.zshrc" ;;
+      */bash) SHELL_RC="$HOME/.bashrc" ;;
+      *)      SHELL_RC="$HOME/.profile" ;;
+    esac
+    printf "\n%s is not in your PATH. Add it now? [y/N] " "$INSTALL_DIR" >/dev/tty
+    read -r REPLY </dev/tty
+    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+      echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "$SHELL_RC"
+      echo "Added to ${SHELL_RC}. Run: source ${SHELL_RC}"
+    else
+      echo "Skipped. Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
+    fi
   else
-    echo "Skipped. Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
+    echo "${INSTALL_DIR} is not in your PATH."
+    echo "Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
   fi
 fi
