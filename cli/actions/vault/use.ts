@@ -6,7 +6,10 @@ import { dirname } from 'path';
 import { exit } from 'process';
 import { DeadropConfig } from '@shared/types/config';
 
-export async function vaultUse(vaultNameInput: string) {
+export async function vaultUse(
+  vaultNameInput: string,
+  options: { environment?: string } = {},
+) {
   const { config, filepath: configPath } = await loadConfig();
 
   const { vaults, active_vault } = config;
@@ -21,7 +24,7 @@ export async function vaultUse(vaultNameInput: string) {
     return exit(1);
   }
 
-  if (vaultNameInput === active_vault.name) {
+  if (vaultNameInput === active_vault.name && !options.environment) {
     logInfo(
       `Vault '${chalk.bold(vaultNameInput)}' is already active...`,
     );
@@ -32,7 +35,7 @@ export async function vaultUse(vaultNameInput: string) {
     ...config,
     active_vault: {
       name: vaultNameInput,
-      environment: 'development',
+      environment: options.environment ?? active_vault.environment,
     },
     vaults,
   };
