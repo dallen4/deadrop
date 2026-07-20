@@ -69,7 +69,10 @@ deadrop
     'run a command with vault secrets injected as env vars',
   )
   .argument('<command...>', 'command to run (after --)')
-  .option('-v, --vault <name>', 'vault to inject')
+  .option(
+    '-v, --vault <name>',
+    'vault to inject (optional: defaults to your default vault)',
+  )
   .option('-e, --environment <env>', 'environment to inject')
   .option(
     '-c, --config <path>',
@@ -78,6 +81,10 @@ deadrop
   .option(
     '--no-override',
     'let existing env vars win over vault values',
+  )
+  .option(
+    '--refresh-token',
+    'mint a fresh read-only Turso token via /vault/tokens',
   )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
