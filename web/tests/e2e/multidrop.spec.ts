@@ -6,11 +6,7 @@ import {
   DROP_LINK_ID,
   DROP_SECRET_VALUE_ID,
 } from '../../lib/constants';
-import {
-  createContextForBrowser,
-  createPageForBrowser,
-  test,
-} from './util';
+import { createPeerPage, test } from './util';
 
 // multidrop fans a single secret out to many grabbers over one session.
 // Here we exercise a cap of 2: both grabbers must receive and verify the
@@ -27,16 +23,14 @@ test('drops one secret to two grabbers with a maxGrabbers cap of 2', async ({
   // 3 browsers + 2 sequential WebRTC grabs exceed the 30s default under slow CI signaling
   test.setTimeout(120_000);
 
-  const context = await createContextForBrowser(browser);
-
-  const dropperPage = dropBrowser
-    ? await createPageForBrowser(playwright[dropBrowser])
-    : await context.newPage();
+  const dropperPage = await createPeerPage(
+    browser,
+    playwright,
+    dropBrowser,
+  );
 
   const makeGrabberPage = () =>
-    grabBrowser
-      ? createPageForBrowser(playwright[grabBrowser])
-      : context.newPage();
+    createPeerPage(browser, playwright, grabBrowser);
 
   const secretValue = 'one secret, many grabbers';
 
@@ -103,9 +97,7 @@ test('drops one secret to two grabbers with a maxGrabbers cap of 2', async ({
     });
   });
 
-  await dropperPage.close();
-  await first.grabberPage.close();
-  await second.grabberPage.close();
-
-  await context.close();
+  await dropperPage.context().close();
+  await first.grabberPage.context().close();
+  await second.grabberPage.context().close();
 });

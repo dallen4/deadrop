@@ -56,22 +56,29 @@ const config: PlaywrightTestConfig<{
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
       dependencies: ['setup'],
+      // multidrop only needs its 3 distinct pairings; skip the redundant copy here
+      testIgnore: '**/multidrop.spec.ts',
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
       dependencies: ['setup'],
+      // Playwright's WebKit lacks working WebRTC, so P2P specs can't run here
+      testIgnore: ['**/multidrop.spec.ts', '**/drop-flow.spec.ts'],
     },
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
       dependencies: ['setup'],
+      testIgnore: '**/multidrop.spec.ts',
     },
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
       dependencies: ['setup'],
+      // WebKit engine: no working WebRTC, same as the webkit project
+      testIgnore: ['**/multidrop.spec.ts', '**/drop-flow.spec.ts'],
     },
     {
       name: 'Chrome to Firefox',
@@ -80,6 +87,8 @@ const config: PlaywrightTestConfig<{
         grabBrowser: 'firefox',
       },
       dependencies: ['setup'],
+      // cross-browser projects only vary the P2P specs; other specs would just re-run chromium
+      testMatch: ['**/drop-flow.spec.ts', '**/multidrop.spec.ts'],
     },
     {
       name: 'Firefox to Chrome',
@@ -88,6 +97,7 @@ const config: PlaywrightTestConfig<{
         grabBrowser: 'chromium',
       },
       dependencies: ['setup'],
+      testMatch: ['**/drop-flow.spec.ts', '**/multidrop.spec.ts'],
     },
     // WebKit cross-browser projects disabled due to Playwright
     // limitation: WebRTC ICE negotiation fails when WebKit runs
