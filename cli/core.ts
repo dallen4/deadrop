@@ -10,6 +10,8 @@ import { secretRemove } from 'actions/secret/remove';
 import {
   vaultCreate,
   vaultDelete,
+  vaultEnvAdd,
+  vaultEnvList,
   vaultExport,
   vaultImport,
   vaultSync,
@@ -63,12 +65,20 @@ deadrop
 
 deadrop
   .command('inject')
-  .description('run a command with vault secrets injected as env vars')
+  .description(
+    'run a command with vault secrets injected as env vars',
+  )
   .argument('<command...>', 'command to run (after --)')
   .option('-v, --vault <name>', 'vault to inject')
   .option('-e, --environment <env>', 'environment to inject')
-  .option('-c, --config <path>', 'explicit config file (JSON or YAML)')
-  .option('--no-override', 'let existing env vars win over vault values')
+  .option(
+    '-c, --config <path>',
+    'explicit config file (JSON or YAML)',
+  )
+  .option(
+    '--no-override',
+    'let existing env vars win over vault values',
+  )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
 
@@ -93,6 +103,7 @@ vaultRoot
   .command('use')
   .description('change the current active vault deadrop is using')
   .argument('<name>', 'name of the vault to switch to as active')
+  .option('-e, --environment <env>', 'environment to switch to')
   .action(vaultUse);
 
 vaultRoot
@@ -106,7 +117,10 @@ vaultRoot
   .command('export')
   .description('export all the secrets of the specified vault')
   .argument('<name>', 'name of the vault to export')
-  .argument('<destination>', 'path to write the exported .env file to')
+  .argument(
+    '<destination>',
+    'path to write the exported .env file to',
+  )
   .action(vaultExport);
 
 vaultRoot
@@ -124,6 +138,21 @@ vaultRoot
   )
   .argument('<name>', 'name of the vault to delete')
   .action(vaultDelete);
+
+const vaultEnvRoot = vaultRoot
+  .command('env')
+  .description('manage environments in the active vault');
+
+vaultEnvRoot
+  .command('list')
+  .description('list environments in the active vault')
+  .action(vaultEnvList);
+
+vaultEnvRoot
+  .command('add')
+  .description('add a new environment to the active vault')
+  .argument('<name>', 'name of the environment to add')
+  .action(vaultEnvAdd);
 
 // secrets commands
 

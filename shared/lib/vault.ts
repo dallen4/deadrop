@@ -13,6 +13,7 @@ export const vault = async (
   location: path,
   environments: {
     development: await initEnvKey(),
+    production: await initEnvKey(),
   },
 });
 
