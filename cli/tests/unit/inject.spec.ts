@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runWithEnv } from 'lib/process';
 
 describe('runWithEnv', () => {
@@ -68,8 +68,19 @@ vi.mock('lib/config', () => ({
   loadConfigFromPath: vi.fn(),
 }));
 
+vi.mock('lib/auth/vault-token', () => ({
+  mintVaultToken: vi.fn(),
+  VaultNotFoundError: class VaultNotFoundError extends Error {},
+}));
+
 describe('inject', () => {
   beforeEach(() => vi.clearAllMocks());
+
+  afterEach(() => {
+    delete process.env.DEADROP_VAULT_KEY;
+    delete process.env.DEADROP_VAULT;
+    delete process.env.DEADROP_ENVIRONMENT;
+  });
 
   it('exits 1 with no command', async () => {
     const { logError } = await import('lib/log');
@@ -85,17 +96,22 @@ describe('inject', () => {
     exitSpy.mockRestore();
   });
 
-  it('resolves the active vault/environment, runs the command, and closes the db', async () => {
+  it('resolves the active vault/environment, mints a token, runs the command, and closes the db', async () => {
     const { loadConfig } = await import('lib/config');
     const { initDBClient } = await import('db/init');
     const { createSecretsHelpers } = await import(
       '@shared/db/secrets'
     );
+    const { mintVaultToken } = await import('lib/auth/vault-token');
     const processModule = await import('lib/process');
     const { inject } = await import('actions/inject');
 
     const close = vi.fn();
     const secrets = { FOO: 'bar' };
+    const minted = {
+      authToken: 'minted-token',
+      syncUrl: 'libsql://default.turso.io',
+    };
 
     vi.mocked(loadConfig).mockResolvedValue({
       config: {
@@ -103,6 +119,7 @@ describe('inject', () => {
         vaults: { default: { location: './vault.db', environments: {} } },
       },
     } as any);
+    vi.mocked(mintVaultToken).mockResolvedValue(minted);
     vi.mocked(initDBClient).mockResolvedValue({
       $client: { close },
     } as any);
@@ -119,7 +136,11 @@ describe('inject', () => {
 
     await inject(['node', '-e', 'process.exit(3)'], { override: true });
 
-    expect(initDBClient).toHaveBeenCalledWith('./vault.db', undefined);
+    expect(mintVaultToken).toHaveBeenCalledWith('default');
+    expect(initDBClient).toHaveBeenCalledWith('./vault.db', {
+      name: 'default',
+      ...minted,
+    });
     expect(runWithEnvSpy).toHaveBeenCalledWith(
       'node',
       ['-e', 'process.exit(3)'],
@@ -132,6 +153,164 @@ describe('inject', () => {
     runWithEnvSpy.mockRestore();
   });
 
+  it('does not re-mint when the config already has a token', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } = await import(
+      '@shared/db/secrets'
+    );
+    const { mintVaultToken } = await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    const close = vi.fn();
+    const cloud = {
+      name: 'default',
+      syncUrl: 'libsql://default.turso.io',
+      authToken: 'existing-token',
+    };
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: {
+          default: { location: './vault.db', environments: {}, cloud },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+    await inject(['node'], { override: true });
+
+    expect(mintVaultToken).not.toHaveBeenCalled();
+    expect(initDBClient).toHaveBeenCalledWith('./vault.db', cloud);
+  });
+
+  it('--refresh-token forces a re-mint even when a token exists', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } = await import(
+      '@shared/db/secrets'
+    );
+    const { mintVaultToken } = await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    const close = vi.fn();
+    const cloud = {
+      name: 'default',
+      syncUrl: 'libsql://default.turso.io',
+      authToken: 'existing-token',
+    };
+    const minted = {
+      authToken: 'refreshed-token',
+      syncUrl: 'libsql://default.turso.io',
+    };
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: {
+          default: { location: './vault.db', environments: {}, cloud },
+        },
+      },
+    } as any);
+    vi.mocked(mintVaultToken).mockResolvedValue(minted);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+    await inject(['node'], { override: true, refreshToken: true });
+
+    expect(mintVaultToken).toHaveBeenCalledWith('default');
+    expect(initDBClient).toHaveBeenCalledWith('./vault.db', {
+      name: 'default',
+      ...minted,
+    });
+  });
+
+  it('surfaces VaultNotFoundError cleanly instead of the generic message', async () => {
+    const { logError } = await import('lib/log');
+    const { loadConfig } = await import('lib/config');
+    const { mintVaultToken, VaultNotFoundError } = await import(
+      'lib/auth/vault-token'
+    );
+    const { inject } = await import('actions/inject');
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: { default: { location: './vault.db', environments: {} } },
+      },
+    } as any);
+    vi.mocked(mintVaultToken).mockRejectedValue(
+      new VaultNotFoundError("Vault 'default' not found."),
+    );
+
+    const exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation(() => {
+        throw new Error('exit');
+      });
+
+    await expect(inject(['node'], { override: true })).rejects.toThrow(
+      'exit',
+    );
+
+    expect(logError).toHaveBeenCalledWith("Vault 'default' not found.");
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    exitSpy.mockRestore();
+  });
+
+  it('config-free: resolves vault from env vars without loadConfig', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } = await import(
+      '@shared/db/secrets'
+    );
+    const { mintVaultToken } = await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    const close = vi.fn();
+    const secrets = { FOO: 'bar' };
+    const minted = {
+      authToken: 'minted-token',
+      syncUrl: 'libsql://default.turso.io',
+    };
+
+    process.env.DEADROP_VAULT_KEY = 'aes-key';
+    process.env.DEADROP_ENVIRONMENT = 'production';
+
+    vi.mocked(mintVaultToken).mockResolvedValue(minted);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue(secrets),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+    await inject(['node'], { override: true });
+
+    expect(loadConfig).not.toHaveBeenCalled();
+    // Default vault: no name given via -v or DEADROP_VAULT.
+    expect(mintVaultToken).toHaveBeenCalledWith(undefined);
+  });
+
   it('exits 127 with a clean error when the command is not found', async () => {
     const { logError } = await import('lib/log');
     const { loadConfig } = await import('lib/config');
@@ -139,6 +318,7 @@ describe('inject', () => {
     const { createSecretsHelpers } = await import(
       '@shared/db/secrets'
     );
+    const { mintVaultToken } = await import('lib/auth/vault-token');
     const processModule = await import('lib/process');
     const { inject } = await import('actions/inject');
 
@@ -150,6 +330,10 @@ describe('inject', () => {
         vaults: { default: { location: './vault.db', environments: {} } },
       },
     } as any);
+    vi.mocked(mintVaultToken).mockResolvedValue({
+      authToken: 'minted-token',
+      syncUrl: 'libsql://default.turso.io',
+    });
     vi.mocked(initDBClient).mockResolvedValue({
       $client: { close },
     } as any);

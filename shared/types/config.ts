@@ -14,7 +14,7 @@ export type VaultEnvironments = {
 export type CloudVaultConfig = {
   name: string;
   syncUrl: string;
-  authToken: string;
+  authToken?: string;
 };
 
 export type VaultDBConfig = {

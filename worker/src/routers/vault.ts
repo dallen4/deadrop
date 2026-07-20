@@ -5,6 +5,7 @@ import { hono } from '../lib/http/core';
 import {
   createVaultUtils,
   vaultNameFromUserId,
+  TursoApiError,
 } from '@shared/lib/turso';
 import {
   authenticated,
@@ -17,6 +18,7 @@ const CreateVaultSchema = VaultNameSchema.partial().extend({
   seed: z.enum(['database_upload']).optional(),
 });
 const VaultOwnerSchema = z.object({ userId: z.string() });
+const VaultTokenSchema = z.object({ name: z.string().optional() });
 
 const vaultRouter = hono()
   .post(
@@ -61,13 +63,13 @@ const vaultRouter = hono()
     },
   )
   .post(
-    AppRouteParts.Share,
+    AppRouteParts.Tokens,
     restricted({ allowApiKey: true }),
-    zValidator('json', VaultNameSchema),
+    zValidator('json', VaultTokenSchema),
     async (c) => {
       const userId = c.get('userId')!;
 
-      const { createVaultToken } = createVaultUtils(
+      const { createVaultToken, getVault } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
@@ -77,10 +79,23 @@ const vaultRouter = hono()
       try {
         const vaultName = await vaultNameFromUserId(userId!, name);
 
-        const token = await createVaultToken(vaultName, 'read-only');
+        const [vault, token] = await Promise.all([
+          getVault(vaultName),
+          createVaultToken(vaultName, 'read-only'),
+        ]);
 
-        return c.json({ token }, 201);
+        return c.json({ token, hostname: vault?.Hostname }, 201);
       } catch (error) {
+        if (error instanceof TursoApiError && error.status === 404) {
+          return c.json(
+            {
+              error: name
+                ? `Vault '${name}' not found.`
+                : 'No default vault found for this account.',
+            },
+            404,
+          );
+        }
         return c.json(
           { error: `Unexpected error: ${(error as Error).message}` },
           500,
