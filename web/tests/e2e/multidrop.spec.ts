@@ -24,6 +24,9 @@ test('drops one secret to two grabbers with a maxGrabbers cap of 2', async ({
   dropBrowser,
   grabBrowser,
 }) => {
+  // 3 browsers + 2 sequential WebRTC grabs exceed the 30s default under slow CI signaling
+  test.setTimeout(120_000);
+
   const context = await createContextForBrowser(browser);
 
   const dropperPage = dropBrowser
