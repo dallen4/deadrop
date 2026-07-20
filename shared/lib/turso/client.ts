@@ -1,5 +1,17 @@
 const BASE = 'https://api.turso.tech/v1/organizations';
 
+export class TursoApiError extends Error {
+  constructor(
+    public readonly status: number,
+    method: string,
+    path: string,
+    body: string,
+  ) {
+    super(`Turso API ${method} ${path} (${status}): ${body}`);
+    this.name = 'TursoApiError';
+  }
+}
+
 export type TursoClient = ReturnType<typeof createTursoClient>;
 
 export const createTursoClient = (
@@ -26,9 +38,7 @@ export const createTursoClient = (
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(
-        `Turso API ${method} ${path} (${res.status}): ${text}`,
-      );
+      throw new TursoApiError(res.status, method, path, text);
     }
 
     const contentType = res.headers.get('content-type');

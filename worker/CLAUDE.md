@@ -21,7 +21,7 @@ worker/
 │   │   ├── auth.ts           # Clerk auth endpoints
 │   │   ├── peers.ts          # PeerJS signaling (upgrades to WebSocket → Durable Object)
 │   │   ├── drop.ts           # Drop CRUD (Redis-backed)
-│   │   └── vault.ts          # Vault create/share/get/delete/lock/unlock (Turso via @shared/lib/turso)
+│   │   └── vault.ts          # Vault create/tokens/get/delete/lock/unlock (Turso via @shared/lib/turso)
 │   └── lib/
 │       ├── http/core.ts      # Hono instance + custom context/middleware types
 │       ├── middleware.ts     # cors, tracing, redis, authenticated(), restricted(), service()
@@ -52,7 +52,7 @@ worker/
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
 | POST | `/vault` | Create a Turso vault database (`restricted()`) |
-| POST | `/vault/share` | Share a vault with another user (`restricted()`) |
+| POST | `/vault/tokens` | Mint a read-only Turso token for a vault (`restricted({ allowApiKey: true })`) |
 | GET | `/vault/:name` | Get vault metadata (`authenticated()`) |
 | DELETE | `/vault/:name` | Delete a vault (`restricted()`) |
 | POST | `/vault/lock` | Lock all of a user's vaults on cancel (`service()`, `{ userId }`) |
@@ -88,7 +88,7 @@ worker/
 
 ### Vaults — Turso
 - Provisioning + lifecycle live in `shared/lib/turso/` (`createVaultUtils`) — see `shared/lib/turso/CLAUDE.md`. The former `worker/src/lib/vault.ts` was collapsed into it.
-- `vault.ts` router: create/share/get are `restricted()`/`authenticated()` (early-access/internal, per-user Clerk claim); `lock`/`unlock` are `service()`-gated for billing webhooks
+- `vault.ts` router: create/tokens/get are `restricted()`/`authenticated()` (early-access/internal, per-user Clerk claim; `/vault/tokens` also allows `DEADROP_API_KEY` via `allowApiKey: true`, for CI/`inject`); `lock`/`unlock` are `service()`-gated for billing webhooks
 - Cancel-on-billing fans out over **all** of a user's vaults via `listVaults(<hash13>)`; org-payer cancellations are a known gap (vaults are named per user, not per org)
 
 ### Billing/plans (`src/lib/billing.ts`)

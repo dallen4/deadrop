@@ -3,7 +3,7 @@ import { createTursoClient } from './client';
 import { createLifecycleHandlers } from './lifecycle';
 import { createProvisionHandlers } from './provision';
 
-export { createTursoClient } from './client';
+export { createTursoClient, TursoApiError } from './client';
 export type { TursoClient } from './client';
 export { createProvisionHandlers } from './provision';
 export { createLifecycleHandlers } from './lifecycle';
