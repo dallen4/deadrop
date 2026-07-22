@@ -2,6 +2,10 @@ import { PlaywrightTestConfig, devices } from '@playwright/test';
 import path from 'path';
 import { baseURL, isLocal, runAuthTests } from './tests/e2e/config';
 
+const authIgnore = runAuthTests
+  ? []
+  : ['**/stripe-*.spec.ts', '**/clerk-*.spec.ts'];
+
 const server: PlaywrightTestConfig['webServer'] = {
   command: 'pnpm start',
   url: baseURL,
@@ -21,9 +25,7 @@ const config: PlaywrightTestConfig<{
   // Auth-dependent specs only run when runAuthTests (alpha/main, and not
   // hard-disabled via SKIP_AUTH_TESTS). Everywhere else they're ignored so
   // the drop-flow suite runs Clerk-free
-  testIgnore: runAuthTests
-    ? []
-    : ['**/stripe-*.spec.ts', '**/clerk-*.spec.ts'],
+  testIgnore: authIgnore,
   retries: 2,
   outputDir: 'test-results/',
   expect: {},
@@ -57,28 +59,36 @@ const config: PlaywrightTestConfig<{
       use: { ...devices['Desktop Firefox'] },
       dependencies: ['setup'],
       // multidrop only needs its 3 distinct pairings; skip the redundant copy here
-      testIgnore: '**/multidrop.spec.ts',
+      testIgnore: ['**/multidrop.spec.ts', ...authIgnore],
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
       dependencies: ['setup'],
       // Playwright's WebKit lacks working WebRTC, so P2P specs can't run here
-      testIgnore: ['**/multidrop.spec.ts', '**/drop-flow.spec.ts'],
+      testIgnore: [
+        '**/multidrop.spec.ts',
+        '**/drop-flow.spec.ts',
+        ...authIgnore,
+      ],
     },
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
       dependencies: ['setup'],
-      testIgnore: '**/multidrop.spec.ts',
+      testIgnore: ['**/multidrop.spec.ts', ...authIgnore],
     },
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 12'] },
       dependencies: ['setup'],
       // WebKit engine: no working WebRTC, same as the webkit project
-      testIgnore: ['**/multidrop.spec.ts', '**/drop-flow.spec.ts'],
+      testIgnore: [
+        '**/multidrop.spec.ts',
+        '**/drop-flow.spec.ts',
+        ...authIgnore,
+      ],
     },
     {
       name: 'Chrome to Firefox',
