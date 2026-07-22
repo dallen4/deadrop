@@ -121,7 +121,16 @@ describe('inject', () => {
     vi.mocked(loadConfig).mockResolvedValue({
       config: {
         active_vault: { name: 'default', environment: 'dev' },
-        vaults: { default: { location: './vault.db', environments: {} } },
+        vaults: {
+          default: {
+            location: './vault.db',
+            environments: {},
+            cloud: {
+              name: 'default',
+              syncUrl: 'libsql://default.turso.io',
+            },
+          },
+        },
       },
     } as any);
     vi.mocked(mintVaultToken).mockResolvedValue(minted);
@@ -198,6 +207,39 @@ describe('inject', () => {
     expect(initDBClient).toHaveBeenCalledWith('./vault.db', cloud);
   });
 
+  it('local vault (no cloud config): does not mint, reads locally', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } = await import(
+      '@shared/db/secrets'
+    );
+    const { mintVaultToken } = await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: {
+          default: { location: './vault.db', environments: {} },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+    await inject(['node'], { override: true });
+
+    expect(mintVaultToken).not.toHaveBeenCalled();
+    expect(initDBClient).toHaveBeenCalledWith('./vault.db', undefined);
+  });
+
   it('--refresh-token forces a re-mint even when a token exists', async () => {
     const { loadConfig } = await import('lib/config');
     const { initDBClient } = await import('db/init');
@@ -257,7 +299,16 @@ describe('inject', () => {
     vi.mocked(loadConfig).mockResolvedValue({
       config: {
         active_vault: { name: 'default', environment: 'dev' },
-        vaults: { default: { location: './vault.db', environments: {} } },
+        vaults: {
+          default: {
+            location: './vault.db',
+            environments: {},
+            cloud: {
+              name: 'default',
+              syncUrl: 'libsql://default.turso.io',
+            },
+          },
+        },
       },
     } as any);
     vi.mocked(mintVaultToken).mockRejectedValue(

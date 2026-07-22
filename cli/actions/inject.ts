@@ -92,7 +92,9 @@ export async function inject(
     await resolveVault(options);
 
   let cloud = vault.cloud;
-  if (!cloud || !cloud.authToken || options.refreshToken) {
+  // only cloud vaults or the config-free CI path mint a token
+  const usesCloud = ephemeral || !!cloud;
+  if (usesCloud && (!cloud?.authToken || options.refreshToken)) {
     let minted;
     try {
       minted = await mintVaultToken(vaultName);
