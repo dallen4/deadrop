@@ -93,7 +93,7 @@ Hono routes:
 
 ### CLI (`cli/`)
 
-- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `vault` (create/use/sync/export/import/delete), `secret` (add/remove)
+- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `vault` (create/use/sync/export/import/delete/env), `secret` (add/remove)
 - Local secrets storage: Drizzle ORM + SQLite (libsql)
 - Build: esbuild → `dist/deadrop.js`; optional standalone binary via nexe
 

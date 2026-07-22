@@ -47,12 +47,14 @@ deadrop update           # Update to the latest version (npm or standalone binar
 deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
 deadrop inject           # Run a command with vault secrets injected as env vars
-deadrop vault create    # Create a local vault
-deadrop vault use       # Switch active vault
+deadrop vault create    # Create a local vault (seeds development + production envs)
+deadrop vault use       # Switch active vault (--environment to also switch env)
 deadrop vault sync      # Sync vault ↔ .env file
 deadrop vault export
 deadrop vault import
 deadrop vault delete
+deadrop vault env list  # List environments in the active vault
+deadrop vault env add   # Add a new environment (fresh key) to the active vault
 deadrop secret add      # Add secret to vault
 deadrop secret remove
 ```

@@ -63,6 +63,10 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 - **Multi-recipient drops** (Supporter+): send the same secret to multiple grabbers in one session. Free plan is capped at 1 grabber. [#6](https://github.com/dallen4/deadrop/issues/6)
 
+### CI/CD
+
+- **CI service tokens**: `deadrop inject` mints short-lived, read-only vault tokens for non-interactive build pipelines (via `DEADROP_API_KEY` and config-free env vars), replacing the long-lived token in a CI config. Currently gated to early-access accounts.
+
 <DocsSectionTitle
   id={'in-progress'}
   label={'🛠️ In progress'}
@@ -93,7 +97,6 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 ### CI/CD
 
-- **Service tokens** (Supporter+): short-lived, revocable non-interactive vault access for build pipelines, replacing the long-lived token in a CI config. [#62](https://github.com/dallen4/deadrop/issues/62) [#25](https://github.com/dallen4/deadrop/issues/25)
 - **GitHub Action**: composite action wrapping `deadrop inject`, with masked log output. GitLab CI template and CircleCI orb to follow.
 
 ### Distribution
