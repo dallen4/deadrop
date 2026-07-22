@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { existsSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { runWithEnv } from 'lib/process';
+
+const REPLICA_SIDECARS = ['', '-wal', '-shm', '-info'];
 
 describe('runWithEnv', () => {
   it('injects secrets into the child process env', async () => {
@@ -355,5 +360,92 @@ describe('inject', () => {
     expect(exitSpy).toHaveBeenCalledWith(127);
     exitSpy.mockRestore();
     runWithEnvSpy.mockRestore();
+  });
+
+  it('config-free: removes the temp replica and its sidecars on exit', async () => {
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } = await import(
+      '@shared/db/secrets'
+    );
+    const { mintVaultToken } = await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    process.env.DEADROP_VAULT_KEY = 'aes-key';
+    process.env.DEADROP_ENVIRONMENT = 'production';
+
+    // initDBClient receives the temp path inject chose; write the real db
+    // plus sync sidecars there so the cleanup runs against real files.
+    let replicaPath = '';
+    vi.mocked(initDBClient).mockImplementation(async (path: string) => {
+      replicaPath = path;
+      for (const suffix of REPLICA_SIDECARS)
+        writeFileSync(`${path}${suffix}`, 'x');
+      return { $client: { close: vi.fn() } } as any;
+    });
+    vi.mocked(mintVaultToken).mockResolvedValue({
+      authToken: 'minted-token',
+      syncUrl: 'libsql://default.turso.io',
+    });
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({ FOO: 'bar' }),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+    await inject(['node'], { override: true });
+
+    expect(replicaPath).toContain('deadrop-inject-');
+    for (const suffix of REPLICA_SIDECARS)
+      expect(existsSync(`${replicaPath}${suffix}`)).toBe(false);
+  });
+
+  it('config-based: never deletes the real vault db file', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } = await import(
+      '@shared/db/secrets'
+    );
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    const vaultDb = join(
+      tmpdir(),
+      `deadrop-real-vault-${Date.now()}.db`,
+    );
+    writeFileSync(vaultDb, 'real-vault-data');
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: {
+          default: {
+            location: vaultDb,
+            environments: {},
+            // Cached token present, so inject won't try to re-mint.
+            cloud: {
+              name: 'default',
+              syncUrl: 'libsql://default.turso.io',
+              authToken: 'cached-token',
+            },
+          },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+    try {
+      await inject(['node'], { override: true });
+      expect(existsSync(vaultDb)).toBe(true);
+    } finally {
+      rmSync(vaultDb, { force: true });
+    }
   });
 });

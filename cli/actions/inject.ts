@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import { rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { initDBClient } from 'db/init';
@@ -21,7 +22,17 @@ type InjectOptions = {
   verbose?: boolean;
 };
 
-async function resolveVault(options: InjectOptions) {
+type ResolvedVault = {
+  vaultName?: string;
+  environment: string;
+  vault: VaultDBConfig;
+  // vault.location is a temp replica we own and must clean up on exit.
+  ephemeral: boolean;
+};
+
+async function resolveVault(
+  options: InjectOptions,
+): Promise<ResolvedVault> {
   const decryptionKey = process.env.DEADROP_VAULT_KEY;
 
   // Config-free path: DEADROP_VAULT_KEY present means CI is supplying
@@ -48,7 +59,7 @@ async function resolveVault(options: InjectOptions) {
       environments: { [environment]: decryptionKey },
     };
 
-    return { vaultName, environment, vault };
+    return { vaultName, environment, vault, ephemeral: true };
   }
 
   const { config } = options.config
@@ -65,7 +76,7 @@ async function resolveVault(options: InjectOptions) {
     process.exit(1);
   }
 
-  return { vaultName, environment, vault };
+  return { vaultName, environment, vault, ephemeral: false };
 }
 
 export async function inject(
@@ -77,7 +88,8 @@ export async function inject(
     process.exit(1);
   }
 
-  const { vaultName, environment, vault } = await resolveVault(options);
+  const { vaultName, environment, vault, ephemeral } =
+    await resolveVault(options);
 
   let cloud = vault.cloud;
   if (!cloud || !cloud.authToken || options.refreshToken) {
@@ -113,16 +125,21 @@ export async function inject(
   if (options.verbose && names.length)
     logInfo(`Variables: ${names.join(', ')}`);
 
+  let exitCode = 0;
   try {
     const [cmd, ...args] = command;
-    const exitCode = await runWithEnv(cmd, args, secrets, {
+    exitCode = await runWithEnv(cmd, args, secrets, {
       override: options.override,
     });
-    process.exit(exitCode);
   } catch (err) {
     logError((err as Error).message);
-    process.exit(127);
+    exitCode = 127;
   } finally {
     db.$client.close();
+    // Remove the throwaway CI replica (db + sync sidecars); never a real vault.
+    if (ephemeral)
+      for (const suffix of ['', '-wal', '-shm', '-info'])
+        rmSync(`${vault.location}${suffix}`, { force: true });
   }
+  process.exit(exitCode);
 }
