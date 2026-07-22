@@ -8,53 +8,19 @@ Core library consumed by `web/`, `cli/`, and `vscode-extension/`. Provides crypt
 
 ```
 shared/
-├── types/              # TypeScript type definitions
-│   ├── drop.ts         # DropContext, DropEvent, drop session types
-│   ├── grab.ts         # GrabContext, GrabEvent, grab session types
-│   ├── common.ts       # BaseContext, BaseHandlerInputs, file types
-│   ├── peer.ts         # PeerJS type extensions
-│   ├── messages.ts     # P2P protocol message types
-│   ├── config.ts       # VaultStore, ConfigFile types
-│   ├── db.ts           # Database schema types
-│   ├── fetch.ts        # API request/response types
-│   └── global.d.ts     # Global type augmentations
-├── config/             # Shared configuration constants
-│   ├── crypto.ts       # Crypto algorithm parameters (key sizes, algorithms)
-│   ├── paths.ts        # File/folder path constants
-│   ├── files.ts        # File-related constants
+├── types/              # drop/grab/peer/message/config/db/fetch types — one file per domain
+├── config/             # crypto params, paths, file constants, plus:
 │   ├── plans.ts        # PLAN_SLUGS/FEATURE_SLUGS/PLAN_LIMITS — billing source of truth
-│   └── tiers.ts        # Pricing-page tier definitions (web-facing copy, not enforcement)
-├── handlers/           # Platform-agnostic drop/grab session orchestration
-│   ├── drop.ts         # createDropHandlers() — used by web/hooks/use-drop.tsx & cli/actions/drop.ts
-│   └── grab.ts         # createGrabHandlers() — used by web/hooks/use-grab.tsx & cli/actions/grab.ts
-├── lib/                # Core implementations
-│   ├── machines/
-│   │   ├── drop.ts     # dropMachine (XState v4), initDropContext()
-│   │   └── grab.ts     # grabMachine (XState v4)
-│   ├── crypto/
-│   │   ├── index.ts    # getCrypto(), getSubtle(), BaseCrypto type
-│   │   └── operations.ts  # ECDH key exchange, AES-256-GCM, SHA-256 helpers
-│   ├── messages.ts     # P2P message serialization + validation
-│   ├── secrets.ts      # Secret encryption utilities
-│   ├── vault.ts        # Vault operations (consumed by cli/web vault flows)
-│   ├── turso.ts        # Turso HTTP API helpers (vault databases)
-│   ├── redis.ts        # Upstash Redis client helper (test-token hydration, etc.)
-│   ├── peer.ts         # PeerJS initialization helper
-│   ├── data.ts         # Data transformation utilities
-│   ├── fetch.ts        # Fetch wrapper types/helpers
-│   ├── constants.ts    # DropState enum, DropEventType enum, shared constants
-│   └── util.ts         # General utility functions
+│   └── tiers.ts        # Pricing-page tier copy (web-facing only, not enforcement)
+├── handlers/           # createDropHandlers()/createGrabHandlers() — see Handler Factories below
+├── lib/
+│   ├── machines/       # dropMachine/grabMachine (XState v4) — see XState Machines below
+│   ├── crypto/         # getCrypto()/getSubtle() + ECDH/AES-256-GCM/SHA-256 ops — see Crypto below
+│   ├── turso/          # Turso vault provisioning/lifecycle — own CLAUDE.md, read it before touching
+│   └── ...             # messages, secrets, vault, redis, peer, data, fetch, constants, util
 ├── db/                 # Drizzle schema shared between cli (libsql) and worker (vault provisioning)
-│   ├── schema.ts        # secretsTable
-│   ├── secrets.ts
-│   ├── init.ts
-│   └── migrate.ts
-├── tests/
-│   ├── lib/            # Vitest specs (crypto.spec.ts, etc.)
-│   ├── mocks/          # Test mocks and fixtures (constants.ts)
-│   └── http.ts         # TEST_TOKEN_COOKIE/TEST_TOKEN_HEADER/TEST_FLAG_COOKIE — e2e test-bypass constants
-├── scripts/
-│   └── hydrate-test-token.ts  # Seeds the stable e2e DROP_TEST_TOKEN into Redis
+├── tests/lib/ + mocks/ # Vitest specs + fixtures; tests/http.ts has the e2e test-bypass constants
+├── scripts/hydrate-test-token.ts  # Seeds the stable e2e DROP_TEST_TOKEN into Redis
 ├── client.ts           # createClient() + DeadropApiClient type
 └── tsconfig.json
 ```
@@ -114,6 +80,8 @@ Both machines use XState v4 (not v5):
 ## Handler Factories (`shared/handlers/`)
 
 `createDropHandlers`/`createGrabHandlers` own *all* session orchestration (peer init, key exchange, message send/receive, machine event dispatch) and build a Hono client from `apiUri`/`apiHeaders`. Both `web/hooks/use-drop.tsx`/`use-grab.tsx` and `cli/actions/drop.ts`/`grab.ts` are thin adapters that supply platform-specific I/O (logger, file encrypt/decrypt, `initPeer`, `apiHeaders`) and otherwise just call `init()`. Never duplicate this orchestration logic in `web/` or `cli/` — extend the handler factory instead.
+
+**Multidrop**: `createDropHandlers` tracks each grabber independently in `ctx.grabbers` (a `Map<grabberId, Grabber>`), each with its own `GrabberStatus` (`connected` → `transferring` → `confirmed`/`failed`) and retry timers scoped per grabber, so one slow/failed grabber never blocks or corrupts another's handshake. The dropper accepts grabbers up to `maxGrabbers` (server-enforced in `worker/src/lib/billing.ts`'s `checkMaxGrabbers`, plan cap with an `early_access`/`internal` bypass) and the session completes/cleans up once every grabber reaches a terminal status.
 
 `apiHeaders` on `BaseHandlerInputs` (`shared/types/common.ts`) accepts either a plain object or a `() => Record<string,string> | Promise<Record<string,string>>` — the function form exists because web's Clerk token has to be fetched fresh per request (`useApiHeaders()`).
 

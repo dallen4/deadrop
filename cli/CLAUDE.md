@@ -16,70 +16,21 @@ pnpm release    # build + npm publish
 
 ```
 cli/
-├── index.ts              # Entry point (shebang, signal handlers, bootstrap)
-├── core.ts               # Commander.js CLI definition (all commands)
-├── actions/              # Command handler implementations
-│   ├── drop.ts           # drop command → drives dropMachine (XState)
-│   ├── grab.ts           # grab command → drives grabMachine (XState)
-│   ├── inject.ts         # inject: run <cmd> with vault secrets as env vars, no file on disk
-│   ├── init.ts           # init: CLI setup wizard
-│   ├── login.ts          # login: Clerk auth
-│   ├── logout.ts
-│   ├── update.ts         # update: self-update (npm or binary path via lib/update/)
-│   ├── vault/            # vault subcommands
-│   │   ├── create.ts
-│   │   ├── use.ts
-│   │   ├── sync.ts       # sync vault with .env file
-│   │   ├── export.ts
-│   │   ├── import.ts
-│   │   ├── delete.ts
-│   │   └── index.ts
-│   └── secret/           # secret subcommands
-│       ├── add.ts
-│       └── remove.ts
-├── logic/
-│   └── drop.ts           # Drop session workflow helpers
+├── index.ts        # Entry point (shebang, signal handlers, bootstrap)
+├── core.ts         # Commander.js CLI definition (all commands)
+├── actions/        # One handler file per command/subcommand — see "CLI Commands" below for the full list
+├── logic/          # Workflow helpers kept out of actions/ (currently just drop session logic)
 ├── lib/
-│   ├── api.ts            # deadropFactory singleton client (not used by drop/grab — see below)
-│   ├── auth/
-│   │   ├── clerk.ts       # Clerk client for Node.js + getSessionToken() (shared by drop/grab actions)
-│   │   ├── cache.ts       # Token caching (filesystem)
-│   │   ├── localhostServer.tsx # Loopback HTTP server for the `login` OAuth callback
-│   │   └── snippets.tsx
-│   ├── peer.ts            # PeerJS init with @roamhq/wrtc (Node.js WebRTC)
-│   ├── session.ts         # Session management helpers
-│   ├── crypto.ts          # CLI-specific crypto utilities
-│   ├── env.ts             # Env var resolution
-│   ├── config.ts          # CLI config file (~/.deadrop); loadConfigFromPath for --config
-│   ├── process.ts         # runWithEnv: spawn a child with injected env, forward signals/exit code
-│   ├── files.ts           # File read/write helpers (file-mode drop/grab)
-│   ├── log/
-│   │   ├── index.ts       # Logger setup
-│   │   ├── text.ts        # chalk text formatting
-│   │   └── loader.ts      # Ora spinners
-│   ├── update/
-│   │   ├── version.ts     # GitHub release / npm registry latest-version lookups
-│   │   ├── binary.ts      # Binary-install self-update (download, checksum, atomic replace)
-│   │   ├── npm.ts         # npm-install update (package manager detection + global install)
-│   │   ├── download.ts    # Streamed download + progress bar rendering
-│   │   └── checksum.ts    # SHA-256 verification helpers
-│   ├── constants.ts
-│   └── util.ts            # Node.js utilities
-├── db/
-│   ├── init.ts           # Drizzle schema init + migrations
-│   ├── vaults.ts         # Vault table schema
-│   └── migrations/       # Drizzle migration files
-├── scripts/
-│   ├── esbuild.js        # esbuild config (bundles to dist/deadrop.js)
-│   ├── prebuild.sh
-│   ├── postversion.sh
-│   ├── prepublish.sh
-│   └── postpublish.sh
+│   ├── auth/       # clerk.ts (getSessionToken(), see Key Patterns) + cache.ts (OS keychain via keytar/Bun.secrets — never plaintext) + the login OAuth loopback server
+│   ├── update/     # Self-update: binary.ts (download+checksum+atomic replace) vs npm.ts (package-manager detection), shared by version.ts/download.ts/checksum.ts
+│   ├── process.ts  # runWithEnv: spawns a child with injected env, forwards signals/exit code
+│   ├── config.ts   # CLI config file (~/.deadrop); loadConfigFromPath for --config
+│   └── ...         # crypto.ts, env.ts, files.ts, peer.ts, log/ — platform-specific I/O, see Key Patterns
+├── db/             # Drizzle schema (vaults.ts) + migrations/, initialized via init.ts at startup
+├── scripts/        # esbuild config + npm release lifecycle scripts
 ├── tests/
-│   ├── unit/             # Vitest unit tests (crypto.spec.ts)
-│   ├── e2e/              # CLI-to-CLI drop/grab e2e (vitest.e2e.config.mts), run via `tests/` workspace too
-│   ├── runLocal.ts       # Local integration test helper
-│   └── injectDryrun.ts   # Dry-run injection for tests
+│   ├── e2e/        # CLI-to-CLI drop/grab e2e — also run via the tests/ workspace
+│   └── unit/
 ├── drizzle.config.ts
 ├── tsconfig.json
 └── vitest.config.mts
@@ -91,16 +42,19 @@ cli/
 deadrop init            # First-time setup
 deadrop login           # Authenticate with Clerk
 deadrop logout
+deadrop whoami           # Check signed-in identity
 deadrop update           # Update to the latest version (npm or standalone binary)
 deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
 deadrop inject           # Run a command with vault secrets injected as env vars
-deadrop vault create    # Create a local vault
-deadrop vault use       # Switch active vault
+deadrop vault create    # Create a local vault (seeds development + production envs)
+deadrop vault use       # Switch active vault (--environment to also switch env)
 deadrop vault sync      # Sync vault ↔ .env file
 deadrop vault export
 deadrop vault import
 deadrop vault delete
+deadrop vault env list  # List environments in the active vault
+deadrop vault env add   # Add a new environment (fresh key) to the active vault
 deadrop secret add      # Add secret to vault
 deadrop secret remove
 ```

@@ -4,8 +4,13 @@ import { randomBytes } from 'crypto';
 import nextSafe from 'next-safe';
 import nextMdx from '@next/mdx';
 import nextTranspileModules from 'next-transpile-modules';
+import remarkGfm from 'remark-gfm';
 
-const withMdx = nextMdx();
+const withMdx = nextMdx({
+  options: {
+    remarkPlugins: [remarkGfm],
+  },
+});
 const withTM = nextTranspileModules(['shared']);
 
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/

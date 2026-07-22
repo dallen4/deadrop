@@ -1,5 +1,5 @@
 import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
-import { BlockCode } from 'atoms/Code';
+import { CopyableCode } from 'atoms/Code';
 import { INSTALL_COMMAND } from 'molecules/HeroBanner';
 
 # ⌨️ deadrop CLI
@@ -15,7 +15,10 @@ The CLI gives you everything the web app does (dropping and grabbing) plus local
 
 Downloads the prebuilt binary for your platform into your home directory. No Node.js required.
 
-<BlockCode>{INSTALL_COMMAND}</BlockCode>
+<CopyableCode
+  value={INSTALL_COMMAND}
+  ariaLabel={'Copy install command'}
+/>
 
 If you are interested in the logic of the script, you can view it at `deadrop.io/install.sh`. It handles installing the appropriate binary for your platform and places it in your home directory for you.
 
@@ -45,13 +48,13 @@ For the npm install path: Node.js 20 or newer. The install.sh binary has no runt
 Share a secret in one terminal:
 
 ```
-$ deadrop drop "my-database-password"
+deadrop drop "my-database-password"
 ```
 
 Grab it in another (using the drop ID printed by the dropper):
 
 ```
-$ deadrop grab <drop_id>
+deadrop grab <drop_id>
 ```
 
 That's it. The two sessions complete a peer-to-peer handoff, the secret prints in the grabber's terminal, and both sessions exit.
@@ -69,17 +72,21 @@ deadrop init
 
 This creates a config file (default location is `.deadrop/` in your home directory) and your first local vault. The config tracks which vault is active and stores per-vault metadata:
 
-```
-active_vault:
+<CopyableCode
+  value={`active_vault:
   name: default
-  environment: dev
+  environment: development
 vaults:
   default:
     location: /<path-to-vault>/default.db
-    key: <base64-key>
-```
+    environments:
+      development: <base64-key>
+      production: <base64-key>`}
+  prompt={false}
+  ariaLabel={'Copy config'}
+/>
 
-The `key` is the encryption key for the local SQLite vault file. Treat it like any other secret. Never commit your `.deadrop/` directory.
+New vaults are seeded with `development` and `production` environments, each with its own encryption key for the local SQLite vault file. Treat those keys like any other secret. Never commit your `.deadrop/` directory.
 
 <DocsSectionTitle
   id={'authentication'}
@@ -105,9 +112,11 @@ Tokens are stored in your OS keychain (macOS Keychain, Linux Secret Service via 
 
 Share a secret with a single recipient over an end-to-end encrypted P2P connection.
 
-```
-deadrop drop [options] [input]
-```
+<CopyableCode
+  value={'deadrop drop [options] [input]'}
+  prompt={false}
+  ariaLabel={'Copy usage'}
+/>
 
 | Argument              | Description                                                  |
 | --------------------- | ------------------------------------------------------------ |
@@ -156,12 +165,13 @@ deadrop vault create staging --cloud
 deadrop vault create scratch ~/projects/scratch
 ```
 
-#### `vault use <name>`
+#### `vault use <name> [--environment <env>]`
 
-Switch the active vault. Subsequent `secret` and `drop` commands operate against this vault.
+Switch the active vault. Subsequent `secret` and `drop` commands operate against this vault. Pass `--environment` to switch the active environment at the same time; without it the current environment is kept.
 
 ```
 deadrop vault use staging
+deadrop vault use staging -e production
 ```
 
 #### `vault sync`
@@ -188,13 +198,24 @@ deadrop vault import ./.env.production
 
 Remove a vault from config and delete its database file. This is destructive and cannot be undone.
 
+#### `vault env`
+
+Manage the environments in the active vault. Each environment has its own encryption key and its own set of secrets.
+
+```
+deadrop vault env list          # list environments (* marks the active one)
+deadrop vault env add staging   # add a new environment with a fresh key
+```
+
 ### `inject`
 
 Run a command with a vault's secrets injected directly into its environment. Secrets are decrypted in memory and never written to disk, so there's no `.env` file to clean up.
 
-```
-deadrop inject [options] -- <command...>
-```
+<CopyableCode
+  value={'deadrop inject [options] -- <command...>'}
+  prompt={false}
+  ariaLabel={'Copy usage'}
+/>
 
 | Option                    | Description                                                                                |
 | ------------------------- | ------------------------------------------------------------------------------------------ |
@@ -202,6 +223,7 @@ deadrop inject [options] -- <command...>
 | `-e, --environment <env>` | Environment to inject (default: the active vault's environment).                           |
 | `-c, --config <path>`     | Load an explicit config file (JSON or YAML) instead of the auto-discovered config, for CI. |
 | `--no-override`           | Let pre-existing environment variables win over vault values (default: vault values win).  |
+| `--refresh-token`         | Mint a fresh read-only Turso token before running, instead of reusing a cached one.        |
 | `--verbose`               | Log the names of injected variables. Values are never logged.                              |
 
 The `--` separator is required. Everything after it is passed straight through to your command, so its own flags are safe:
@@ -212,7 +234,16 @@ deadrop inject -v prod -e production -- node server.js
 deadrop inject -- pnpm build --watch   # --watch reaches pnpm, not deadrop
 ```
 
-The child process exits with the wrapped command's exit code, and Ctrl-C/SIGTERM are forwarded to it. `deadrop login` isn't required as long as your config already has what it needs (the CI case, via `--config`).
+The child process exits with the wrapped command's exit code, and Ctrl-C/SIGTERM are forwarded to it. For cloud vaults, `inject` mints a fresh read-only token on the fly whenever it doesn't already have a usable one, so `deadrop login` isn't strictly required.
+
+**Config-free CI mode.** Set `DEADROP_VAULT_KEY` (the environment's decryption key) and `inject` skips config discovery entirely, so it works from a clean checkout with no `.deadrop/` directory. Select the vault and environment with `DEADROP_VAULT`/`DEADROP_ENVIRONMENT` (or `-v`/`-e`), and authenticate to the token endpoint with `DEADROP_API_KEY` when there's no interactive session:
+
+```
+DEADROP_API_KEY=... \
+DEADROP_VAULT_KEY=... \
+DEADROP_ENVIRONMENT=production \
+deadrop inject -v prod -- pnpm build
+```
 
 ### `secret`
 
@@ -258,10 +289,11 @@ eval "$(deadrop vault export work)"
 DB_URL=$(deadrop grab <drop_id>) ./deploy.sh
 ```
 
-**Run CI/CD steps with vault secrets, no file on disk.** `inject` replaces the export-to-`.env`-then-source pattern:
+**Run CI/CD steps with vault secrets, no file on disk.** `inject` replaces the export-to-`.env`-then-source pattern. In CI, drive it entirely from environment variables, no config file or interactive login required:
 
 ```
-deadrop inject --config ./deadrop-ci.json -- pnpm build
+DEADROP_API_KEY=... DEADROP_VAULT_KEY=... DEADROP_ENVIRONMENT=production \
+  deadrop inject -v prod -- pnpm build
 ```
 
 <DocsSectionTitle

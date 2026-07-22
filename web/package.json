@@ -50,6 +50,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-type-animation": "^3.2.0",
+    "remark-gfm": "^4.0.1",
     "request-ip": "^3.3.0",
     "shared": "workspace:*",
     "sharp": "^0.32.0",

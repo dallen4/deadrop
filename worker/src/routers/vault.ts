@@ -2,7 +2,11 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
-import { createVaultUtils, vaultNameFromUserId } from '@shared/lib/turso';
+import {
+  createVaultUtils,
+  vaultNameFromUserId,
+  TursoApiError,
+} from '@shared/lib/turso';
 import {
   authenticated,
   restricted,
@@ -14,6 +18,7 @@ const CreateVaultSchema = VaultNameSchema.partial().extend({
   seed: z.enum(['database_upload']).optional(),
 });
 const VaultOwnerSchema = z.object({ userId: z.string() });
+const VaultTokenSchema = z.object({ name: z.string().optional() });
 
 const vaultRouter = hono()
   .post(
@@ -21,7 +26,7 @@ const vaultRouter = hono()
     restricted(),
     zValidator('json', CreateVaultSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { createVault, createVaultToken } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
@@ -58,13 +63,13 @@ const vaultRouter = hono()
     },
   )
   .post(
-    AppRouteParts.Share,
-    restricted(),
-    zValidator('json', VaultNameSchema),
+    AppRouteParts.Tokens,
+    restricted({ allowApiKey: true }),
+    zValidator('json', VaultTokenSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
-      const { createVaultToken } = createVaultUtils(
+      const { createVaultToken, getVault } = createVaultUtils(
         c.env.TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
@@ -74,10 +79,23 @@ const vaultRouter = hono()
       try {
         const vaultName = await vaultNameFromUserId(userId!, name);
 
-        const token = await createVaultToken(vaultName, 'read-only');
+        const [vault, token] = await Promise.all([
+          getVault(vaultName),
+          createVaultToken(vaultName, 'read-only'),
+        ]);
 
-        return c.json({ token }, 201);
+        return c.json({ token, hostname: vault?.Hostname }, 201);
       } catch (error) {
+        if (error instanceof TursoApiError && error.status === 404) {
+          return c.json(
+            {
+              error: name
+                ? `Vault '${name}' not found.`
+                : 'No default vault found for this account.',
+            },
+            404,
+          );
+        }
         return c.json(
           { error: `Unexpected error: ${(error as Error).message}` },
           500,
@@ -90,7 +108,7 @@ const vaultRouter = hono()
     authenticated(),
     zValidator('param', VaultNameSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { name } = c.req.valid('param');
 
@@ -111,7 +129,7 @@ const vaultRouter = hono()
     restricted(),
     zValidator('param', VaultNameSchema),
     async (c) => {
-      const userId = c.var.clerkAuth().userId!;
+      const userId = c.get('userId')!;
 
       const { name } = c.req.valid('param');
 

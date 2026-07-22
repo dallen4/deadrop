@@ -7,11 +7,7 @@ import {
   DROP_SECRET_VALUE_ID,
 } from '../../lib/constants';
 import { peerInitVisible } from './config';
-import {
-  createContextForBrowser,
-  createPageForBrowser,
-  test,
-} from './util';
+import { createPeerPage, test } from './util';
 
 test('should drop a text secret from one page session to another', async ({
   playwright,
@@ -19,13 +15,16 @@ test('should drop a text secret from one page session to another', async ({
   dropBrowser,
   grabBrowser,
 }) => {
-  const context = await createContextForBrowser(browser);
-  const dropperPage = dropBrowser
-    ? await createPageForBrowser(playwright[dropBrowser])
-    : await context.newPage();
-  const grabberPage = grabBrowser
-    ? await createPageForBrowser(playwright[grabBrowser])
-    : await context.newPage();
+  const dropperPage = await createPeerPage(
+    browser,
+    playwright,
+    dropBrowser,
+  );
+  const grabberPage = await createPeerPage(
+    browser,
+    playwright,
+    grabBrowser,
+  );
 
   const secretValue = 'super secret value';
 
@@ -71,10 +70,6 @@ test('should drop a text secret from one page session to another', async ({
   expect(grabbedSecretValue).toBeDefined();
   expect(grabbedSecretValue).toEqual(secretValue);
 
-  await dropperPage.close();
-  await grabberPage.close();
-
-  await context.close();
-
-  // TODO redo pattern to allow `close()` invocation on browser instances
+  await dropperPage.context().close();
+  await grabberPage.context().close();
 });

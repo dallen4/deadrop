@@ -16,13 +16,15 @@ import { getRedis } from 'api/redis';
 type BrowserName = PlaywrightWorkerOptions['browserName'];
 
 export type TestOptions = {
-  dropBrowser: BrowserName;
-  grabBrowser: BrowserName;
+  dropBrowser: BrowserName | undefined;
+  grabBrowser: BrowserName | undefined;
 };
 
+// Unset by default so device projects fall through to their own browser (see
+// createPeerPage); only cross-browser projects set an explicit engine.
 export const test = base.extend<TestOptions>({
-  dropBrowser: ['chromium', { option: true }],
-  grabBrowser: ['chromium', { option: true }],
+  dropBrowser: [undefined, { option: true }],
+  grabBrowser: [undefined, { option: true }],
 });
 
 let testToken: string | null = null;
@@ -89,6 +91,21 @@ export const createPageForBrowser = async (
 ) => {
   const newBrowser = await browser.launch();
   const context = await createContextForBrowser(newBrowser, options);
+
+  return context.newPage();
+};
+
+// Resolves an isolated page for one peer. A set browserType (cross-browser
+// projects) launches that engine; otherwise a fresh context in the project's
+// own browser is used, so each device project genuinely tests its engine.
+export const createPeerPage = async (
+  browser: Browser,
+  browserTypes: Record<NonNullable<BrowserName>, BrowserType>,
+  browserType?: BrowserName,
+) => {
+  if (browserType) return createPageForBrowser(browserTypes[browserType]);
+
+  const context = await createContextForBrowser(browser);
 
   return context.newPage();
 };
