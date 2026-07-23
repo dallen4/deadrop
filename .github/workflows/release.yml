@@ -51,12 +51,26 @@ jobs:
           PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}
         run: |
           version=$(echo "$PUBLISHED" | jq -r '.[] | select(.name == "deadrop") | .version')
-          if [ -n "$version" ]; then
-            echo "Dispatching CLI binary build for deadrop@${version}"
-            gh workflow run cli_publish_workflow.yml --ref "deadrop@${version}"
-          else
+          if [ -z "$version" ]; then
             echo "deadrop package not in published set; skipping binary build"
+            exit 0
           fi
+          tag="deadrop@${version}"
+          # changeset publish's tag isn't reliably on origin when we dispatch by
+          # ref below, so create + push it ourselves (idempotent) first.
+          git tag "$tag" 2>/dev/null || true
+          git push origin "refs/tags/$tag" 2>/dev/null || true
+          # Wait for the ref to be resolvable before dispatching, else GitHub
+          # returns 422 No ref found.
+          for i in $(seq 1 10); do
+            if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/$tag" >/dev/null 2>&1; then
+              break
+            fi
+            echo "waiting for $tag to appear on origin ($i)..."
+            sleep 3
+          done
+          echo "Dispatching CLI binary build for $tag"
+          gh workflow run cli_publish_workflow.yml --ref "$tag"
       - name: Restore cli/package.json name
         if: always()
         run: git checkout -- cli/package.json
