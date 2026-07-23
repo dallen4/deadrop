@@ -23,6 +23,7 @@ const VaultTokenSchema = z.object({ name: z.string().optional() });
 const vaultRouter = hono()
   .post(
     AppRouteParts.Root,
+    authenticated({ allowApiKey: true }),
     restricted(),
     zValidator('json', CreateVaultSchema),
     async (c) => {
@@ -64,7 +65,8 @@ const vaultRouter = hono()
   )
   .post(
     AppRouteParts.Tokens,
-    restricted({ allowApiKey: true }),
+    authenticated({ allowApiKey: true }),
+    restricted(),
     zValidator('json', VaultTokenSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -105,7 +107,7 @@ const vaultRouter = hono()
   )
   .get(
     AppRouteParts.NameParam,
-    authenticated(),
+    authenticated({ allowApiKey: true }),
     zValidator('param', VaultNameSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -126,6 +128,7 @@ const vaultRouter = hono()
   )
   .delete(
     AppRouteParts.NameParam,
+    authenticated(),
     restricted(),
     zValidator('param', VaultNameSchema),
     async (c) => {

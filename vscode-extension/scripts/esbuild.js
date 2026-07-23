@@ -30,7 +30,9 @@ const buildOptions = {
   format: 'cjs',
   platform: 'node',
   outfile: 'dist/extension.js',
-  external: ['vscode', '@libsql/client', 'drizzle-orm'],
+  // libsql is the native binding (staged into the vsix by stage-native.js);
+  // bufferutil/utf-8-validate are optional ws natives resolved in try/catch
+  external: ['vscode', 'libsql', 'bufferutil', 'utf-8-validate'],
   sourcemap: !production,
   minify: production,
   define,

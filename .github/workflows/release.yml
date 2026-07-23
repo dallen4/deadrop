@@ -74,3 +74,57 @@ jobs:
       - name: Restore cli/package.json name
         if: always()
         run: git checkout -- cli/package.json
+
+  vscode-extension:
+    name: Publish VS Code extension
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check marketplace version
+        id: check
+        working-directory: vscode-extension
+        run: |
+          local_version=$(jq -r .version package.json)
+          marketplace_version=$(pnpm exec vsce show n1eky.deadrop-vsc --json | jq -r '.versions[0].version')
+          echo "local=$local_version marketplace=$marketplace_version"
+          if [ "$local_version" = "$marketplace_version" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          elif [ "$(printf '%s\n%s' "$marketplace_version" "$local_version" | sort -V | tail -1)" = "$local_version" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "local version is behind marketplace; refusing to publish"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build extension
+        if: steps.check.outputs.publish == 'true'
+        run: pnpm vscode:build
+        env:
+          PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
+          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          TURN_PWD: ${{ secrets.TURN_PWD }}
+          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          DEADROP_APP_URL: ${{ secrets.DEADROP_APP_URL }}
+          CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
+      - name: Package per-platform vsixes
+        if: steps.check.outputs.publish == 'true'
+        working-directory: vscode-extension
+        run: |
+          mkdir -p vsix
+          for target in darwin-arm64 darwin-x64 linux-x64 linux-arm64 alpine-x64 alpine-arm64 win32-x64; do
+            node scripts/stage-native.js "$target"
+            pnpm exec vsce package --no-dependencies --target "$target" -o "vsix/deadrop-vsc-$target.vsix"
+          done
+      - name: Publish to marketplace
+        if: steps.check.outputs.publish == 'true'
+        working-directory: vscode-extension
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: pnpm exec vsce publish --packagePath vsix/*.vsix
