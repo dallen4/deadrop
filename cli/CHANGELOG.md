@@ -1,5 +1,11 @@
 # cli
 
+## 1.4.1
+
+### Patch Changes
+
+- 30c68e8: Fix `deadrop inject` failing with "Vault not found" on local (non-cloud) vaults. It now only mints a cloud token for cloud vaults or the config-free CI path; local vaults read directly from their SQLite file with no network call.
+
 ## 1.4.0
 
 ### Minor Changes
