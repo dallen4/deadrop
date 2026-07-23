@@ -104,8 +104,9 @@
     "views:dev": "vite dev --config vite.config.ts",
     "check-types": "tsc --noEmit && tsc --noEmit -p tsconfig.views.json",
     "test": "vscode-test",
-    "package": "vsce package --no-dependencies",
-    "publish": "vsce publish --no-dependencies"
+    "stage-native": "node scripts/stage-native.js",
+    "package": "node scripts/stage-native.js && vsce package --no-dependencies",
+    "publish": "node scripts/stage-native.js && vsce publish --no-dependencies"
   },
   "dependencies": {
     "cosmiconfig": "^9.0.1",
@@ -122,6 +123,7 @@
     "@vitejs/plugin-react-swc": "^4.3.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.9.2",
     "dotenv": "^16.6.1",
     "vite": "^8.0.3"
   }
