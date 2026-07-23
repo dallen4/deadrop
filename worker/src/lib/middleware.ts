@@ -81,15 +81,22 @@ export const authenticated = (
   { allowApiKey }: AuthOptions = { allowApiKey: false },
 ) =>
   createMiddleware<HonoCtx>(async (c, next) => {
-    const tokens = ['session_token', 'oauth_token'];
+    // acceptsToken arrays don't narrow (m2m_token stays in the union,
+    // sans userId) — request 'any' and gate on tokenType ourselves
+    const auth = getAuth(c, { acceptsToken: 'any' });
 
-    if (allowApiKey) tokens.push('api_key');
+    const allowed =
+      auth.tokenType === TokenType.SessionToken ||
+      auth.tokenType === TokenType.OAuthToken ||
+      (allowApiKey && auth.tokenType === TokenType.ApiKey);
 
-    const auth = getAuth(c, { acceptsToken: tokens });
+    // unauthenticated/org-scoped variants carry userId: null, so one
+    // check covers signed-out, invalid, and userless tokens
+    const userId = allowed ? auth.userId : null;
 
-    if (!auth.isAuthenticated) return c.json(NotAuthenticated, 401);
+    if (!userId) return c.json(NotAuthenticated, 401);
 
-    c.set('userId', auth.userId);
+    c.set('userId', userId);
 
     await next();
   });
