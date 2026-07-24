@@ -117,7 +117,6 @@ export async function hasCloudAccess(): Promise<boolean> {
     const payload = JSON.parse(
       Buffer.from(jwt.split('.')[1], 'base64').toString(),
     );
-    console.log("PAYLOAD", payload);
     return !!(payload.early_access || payload.internal);
   } catch {
     return false;
