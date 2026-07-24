@@ -80,7 +80,7 @@ export default function EnvSidebar({
               onClick={() => setAddEnvOpen(false)}
               disabled={addingEnv}
             >
-              \u2715
+              {'\u2715'}
             </button>
           </div>
         </form>
