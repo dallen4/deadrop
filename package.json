@@ -15,6 +15,7 @@
     "worker",
     "shared",
     "vscode-extension",
+    "desktop",
     "tests"
   ],
   "scripts": {
@@ -41,6 +42,10 @@
     "vscode:dev": "pnpm -F deadrop-vsc dev",
     "vscode:package": "pnpm -F deadrop-vsc package",
     "vscode:publish": "pnpm -F deadrop-vsc publish",
+    "desktop": "pnpm -F desktop",
+    "desktop:web": "pnpm -F desktop dev",
+    "desktop:dev": "pnpm -F desktop tauri dev",
+    "desktop:build": "pnpm -F desktop tauri build",
     "analyze:dup": "jscpd",
     "analyze:unused": "ts-prune",
     "changeset": "changeset",

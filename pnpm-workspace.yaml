@@ -4,6 +4,7 @@ packages:
   - worker
   - cli
   - vscode-extension
+  - desktop
   - tests
 
 onlyBuiltDependencies:

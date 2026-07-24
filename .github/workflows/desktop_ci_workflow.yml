@@ -1,0 +1,63 @@
+name: Desktop CI
+
+on:
+  push:
+    paths:
+      - 'desktop/**'
+      - 'shared/**'
+      - '.github/workflows/desktop_ci_workflow.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - 'shared/**'
+      - '.github/workflows/desktop_ci_workflow.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Every branch runs via push; only run on pull_request for forks (which
+    # can't fire push), so same-repo PRs don't run twice.
+    if: >-
+      github.event_name == 'push' ||
+      github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: macos-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Frontend build (Vite). Real VITE_* values are baked at release time;
+      # placeholders are enough to prove the app compiles and bundles.
+      - name: Build desktop frontend
+        env:
+          VITE_DEADROP_API_URL: https://deadrop.api.com/
+          VITE_PEER_SERVER_URL: https://peer-server.com/endpoint
+          VITE_TURN_USERNAME: ci
+          VITE_TURN_PWD: ci
+          VITE_CLERK_PUBLISHABLE_KEY: pk_test_ci
+          VITE_WEB_URL: https://deadrop.io
+        run: pnpm -F desktop build
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+      - name: Check Rust shell
+        working-directory: desktop/src-tauri
+        run: cargo check
+
+  # NOTE: full multi-platform bundling (macOS/Windows/Linux via
+  # tauri-apps/tauri-action) is a release-time job, intentionally not part of
+  # this fast PR check.
