@@ -13,7 +13,7 @@ import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
 Adds a deadrop sidebar in VS Code with two sections:
 
 - **Secrets**: drop or grab a secret without leaving the editor
-- **Vaults**: browse and manage your cloud vault environments
+- **Vaults**: create and manage vault environments — local or cloud-synced — without leaving the editor
 
 <DocsSectionTitle
   id={'installation'}
@@ -48,5 +48,6 @@ After installing, sign in via the extension sidebar. Your plan entitlements are 
   label={'Vault access'}
 />
 
-Environments from your cloud vault(s) appear in the Vaults section. Click an entry to view or
-copy a secret value.
+Your vaults appear in the Vaults section. Open one to browse its environments, reveal or copy
+secret values, and add, edit, or delete secrets. Local vaults live in your workspace; if you
+have cloud access, you can convert a local vault to a cloud-synced one from the vault view.

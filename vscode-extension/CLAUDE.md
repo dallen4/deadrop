@@ -7,14 +7,17 @@ VS Code extension providing deadrop's e2e encrypted secret sharing directly in t
 ```bash
 pnpm vscode:build          # Production build (esbuild + vite)
 pnpm vscode:dev            # Watch mode for extension host only
-pnpm vscode:package        # Package .vsix (vsce --no-dependencies)
-pnpm vscode:publish        # Publish to marketplace (vsce --no-dependencies)
+pnpm vscode:package        # Stage native libsql + package .vsix (vsce --no-dependencies)
+pnpm vscode:publish        # Stage native libsql + publish to marketplace (vsce --no-dependencies)
+pnpm -F deadrop-vsc stage-native  # Stage the native libsql binding into dist/node_modules
 pnpm -F deadrop-vsc views:build   # Build webview only (Vite)
 pnpm -F deadrop-vsc views:dev     # Vite dev server (HMR)
 pnpm -F deadrop-vsc check-types   # Type check both src/ and views/
 ```
 
 Press **F5** from the monorepo root to launch the Extension Development Host (runs `vscode:build` preLaunchTask automatically).
+
+**Releases are CI-automated.** The `vscode-extension` job in `.github/workflows/release.yml` (runs on merge to `main`) compares `package.json` against the marketplace and publishes 7 per-platform vsixes only when the local version is ahead — independent of the CLI/npm release. Bump `deadrop-vsc` via a changeset; the manual `vscode:publish` is a fallback. See `scripts/stage-native.js` and the Build System section for the native-packaging details.
 
 ## Directory Structure
 
@@ -32,6 +35,7 @@ vscode-extension/
 │       ├── vscode.ts    # typed postMessage/onMessage wrappers
 │       └── lib/          # peer.ts (initPeerFromConfig), session.ts (cleanupSession)
 ├── scripts/esbuild.js   # Extension host build config — see Build System below
+├── scripts/stage-native.js  # Stages native libsql binding into dist/node_modules for the vsix — see Build System
 ├── vite.config.ts       # Webview build config — see Build System below
 ├── tsconfig.json        # Extension host (CommonJS)
 └── tsconfig.views.json  # Webview (ESM, jsx: react-jsx)
@@ -44,11 +48,16 @@ Two separate build steps, both run by `pnpm vscode:build`:
 ### Extension Host — esbuild (`scripts/esbuild.js`)
 - Entry: `src/extension.ts` → `dist/extension.js`
 - Format: CommonJS, platform: Node
-- `vscode` is external (provided by VS Code at runtime)
+- Bundles pure-JS deps (`@libsql/client`, `drizzle-orm`, `cosmiconfig`, …) into the output. Externals are only `vscode` (provided by VS Code), `libsql` (native binding, staged separately), and ws's optional natives `bufferutil`/`utf-8-validate`
 - Env vars baked at build time via esbuild `define` from `.env`:
   - `DEADROP_API_URL`, `PEER_SERVER_URL`, `TURN_USERNAME`, `TURN_PWD`, `CLERK_PUBLISHABLE_KEY`
 - `@shared` alias → `../../shared` (relative from `scripts/`)
 - Source maps in dev; minified in production (`--production` flag)
+
+### Native packaging — stage-native.js (`scripts/stage-native.js`)
+- esbuild can't bundle native `.node` binaries, and `vsce --no-dependencies` drops top-level `node_modules` — so `stage-native.js` copies `libsql` + `@neon-rs/load` + `detect-libc` + the target platform's `@libsql/*` binary into `dist/node_modules`, where `require('libsql')` from `dist/extension.js` resolves it inside the vsix
+- Takes an optional vsce target (`darwin-arm64`, `linux-x64`, `win32-x64`, …); defaults to the host platform. Non-host binaries are fetched via `npm pack` at the version pinned by the installed `libsql`
+- Runs automatically before `vscode:package`/`vscode:publish`; CI loops it over all 7 targets
 
 ### Webview — Vite (`vite.config.ts`)
 - Root: `views/`

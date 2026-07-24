@@ -51,10 +51,10 @@ worker/
 | `*` | `/auth/*` | Clerk auth endpoints |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
-| POST | `/vault` | Create a Turso vault database (`restricted()`) |
-| POST | `/vault/tokens` | Mint a read-only Turso token for a vault (`restricted({ allowApiKey: true })`) |
-| GET | `/vault/:name` | Get vault metadata (`authenticated()`) |
-| DELETE | `/vault/:name` | Delete a vault (`restricted()`) |
+| POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true })` + `restricted()`) |
+| POST | `/vault/tokens` | Mint a read-only Turso token for a vault (`authenticated({ allowApiKey: true })` + `restricted()`) |
+| GET | `/vault/:name` | Get vault metadata (`authenticated({ allowApiKey: true })`) |
+| DELETE | `/vault/:name` | Delete a vault (`authenticated()` + `restricted()`) |
 | POST | `/vault/lock` | Lock all of a user's vaults on cancel (`service()`, `{ userId }`) |
 | POST | `/vault/unlock` | Restore all of a user's vaults on reactivate (`service()`, `{ userId }`) |
 
@@ -68,9 +68,9 @@ worker/
 5. `redis()` — attaches an Upstash client to `c.get('redis')`
 
 ### Auth gates (`src/lib/middleware.ts`)
-- Both gates take `{ allowApiKey?: boolean }` and call `getAuth(c, { acceptsToken: 'any' })` directly (not `c.var.clerkAuth()`, which defaults to session-tokens-only), then gate on `auth.tokenType` themselves. `acceptsToken` as a `TokenType[]` array doesn't type-narrow the way you'd expect — TS can't tell which literal token types were actually pushed, so the return type keeps `m2m_token` (never used anywhere in this app) in the union, and `m2m_token`'s auth object has no `userId` at all; requesting `'any'` and branching on `auth.tokenType` sidesteps that entirely. On success they `c.set('userId', ...)` — route handlers read `c.get('userId')!`, never `c.var.clerkAuth().userId!`, so the resolved identity always matches whichever token type actually authenticated.
-- `authenticated()` — 401s unless `auth.tokenType` is `session_token`/`oauth_token`, or `api_key` with `allowApiKey: true`
-- `restricted()` — 401s unless early_access/internal is set. For session tokens that's `sessionClaims.early_access`/`.internal` (Clerk publicMetadata via the JWT template). For OAuth/API-key tokens there's no session claims — it looks up the owning user's *live* Clerk metadata instead (`c.var.clerk.users.getUser(auth.userId)`); org-scoped API keys (no `userId`) are denied since vaults are per-user.
+- The two gates are **layered, not standalone**: `authenticated()` resolves identity and `c.set('userId', ...)`; `restricted()` reads that `userId` back and gates on entitlement. A `restricted()` route must chain `authenticated()` before it, or `c.get('userId')` is undefined.
+- `authenticated({ allowApiKey?: boolean })` — calls `getAuth(c, { acceptsToken: 'any' })` directly (not `c.var.clerkAuth()`, which defaults to session-tokens-only) and gates on `auth.tokenType` itself: 401s unless the type is `session_token`/`oauth_token`, or `api_key` with `allowApiKey: true`. Requesting `'any'` (rather than an `acceptsToken` array) is deliberate — a `TokenType[]` array doesn't type-narrow, so the return type keeps `m2m_token` (unused here, and its auth object has no `userId`) in the union. The single `if (!userId)` 401 also catches org-scoped API keys, whose `userId` is `null`. On success `c.set('userId', ...)` — handlers read `c.get('userId')!`, never `c.var.clerkAuth().userId!`, so identity always matches whichever token type actually authenticated.
+- `restricted()` — takes no options; reads `c.get('userId')` (set by a preceding `authenticated()`) and 401s unless `early_access`/`internal` is set. Always resolves the flag from the owner's **live** Clerk metadata (`c.var.clerk.users.getUser(userId)`), for every token type — it no longer reads `sessionClaims`, so the check is independent of the JWT template (a per-request Clerk API call is the tradeoff). Interactive surfaces (web `isExperimental`, the VS Code extension's `hasCloudAccess`) still read the claim off the session token, so those *do* need `early_access`/`internal` in the JWT template even though the worker doesn't.
 - `service()` — first-party service-to-service auth (no Clerk session): constant-time checks `SERVICE_TOKEN_HEADER` against `WORKER_SERVICE_TOKEN`. Used by `/vault/lock` and `/vault/unlock`, which billing webhooks call. Authenticates the *caller*; the subject `userId` is in the request body — treat the token as high-value.
 - Routes with neither gate (e.g. `/drop`) work anonymously; if a caller *is* authenticated, `clerkAuth()` still resolves so the route can read identity opportunistically
 
@@ -88,7 +88,7 @@ worker/
 
 ### Vaults — Turso
 - Provisioning + lifecycle live in `shared/lib/turso/` (`createVaultUtils`) — see `shared/lib/turso/CLAUDE.md`. The former `worker/src/lib/vault.ts` was collapsed into it.
-- `vault.ts` router: create/tokens/get are `restricted()`/`authenticated()` (early-access/internal, per-user Clerk claim; `/vault/tokens` also allows `DEADROP_API_KEY` via `allowApiKey: true`, for CI/`inject`); `lock`/`unlock` are `service()`-gated for billing webhooks
+- `vault.ts` router: create/tokens layer `authenticated({ allowApiKey: true })` + `restricted()`; get is `authenticated({ allowApiKey: true })` alone; delete is `authenticated()` + `restricted()`. API keys (`DEADROP_API_KEY`) are accepted on create/tokens/get for CI/`inject`; `lock`/`unlock` are `service()`-gated for billing webhooks
 - Cancel-on-billing fans out over **all** of a user's vaults via `listVaults(<hash13>)`; org-payer cancellations are a known gap (vaults are named per user, not per org)
 
 ### Billing/plans (`src/lib/billing.ts`)
