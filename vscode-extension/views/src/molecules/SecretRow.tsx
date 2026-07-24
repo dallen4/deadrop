@@ -185,7 +185,7 @@ export default function SecretRow({
               title="Cancel"
               aria-label="Cancel"
             >
-              \u2715
+              {'\u2715'}
             </IconButton>
           </>
         ) : (
@@ -202,7 +202,7 @@ export default function SecretRow({
               title="Rename"
               aria-label="Rename"
             >
-              \u270E
+              {'\u270E'}
             </IconButton>
           </>
         )}
@@ -239,7 +239,7 @@ export default function SecretRow({
               title="Cancel"
               aria-label="Cancel"
             >
-              \u2715
+              {'\u2715'}
             </IconButton>
           </>
         ) : (
@@ -268,14 +268,14 @@ export default function SecretRow({
                 title="Copy"
                 aria-label="Copy"
               >
-                \u29C9
+                {'\u29C9'}
               </IconButton>
               <IconButton
                 onClick={startEditValue}
                 title="Edit value"
                 aria-label="Edit value"
               >
-                \u270E
+                {'\u270E'}
               </IconButton>
               {confirmDelete ? (
                 <>
@@ -288,14 +288,14 @@ export default function SecretRow({
                     title="Confirm delete"
                     aria-label="Confirm delete"
                   >
-                    \u2713
+                    {'\u2713'}
                   </IconButton>
                   <IconButton
                     onClick={() => setConfirmDelete(false)}
                     title="Cancel"
                     aria-label="Cancel"
                   >
-                    \u2715
+                    {'\u2715'}
                   </IconButton>
                 </>
               ) : (
