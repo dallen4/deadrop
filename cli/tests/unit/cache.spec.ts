@@ -58,6 +58,31 @@ describe('getToken', () => {
 
     expect(await getToken()).toEqual('a-token');
   });
+
+  it('migrates a legacy deadrop-cli credential forward and deletes it', async () => {
+    const setPassword = vi.fn();
+    const deletePassword = vi.fn();
+    vi.spyOn(keyring, 'Entry').mockImplementation((service: string) => {
+      if (service === 'deadrop') {
+        return {
+          getPassword: () => {
+            throw new Error('No matching entry found in secure storage');
+          },
+          setPassword,
+        } as any;
+      }
+      // legacy 'deadrop-cli' entry
+      return {
+        getPassword: () => 'legacy-token',
+        deletePassword,
+      } as any;
+    });
+    const { getToken } = await import('lib/auth/cache');
+
+    expect(await getToken()).toEqual('legacy-token');
+    expect(setPassword).toHaveBeenCalledWith('legacy-token');
+    expect(deletePassword).toHaveBeenCalled();
+  });
 });
 
 describe('setSession', () => {
