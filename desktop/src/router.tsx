@@ -5,6 +5,8 @@ import { DropPage } from './routes/Drop';
 import { GrabPage } from './routes/Grab';
 import { SignInPage } from './routes/SignIn';
 import { SignUpPage } from './routes/SignUp';
+import { VaultPage } from './routes/Vault';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +17,10 @@ export const router = createBrowserRouter([
       { path: '/grab', element: <GrabPage /> },
       { path: '/sign-in/*', element: <SignInPage /> },
       { path: '/sign-up/*', element: <SignUpPage /> },
+      {
+        element: <ProtectedRoute />,
+        children: [{ path: '/vault', element: <VaultPage /> }],
+      },
     ],
   },
 ]);
