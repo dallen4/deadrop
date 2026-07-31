@@ -1,13 +1,13 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '@clerk/react';
 import {
-  Badge,
   Card,
   Group,
   SimpleGrid,
   Stack,
   Text,
+  ThemeIcon,
   Title,
 } from '@mantine/core';
 import {
@@ -22,29 +22,35 @@ import { MainWrapper } from '@shared/components';
 const ActionCard = ({
   to,
   icon,
+  color,
   title,
   description,
 }: {
   to: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
+  color: string;
   title: string;
   description: string;
 }) => (
-  <Card
-    component={Link}
-    to={to}
-    withBorder
-    padding={'lg'}
-    radius={'md'}
-    style={{ height: '100%' }}
-  >
-    <Group gap={'sm'} mb={'xs'}>
-      {icon}
-      <Text fw={600}>{title}</Text>
-    </Group>
-    <Text size={'sm'} c={'dimmed'}>
-      {description}
-    </Text>
+  <Card component={Link} to={to} withBorder padding={'lg'} radius={'md'}>
+    <Stack gap={'sm'}>
+      <ThemeIcon
+        size={36}
+        radius={'md'}
+        variant={'light'}
+        color={color}
+      >
+        {icon}
+      </ThemeIcon>
+      <div>
+        <Text fw={600} mb={4}>
+          {title}
+        </Text>
+        <Text size={'sm'} c={'dimmed'}>
+          {description}
+        </Text>
+      </div>
+    </Stack>
   </Card>
 );
 
@@ -56,45 +62,85 @@ export const HomePage = () => {
     : 'Welcome back';
 
   return (
-    <MainWrapper>
+    <MainWrapper py={'xl'}>
       <Stack gap={'xl'} w={'100%'}>
-        <Title order={2}>{greeting}</Title>
+        <div>
+          <Title order={2} mb={4}>
+            {greeting}
+          </Title>
+          <Text size={'sm'} c={'dimmed'}>
+            Send and receive end-to-end encrypted secrets, peer to
+            peer.
+          </Text>
+        </div>
 
-        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={'md'}>
-          <ActionCard
-            to={'/drop'}
-            icon={<IconArrowUpRight size={20} />}
-            title={'Drop a secret'}
-            description={
-              'Start an encrypted peer-to-peer transfer and share the link.'
-            }
-          />
-          <ActionCard
-            to={'/grab'}
-            icon={<IconDownload size={20} />}
-            title={'Grab a secret'}
-            description={
-              'Paste a drop link or id to receive a secret securely.'
-            }
-          />
-        </SimpleGrid>
+        <Stack gap={'sm'}>
+          <Text
+            size={'xs'}
+            fw={600}
+            c={'dimmed'}
+            tt={'uppercase'}
+            style={{ letterSpacing: 0.4 }}
+          >
+            Quick actions
+          </Text>
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing={'md'}>
+            <ActionCard
+              to={'/drop'}
+              icon={<IconArrowUpRight size={20} />}
+              color={'blue'}
+              title={'Drop a secret'}
+              description={
+                'Start an encrypted peer-to-peer transfer and share the link.'
+              }
+            />
+            <ActionCard
+              to={'/grab'}
+              icon={<IconDownload size={20} />}
+              color={'teal'}
+              title={'Grab a secret'}
+              description={
+                'Paste a drop link or id to receive a secret securely.'
+              }
+            />
+          </SimpleGrid>
+        </Stack>
 
-        <Card withBorder padding={'lg'} radius={'md'}>
-          <Group justify={'space-between'} align={'flex-start'}>
+        <Stack gap={'sm'}>
+          <Text
+            size={'xs'}
+            fw={600}
+            c={'dimmed'}
+            tt={'uppercase'}
+            style={{ letterSpacing: 0.4 }}
+          >
+            Vaults
+          </Text>
+          <Card
+            component={Link}
+            to={'/vault'}
+            withBorder
+            padding={'lg'}
+            radius={'md'}
+          >
             <Group gap={'sm'}>
-              <IconLock size={20} />
+              <ThemeIcon
+                size={36}
+                radius={'md'}
+                variant={'light'}
+                color={'gray'}
+              >
+                <IconLock size={20} />
+              </ThemeIcon>
               <div>
-                <Text fw={600}>Vaults</Text>
+                <Text fw={600}>Store secrets in a vault</Text>
                 <Text size={'sm'} c={'dimmed'}>
-                  Store and sync your secrets across devices.
+                  Manage secrets locally, with optional cloud sync.
                 </Text>
               </div>
             </Group>
-            <Badge variant={'light'} color={'gray'}>
-              Coming soon
-            </Badge>
-          </Group>
-        </Card>
+          </Card>
+        </Stack>
       </Stack>
     </MainWrapper>
   );
