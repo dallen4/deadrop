@@ -60,6 +60,18 @@ jobs:
           prerelease: false
           args: --target universal-apple-darwin
 
+      # tauri-action doesn't generate checksums (unlike cli_publish_workflow.yml,
+      # which explicitly does for every CLI binary) — do it ourselves and
+      # upload alongside the .dmg it already published, so both install
+      # paths (deadrop desktop install, install-desktop.sh) can verify.
+      - name: Checksum + upload .dmg.sha256
+        run: |
+          dmg=$(find desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg -name '*.dmg')
+          shasum -a 256 "$dmg" > "$dmg.sha256"
+          gh release upload "${{ steps.tag.outputs.tag }}" "$dmg.sha256"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # NOTE: unsigned build — no Apple Developer ID / notarization set up
       # yet (matches the CLI's own binaries, also unsigned today). Users
       # hit Gatekeeper's "unidentified developer" warning; signing is a
