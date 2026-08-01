@@ -60,6 +60,7 @@ export const RootLayout = () => {
             <Group gap={'md'}>
               <NavLink to={'/drop'}>Drop</NavLink>
               <NavLink to={'/grab'}>Grab</NavLink>
+              <NavLink to={'/vault'}>Vault</NavLink>
             </Group>
           </Group>
           <Group>

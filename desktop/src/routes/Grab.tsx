@@ -43,7 +43,7 @@ export const GrabPage = () => {
   if (!dropId) {
     return (
       <MainWrapper>
-        <Stack gap={'sm'} maw={420}>
+        <Stack gap={'sm'} maw={420} mx={'auto'} w={'100%'}>
           <Text>Paste a drop link or id to grab a secret.</Text>
           <TextInput
             value={input}
