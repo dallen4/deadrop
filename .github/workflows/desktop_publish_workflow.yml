@@ -1,0 +1,76 @@
+name: Release Desktop App
+on:
+  push:
+    tags:
+      - 'deadrop-desktop@*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Override release tag (defaults to the dispatched ref, e.g. deadrop-desktop@0.1.0)'
+        required: false
+
+jobs:
+  desktop-release:
+    name: Build + release (macOS, universal)
+    runs-on: macos-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      - name: Resolve release tag
+        id: tag
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#deadrop-desktop@}" >> "$GITHUB_OUTPUT"
+
+      - name: Build + release Tauri app
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Baked into the frontend at build time (Vite) — same
+          # secrets/vars desktop_ci_workflow.yml validates against.
+          VITE_DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          VITE_PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
+          VITE_TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          VITE_TURN_PWD: ${{ secrets.TURN_PWD }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+          VITE_WEB_URL: ${{ vars.DEADROP_APP_URL }}
+        with:
+          projectPath: desktop
+          tagName: ${{ steps.tag.outputs.tag }}
+          releaseName: 'Desktop v${{ steps.tag.outputs.version }}'
+          releaseDraft: false
+          prerelease: false
+          args: --target universal-apple-darwin
+
+      # NOTE: unsigned build — no Apple Developer ID / notarization set up
+      # yet (matches the CLI's own binaries, also unsigned today). Users
+      # hit Gatekeeper's "unidentified developer" warning; signing is a
+      # tracked fast-follow, not a blocker for this release pipeline.
+      #
+      # NOTE: Windows/Linux bundling intentionally out of scope for this
+      # pass — macOS only, per explicit scoping decision. Extending the
+      # platform matrix is a follow-up (see specs/ once written).
+      #
+      # NOTE: nothing currently creates/pushes a `deadrop-desktop@*` tag
+      # automatically — desktop isn't part of the changesets/npm-publish
+      # flow the CLI uses (desktop/package.json is private, unpublished).
+      # This workflow only fires on a manually pushed tag or
+      # workflow_dispatch until that's designed.
