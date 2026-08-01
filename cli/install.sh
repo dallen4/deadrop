@@ -27,12 +27,16 @@ case "$(uname -m)" in
   *) echo "Unsupported arch: $(uname -m)" >&2; exit 1 ;;
 esac
 
-RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest") || {
+# This repo also publishes desktop releases (`deadrop-desktop@*`) on the
+# same releases list — /releases/latest can't tell them apart, so fetch the
+# list and take the newest tag that's actually a CLI release. `"deadrop@`
+# (with the trailing `@`) naturally excludes `"deadrop-desktop@`.
+RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases") || {
   echo "No published deadrop release found (or network error)." >&2
   echo "See https://github.com/${REPO}/releases" >&2
   exit 1
 }
-TAG=$(printf '%s' "$RELEASE_JSON" | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
+TAG=$(printf '%s' "$RELEASE_JSON" | grep -o '"tag_name": *"deadrop@[^"]*"' | head -1 | sed 's/.*"deadrop@\([^"]*\)".*/deadrop@\1/')
 [ -z "$TAG" ] && { echo "Could not determine latest release tag" >&2; exit 1; }
 
 URL="https://github.com/${REPO}/releases/download/${TAG}/${BINARY}-${OS}-${ARCH}"
