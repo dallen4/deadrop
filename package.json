@@ -46,6 +46,7 @@
     "desktop:web": "pnpm -F desktop dev",
     "desktop:dev": "pnpm -F desktop tauri dev",
     "desktop:build": "pnpm -F desktop tauri build",
+    "desktop:build:debug": "pnpm -F desktop tauri build --debug",
     "analyze:dup": "jscpd",
     "analyze:unused": "ts-prune",
     "changeset": "changeset",
