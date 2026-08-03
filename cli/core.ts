@@ -48,6 +48,10 @@ deadrop
 deadrop
   .command('update')
   .description('update deadrop to the latest version')
+  .option(
+    '--skip-desktop',
+    "don't check for/offer a desktop app update",
+  )
   .action(update);
 
 deadrop
