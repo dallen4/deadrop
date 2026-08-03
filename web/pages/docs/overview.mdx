@@ -1,4 +1,5 @@
 import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
+import Image from 'next/image';
 
 # What is deadrop?
 
@@ -12,6 +13,15 @@ import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
 Utilizing public key infrastructure patterns, deadrop uses AES (with GCM) and Eliptical Curve (ECDH) cryptographic methods to generate keys and obfuscate payloads then SHA-256 is used after handoff for verifying data integrity.
 
 All keys are exchanged through peer-to-peer connections over WebRTC allowing all key and payload communications to remain solely between the two peers ("dropper" and "grabber") and are not logged or tracked by any server-side functionality. An opaque drop ID, the dropper's peer ID, and a nonce for the drop session are stored in a redis instance. The dropper's peer ID and nonce are then retrieved for the grabber by sending GET request to the `/api/drop` endpoint.
+
+<Image
+  src={'/images/deadrop-flow-diagram.jpg'}
+  alt={'deadrop core drop/grab flow diagram'}
+  width={2294}
+  height={1743}
+  style={{ width: '100%', height: 'auto' }}
+  sizes={'(max-width: 800px) 100vw, 800px'}
+/>
 
 <DocsSectionTitle
   id={'features'}
@@ -28,6 +38,7 @@ All keys are exchanged through peer-to-peer connections over WebRTC allowing all
 - 🧪 local vaults (CLI stable, web experimental)
 - 🧪 cloud-synced vaults (Supporter+ plans)
 - 🧪 VS Code Extension (Supporter+ plans, experimental)
+- 🧪 Desktop app (macOS, experimental)
 - ⬜️ multi-user sharing
 - ⬜️ drop passcode protection
 - ⬜️ dynamic QR codes
@@ -53,3 +64,7 @@ See the [CLI docs](/docs/features/cli) for installation and usage.
 ## VS Code Extension
 
 The deadrop VS Code extension is available on the Marketplace for Supporter+ plans. See the [VS Code docs](/docs/features/vscode) for details.
+
+## Desktop App
+
+An experimental native desktop app (macOS only for now) is available via `deadrop desktop install` from the CLI, or `install-desktop.sh`. It's built to be the "hub" for engaged users — drop, grab, and a native vault in one window.
