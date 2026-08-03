@@ -20,6 +20,7 @@ import {
 import logout from 'actions/logout';
 import whoami from 'actions/whoami';
 import update from 'actions/update';
+import { desktopInstall } from 'actions/desktop/install';
 import { displayWelcomeMessage } from 'lib/log';
 
 const deadrop = new Command();
@@ -47,6 +48,10 @@ deadrop
 deadrop
   .command('update')
   .description('update deadrop to the latest version')
+  .option(
+    '--skip-desktop',
+    "don't check for/offer a desktop app update",
+  )
   .action(update);
 
 deadrop
@@ -88,6 +93,20 @@ deadrop
   )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
+
+// desktop commands
+
+const desktopRoot = deadrop
+  .command('desktop')
+  .description('manage the deadrop desktop app');
+
+desktopRoot
+  .command('install')
+  .description(
+    'install (or update, if already installed) the deadrop desktop app',
+  )
+  .option('--force', 'reinstall even if already on the latest version')
+  .action(desktopInstall);
 
 // vault commands
 

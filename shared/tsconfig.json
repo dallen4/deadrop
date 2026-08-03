@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "strict": true,
+    "jsx": "react-jsx",
     "forceConsistentCasingInFileNames": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -16,6 +17,6 @@
       "./types/"
     ]
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
 }

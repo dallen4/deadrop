@@ -1,0 +1,36 @@
+import type { DropMessage } from '@shared/types/messages';
+import {
+  decrypt,
+  encrypt,
+  hash,
+} from '@shared/lib/crypto/operations';
+import { buildFileFromBuffer, readFileAsBuffer } from './files';
+
+// File crypto adapter for the shared drop/grab hooks. The Tauri webview has
+// the native Web Crypto API, so this mirrors web/lib/crypto.ts exactly.
+export const encryptFile = async (
+  key: CryptoKey,
+  iv: string,
+  input: File,
+) => {
+  const fileBuffer = await readFileAsBuffer(input);
+
+  return encrypt(key, iv, fileBuffer);
+};
+
+export const decryptFile = (
+  key: CryptoKey,
+  iv: string,
+  data: string,
+  meta: NonNullable<DropMessage['meta']>,
+) => {
+  const bufferTransform = (buffer: AllowSharedBufferSource) =>
+    buildFileFromBuffer(buffer as ArrayBuffer, meta);
+
+  return decrypt(key, iv, data, bufferTransform);
+};
+
+export const hashFile = async (file: File) => {
+  const fileAsArrayBuffer = await readFileAsBuffer(file);
+  return hash(new Uint8Array(fileAsArrayBuffer));
+};
