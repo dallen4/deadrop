@@ -58,10 +58,24 @@ Local vault at `/vault`: Rust-side SQLite via the `libsql` crate
 Encryption reuses `shared/lib/secrets.ts` directly; config persisted to
 `.deadroprc` (same pattern as CLI/vscode-extension).
 
+## Auth keychain backend
+
+`src-tauri/src/keychain_store.rs` uses the `keyring` crate with all three
+native-store features enabled in `Cargo.toml` (`apple-native-keyring-store`,
+`windows-native-keyring-store`, `zbus-secret-service-keyring-store`) — same
+credential-store semantics as the CLI's keytar on every platform (macOS
+Keychain, Windows Credential Manager, Linux Secret Service via D-Bus). The
+zbus backend is pure Rust, no `libdbus` system dependency needed at build
+time; it still needs a running D-Bus session + Secret Service provider
+(gnome-keyring/kwallet) at runtime on Linux.
+
 ## Follow-ups (not yet built)
 
 - OAuth via `@tauri-apps/plugin-deep-link` (`deadrop://`) for packaged builds.
 - `inject` / `secret` command parity with the CLI (`vault` CRUD is done via
   the in-app UI).
-- Windows/Linux release bundling — `desktop_publish_workflow.yml` currently
-  ships a macOS universal build only, unsigned.
+- CLI-driven install/update (`deadrop desktop install`, `cli/lib/update/desktop.ts`)
+  is still macOS-only (`hdiutil`/`ditto`/`plutil`, hardcoded `/Applications`).
+  `desktop_publish_workflow.yml` now builds and publishes Linux (AppImage) and
+  Windows (NSIS) bundles alongside macOS, but nothing installs them yet.
+- Signing — every platform ships unsigned (Gatekeeper/SmartScreen warnings).
