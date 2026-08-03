@@ -94,7 +94,7 @@ Hono routes:
 
 ### CLI (`cli/`)
 
-- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `vault` (create/use/sync/export/import/delete/env), `secret` (add/remove)
+- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `desktop install`, `vault` (create/use/sync/export/import/delete/env), `secret` (add/remove)
 - Local secrets storage: Drizzle ORM + SQLite (libsql)
 - Build: esbuild → `dist/deadrop.js`; optional standalone binary via nexe
 
@@ -103,6 +103,7 @@ Hono routes:
 | Layer | Technology |
 |---|---|
 | Frontend | Next.js 14, React 18, Mantine v8, XState v4 |
+| Desktop | Tauri v2 (Rust shell), React 19 / Vite 7 webview |
 | Auth | Clerk |
 | P2P | PeerJS + WebRTC (browser: native, Node.js: `@roamhq/wrtc`) |
 | Crypto | Web Crypto API (ECDH, AES-256-GCM, SHA-256) |

@@ -50,9 +50,18 @@ pnpm -F desktop typecheck  # tsc --noEmit (NON-gating; see note below)
 - Tauri `security.csp` is `null` (dev-open); WebRTC/PeerJS/fetch to the worker
   are unrestricted. CSP hardening is a follow-up.
 
+## Vault
+
+Local vault at `/vault`: Rust-side SQLite via the `libsql` crate
+(`src-tauri/src/vault_store.rs`), optional Turso cloud sync
+(`src/lib/vault-cloud.ts`), gated by `isExperimental` (`src/lib/billing.ts`).
+Encryption reuses `shared/lib/secrets.ts` directly; config persisted to
+`.deadroprc` (same pattern as CLI/vscode-extension).
+
 ## Follow-ups (not yet built)
 
 - OAuth via `@tauri-apps/plugin-deep-link` (`deadrop://`) for packaged builds.
-- Local vaults (needs libsql-WASM in the webview or Rust-side SQLite).
-- `inject` / `secret` / `vault` command parity with the CLI.
-- Multi-platform release bundling (`tauri-apps/tauri-action`).
+- `inject` / `secret` command parity with the CLI (`vault` CRUD is done via
+  the in-app UI).
+- Windows/Linux release bundling — `desktop_publish_workflow.yml` currently
+  ships a macOS universal build only, unsigned.
