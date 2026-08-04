@@ -1,7 +1,4 @@
 .docsTitle {
-  display: block;
-  color: inherit;
-  text-decoration: none;
   padding-top: var(--mantine-spacing-xl);
   padding-bottom: var(--mantine-spacing-sm);
   border-bottom: 1px solid

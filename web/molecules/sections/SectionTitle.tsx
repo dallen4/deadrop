@@ -1,4 +1,4 @@
-import { Anchor, Button, CopyButton, Title } from '@mantine/core';
+import { Button, CopyButton, Title } from '@mantine/core';
 
 import classes from './SectionTitle.module.css';
 import { IconCheck, IconLink } from '@tabler/icons-react';
@@ -38,22 +38,21 @@ export function DocsSectionTitle({
       timeout={2000}
     >
       {({ copied, copy }) => (
-        <Anchor
-          href={`#${id}`}
-          onClick={copy}
+        <Title
+          order={2}
+          id={id}
           className={classes.docsTitle}
+          onClick={copy}
         >
-          <Title order={2} id={id}>
-            {label}{' '}
-            <Button
-              className={classes.linkIcon}
-              variant={'transparent'}
-              aria-label={'Copy link to this section'}
-            >
-              {copied ? <IconCheck /> : <IconLink />}
-            </Button>
-          </Title>
-        </Anchor>
+          {label}{' '}
+          <Button
+            className={classes.linkIcon}
+            variant={'transparent'}
+            aria-label={'Copy link to this section'}
+          >
+            {copied ? <IconCheck /> : <IconLink />}
+          </Button>
+        </Title>
       )}
     </CopyButton>
   );
