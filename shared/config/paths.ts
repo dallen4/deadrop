@@ -12,6 +12,8 @@ export const WEB_DOCS_PATH = '/docs/features/web';
 
 export const VSCODE_DOCS_PATH = '/docs/features/vscode';
 
+export const DESKTOP_DOCS_PATH = '/docs/features/desktop';
+
 export const FAQS_DOCS_PATH = '/docs/faqs';
 
 export const FEATURES_DOCS_PATH = '/docs/features';

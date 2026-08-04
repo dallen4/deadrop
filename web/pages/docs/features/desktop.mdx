@@ -1,0 +1,62 @@
+import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
+
+# 🖥️ Desktop App
+
+> **Experimental, macOS only.** Windows and Linux builds are on the way; the app is unsigned
+> for now, so macOS will show an "unidentified developer" warning on first launch.
+
+<DocsSectionTitle
+  id={'what-it-does'}
+  label={'What it does'}
+/>
+
+A native window for drop, grab, and vault management, meant to be the "hub" for engaged
+users rather than a one-off tool. It shares your CLI sign-in through the OS keychain, so
+signing in on one signs you in on both.
+
+<DocsSectionTitle
+  id={'installation'}
+  label={'📦 Installation'}
+/>
+
+Install (or update) via the CLI:
+
+```
+deadrop desktop install
+```
+
+Or run the standalone installer script directly:
+
+```
+curl -fsSL https://deadrop.io/install-desktop.sh | sh
+```
+
+`deadrop update` also offers to update desktop automatically if it's already installed. See
+the [CLI docs](/docs/features/cli#commands) for flags.
+
+<DocsSectionTitle
+  id={'dropping-and-grabbing'}
+  label={'Dropping and grabbing'}
+/>
+
+Drop and grab work the same as the web app: paste or type a secret to drop it, or enter a
+drop ID to grab one. Since the desktop webview has native WebRTC and Web Crypto, the
+transfer runs the same peer-to-peer path as the browser, not the CLI's Node.js WebRTC shim.
+
+<DocsSectionTitle
+  id={'vault-access'}
+  label={'Vault access'}
+/>
+
+The Vault tab gives you a native local vault out of the box, stored on-device. Signed-in
+users with cloud access can enable Turso-backed cloud sync for a vault from the same view,
+so its secrets stay available across devices.
+
+<DocsSectionTitle
+  id={'related'}
+  label={'🔗 Related'}
+/>
+
+- [CLI docs](/docs/features/cli) for `deadrop desktop install`/`update` and the shared
+  keychain-backed sign-in
+- [FAQs](/docs/faqs) for answers about security, accounts, and plans
