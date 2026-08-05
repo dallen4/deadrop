@@ -21,6 +21,16 @@ export const removeOnUnloadListener = () => {
   }
 };
 
+export interface PeerConfig {
+  url: string;
+  turn: IceServerCredentials;
+}
+
+// Convenience wrapper so platform adapters can build a peer from a single
+// config object (url + TURN creds) sourced from their own env/settings.
+export const createPeerFromConfig = ({ url, turn }: PeerConfig) =>
+  createPeer(url, turn);
+
 export function createPeer(
   url: string,
   { username, credential }: IceServerCredentials,

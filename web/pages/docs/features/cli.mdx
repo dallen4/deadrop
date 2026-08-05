@@ -253,6 +253,17 @@ DEADROP_ENVIRONMENT=production \
 deadrop inject -v prod -- pnpm build
 ```
 
+### `desktop install`
+
+Install (or update, if already installed) the [desktop app](/docs/features/desktop). macOS only for now.
+
+```
+deadrop desktop install
+deadrop desktop install --force   # reinstall even if already on the latest version
+```
+
+`deadrop update` also offers to update desktop automatically if it's already installed (pass `--skip-desktop` to opt out).
+
 ### `secret`
 
 Manage secrets in the active vault.

@@ -17,7 +17,7 @@ Find documentation that has gone stale relative to what actually shipped, and fi
 2. **Agent/dev docs** — root `CLAUDE.md` and each workspace's `CLAUDE.md` (command lists, directory trees, architecture notes)
 3. **Internal tracking specs** — `specs/*.md`, especially any doc that tracks open/in-progress/done items (e.g. `post-v1-fast-follows.md`)
 
-Staleness looks like: a roadmap item still marked 🧪/🛠️/📋 that has actually shipped; a command list missing a new subcommand; a directory-tree comment describing removed/replaced behavior (e.g. "filesystem" when it's now keychain-backed); a spec's checklist item not marked DONE when the code confirms it landed.
+Staleness looks like: a roadmap item still marked 🧪/🛠️/📋 that has actually shipped; a command list missing a new subcommand; a directory-tree comment describing removed/replaced behavior (e.g. "filesystem" when it's now keychain-backed); a spec's checklist item not marked DONE when the code confirms it landed; **or the same feature described under different terminology in two places with different, contradictory status** (e.g. `features/index.mdx` calls it "multidrop" and marks it 🧪 Experimental, while `overview.mdx`'s compact list calls it "multi-user sharing" and marks it 📋 Planned, or `faqs.mdx` says it's "on the roadmap"). This last kind is invisible to PR-diffing — a fix to one file doesn't touch the others' wording — so it needs the dedicated sweep in Step 3b below, run regardless of PR window.
 
 ## Arguments
 
@@ -76,6 +76,17 @@ For each hit, read enough surrounding context to judge: does this line still acc
 
 Verify claims against the actual code before editing — grep for the function/file/flag the doc mentions to confirm current state, don't infer purely from the PR title.
 
+### 3b. Cross-file consistency sweep (always run, independent of PR window)
+
+The PR-diff pass above only catches staleness triggered by a *recent* change. It's blind to older drift where one file's feature-status was already fixed but a duplicate description elsewhere was missed at the time — that fix is invisible to a keyword grep seeded from a different PR's vocabulary, since the two descriptions don't share words (e.g. "multidrop" vs "multi-user sharing" vs "multi-recipient drops"). This step is not scoped by the PR/commit window — always run it, every invocation, regardless of arguments.
+
+`web/pages/docs/features/index.mdx` is the source of truth for feature status (✅ Shipped / 🧪 Experimental / 🛠️ In progress / 📋 Planned) — it's the only file with a formal status key. For every feature entry there:
+
+1. Extract the feature's plain-language name(s) and current status.
+2. Search `overview.mdx`'s compact Features list, `faqs.mdx`, and any other doc mentioning the same capability — under whatever synonym it's likely to use, not just the exact string from `features/index.mdx` (think through obvious rephrasings: a feature named "X — Y" in one doc might appear as "Y" or "multi-Z" elsewhere; check plausible alternate phrasings, not just literal substring matches).
+3. Confirm the status/framing agrees. A ✅/🧪/🛠️ item must not appear elsewhere as "planned," "on the roadmap," "coming soon," or an unchecked box — and vice versa.
+4. Fix every disagreement found this way, even if it traces back to a PR outside the current window.
+
 ### 4. Apply fixes
 
 Edit stale lines directly (this command applies fixes, it does not just report). For each edit:
@@ -89,6 +100,7 @@ Edit stale lines directly (this command applies fixes, it does not just report).
 Summarize:
 - PR/commit window covered
 - Which PRs triggered doc changes, and why (one line each)
+- Any cross-file inconsistencies found by the Step 3b sweep, called out separately from PR-triggered changes since they aren't tied to the window
 - Files touched, grouped by tier (user-facing / CLAUDE.md / specs)
 - Anything you found stale but deliberately left alone (e.g. ambiguous roadmap classification, or a PR whose user-facing impact was unclear) — flag these for the user rather than guessing
 

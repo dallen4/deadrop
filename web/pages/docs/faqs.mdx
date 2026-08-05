@@ -74,11 +74,11 @@ Yes. Closing the dropper's tab (or terminating the CLI session) tears down the W
 
 ### How many people can I drop a secret to at once?
 
-One. Each drop session is a 1:1 handoff between dropper and grabber. Multi-recipient drops are on the roadmap as a premium feature.
+Free plan drops are capped at one grabber, a 1:1 handoff between dropper and grabber. Supporter+ plans can enable multidrop (experimental) to accept multiple grabbers in the same drop session. See [Features](/docs/features#experimental) for details.
 
 ### Can I send the same secret to multiple people?
 
-You can start a new drop for each recipient. Each gets a unique drop ID and fresh keys. We deliberately don't reuse drop sessions so that compromising one handoff doesn't expose others.
+On a Supporter+ plan, multidrop lets one drop session accept multiple grabbers, all receiving the same secret. On the free plan, start a new drop for each recipient instead: each gets a unique drop ID and fresh keys, so compromising one handoff doesn't expose others.
 
 <DocsSectionTitle
   id={'surfaces'}
@@ -87,17 +87,18 @@ You can start a new drop for each recipient. Each gets a unique drop ID and fres
 
 ### Is this service only available as a web application?
 
-No. deadrop has three surfaces:
+No. deadrop has four surfaces:
 
 - **Web app**: `deadrop.io`, also installable as a PWA
 - **CLI**: `deadrop` on npm or via the install script. Runs on macOS, Linux, and Windows
 - **VS Code extension**: drop, grab, and manage local or cloud-synced vaults directly from your editor (experimental, Supporter+ plans)
+- **Desktop app**: a native app with drop, grab, and a local/cloud-synced vault in one window (experimental, macOS only), install via `deadrop desktop install`
 
-All three implement the same cryptographic protocol and can interoperate. For example, you can drop from the CLI and grab in the browser.
+All four implement the same cryptographic protocol and can interoperate. For example, you can drop from the CLI and grab in the browser.
 
-### What's the difference between the web app, CLI, and VS Code extension?
+### What's the difference between the web app, CLI, VS Code extension, and desktop app?
 
-The web app is the easiest entry point and requires zero setup. The CLI is best for scripting, automation, dropping files from your terminal, and injecting vault secrets into CI/CD jobs (`deadrop inject`). It also unlocks CI/CD service tokens on paid plans. The VS Code extension brings drop, grab, and vault access into your editor without context-switching.
+The web app is the easiest entry point and requires zero setup. The CLI is best for scripting, automation, dropping files from your terminal, and injecting vault secrets into CI/CD jobs (`deadrop inject`). It also unlocks CI/CD service tokens on paid plans. The VS Code extension brings drop, grab, and vault access into your editor without context-switching. The desktop app is a dedicated native hub for drop, grab, and vault management, sharing your CLI sign-in via the OS keychain.
 
 <DocsSectionTitle
   id={'vaults'}

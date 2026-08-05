@@ -4,10 +4,13 @@ packages:
   - worker
   - cli
   - vscode-extension
+  - desktop
   - tests
 
 onlyBuiltDependencies:
   - '@sentry/cli'
+  - '@swc/core'
+  - '@vscode/vsce-sign'
   # bun's postinstall (node install.js) materializes the platform binary from
   # its @oven/bun-* optional deps; without it `pnpm -F cli compile` has no bun.
   - bun
@@ -16,6 +19,7 @@ onlyBuiltDependencies:
   - esbuild-plugin-define
   - esbuild-plugin-environment
   - fsevents
+  - keytar
   - node-datachannel
   - sharp
   - unrs-resolver

@@ -1,0 +1,137 @@
+name: Release Desktop App
+on:
+  push:
+    tags:
+      - 'deadrop-desktop@*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Override release tag (defaults to the dispatched ref, e.g. deadrop-desktop@0.1.0)'
+        required: false
+
+jobs:
+  desktop-release:
+    name: Build + release (${{ matrix.name }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS universal
+            runner: macos-latest
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            args: --target universal-apple-darwin
+            bundle-glob: desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          # ubuntu-22.04, not -latest: Tauri's AppImage bundling links
+          # against the runner's glibc, and 22.04's older glibc keeps the
+          # result compatible with more end-user distros than 24.04's would.
+          - name: Linux (x86_64 AppImage)
+            runner: ubuntu-22.04
+            rust-targets: ''
+            args: ''
+            bundle-glob: desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+          - name: Windows (x86_64 NSIS)
+            runner: windows-latest
+            rust-targets: ''
+            args: ''
+            bundle-glob: desktop/src-tauri/target/release/bundle/nsis/*.exe
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Standard Tauri v2 Linux bundling prerequisites — webkit2gtk for the
+      # webview, appindicator/librsvg for tray + icon rendering, patchelf for
+      # the AppImage step. None of this is needed on macOS/Windows.
+      - name: Install Linux system dependencies
+        if: matrix.runner == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libxdo-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri
+
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          tag="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#deadrop-desktop@}" >> "$GITHUB_OUTPUT"
+
+      - name: Build + release Tauri app
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Baked into the frontend at build time (Vite) — same
+          # secrets/vars desktop_ci_workflow.yml validates against.
+          VITE_DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          VITE_PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
+          VITE_TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
+          VITE_TURN_PWD: ${{ secrets.TURN_PWD }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
+          VITE_WEB_URL: ${{ vars.DEADROP_APP_URL }}
+        with:
+          projectPath: desktop
+          tagName: ${{ steps.tag.outputs.tag }}
+          releaseName: 'Desktop v${{ steps.tag.outputs.version }}'
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
+
+      # tauri-action doesn't generate checksums (unlike cli_publish_workflow.yml,
+      # which explicitly does for every CLI binary) — do it ourselves and
+      # upload alongside the bundle it already published, so every install
+      # path can verify.
+      - name: Checksum + upload bundle
+        shell: bash
+        run: |
+          f=$(ls ${{ matrix.bundle-glob }})
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "$f" > "$f.sha256"
+          else
+            shasum -a 256 "$f" > "$f.sha256"
+          fi
+          gh release upload "${{ steps.tag.outputs.tag }}" "$f.sha256"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # NOTE: unsigned builds on every platform — no Apple Developer ID /
+      # notarization, no Windows code-signing cert (matches the CLI's own
+      # binaries, also unsigned today). macOS users hit Gatekeeper's
+      # "unidentified developer" warning; Windows users hit SmartScreen.
+      # Signing is a tracked fast-follow, not a blocker for this pipeline.
+      #
+      # NOTE: only `deadrop desktop install`/`install-desktop.sh` (macOS)
+      # know how to consume these releases today — Linux/Windows artifacts
+      # publish here but have no CLI-driven install path yet. That's
+      # `cli/lib/update/desktop.ts`, tracked separately.
+      #
+      # NOTE: nothing currently creates/pushes a `deadrop-desktop@*` tag
+      # automatically — desktop isn't part of the changesets/npm-publish
+      # flow the CLI uses (desktop/package.json is private, unpublished).
+      # This workflow only fires on a manually pushed tag or
+      # workflow_dispatch until that's designed.

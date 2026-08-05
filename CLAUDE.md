@@ -15,6 +15,7 @@ pnpm Workspaces (see `pnpm-workspace.yaml`):
 - `worker/` — Cloudflare Worker (Hono framework) providing the backend API, Redis-backed (Upstash) drop session storage, Turso-backed vaults, and PeerJS signaling via Durable Objects.
 - `cli/` — Node.js CLI published to npm as `deadrop`.
 - `vscode-extension/` — VS Code extension (`deadrop-vsc`), see its own `CLAUDE.md`.
+- `desktop/` — Tauri v2 desktop app (Rust shell + React 19 / Vite webview), the "true hub". Consumes the shared drop/grab hooks (`shared/hooks/`) + Mantine components (`shared/components/`). See its own `CLAUDE.md`.
 - `tests/` — Cross-platform e2e suite that drives web + CLI actors against the same live drop (see `specs/cross-platform-e2e-design.md`).
 
 ## Commands
@@ -93,7 +94,7 @@ Hono routes:
 
 ### CLI (`cli/`)
 
-- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `vault` (create/use/sync/export/import/delete/env), `secret` (add/remove)
+- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `desktop install`, `vault` (create/use/sync/export/import/delete/env), `secret` (add/remove)
 - Local secrets storage: Drizzle ORM + SQLite (libsql)
 - Build: esbuild → `dist/deadrop.js`; optional standalone binary via nexe
 
@@ -102,6 +103,7 @@ Hono routes:
 | Layer | Technology |
 |---|---|
 | Frontend | Next.js 14, React 18, Mantine v8, XState v4 |
+| Desktop | Tauri v2 (Rust shell), React 19 / Vite 7 webview |
 | Auth | Clerk |
 | P2P | PeerJS + WebRTC (browser: native, Node.js: `@roamhq/wrtc`) |
 | Crypto | Web Crypto API (ECDH, AES-256-GCM, SHA-256) |
@@ -150,4 +152,5 @@ Each workspace has its own `CLAUDE.md` with package-specific context:
 - `worker/CLAUDE.md` — Hono routes, Durable Objects, Redis/Turso patterns
 - `cli/CLAUDE.md` — Commander.js commands, Drizzle ORM, esbuild
 - `vscode-extension/CLAUDE.md` — extension host + webview architecture
+- `desktop/CLAUDE.md` — Tauri shell + React/Vite webview; consumes shared hooks + Mantine components
 - `tests/CLAUDE.md` — cross-platform (web↔cli) e2e actors, run against a live deployment

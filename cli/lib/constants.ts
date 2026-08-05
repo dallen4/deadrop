@@ -11,7 +11,12 @@ export const LOCALHOST_AUTH_URL = `http://localhost:${LOCALHOST_AUTH_PORT}`;
 // `deadrop update` binary-install path — same repo/naming convention as install.sh
 export const GITHUB_REPO = 'dallen4/deadrop';
 export const BINARY_NAME = 'deadrop';
-export const GITHUB_LATEST_RELEASE_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+// The CLI (`deadrop@x.y.z`) and desktop (`deadrop-desktop@x.y.z`) release
+// trains share this one releases list — GET /releases/latest doesn't
+// distinguish between them, so callers must fetch the list and filter by
+// tag prefix instead (see cli/lib/update/version.ts's fetchLatestBinaryVersion
+// and cli/lib/update/desktop.ts's fetchLatestDesktopRelease).
+export const GITHUB_RELEASES_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases`;
 export const NPM_REGISTRY_LATEST_URL =
   'https://registry.npmjs.org/deadrop/latest';
 

@@ -40,11 +40,40 @@ describe('fetchLatestBinaryVersion / fetchLatestNpmVersion', () => {
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ tag_name: 'deadrop@2.0.0' }),
+        json: async () => [{ tag_name: 'deadrop@2.0.0' }],
       }),
     );
 
     await expect(fetchLatestBinaryVersion()).resolves.toBe('2.0.0');
+  });
+
+  it('skips desktop releases and resolves the newest CLI tag', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [
+          { tag_name: 'deadrop-desktop@1.0.0' },
+          { tag_name: 'deadrop@2.0.0' },
+        ],
+      }),
+    );
+
+    await expect(fetchLatestBinaryVersion()).resolves.toBe('2.0.0');
+  });
+
+  it('throws when no CLI release exists in the list', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => [{ tag_name: 'deadrop-desktop@1.0.0' }],
+      }),
+    );
+
+    await expect(fetchLatestBinaryVersion()).rejects.toThrow(
+      /No published deadrop CLI release/,
+    );
   });
 
   it('throws when the GitHub releases API request fails', async () => {

@@ -3,7 +3,8 @@ import { cwd } from 'process';
 import { STORAGE_DIR_NAME } from '@shared/lib/constants';
 import { logInfo } from 'lib/log';
 
-const SERVICE = 'deadrop-cli';
+const SERVICE = 'deadrop';
+const LEGACY_SERVICE = 'deadrop-cli';
 const ACCOUNT = 'auth-token';
 
 let warnedKeychainError = false;
@@ -34,16 +35,60 @@ function keychainUnavailableMessage(): string {
   return 'Secure credential storage is unavailable. If your OS just prompted for keychain access, allow it and run `deadrop login` again.';
 }
 
-// Never throws: missing entry is silent, backend failure warns once
+// Never throws: missing entry is silent, backend failure warns once.
+// Falls back to the pre-rename `deadrop-cli` service on a miss and
+// migrates it forward to `deadrop`, so existing CLI installs don't need
+// to re-login after the service rename.
 export async function getToken(): Promise<string> {
   try {
     if (process.env.DEADROP_INSTALL_METHOD === 'binary') {
-      return (
-        (await Bun.secrets.get({ service: SERVICE, name: ACCOUNT })) ?? ''
-      );
+      const token = await Bun.secrets.get({ service: SERVICE, name: ACCOUNT });
+      if (token) return token;
+
+      const legacyToken = await Bun.secrets.get({
+        service: LEGACY_SERVICE,
+        name: ACCOUNT,
+      });
+      if (!legacyToken) return '';
+
+      await Bun.secrets.set({
+        service: SERVICE,
+        name: ACCOUNT,
+        value: legacyToken,
+      });
+      try {
+        await Bun.secrets.delete({ service: LEGACY_SERVICE, name: ACCOUNT });
+      } catch {
+        // best effort
+      }
+      return legacyToken;
     }
+
     const { Entry } = require('@napi-rs/keyring');
-    return new Entry(SERVICE, ACCOUNT).getPassword() ?? '';
+
+    let token: string | undefined;
+    try {
+      token = new Entry(SERVICE, ACCOUNT).getPassword();
+    } catch (err) {
+      if (!isMissingEntry(err)) throw err;
+    }
+    if (token) return token;
+
+    let legacyToken: string | undefined;
+    try {
+      legacyToken = new Entry(LEGACY_SERVICE, ACCOUNT).getPassword();
+    } catch (err) {
+      if (!isMissingEntry(err)) throw err;
+    }
+    if (!legacyToken) return '';
+
+    new Entry(SERVICE, ACCOUNT).setPassword(legacyToken);
+    try {
+      new Entry(LEGACY_SERVICE, ACCOUNT).deletePassword();
+    } catch {
+      // best effort
+    }
+    return legacyToken;
   } catch (err) {
     if (!isMissingEntry(err)) warnKeychainOnce();
     return '';
@@ -69,13 +114,27 @@ export async function setSession(token: string): Promise<void> {
 }
 
 export async function clearSession(): Promise<void> {
-  try {
-    if (process.env.DEADROP_INSTALL_METHOD === 'binary') {
+  if (process.env.DEADROP_INSTALL_METHOD === 'binary') {
+    try {
       await Bun.secrets.delete({ service: SERVICE, name: ACCOUNT });
-      return;
+    } catch {
+      // already gone or backend unavailable
     }
-    const { Entry } = require('@napi-rs/keyring');
+    try {
+      await Bun.secrets.delete({ service: LEGACY_SERVICE, name: ACCOUNT });
+    } catch {
+      // already gone or backend unavailable
+    }
+    return;
+  }
+  const { Entry } = require('@napi-rs/keyring');
+  try {
     new Entry(SERVICE, ACCOUNT).deletePassword();
+  } catch {
+    // already gone or backend unavailable
+  }
+  try {
+    new Entry(LEGACY_SERVICE, ACCOUNT).deletePassword();
   } catch {
     // already gone or backend unavailable
   }

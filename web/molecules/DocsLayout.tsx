@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
   CLI_DOCS_PATH,
+  DESKTOP_DOCS_PATH,
   FAQS_DOCS_PATH,
   FEATURES_DOCS_PATH,
   OVERVIEW_DOCS_PATH,
@@ -31,6 +32,7 @@ const featureLinks = [
   // { label: 'Web App', href: WEB_DOCS_PATH },
   { label: 'CLI', href: CLI_DOCS_PATH },
   { label: 'VS Code', href: VSCODE_DOCS_PATH },
+  { label: 'Desktop', href: DESKTOP_DOCS_PATH },
 ];
 
 type NavContentProps = {
