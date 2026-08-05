@@ -1,6 +1,6 @@
 {
   "name": "shared",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "build/index.js",
   "license": "MIT",
   "private": true,
@@ -20,15 +20,35 @@
     "ws": "*"
   },
   "peerDependenciesMeta": {
-    "@mantine/core": { "optional": true },
-    "@mantine/dropzone": { "optional": true },
-    "@mantine/form": { "optional": true },
-    "@mantine/hooks": { "optional": true },
-    "@mantine/notifications": { "optional": true },
-    "@tabler/icons-react": { "optional": true },
-    "@xstate/react": { "optional": true },
-    "qrcode": { "optional": true },
-    "react": { "optional": true },
-    "react-dom": { "optional": true }
+    "@mantine/core": {
+      "optional": true
+    },
+    "@mantine/dropzone": {
+      "optional": true
+    },
+    "@mantine/form": {
+      "optional": true
+    },
+    "@mantine/hooks": {
+      "optional": true
+    },
+    "@mantine/notifications": {
+      "optional": true
+    },
+    "@tabler/icons-react": {
+      "optional": true
+    },
+    "@xstate/react": {
+      "optional": true
+    },
+    "qrcode": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   }
 }
