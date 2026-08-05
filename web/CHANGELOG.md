@@ -1,5 +1,16 @@
 # web
 
+## 1.0.3
+
+### Patch Changes
+
+- 84acb4f: Added a dedicated desktop app docs page and linked it from the
+  overview, features, and CLI docs. Fixed the docs section-heading
+  button, which looked clickable but had no handler wired up; clicking a
+  section heading now copies a link to that section.
+- Updated dependencies [84acb4f]
+  - shared@1.1.0
+
 ## 1.0.2
 
 ### Patch Changes
