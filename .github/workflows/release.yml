@@ -72,7 +72,11 @@ jobs:
           echo "Dispatching CLI binary build for $tag"
           gh workflow run cli_publish_workflow.yml --ref "$tag"
       - name: Trigger desktop release
-        if: steps.changesets.outputs.published == 'true'
+        # Not `published == 'true'`: that only reflects an actual npm publish,
+        # and desktop is private (never published to npm), so a desktop-only
+        # release would leave it 'false' forever. hasChangesets is 'false' on
+        # the real post-merge run and 'true' on the version-PR-opening run.
+        if: steps.changesets.outputs.hasChangesets == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
