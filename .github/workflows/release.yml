@@ -71,6 +71,19 @@ jobs:
           done
           echo "Dispatching CLI binary build for $tag"
           gh workflow run cli_publish_workflow.yml --ref "$tag"
+      - name: Trigger desktop release
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(jq -r .version desktop/package.json)
+          tag="deadrop-desktop@${version}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "$tag already exists, skipping (desktop version unchanged this release)"
+            exit 0
+          fi
+          git tag "$tag"
+          git push origin "refs/tags/$tag"
       - name: Restore cli/package.json name
         if: always()
         run: git checkout -- cli/package.json
