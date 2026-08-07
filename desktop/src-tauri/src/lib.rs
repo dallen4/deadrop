@@ -1,6 +1,8 @@
+mod config_import;
 mod keychain_store;
 mod vault_store;
 
+use config_import::read_external_text_file;
 use keychain_store::{clear_auth_token, get_auth_token, set_auth_token};
 use vault_store::{
     vault_add_secret, vault_delete_secret, vault_ensure_schema, vault_get_encrypted_secret,
@@ -19,6 +21,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             get_auth_token,
@@ -31,6 +34,7 @@ pub fn run() {
             vault_update_secret,
             vault_rename_secret,
             vault_delete_secret,
+            read_external_text_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

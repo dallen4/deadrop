@@ -19,6 +19,7 @@ import {
   IconChevronDown,
   IconCloud,
   IconCloudOff,
+  IconFileImport,
   IconPlus,
 } from '@tabler/icons-react';
 import { MainWrapper } from '@shared/components';
@@ -87,15 +88,34 @@ export const VaultPage = () => {
       <MainWrapper py={'xl'}>
         <Center mih={'50vh'}>
           <Stack gap={'md'} align={'center'}>
+            {vault.error && (
+              <Alert
+                color={'red'}
+                icon={<IconAlertCircle size={16} />}
+                onClose={() => {}}
+              >
+                {vault.error}
+              </Alert>
+            )}
             <Text size={'sm'} c={'dimmed'}>
               You don&apos;t have a vault yet.
             </Text>
-            <Button
-              leftSection={<IconPlus size={14} />}
-              onClick={() => setCreateModalOpen(true)}
-            >
-              Create your vault
-            </Button>
+            <Group gap={'sm'}>
+              <Button
+                leftSection={<IconPlus size={14} />}
+                onClick={() => setCreateModalOpen(true)}
+              >
+                Create your vault
+              </Button>
+              <Button
+                variant={'default'}
+                leftSection={<IconFileImport size={14} />}
+                loading={vault.busy}
+                onClick={() => void vault.importVault()}
+              >
+                Import existing vault
+              </Button>
+            </Group>
           </Stack>
         </Center>
         <CreateVaultModal
@@ -145,6 +165,12 @@ export const VaultPage = () => {
                   onClick={() => setCreateModalOpen(true)}
                 >
                   New vault
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconFileImport size={14} />}
+                  onClick={() => void vault.importVault()}
+                >
+                  Import vault
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
