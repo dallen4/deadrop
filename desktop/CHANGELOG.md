@@ -1,5 +1,11 @@
 # desktop
 
+## 0.2.1
+
+### Patch Changes
+
+- 40218b6: Release CI now auto-tags desktop releases on publish instead of requiring a manual `deadrop-desktop@*` tag push, and desktop CI/publish builds use prod Clerk credentials instead of placeholders.
+
 ## 0.2.0
 
 ### Minor Changes
