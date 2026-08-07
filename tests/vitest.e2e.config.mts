@@ -13,6 +13,9 @@ export default defineConfig({
     setupFiles: ['dotenv/config'],
     testTimeout: 90_000,
     hookTimeout: 30_000,
+    // CI has needed manual reruns for this suite; retry flaky live-deployment
+    // failures in-process before requiring a human to re-trigger the job.
+    retry: 2,
     // One flow at a time: real browsers + WebRTC peers are resource-heavy.
     fileParallelism: false,
     pool: 'forks',
