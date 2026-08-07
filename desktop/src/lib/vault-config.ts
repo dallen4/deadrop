@@ -7,7 +7,7 @@ import {
 } from '@tauri-apps/plugin-fs';
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { parse, stringify } from 'yaml';
-import { initConfig, vault as buildVaultConfig } from '@shared/lib/vault';
+import { vault as buildVaultConfig } from '@shared/lib/vault';
 import type { DeadropConfig, VaultDBConfig } from '@shared/types/config';
 
 // Same `.deadroprc` YAML pattern CLI (lib/config.ts) and vscode-extension
@@ -42,24 +42,6 @@ async function ensureVaultsDir(): Promise<void> {
     baseDir: BaseDirectory.AppData,
     recursive: true,
   });
-}
-
-async function defaultVaultPath(): Promise<string> {
-  await ensureVaultsDir();
-  const dir = await appDataDir();
-  return join(dir, 'vaults', 'default.db');
-}
-
-// Mirrors cli/actions/init.ts + shared/lib/vault.ts's initConfig(): first
-// launch with no config bootstraps one vault named `default`, no manual
-// "create your first vault" step required.
-export async function loadOrBootstrapVaultConfig(): Promise<DeadropConfig> {
-  const existing = await loadVaultConfig();
-  if (existing) return existing;
-
-  const config = await initConfig(await defaultVaultPath());
-  await saveVaultConfig(config);
-  return config;
 }
 
 export async function vaultPathForName(name: string): Promise<string> {

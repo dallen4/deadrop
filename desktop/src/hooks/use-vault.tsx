@@ -7,7 +7,7 @@ import { isExperimental } from '../lib/billing';
 import { useApiHeaders } from '../lib/api-headers';
 import {
   createNamedVault,
-  loadOrBootstrapVaultConfig,
+  loadVaultConfig,
   saveVaultConfig,
 } from '../lib/vault-config';
 import { deleteCloudVault, provisionCloudVault } from '../lib/vault-cloud';
@@ -49,7 +49,7 @@ export const useVault = () => {
   useEffect(() => {
     (async () => {
       try {
-        setConfig(await loadOrBootstrapVaultConfig());
+        setConfig(await loadVaultConfig());
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -100,7 +100,6 @@ export const useVault = () => {
 
   const createVault = (name: string, cloud: boolean) =>
     withBusy(async () => {
-      if (!config) return;
       const vaultConfig = await createNamedVault(name);
 
       if (cloud) {
@@ -112,7 +111,7 @@ export const useVault = () => {
 
       const next: DeadropConfig = {
         active_vault: { name, environment: 'development' },
-        vaults: { ...config.vaults, [name]: vaultConfig },
+        vaults: { ...config?.vaults, [name]: vaultConfig },
       };
       setConfig(next);
       await saveVaultConfig(next);

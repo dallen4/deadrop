@@ -82,6 +82,33 @@ export const VaultPage = () => {
     );
   }
 
+  if (!vault.config) {
+    return (
+      <MainWrapper py={'xl'}>
+        <Center mih={'50vh'}>
+          <Stack gap={'md'} align={'center'}>
+            <Text size={'sm'} c={'dimmed'}>
+              You don&apos;t have a vault yet.
+            </Text>
+            <Button
+              leftSection={<IconPlus size={14} />}
+              onClick={() => setCreateModalOpen(true)}
+            >
+              Create your vault
+            </Button>
+          </Stack>
+        </Center>
+        <CreateVaultModal
+          opened={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          canCloudSync={vault.canCloudSync}
+          busy={vault.busy}
+          onCreate={vault.createVault}
+        />
+      </MainWrapper>
+    );
+  }
+
   const vaultNames = Object.keys(vault.config?.vaults ?? {});
   const filtered = vault.secretNames.filter(
     (s) => s.environment === vault.activeEnv,
