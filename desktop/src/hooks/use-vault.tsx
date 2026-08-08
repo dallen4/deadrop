@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@clerk/react';
+import { showNotification } from '@mantine/notifications';
 import { initEnvKey } from '@shared/lib/vault';
 import { unwrapSecret, wrapSecret } from '@shared/lib/secrets';
 import type { DeadropConfig } from '@shared/types/config';
@@ -7,7 +8,8 @@ import { isExperimental } from '../lib/billing';
 import { useApiHeaders } from '../lib/api-headers';
 import {
   createNamedVault,
-  loadOrBootstrapVaultConfig,
+  loadVaultConfig,
+  pickExternalVaultConfig,
   saveVaultConfig,
 } from '../lib/vault-config';
 import { deleteCloudVault, provisionCloudVault } from '../lib/vault-cloud';
@@ -49,7 +51,7 @@ export const useVault = () => {
   useEffect(() => {
     (async () => {
       try {
-        setConfig(await loadOrBootstrapVaultConfig());
+        setConfig(await loadVaultConfig());
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -100,7 +102,6 @@ export const useVault = () => {
 
   const createVault = (name: string, cloud: boolean) =>
     withBusy(async () => {
-      if (!config) return;
       const vaultConfig = await createNamedVault(name);
 
       if (cloud) {
@@ -112,10 +113,50 @@ export const useVault = () => {
 
       const next: DeadropConfig = {
         active_vault: { name, environment: 'development' },
-        vaults: { ...config.vaults, [name]: vaultConfig },
+        vaults: { ...config?.vaults, [name]: vaultConfig },
       };
       setConfig(next);
       await saveVaultConfig(next);
+    });
+
+  // Links vaults from a project-scoped `.deadroprc` (CLI `deadrop init` /
+  // `vault create`, or vscode-extension) into this config, keyed by name.
+  // The DB `location` stays wherever the project put it — desktop just
+  // starts tracking it alongside vaults created in-app.
+  const importVault = () =>
+    withBusy(async () => {
+      const imported = await pickExternalVaultConfig();
+      if (!imported) return;
+
+      const existingNames = new Set(Object.keys(config?.vaults ?? {}));
+      const nextVaults = { ...config?.vaults };
+      const importedNames: string[] = [];
+
+      for (const [name, vaultConfig] of Object.entries(imported.vaults)) {
+        let finalName = name;
+        let suffix = 2;
+        while (existingNames.has(finalName)) {
+          finalName = `${name}-${suffix++}`;
+        }
+        existingNames.add(finalName);
+        nextVaults[finalName] = vaultConfig;
+        importedNames.push(finalName);
+      }
+
+      const next: DeadropConfig = {
+        active_vault: config?.active_vault ?? {
+          name: importedNames[0],
+          environment: 'development',
+        },
+        vaults: nextVaults,
+      };
+      setConfig(next);
+      await saveVaultConfig(next);
+
+      showNotification({
+        message: `Imported vault${importedNames.length > 1 ? 's' : ''}: ${importedNames.join(', ')}`,
+        color: 'teal',
+      });
     });
 
   const createEnvironment = (name: string) =>
@@ -237,6 +278,7 @@ export const useVault = () => {
     switchVault,
     switchEnv,
     createVault,
+    importVault,
     createEnvironment,
     toggleCloudSync,
     addSecret,

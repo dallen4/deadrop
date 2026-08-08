@@ -31,4 +31,5 @@ tauri-plugin-http = { version = "2.5.9", features = ["unsafe-headers"] }
 libsql = { version = "0.9.30", features = ["remote", "replication"] }
 tokio = { version = "1.53.1", features = ["time"] }
 tauri-plugin-fs = "2.5.1"
+tauri-plugin-dialog = "2"
 

@@ -19,9 +19,10 @@ import {
   IconChevronDown,
   IconCloud,
   IconCloudOff,
+  IconFileImport,
   IconPlus,
 } from '@tabler/icons-react';
-import { MainWrapper } from '@shared/components';
+import { MainWrapper } from '../components/MainWrapper';
 import { useVault } from '../hooks/use-vault';
 import { AddSecretForm } from '../components/vault/AddSecretForm';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
@@ -82,13 +83,59 @@ export const VaultPage = () => {
     );
   }
 
+  if (!vault.config) {
+    return (
+      <MainWrapper>
+        <Center mih={'50vh'}>
+          <Stack gap={'md'} align={'center'}>
+            {vault.error && (
+              <Alert
+                color={'red'}
+                icon={<IconAlertCircle size={16} />}
+                onClose={() => {}}
+              >
+                {vault.error}
+              </Alert>
+            )}
+            <Text size={'sm'} c={'dimmed'}>
+              You don&apos;t have a vault yet.
+            </Text>
+            <Group gap={'sm'}>
+              <Button
+                leftSection={<IconPlus size={14} />}
+                onClick={() => setCreateModalOpen(true)}
+              >
+                Create your vault
+              </Button>
+              <Button
+                variant={'default'}
+                leftSection={<IconFileImport size={14} />}
+                loading={vault.busy}
+                onClick={() => void vault.importVault()}
+              >
+                Import existing vault
+              </Button>
+            </Group>
+          </Stack>
+        </Center>
+        <CreateVaultModal
+          opened={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          canCloudSync={vault.canCloudSync}
+          busy={vault.busy}
+          onCreate={vault.createVault}
+        />
+      </MainWrapper>
+    );
+  }
+
   const vaultNames = Object.keys(vault.config?.vaults ?? {});
   const filtered = vault.secretNames.filter(
     (s) => s.environment === vault.activeEnv,
   );
 
   return (
-    <MainWrapper py={'xl'}>
+    <MainWrapper>
       <Stack gap={'lg'} w={'100%'}>
         <Group justify={'space-between'}>
           <Group gap={'sm'}>
@@ -118,6 +165,12 @@ export const VaultPage = () => {
                   onClick={() => setCreateModalOpen(true)}
                 >
                   New vault
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconFileImport size={14} />}
+                  onClick={() => void vault.importVault()}
+                >
+                  Import vault
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>

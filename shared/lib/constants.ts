@@ -66,6 +66,11 @@ export const CONFIG_FILE_NAME = '.deadroprc';
 
 export const STORAGE_DIR_NAME = '.deadrop';
 
+// Must match `identifier` in desktop/src-tauri/tauri.conf.json — used by
+// the CLI to compute the same OS app-data directory Tauri's
+// app_data_dir() resolves to, so both share one global default config.
+export const APP_IDENTIFIER = 'com.deadrop';
+
 export const DEFAULT_VAULT_NAME = 'default.db';
 
 export const SECRET_VALUE_DELIMITER = ' | ';

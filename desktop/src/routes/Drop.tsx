@@ -1,5 +1,6 @@
 import { useAuth } from '@clerk/react';
-import { DropFlow, MainWrapper } from '@shared/components';
+import { DropFlow } from '@shared/components';
+import { MainWrapper } from '../components/MainWrapper';
 import { DropState } from '@shared/lib/constants';
 import { DropProvider, useDropContext } from '../contexts/DropContext';
 import { isExperimental } from '../lib/billing';

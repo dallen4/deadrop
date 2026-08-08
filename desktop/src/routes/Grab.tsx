@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button, Stack, Text, TextInput } from '@mantine/core';
-import { GrabFlow, MainWrapper } from '@shared/components';
+import { GrabFlow } from '@shared/components';
+import { MainWrapper } from '../components/MainWrapper';
 import { GrabState } from '@shared/lib/constants';
 import { GrabProvider, useGrabContext } from '../contexts/GrabContext';
 import { downloadFile } from '../lib/files';

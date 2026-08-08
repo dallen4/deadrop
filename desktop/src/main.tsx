@@ -1,5 +1,13 @@
 import type { Clerk } from '@clerk/clerk-js';
-import { StrictMode, Suspense, use, useEffect, useRef } from 'react';
+import {
+  Component,
+  StrictMode,
+  Suspense,
+  use,
+  useEffect,
+  useRef,
+  type ReactNode,
+} from 'react';
 import ReactDOM from 'react-dom/client';
 import { ClerkProvider } from '@clerk/react';
 import { invoke } from '@tauri-apps/api/core';
@@ -38,6 +46,77 @@ const useClearSharedTokenOnSignOut = (clerk: Clerk) => {
   }, [clerk]);
 };
 
+// TEMPORARY diagnostic: `Suspense fallback={null}` hides Clerk init
+// failures as a permanent blank screen with nothing in any log. This
+// surfaces the actual error on-screen instead. Remove once the boot
+// white-screen issue is root-caused.
+class BootErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: unknown }
+> {
+  state = { error: undefined as unknown };
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error !== undefined) {
+      return (
+        <pre style={{ padding: 24, whiteSpace: 'pre-wrap', color: 'red' }}>
+          {String(
+            this.state.error instanceof Error
+              ? (this.state.error.stack ?? this.state.error.message)
+              : this.state.error,
+          )}
+        </pre>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const BootLoading = () => (
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 16,
+      height: '100vh',
+      width: '100vw',
+      background: '#1a1b1e',
+    }}
+  >
+    <img
+      src={'/handshake.svg'}
+      alt={'deadrop'}
+      width={48}
+      height={48}
+      style={{ animation: 'deadrop-pulse 1.6s ease-in-out infinite' }}
+    />
+    <span
+      style={{
+        fontFamily:
+          '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif',
+        fontWeight: 600,
+        fontSize: 14,
+        letterSpacing: 0.2,
+        color: '#c1c2c5',
+      }}
+    >
+      deadrop
+    </span>
+    <style>{`
+      @keyframes deadrop-pulse {
+        0%, 100% { opacity: 0.45; transform: scale(0.96); }
+        50% { opacity: 1; transform: scale(1); }
+      }
+    `}</style>
+  </div>
+);
+
 const AppWithClerk = () => {
   const clerk = use(clerkPromise);
   useClearSharedTokenOnSignOut(clerk);
@@ -59,7 +138,7 @@ const AppWithClerk = () => {
     >
       <MantineProvider
         defaultColorScheme={'dark'}
-        theme={{ primaryColor: 'blue' }}
+        theme={{ primaryColor: 'blue', scale: 1.1 }}
       >
         <Notifications />
         <RouterProvider router={router} />
@@ -72,8 +151,10 @@ ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
 ).render(
   <StrictMode>
-    <Suspense fallback={null}>
-      <AppWithClerk />
-    </Suspense>
+    <BootErrorBoundary>
+      <Suspense fallback={<BootLoading />}>
+        <AppWithClerk />
+      </Suspense>
+    </BootErrorBoundary>
   </StrictMode>,
 );
