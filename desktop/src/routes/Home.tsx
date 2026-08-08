@@ -15,7 +15,7 @@ import {
   IconDownload,
   IconLock,
 } from '@tabler/icons-react';
-import { MainWrapper } from '@shared/components';
+import { MainWrapper } from '../components/MainWrapper';
 
 // Desktop home is a hub/dashboard for engaged users — quick actions +
 // account/vault status, not a marketing landing page.
@@ -62,7 +62,7 @@ export const HomePage = () => {
     : 'Welcome back';
 
   return (
-    <MainWrapper py={'xl'}>
+    <MainWrapper>
       <Stack gap={'xl'} w={'100%'}>
         <div>
           <Title order={2} mb={4}>

@@ -22,7 +22,7 @@ import {
   IconFileImport,
   IconPlus,
 } from '@tabler/icons-react';
-import { MainWrapper } from '@shared/components';
+import { MainWrapper } from '../components/MainWrapper';
 import { useVault } from '../hooks/use-vault';
 import { AddSecretForm } from '../components/vault/AddSecretForm';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
@@ -85,7 +85,7 @@ export const VaultPage = () => {
 
   if (!vault.config) {
     return (
-      <MainWrapper py={'xl'}>
+      <MainWrapper>
         <Center mih={'50vh'}>
           <Stack gap={'md'} align={'center'}>
             {vault.error && (
@@ -135,7 +135,7 @@ export const VaultPage = () => {
   );
 
   return (
-    <MainWrapper py={'xl'}>
+    <MainWrapper>
       <Stack gap={'lg'} w={'100%'}>
         <Group justify={'space-between'}>
           <Group gap={'sm'}>
