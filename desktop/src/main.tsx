@@ -138,7 +138,7 @@ const AppWithClerk = () => {
     >
       <MantineProvider
         defaultColorScheme={'dark'}
-        theme={{ primaryColor: 'blue' }}
+        theme={{ primaryColor: 'blue', scale: 1.1 }}
       >
         <Notifications />
         <RouterProvider router={router} />

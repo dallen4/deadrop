@@ -20,7 +20,7 @@ const NavLink = ({
       c={active ? 'gray.0' : 'dimmed'}
       fw={active ? 600 : 500}
       underline={'never'}
-      size={'sm'}
+      size={'md'}
     >
       {children}
     </Anchor>
@@ -31,7 +31,7 @@ export const RootLayout = () => {
   const { isSignedIn } = useUser();
 
   return (
-    <AppShell header={{ height: 56 }} padding={'md'}>
+    <AppShell header={{ height: 64 }} padding={'md'}>
       <AppShell.Header>
         <Group h={'100%'} px={'md'} justify={'space-between'}>
           <Group gap={'xl'}>
@@ -40,17 +40,17 @@ export const RootLayout = () => {
               to={'/'}
               underline={'never'}
               display={'flex'}
-              style={{ alignItems: 'center', gap: 8 }}
+              style={{ alignItems: 'center', gap: 10 }}
             >
               <img
                 src={'/handshake.svg'}
                 alt={''}
-                width={34}
-                height={34}
+                width={40}
+                height={40}
               />
               <Text
-                fw={600}
-                size={'sm'}
+                fw={700}
+                size={'lg'}
                 c={'gray.2'}
                 style={{ letterSpacing: 0.2 }}
               >
@@ -65,10 +65,14 @@ export const RootLayout = () => {
           </Group>
           <Group>
             {isSignedIn ? (
-              <UserButton />
+              <UserButton
+                appearance={{
+                  elements: { avatarBox: { width: 42, height: 42 } },
+                }}
+              />
             ) : (
               <SignInButton mode={'modal'}>
-                <Button size={'xs'} variant={'light'}>
+                <Button size={'sm'} variant={'light'}>
                   Sign in
                 </Button>
               </SignInButton>
