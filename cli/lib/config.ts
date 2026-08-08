@@ -7,6 +7,10 @@ import { extname } from 'path';
 import { parse, stringify } from 'yaml';
 import { displayWelcomeMessage, logError, logInfo } from './log';
 import { initConfig as baseInitConfig } from '@shared/lib/vault';
+import {
+  globalConfigExists,
+  globalConfigPath,
+} from './global-config';
 
 type CustomConfigResult = Omit<
   NonNullable<CosmiconfigResult>,
@@ -19,15 +23,20 @@ export const loadConfig = async (): Promise<CustomConfigResult> => {
   const { search } = cosmiconfig('deadrop');
 
   const configFile = await search();
+  if (configFile) return configFile;
 
-  if (!configFile) {
-    logError(
-      'No config found, please run `deadrop init` to get started.',
-    );
-    process.exit(1);
+  // No project-scoped .deadroprc found walking up from cwd — fall back to
+  // the global config shared with the desktop app (same app-data dir,
+  // see lib/global-config.ts), rather than requiring every directory to
+  // have its own vault.
+  if (globalConfigExists()) {
+    const filepath = globalConfigPath();
+    const raw = await readFile(filepath, 'utf-8');
+    return { config: parse(raw) as DeadropConfig, filepath, isEmpty: false };
   }
 
-  return configFile;
+  logError('No config found, please run `deadrop init` to get started.');
+  process.exit(1);
 };
 
 export const loadConfigFromPath = async (
