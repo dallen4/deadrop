@@ -1,10 +1,4 @@
-import {
-  BaseDirectory,
-  exists,
-  mkdir,
-  readTextFile,
-  writeTextFile,
-} from '@tauri-apps/plugin-fs';
+import { mkdir, BaseDirectory } from '@tauri-apps/plugin-fs';
 import { appDataDir, join } from '@tauri-apps/api/path';
 import { open as openFileDialog } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
@@ -16,27 +10,23 @@ import type { DeadropConfig, VaultDBConfig } from '@shared/types/config';
 // (src/lib/config.ts) already use, not a JSON store — same DeadropConfig
 // shape, just a different root directory (Tauri's app data dir; desktop has
 // no "workspace root"/cwd the way CLI/vscode-extension do).
-const CONFIG_FILE_NAME = '.deadroprc';
-
+//
+// Read/write goes through Rust commands (read_app_vault_config /
+// write_app_vault_config), not `@tauri-apps/plugin-fs` — the fs plugin's
+// `$APPDATA/**` capability scope didn't reliably match a file directly at
+// $APPDATA's root, so writes were silently no-op'ing. Custom commands
+// bypass that scope entirely, same pattern as read_external_text_file and
+// vault_store.rs's DB access.
 export async function loadVaultConfig(): Promise<DeadropConfig | null> {
-  const fileExists = await exists(CONFIG_FILE_NAME, {
-    baseDir: BaseDirectory.AppData,
-  });
-  if (!fileExists) return null;
-
-  const contents = await readTextFile(CONFIG_FILE_NAME, {
-    baseDir: BaseDirectory.AppData,
-  });
+  const contents = await invoke<string | null>('read_app_vault_config');
+  if (!contents) return null;
   return parse(contents) as DeadropConfig;
 }
 
 export async function saveVaultConfig(
   config: DeadropConfig,
 ): Promise<void> {
-  await mkdir('.', { baseDir: BaseDirectory.AppData, recursive: true });
-  await writeTextFile(CONFIG_FILE_NAME, stringify(config), {
-    baseDir: BaseDirectory.AppData,
-  });
+  await invoke('write_app_vault_config', { contents: stringify(config) });
 }
 
 async function ensureVaultsDir(): Promise<void> {

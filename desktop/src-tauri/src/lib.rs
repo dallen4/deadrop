@@ -2,7 +2,7 @@ mod config_import;
 mod keychain_store;
 mod vault_store;
 
-use config_import::read_external_text_file;
+use config_import::{read_app_vault_config, read_external_text_file, write_app_vault_config};
 use keychain_store::{clear_auth_token, get_auth_token, set_auth_token};
 use vault_store::{
     vault_add_secret, vault_delete_secret, vault_ensure_schema, vault_get_encrypted_secret,
@@ -35,6 +35,8 @@ pub fn run() {
             vault_rename_secret,
             vault_delete_secret,
             read_external_text_file,
+            read_app_vault_config,
+            write_app_vault_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
