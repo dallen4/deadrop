@@ -1,17 +1,19 @@
 import {
-  DESKTOP_APP_PATH,
   fetchLatestDesktopRelease,
+  getDesktopInstallLocation,
   getInstalledDesktopVersion,
   installOrUpdateDesktop,
 } from 'lib/update/desktop';
 import { isNewerVersion } from 'lib/update/version';
 import { logError, logInfo } from 'lib/log';
 
+const SUPPORTED_PLATFORMS = ['darwin', 'win32', 'linux'];
+
 export async function desktopInstall(
   options: { force?: boolean } = {},
 ) {
-  if (process.platform !== 'darwin') {
-    logError('deadrop desktop is currently macOS-only.');
+  if (!SUPPORTED_PLATFORMS.includes(process.platform)) {
+    logError(`deadrop desktop is not supported on ${process.platform}.`);
     return process.exit(1);
   }
 
@@ -48,9 +50,16 @@ export async function desktopInstall(
     return process.exit(1);
   }
 
+  const installLocation = getDesktopInstallLocation();
+  const unsignedWarning =
+    process.platform === 'darwin'
+      ? 'Unsigned build — the first launch may show an "unidentified developer" warning; right-click the app and choose Open.'
+      : process.platform === 'win32'
+        ? 'Unsigned build — Windows SmartScreen may warn on first launch; choose "More info" → "Run anyway".'
+        : 'Unsigned build.';
+
   logInfo(
-    `deadrop desktop v${release.version} installed to ${DESKTOP_APP_PATH}\n` +
-      `Unsigned build — the first launch may show an "unidentified developer" warning; right-click the app and choose Open.`,
+    `deadrop desktop v${release.version} installed${installLocation ? ` to ${installLocation}` : ''}\n${unsignedWarning}`,
   );
 
   return process.exit(0);
