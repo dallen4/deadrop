@@ -2,8 +2,10 @@ import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
 
 # 🖥️ Desktop App
 
-> **Experimental, macOS only.** Windows and Linux builds are on the way; the app is unsigned
-> for now, so macOS will show an "unidentified developer" warning on first launch.
+> **Experimental, macOS/Windows/Linux.** `deadrop desktop install`/`install-desktop.sh` only
+> know how to install on macOS for now — on Windows/Linux, grab the build directly from
+> [GitHub Releases](https://github.com/dallen4/deadrop/releases). The app is unsigned on every
+> platform, so expect an "unidentified developer"/SmartScreen warning on first launch.
 
 <DocsSectionTitle
   id={'what-it-does'}
@@ -48,9 +50,12 @@ transfer runs the same peer-to-peer path as the browser, not the CLI's Node.js W
   label={'Vault access'}
 />
 
-The Vault tab gives you a native local vault out of the box, stored on-device. Signed-in
-users with cloud access can enable Turso-backed cloud sync for a vault from the same view,
-so its secrets stay available across devices.
+The Vault tab prompts you to create a vault the first time you visit it, rather than
+creating one silently. It's stored on-device, and shares a default vault with the CLI
+automatically — no setup needed. Signed-in users with cloud access can enable Turso-backed
+cloud sync for a vault from the same view, so its secrets stay available across devices. You
+can also link an existing project-scoped vault created by the CLI or the VS Code extension
+into the desktop app via "Import vault" in the vault switcher.
 
 <DocsSectionTitle
   id={'related'}

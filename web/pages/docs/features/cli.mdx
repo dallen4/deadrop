@@ -78,7 +78,7 @@ Run the setup wizard once after install:
 deadrop init
 ```
 
-This creates a config file (default location is `.deadrop/` in your home directory) and your first local vault. The config tracks which vault is active and stores per-vault metadata:
+This creates a `.deadroprc` config file in the current directory and your first local vault in a `.deadrop/` folder alongside it — config is scoped per project, so different projects can have different vaults. If a command runs somewhere with no project-scoped config, the CLI falls back to one shared default vault stored in your OS app-data directory — the same one the [desktop app](/docs/features/desktop) uses, so a vault created in either is immediately usable in the other with no import step. The config tracks which vault is active and stores per-vault metadata:
 
 <CopyableCode
   value={`active_vault:
