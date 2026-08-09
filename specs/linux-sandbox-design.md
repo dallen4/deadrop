@@ -9,6 +9,19 @@ currently *installs* them. Everything works well on macOS because macOS is where
 the install paths get run by hand; Linux is buggy because it is only ever built
 and shipped. This closes that gap.
 
+Three purposes, in priority order:
+
+1. **Simulate user setup** — run the real install and configuration path a user
+   runs, on a clean machine, and prove it works
+2. **Exercise practical usage** — confirm what was installed actually runs, not
+   merely that files landed
+3. **Reproduce bugs** — when a Linux user reports something, get a disposable
+   machine matching their setup and reproduce it locally rather than guessing
+
+The third is why `shell` and `--keep` (§4) are first-class rather than debug
+conveniences, and why profiles are cheap to add: a repro harness is only useful
+if you can quickly shape it to match the reporter's environment.
+
 Not a pipeline blocker. This is a developer/agent tool for experimentation and
 pre-release signoff, deliberately shaped so the same scenario scripts can later
 be lifted into a `ubuntu-latest` workflow without a rewrite.
@@ -56,8 +69,10 @@ a known, deliberate gap.
 **Out of scope:**
 
 - Rust toolchain, Tauri builds, any desktop compilation
-- GUI, Xvfb, launching the AppImage's window (deferred to §13.5, not permanently
-  excluded)
+- Any display stack, and therefore rendering. The AppImage *is* executed
+  (headlessly, per "installed means runnable" above); what is out of scope is
+  drawing a window and judging what it looks like — deferred to §13.5, not
+  permanently excluded
 - WebRTC drop/grab flows (owned by `tests/e2e/`, and P2P ICE does not complete
   in Linux containers anyway — see the note in `.github/workflows/cli_e2e_workflow.yml`)
 - x86_64 by default — arm64-native only, with emulation as an opt-in follow-on
@@ -688,9 +703,21 @@ A separate opt-in profile, never part of the 13-cell matrix — this is an
 experimentation shell, not a test suite, and the headless suite's speed is a
 feature worth protecting.
 
-Shape: Xvfb + a lightweight window manager + x11vnc + noVNC, so the app is
-reachable over Screen Sharing (`vnc://localhost:5900`) or a browser
-(`localhost:6080`). Launch via `--appimage-extract-and-run` to avoid needing
+**It must be Wayland, not X11.** With `DISPLAY` set and `WAYLAND_DISPLAY` unset,
+GTK selects its X11 backend, so an Xvfb-based profile would not reproduce a
+Wayland-specific WebKitGTK fault — it would report a confident pass on exactly
+the bug it exists to investigate. Use a headless Wayland compositor
+(`weston --backend=headless-backend.so`, or `sway` under `WLR_BACKENDS=headless`)
+with `wayvnc`, reachable over Screen Sharing at `vnc://localhost:5900`. Keep an
+XWayland path available for comparison, since running both is how you establish
+whether a fault is backend-specific at all.
+
+Fidelity caveat: if the underlying fault is in the DMABUF renderer it is likely
+GPU- and driver-dependent, and a container falling back to software rendering
+may not reproduce it under any compositor. Treat this profile as a strong lead,
+not a verdict.
+
+Launch via `--appimage-extract-and-run` to avoid needing
 `/dev/fuse` and `CAP_SYS_ADMIN`, which keeps the container rootless and
 consistent with §5. Requires the full WebKitGTK/GTK3/libayatana dependency set
 already enumerated in `desktop_publish_workflow.yml`'s Linux setup step.
