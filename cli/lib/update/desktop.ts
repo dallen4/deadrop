@@ -42,6 +42,21 @@ export type DesktopRelease = {
   assetSha256Url: string;
 };
 
+// Tauri names Linux bundles `<product>_<version>_<arch>.AppImage` — e.g.
+// `deadrop_0.1.0_amd64.AppImage`. Matching on the extension alone picks
+// whichever build the releases API happens to list first, which would hand
+// an x64 user an aarch64 binary as soon as a second Linux target ships.
+const LINUX_APPIMAGE_ARCH: Record<string, string> = {
+  x64: 'amd64',
+  arm64: 'aarch64',
+};
+
+function matchesLinuxAppImage(name: string): boolean {
+  const arch = LINUX_APPIMAGE_ARCH[process.arch];
+  if (!arch) return false;
+  return name.endsWith(`_${arch}.AppImage`);
+}
+
 function getInstalledDesktopVersionMac(): string | null {
   if (!existsSync(DESKTOP_APP_PATH)) return null;
 
@@ -139,7 +154,7 @@ export async function fetchLatestDesktopRelease(): Promise<DesktopRelease | null
     process.platform === 'win32'
       ? a.name.endsWith('-setup.exe')
       : process.platform === 'linux'
-        ? a.name.endsWith('.AppImage')
+        ? matchesLinuxAppImage(a.name)
         : a.name.endsWith('.dmg'),
   );
   const assetSha256 = release.assets.find(

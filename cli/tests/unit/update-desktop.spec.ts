@@ -4,8 +4,10 @@ import {
   parseMountPoint,
 } from 'lib/update/desktop';
 
-const withPlatform = (platform: string) => {
-  vi.stubGlobal('process', { ...process, platform });
+// Linux asset selection is arch-sensitive, so tests must pin arch too —
+// otherwise they pass or fail based on the machine running them.
+const withPlatform = (platform: string, arch: string = 'x64') => {
+  vi.stubGlobal('process', { ...process, platform, arch });
 };
 
 describe('parseMountPoint', () => {
@@ -86,7 +88,7 @@ describe('fetchLatestDesktopRelease', () => {
   });
 
   it('resolves the Linux .AppImage asset', async () => {
-    withPlatform('linux');
+    withPlatform('linux', 'x64');
     stubReleases([
       {
         name: 'deadrop_1.2.0_amd64.AppImage',
@@ -103,6 +105,50 @@ describe('fetchLatestDesktopRelease', () => {
       assetUrl: 'https://example.com/deadrop.AppImage',
       assetSha256Url: 'https://example.com/deadrop.AppImage.sha256',
     });
+  });
+
+  it('picks the AppImage matching this arch, not the first one listed', async () => {
+    withPlatform('linux', 'arm64');
+    stubReleases([
+      {
+        name: 'deadrop_1.2.0_amd64.AppImage',
+        browser_download_url: 'https://example.com/amd64.AppImage',
+      },
+      {
+        name: 'deadrop_1.2.0_amd64.AppImage.sha256',
+        browser_download_url: 'https://example.com/amd64.AppImage.sha256',
+      },
+      {
+        name: 'deadrop_1.2.0_aarch64.AppImage',
+        browser_download_url: 'https://example.com/aarch64.AppImage',
+      },
+      {
+        name: 'deadrop_1.2.0_aarch64.AppImage.sha256',
+        browser_download_url: 'https://example.com/aarch64.AppImage.sha256',
+      },
+    ]);
+
+    await expect(fetchLatestDesktopRelease()).resolves.toEqual({
+      version: '1.2.0',
+      assetUrl: 'https://example.com/aarch64.AppImage',
+      assetSha256Url: 'https://example.com/aarch64.AppImage.sha256',
+    });
+  });
+
+  it('returns null when the release has no build for this arch', async () => {
+    withPlatform('linux', 'arm64');
+    stubReleases([
+      {
+        name: 'deadrop_1.2.0_amd64.AppImage',
+        browser_download_url: 'https://example.com/amd64.AppImage',
+      },
+      {
+        name: 'deadrop_1.2.0_amd64.AppImage.sha256',
+        browser_download_url: 'https://example.com/amd64.AppImage.sha256',
+      },
+    ]);
+
+    await expect(fetchLatestDesktopRelease()).resolves.toBeNull();
   });
 
   it('returns null on an unsupported platform', async () => {

@@ -20,8 +20,11 @@ export async function desktopInstall(
   const release = await fetchLatestDesktopRelease();
 
   if (!release) {
+    // Also covers "a desktop release exists, but publishes no build for
+    // this platform/arch" — naming both beats a bare "not found" when the
+    // real answer is that we don't ship for it yet.
     logError(
-      `No published deadrop desktop release found.\nSee https://github.com/dallen4/deadrop/releases`,
+      `No published deadrop desktop build found for ${process.platform}/${process.arch}.\nSee https://github.com/dallen4/deadrop/releases`,
     );
     return process.exit(1);
   }

@@ -46,16 +46,26 @@ fi
 TAG=$(printf '%s' "$RELEASE" | jq -r '.tag_name')
 
 if [ "$OS" = "Darwin" ]; then
-  ASSET_EXT="dmg"
+  # macOS ships a single universal .dmg — no arch suffix to match on.
+  ASSET_SUFFIX=".dmg"
 else
-  ASSET_EXT="AppImage"
+  # Tauri names Linux bundles `<product>_<version>_<arch>.AppImage`. Match
+  # the arch too: selecting on `.AppImage` alone takes whichever build the
+  # API lists first, which hands an x64 user an aarch64 binary the moment a
+  # second Linux target is published.
+  case "$(uname -m)" in
+    x86_64)        ASSET_SUFFIX="_amd64.AppImage" ;;
+    arm64|aarch64) ASSET_SUFFIX="_aarch64.AppImage" ;;
+    *) echo "Unsupported arch: $(uname -m)" >&2; exit 1 ;;
+  esac
 fi
 
-ASSET_URL=$(printf '%s' "$RELEASE" | jq -r --arg ext ".$ASSET_EXT" '.assets[] | select(.name | endswith($ext)) | .browser_download_url' | head -1)
-SHA_URL=$(printf '%s' "$RELEASE" | jq -r --arg ext ".$ASSET_EXT.sha256" '.assets[] | select(.name | endswith($ext)) | .browser_download_url' | head -1)
+ASSET_URL=$(printf '%s' "$RELEASE" | jq -r --arg sfx "$ASSET_SUFFIX" '.assets[] | select(.name | endswith($sfx)) | .browser_download_url' | head -1)
+SHA_URL=$(printf '%s' "$RELEASE" | jq -r --arg sfx "${ASSET_SUFFIX}.sha256" '.assets[] | select(.name | endswith($sfx)) | .browser_download_url' | head -1)
 
 if [ -z "$ASSET_URL" ] || [ -z "$SHA_URL" ]; then
-  echo "Could not find a .${ASSET_EXT} (or its checksum) on release ${TAG}" >&2
+  echo "Release ${TAG} publishes no ${ASSET_SUFFIX} build (or its checksum) for $(uname -s)/$(uname -m)" >&2
+  echo "See https://github.com/${REPO}/releases" >&2
   exit 1
 fi
 
@@ -69,7 +79,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-ASSET_PATH="$TMP/deadrop.${ASSET_EXT}"
+ASSET_PATH="$TMP/deadrop${ASSET_SUFFIX}"
 curl -fsSL --progress-bar "$ASSET_URL" -o "$ASSET_PATH"
 curl -fsSL "$SHA_URL" -o "${ASSET_PATH}.sha256" || {
   echo "Could not download checksum for verification" >&2
