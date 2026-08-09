@@ -24,7 +24,8 @@ cli/
 │   ├── auth/       # clerk.ts (getSessionToken(), see Key Patterns) + cache.ts (OS keychain via keytar/Bun.secrets — never plaintext) + the login OAuth loopback server
 │   ├── update/     # Self-update: binary.ts (download+checksum+atomic replace) vs npm.ts (package-manager detection), shared by version.ts/download.ts/checksum.ts
 │   ├── process.ts  # runWithEnv: spawns a child with injected env, forwards signals/exit code
-│   ├── config.ts   # CLI config file (~/.deadrop); loadConfigFromPath for --config
+│   ├── config.ts   # cwd-scoped .deadroprc search (cosmiconfig), falling back to global-config.ts; loadConfigFromPath for --config
+│   ├── global-config.ts # Shared default vault config in the OS app-data dir — mirrors desktop's Tauri app_data_dir() so CLI/desktop see the same vault when no project-scoped config exists
 │   └── ...         # crypto.ts, env.ts, files.ts, peer.ts, log/ — platform-specific I/O, see Key Patterns
 ├── db/             # Drizzle schema (vaults.ts) + migrations/, initialized via init.ts at startup
 ├── scripts/        # esbuild config + npm release lifecycle scripts

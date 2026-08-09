@@ -56,7 +56,19 @@ Local vault at `/vault`: Rust-side SQLite via the `libsql` crate
 (`src-tauri/src/vault_store.rs`), optional Turso cloud sync
 (`src/lib/vault-cloud.ts`), gated by `isExperimental` (`src/lib/billing.ts`).
 Encryption reuses `shared/lib/secrets.ts` directly; config persisted to
-`.deadroprc` (same pattern as CLI/vscode-extension).
+`.deadroprc` (same shape as CLI/vscode-extension, but read/written via Rust
+commands — `read_app_vault_config`/`write_app_vault_config` in
+`src-tauri/src/config_import.rs` — not `@tauri-apps/plugin-fs`, whose
+`$APPDATA/**` capability scope doesn't reliably match a file directly at
+$APPDATA's root and silently no-op'd writes).
+
+First visit to `/vault` with no config prompts "Create your vault" rather
+than silently auto-bootstrapping one (`src/routes/Vault.tsx`). The CLI and
+desktop app share one default vault automatically — the CLI falls back to
+this same app-data-scoped config when it finds no project-scoped
+`.deadroprc` (`cli/lib/global-config.ts`). Project-scoped vaults created by
+the CLI/vscode-extension can also be explicitly linked in via "Import
+vault" (`src/lib/vault-config.ts`'s `pickExternalVaultConfig`).
 
 ## Auth keychain backend
 
