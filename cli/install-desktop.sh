@@ -30,7 +30,7 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
-RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases") || {
+RELEASE_JSON=$(curl -fsSL "${DEADROP_RELEASES_API:-https://api.github.com/repos/${REPO}/releases}") || {
   echo "No published deadrop desktop release found (or network error)." >&2
   echo "See https://github.com/${REPO}/releases" >&2
   exit 1

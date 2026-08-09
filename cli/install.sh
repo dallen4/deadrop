@@ -5,6 +5,11 @@ REPO="dallen4/deadrop"
 BINARY="deadrop"
 INSTALL_DIR="${DEADROP_INSTALL_DIR:-$HOME/.local/bin}"
 
+# Overridable so installs can be pointed at a mirror, a staging release, or a
+# local registry; defaults are the real GitHub endpoints.
+RELEASES_API="${DEADROP_RELEASES_API:-https://api.github.com/repos/${REPO}/releases}"
+DOWNLOAD_BASE="${DEADROP_RELEASES_DOWNLOAD_BASE:-https://github.com/${REPO}/releases/download}"
+
 case "$(uname -s)" in
   Darwin) OS="darwin" ;;
   Linux)  OS="linux" ;;
@@ -31,7 +36,7 @@ esac
 # same releases list — /releases/latest can't tell them apart, so fetch the
 # list and take the newest tag that's actually a CLI release. `"deadrop@`
 # (with the trailing `@`) naturally excludes `"deadrop-desktop@`.
-RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases") || {
+RELEASE_JSON=$(curl -fsSL "$RELEASES_API") || {
   echo "No published deadrop release found (or network error)." >&2
   echo "See https://github.com/${REPO}/releases" >&2
   exit 1
@@ -39,7 +44,7 @@ RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases") || {
 TAG=$(printf '%s' "$RELEASE_JSON" | grep -o '"tag_name": *"deadrop@[^"]*"' | head -1 | sed 's/.*"deadrop@\([^"]*\)".*/deadrop@\1/')
 [ -z "$TAG" ] && { echo "Could not determine latest release tag" >&2; exit 1; }
 
-URL="https://github.com/${REPO}/releases/download/${TAG}/${BINARY}-${OS}-${ARCH}"
+URL="${DOWNLOAD_BASE}/${TAG}/${BINARY}-${OS}-${ARCH}"
 
 echo "Downloading deadrop ${TAG} (${OS}/${ARCH})..."
 

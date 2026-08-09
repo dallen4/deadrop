@@ -16,7 +16,10 @@ export const BINARY_NAME = 'deadrop';
 // distinguish between them, so callers must fetch the list and filter by
 // tag prefix instead (see cli/lib/update/version.ts's fetchLatestBinaryVersion
 // and cli/lib/update/desktop.ts's fetchLatestDesktopRelease).
-export const GITHUB_RELEASES_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases`;
+// Overridable for mirrors, staging releases, and the Linux sandbox registry.
+export const GITHUB_RELEASES_URL =
+  process.env.DEADROP_RELEASES_API ||
+  `https://api.github.com/repos/${GITHUB_REPO}/releases`;
 export const NPM_REGISTRY_LATEST_URL =
   'https://registry.npmjs.org/deadrop/latest';
 
@@ -45,4 +48,7 @@ export const resolveReleaseAssetName = (
 };
 
 export const releaseAssetUrl = (tag: string, assetName: string) =>
-  `https://github.com/${GITHUB_REPO}/releases/download/${tag}/${assetName}`;
+  `${
+    process.env.DEADROP_RELEASES_DOWNLOAD_BASE ||
+    `https://github.com/${GITHUB_REPO}/releases/download`
+  }/${tag}/${assetName}`;
