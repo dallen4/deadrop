@@ -160,6 +160,12 @@ vscode's `CloudSyncButton`'s `canCloudSync`/`onLocked` pattern
 
 ## Multi-Vault & Default Vault
 
+**Update (PR #145, landed):** the auto-bootstrap-on-load design below was
+changed before shipping — first visit to `/vault` with no config now shows
+an explicit "Create your vault" prompt instead of silently bootstrapping a
+`default` vault. Same `initConfig()`/`vault()` builders, just gated behind
+a user action (`desktop/src/routes/Vault.tsx`, `use-vault.tsx`).
+
 Mirrors `cli/actions/init.ts` + `shared/lib/vault.ts`'s `initConfig()`
 exactly: first time the desktop Vault page loads with no config present,
 auto-bootstrap one vault named `default` (via `initConfig()`, unchanged)
@@ -203,16 +209,25 @@ dropping the `Badge`/"Coming soon".
   patterns already used elsewhere in this codebase.
 - **Cloud sync provisioning failure** (network error, `restricted()` 403 if
   claims are stale): notification + cloud toggle reverts to off.
-- **Corrupt/missing config file**: treated as "no config" → re-run the
-  `default` vault bootstrap (self-healing, same spirit as the auth work's
-  keychain migration).
+- **Corrupt/missing config file**: treated as "no config" → shows the
+  "Create your vault" prompt (see update note above; no longer an
+  automatic re-bootstrap).
 
 ## Out of Scope
 
-- Migrating an existing CLI-created local vault into desktop (or vice
+**Update (PR #145, landed):** both items below shipped — the CLI now
+falls back to the same app-data-scoped config desktop uses when no
+project-scoped `.deadroprc` exists (`cli/lib/global-config.ts`), and
+desktop can import a project-scoped CLI/vscode vault via "Import vault"
+(`pickExternalVaultConfig` in `desktop/src/lib/vault-config.ts`). The
+imported vault's DB file stays wherever the project put it — only the
+config entry is copied.
+
+- ~~Migrating an existing CLI-created local vault into desktop (or vice
   versa) — no shared vault-file location between CLI and desktop in this
-  iteration; each platform has its own `<app data dir>/vaults/`.
-- `vault export`/`import` (CLI-only for now).
+  iteration; each platform has its own `<app data dir>/vaults/`.~~
+- ~~`vault export`/`import` (CLI-only for now).~~ (import landed for
+  desktop; export remains CLI-only)
 - Upgrading environment-key storage to the OS keychain (flagged above,
   deliberately deferred).
 - Web's OPFS-based approach — not applicable to Tauri, not revisited here.
@@ -221,8 +236,9 @@ dropping the `Badge`/"Coming soon".
 
 1. `cargo check`/`cargo build` on `desktop/src-tauri` after adding `libsql`
    and `vault_store.rs`.
-2. Fresh app launch (no config) → visiting `/vault` auto-bootstraps a
-   `default` vault, `development`/`production` environments visible.
+2. Fresh app launch (no config) → visiting `/vault` shows the "Create your
+   vault" prompt; creating one shows `development`/`production`
+   environments (see update note above — no longer auto-bootstraps).
 3. Add/edit/rename/delete a secret in `development` → persists across app
    restart (re-open `/vault`, secret still there, still decrypts correctly).
 4. Create a second named vault, switch between the two — each has its own
