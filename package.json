@@ -54,7 +54,8 @@
     "changeset:publish": "node scripts/changeset-publish.js",
     "changeset:status": "changeset status",
     "postversion": "git push --tags",
-    "prepare": "husky"
+    "prepare": "husky",
+    "sandbox": "pnpm -F tests sandbox"
   },
   "dependencies": {
     "@clerk/clerk-js": "^6.3.3",

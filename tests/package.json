@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "test:e2e": "pnpm -F cli build && vitest run -c vitest.e2e.config.mts",
-    "test:e2e:run": "vitest run -c vitest.e2e.config.mts"
+    "test:e2e:run": "vitest run -c vitest.e2e.config.mts",
+    "sandbox": "./sandbox/sandbox"
   },
   "devDependencies": {
     "@types/node": "^24",

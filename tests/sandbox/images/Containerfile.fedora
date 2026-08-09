@@ -1,0 +1,11 @@
+# See Containerfile.ubuntu — same "bare user machine" rule, dnf/rpm family.
+FROM fedora:43
+
+RUN dnf install -y --setopt=install_weak_deps=False \
+      bash ca-certificates curl file jq \
+      libsecret desktop-file-utils binutils \
+    && dnf clean all
+
+RUN useradd --create-home --shell /bin/bash sandbox
+USER sandbox
+WORKDIR /home/sandbox
