@@ -4,18 +4,29 @@ set -euo pipefail
 REPO="dallen4/deadrop"
 APP_NAME="deadrop.app"
 APP_PATH="/Applications/${APP_NAME}"
+INSTALL_DIR="${DEADROP_INSTALL_DIR:-$HOME/.local/bin}"
+APPIMAGE_PATH="${INSTALL_DIR}/deadrop-desktop.AppImage"
 
-if [ "$(uname -s)" != "Darwin" ]; then
-  echo "deadrop desktop is currently macOS-only." >&2
-  exit 1
-fi
+OS="$(uname -s)"
+case "$OS" in
+  Darwin|Linux) ;;
+  *)
+    # Bash doesn't run natively on Windows (no PowerShell/cmd support) —
+    # `deadrop desktop install` (Node, cross-platform) is the real Windows
+    # install path for now. A native install-desktop.ps1 is a tracked
+    # fast-follow, not built yet.
+    echo "install-desktop.sh doesn't support ${OS}." >&2
+    echo "On Windows, use \`deadrop desktop install\` (npm install -g deadrop, or the CLI installer) or download the build directly: https://github.com/${REPO}/releases" >&2
+    exit 1
+    ;;
+esac
 
 # Finding the right release (deadrop-desktop@* among a releases list shared
-# with the CLI's deadrop@* tags) and then that release's own .dmg/.sha256
-# assets needs real JSON structure, not a flat grep extraction like
-# install.sh does — jq is the standard tool for this.
+# with the CLI's deadrop@* tags) and then that release's own assets needs
+# real JSON structure, not a flat grep extraction like install.sh does —
+# jq is the standard tool for this.
 if ! command -v jq >/dev/null 2>&1; then
-  echo "install-desktop.sh requires jq. Install it with: brew install jq" >&2
+  echo "install-desktop.sh requires jq. Install it with: brew install jq (macOS) or your distro's package manager (Linux)" >&2
   exit 1
 fi
 
@@ -33,11 +44,18 @@ if [ "$RELEASE" = "null" ] || [ -z "$RELEASE" ]; then
 fi
 
 TAG=$(printf '%s' "$RELEASE" | jq -r '.tag_name')
-DMG_URL=$(printf '%s' "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".dmg")) | .browser_download_url' | head -1)
-SHA_URL=$(printf '%s' "$RELEASE" | jq -r '.assets[] | select(.name | endswith(".dmg.sha256")) | .browser_download_url' | head -1)
 
-if [ -z "$DMG_URL" ] || [ -z "$SHA_URL" ]; then
-  echo "Could not find a .dmg (or its checksum) on release ${TAG}" >&2
+if [ "$OS" = "Darwin" ]; then
+  ASSET_EXT="dmg"
+else
+  ASSET_EXT="AppImage"
+fi
+
+ASSET_URL=$(printf '%s' "$RELEASE" | jq -r --arg ext ".$ASSET_EXT" '.assets[] | select(.name | endswith($ext)) | .browser_download_url' | head -1)
+SHA_URL=$(printf '%s' "$RELEASE" | jq -r --arg ext ".$ASSET_EXT.sha256" '.assets[] | select(.name | endswith($ext)) | .browser_download_url' | head -1)
+
+if [ -z "$ASSET_URL" ] || [ -z "$SHA_URL" ]; then
+  echo "Could not find a .${ASSET_EXT} (or its checksum) on release ${TAG}" >&2
   exit 1
 fi
 
@@ -51,17 +69,18 @@ cleanup() {
 }
 trap cleanup EXIT
 
-curl -fsSL --progress-bar "$DMG_URL" -o "$TMP/deadrop.dmg"
-curl -fsSL "$SHA_URL" -o "$TMP/deadrop.dmg.sha256" || {
+ASSET_PATH="$TMP/deadrop.${ASSET_EXT}"
+curl -fsSL --progress-bar "$ASSET_URL" -o "$ASSET_PATH"
+curl -fsSL "$SHA_URL" -o "${ASSET_PATH}.sha256" || {
   echo "Could not download checksum for verification" >&2
   exit 1
 }
 
-EXPECTED=$(awk '{print $1}' "$TMP/deadrop.dmg.sha256")
+EXPECTED=$(awk '{print $1}' "${ASSET_PATH}.sha256")
 if command -v sha256sum >/dev/null 2>&1; then
-  ACTUAL=$(sha256sum "$TMP/deadrop.dmg" | awk '{print $1}')
+  ACTUAL=$(sha256sum "$ASSET_PATH" | awk '{print $1}')
 else
-  ACTUAL=$(shasum -a 256 "$TMP/deadrop.dmg" | awk '{print $1}')
+  ACTUAL=$(shasum -a 256 "$ASSET_PATH" | awk '{print $1}')
 fi
 if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then
   echo "Checksum verification failed (expected ${EXPECTED:-<none>}, got ${ACTUAL})" >&2
@@ -69,20 +88,36 @@ if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then
 fi
 echo "Checksum verified."
 
-ATTACH_OUTPUT=$(hdiutil attach "$TMP/deadrop.dmg" -nobrowse)
-MOUNT_POINT=$(printf '%s' "$ATTACH_OUTPUT" | grep -o '/Volumes/[^[:space:]]*' | head -1)
-if [ -z "$MOUNT_POINT" ]; then
-  echo "Could not determine hdiutil mount point" >&2
-  exit 1
+if [ "$OS" = "Darwin" ]; then
+  ATTACH_OUTPUT=$(hdiutil attach "$ASSET_PATH" -nobrowse)
+  MOUNT_POINT=$(printf '%s' "$ATTACH_OUTPUT" | grep -o '/Volumes/[^[:space:]]*' | head -1)
+  if [ -z "$MOUNT_POINT" ]; then
+    echo "Could not determine hdiutil mount point" >&2
+    exit 1
+  fi
+
+  if [ -d "$APP_PATH" ]; then
+    rm -rf "$APP_PATH"
+  fi
+  ditto "${MOUNT_POINT}/${APP_NAME}" "$APP_PATH"
+
+  hdiutil detach "$MOUNT_POINT" -quiet
+  MOUNT_POINT=""
+
+  echo "deadrop desktop ${TAG} installed to ${APP_PATH}"
+  echo "Unsigned build — the first launch may show an \"unidentified developer\" warning; right-click the app and choose Open."
+else
+  # AppImages are self-contained — "installing" is just placing an
+  # executable file, no package manager involved. Same ~/.local/bin
+  # convention install.sh already uses for the CLI binary itself.
+  chmod +x "$ASSET_PATH"
+  mkdir -p "$INSTALL_DIR"
+  mv "$ASSET_PATH" "$APPIMAGE_PATH"
+
+  echo "deadrop desktop ${TAG} installed to ${APPIMAGE_PATH}"
+  echo "Unsigned build."
+
+  if ! printf '%s' "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
+    echo "${INSTALL_DIR} is not in your PATH — run it directly: ${APPIMAGE_PATH}"
+  fi
 fi
-
-if [ -d "$APP_PATH" ]; then
-  rm -rf "$APP_PATH"
-fi
-ditto "${MOUNT_POINT}/${APP_NAME}" "$APP_PATH"
-
-hdiutil detach "$MOUNT_POINT" -quiet
-MOUNT_POINT=""
-
-echo "deadrop desktop ${TAG} installed to ${APP_PATH}"
-echo "Unsigned build — the first launch may show an \"unidentified developer\" warning; right-click the app and choose Open."

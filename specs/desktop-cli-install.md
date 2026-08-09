@@ -1,5 +1,15 @@
 # Desktop Install via CLI Spec
 
+**Update (landed):** the "macOS only" scoping throughout this doc (Goal,
+Scope, error-message wording) is superseded — `deadrop desktop install`
+and `installOrUpdateDesktop()` now support Windows (silent NSIS install)
+and Linux (AppImage in `~/.local/bin`) too, once desktop started
+publishing builds for those platforms. `install-desktop.sh` gained Linux
+support in the same pass; it still doesn't cover Windows (bash doesn't run
+natively there) — an `install-desktop.ps1` is a tracked fast-follow, so
+Windows users go through the CLI. See `cli/lib/update/desktop.ts`,
+`cli/actions/desktop/install.ts`, `cli/install-desktop.sh`.
+
 ## Goal
 
 Let users install *and update* the desktop app two ways — a new

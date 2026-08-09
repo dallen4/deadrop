@@ -47,15 +47,19 @@ describe('update', () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
-  it('skips the desktop check on non-macOS', async () => {
+  it('checks for desktop updates on non-macOS platforms too', async () => {
     withPlatform('linux');
-    const { getInstalledDesktopVersion } = await import('lib/update');
+    const { getInstalledDesktopVersion, fetchLatestDesktopRelease } =
+      await import('lib/update');
     const update = (await import('actions/update')).default;
     vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
 
+    vi.mocked(getInstalledDesktopVersion).mockReturnValue(null);
+
     await update();
 
-    expect(getInstalledDesktopVersion).not.toHaveBeenCalled();
+    expect(getInstalledDesktopVersion).toHaveBeenCalled();
+    expect(fetchLatestDesktopRelease).not.toHaveBeenCalled();
   });
 
   it('does not prompt when desktop is not installed', async () => {
@@ -89,8 +93,8 @@ describe('update', () => {
     vi.mocked(getInstalledDesktopVersion).mockReturnValue('0.1.0');
     vi.mocked(fetchLatestDesktopRelease).mockResolvedValue({
       version: '0.2.0',
-      dmgUrl: 'https://example.com/deadrop.dmg',
-      dmgSha256Url: 'https://example.com/deadrop.dmg.sha256',
+      assetUrl: 'https://example.com/deadrop.dmg',
+      assetSha256Url: 'https://example.com/deadrop.dmg.sha256',
     });
     vi.mocked(isNewerVersion).mockReturnValue(true);
     vi.mocked(confirm).mockResolvedValue(true);
@@ -118,8 +122,8 @@ describe('update', () => {
     vi.mocked(getInstalledDesktopVersion).mockReturnValue('0.1.0');
     vi.mocked(fetchLatestDesktopRelease).mockResolvedValue({
       version: '0.2.0',
-      dmgUrl: 'https://example.com/deadrop.dmg',
-      dmgSha256Url: 'https://example.com/deadrop.dmg.sha256',
+      assetUrl: 'https://example.com/deadrop.dmg',
+      assetSha256Url: 'https://example.com/deadrop.dmg.sha256',
     });
     vi.mocked(isNewerVersion).mockReturnValue(true);
     vi.mocked(confirm).mockResolvedValue(false);

@@ -133,6 +133,11 @@ const baseConfig = {
         destination:
           'https://raw.githubusercontent.com/dallen4/deadrop/main/cli/install.sh',
       },
+      {
+        source: '/install-desktop.sh',
+        destination:
+          'https://raw.githubusercontent.com/dallen4/deadrop/main/cli/install-desktop.sh',
+      },
     ];
   },
   headers() {

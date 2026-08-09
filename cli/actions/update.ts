@@ -14,8 +14,6 @@ import {
 // succeeded by the time this runs, so a failure here is a warning, not a
 // reason to exit non-zero.
 async function maybeOfferDesktopUpdate() {
-  if (process.platform !== 'darwin') return;
-
   const installedVersion = getInstalledDesktopVersion();
   if (!installedVersion) return;
 
