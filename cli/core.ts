@@ -34,7 +34,14 @@ deadrop
     return '';
   });
 
-deadrop.command('init').action(init);
+deadrop
+  .command('init')
+  .description('set up a default vault and config in the current directory')
+  .option(
+    '-y, --yes',
+    'skip prompts and accept defaults (also implied by a non-TTY shell or CI)',
+  )
+  .action(init);
 
 deadrop.command('login').action(login);
 
