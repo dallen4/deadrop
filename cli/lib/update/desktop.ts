@@ -13,6 +13,7 @@ import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 import { GITHUB_RELEASES_URL } from 'lib/constants';
 import { fetchExpectedChecksum, verifyChecksum } from './checksum';
+import { installDesktopEntry } from './desktop-entry';
 import { downloadWithProgress } from './download';
 
 export const DESKTOP_APP_PATH = '/Applications/deadrop.app';
@@ -256,6 +257,9 @@ async function installOrUpdateDesktopLinux(
     // can be on different filesystems, where rename() fails with EXDEV.
     copyFileSync(tmpPath, LINUX_APPIMAGE_PATH);
     writeFileSync(LINUX_VERSION_FILE, release.version);
+
+    // Otherwise the AppImage is runnable but absent from the app menu.
+    installDesktopEntry(LINUX_APPIMAGE_PATH);
   } finally {
     rmSync(scratchDir, { recursive: true, force: true });
   }

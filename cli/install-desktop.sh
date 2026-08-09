@@ -124,7 +124,45 @@ else
   mkdir -p "$INSTALL_DIR"
   mv "$ASSET_PATH" "$APPIMAGE_PATH"
 
+  # Without a .desktop entry the AppImage never appears in the app menu.
+  # Mirrors installDesktopEntry() in cli/lib/update/desktop-entry.ts.
+  DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+  # Largest first — .DirIcon is only a 32x32 symlink.
+  ICON_VALUE="$APPIMAGE_PATH"
+  ICON_TMP=$(mktemp -d)
+  for CANDIDATE in \
+    "usr/share/icons/hicolor/256x256@2/apps/deadrop.png" \
+    "usr/share/icons/hicolor/128x128/apps/deadrop.png" \
+    ".DirIcon"; do
+    (cd "$ICON_TMP" && "$APPIMAGE_PATH" --appimage-extract "$CANDIDATE" >/dev/null 2>&1) || continue
+    [ -f "$ICON_TMP/squashfs-root/$CANDIDATE" ] || continue
+    mkdir -p "${DATA_HOME}/icons/hicolor/256x256/apps"
+    cp "$ICON_TMP/squashfs-root/$CANDIDATE" "${DATA_HOME}/icons/hicolor/256x256/apps/deadrop.png"
+    ICON_VALUE="deadrop"
+    break
+  done
+  rm -rf "$ICON_TMP"
+
+  mkdir -p "${DATA_HOME}/applications"
+  cat > "${DATA_HOME}/applications/deadrop.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=deadrop
+GenericName=Secret Sharing
+Comment=End-to-end encrypted secret sharing
+Exec=${APPIMAGE_PATH}
+Icon=${ICON_VALUE}
+Terminal=false
+Categories=Network;FileTransfer;
+Keywords=secret;encryption;share;vault;
+StartupWMClass=deadrop
+EOF
+
+  update-desktop-database "${DATA_HOME}/applications" >/dev/null 2>&1 || true
+  gtk-update-icon-cache -q -t -f "${DATA_HOME}/icons" >/dev/null 2>&1 || true
+
   echo "deadrop desktop ${TAG} installed to ${APPIMAGE_PATH}"
+  echo "Added to your application menu."
   echo "Unsigned build."
 
   if ! printf '%s' "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
