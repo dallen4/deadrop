@@ -28,9 +28,16 @@ function isMissingEntry(err: unknown): boolean {
 // macOS/Windows failures are almost always the user denying the
 // keychain/Credential Manager access prompt. Point at the fix for each,
 // since "install libsecret" is meaningless (and confusing) on a Mac.
+//
+// List every package manager rather than detecting the distro — detection
+// is more code and more ways to be wrong, and naming only apt sends Fedora
+// and Arch users to a command that doesn't exist. Mirrors install.sh.
 function keychainUnavailableMessage(): string {
   if (process.platform === 'linux') {
-    return 'Secure credential storage is unavailable. Install libsecret (e.g. `sudo apt-get install -y libsecret-1-0`) and run `deadrop login` again.';
+    return `Secure credential storage is unavailable. Install libsecret, then run \`deadrop login\` again:
+  Ubuntu/Debian: sudo apt-get install -y libsecret-1-0
+  Fedora/RHEL:   sudo dnf install -y libsecret
+  Arch:          sudo pacman -S libsecret`;
   }
   return 'Secure credential storage is unavailable. If your OS just prompted for keychain access, allow it and run `deadrop login` again.';
 }
