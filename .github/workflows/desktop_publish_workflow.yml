@@ -24,20 +24,20 @@ jobs:
             runner: macos-latest
             rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
             args: --target universal-apple-darwin
-            bundle-glob: desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            bundle-root: desktop/src-tauri/target/universal-apple-darwin/release/bundle
           # ubuntu-22.04, not -latest: Tauri's AppImage bundling links
           # against the runner's glibc, and 22.04's older glibc keeps the
           # result compatible with more end-user distros than 24.04's would.
-          - name: Linux (x86_64 AppImage)
+          - name: Linux (x86_64)
             runner: ubuntu-22.04
             rust-targets: ''
             args: ''
-            bundle-glob: desktop/src-tauri/target/release/bundle/appimage/*.AppImage
-          - name: Windows (x86_64 NSIS)
+            bundle-root: desktop/src-tauri/target/release/bundle
+          - name: Windows (x86_64)
             runner: windows-latest
             rust-targets: ''
             args: ''
-            bundle-glob: desktop/src-tauri/target/release/bundle/nsis/*.exe
+            bundle-root: desktop/src-tauri/target/release/bundle
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6
@@ -103,18 +103,47 @@ jobs:
 
       # tauri-action doesn't generate checksums (unlike cli_publish_workflow.yml,
       # which explicitly does for every CLI binary) — do it ourselves and
-      # upload alongside the bundle it already published, so every install
+      # upload alongside the bundles it already published, so every install
       # path can verify.
-      - name: Checksum + upload bundle
+      #
+      # tauri.conf.json sets `"targets": "all"`, and tauri-action uploads
+      # every bundle it produces — on Linux that's .deb and .rpm as well as
+      # the AppImage. Checksum the whole bundle directory rather than one
+      # glob per platform: an artifact users can download is an artifact
+      # they must be able to verify, whether or not our own installers
+      # consume it yet.
+      - name: Checksum + upload bundles
         shell: bash
         run: |
-          f=$(ls ${{ matrix.bundle-glob }})
-          if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum "$f" > "$f.sha256"
-          else
-            shasum -a 256 "$f" > "$f.sha256"
+          # find, not a `**` glob — macOS runners ship bash 3.2, which has no
+          # globstar, so `**` would silently match nothing and this step
+          # would pass having checksummed zero files.
+          found=0
+          while IFS= read -r -d '' f; do
+            found=$((found + 1))
+            # Record the basename, not the CI build path, so a user who
+            # downloads the artifact next to its .sha256 can verify with a
+            # plain `sha256sum -c <file>.sha256`.
+            d=$(dirname "$f")
+            b=$(basename "$f")
+            if command -v sha256sum >/dev/null 2>&1; then
+              ( cd "$d" && sha256sum "$b" > "$b.sha256" )
+            else
+              ( cd "$d" && shasum -a 256 "$b" > "$b.sha256" )
+            fi
+            echo "checksummed $b"
+            gh release upload "${{ steps.tag.outputs.tag }}" "$f.sha256" --clobber
+          done < <(find "${{ matrix.bundle-root }}" -type f \( \
+            -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o \
+            -name '*.dmg' -o -name '*.exe' -o -name '*.msi' -o \
+            -name '*.tar.gz' \) -print0)
+          # A silent zero here would republish unverified artifacts, which is
+          # the exact failure this step exists to prevent.
+          if [ "$found" -eq 0 ]; then
+            echo "No bundles found under ${{ matrix.bundle-root }}" >&2
+            exit 1
           fi
-          gh release upload "${{ steps.tag.outputs.tag }}" "$f.sha256"
+          echo "checksummed $found bundle(s)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
