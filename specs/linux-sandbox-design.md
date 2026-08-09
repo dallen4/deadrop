@@ -17,6 +17,32 @@ be lifted into a `ubuntu-latest` workflow without a rewrite.
 
 ## 1. Scope (decided — do not expand)
 
+**Installed means runnable.** This is the success criterion for every scenario
+here. A file landing at the right path with the right mode bits is not a
+validated install; the only proof is executing what was installed. Every install
+scenario therefore ends by running its artifact, not by inspecting it.
+
+That is achievable headlessly, because "can it run" and "does it render
+correctly" are different questions. The CLI answers the first directly —
+`deadrop --version` either works on that distro or it does not. The desktop
+AppImage answers it up to the display layer: extract it, confirm the inner ELF
+matches the host architecture, confirm every shared library resolves, then
+execute it with no `DISPLAY` and require that the failure is *"cannot open
+display"* rather than "exec format error" or "library not found". Reaching the
+display layer proves the entire chain beneath it. Only "does it draw the right
+pixels" needs a real compositor, and that is §13.5.
+
+**North star: the full first-run journey**, in one home directory, in order —
+install CLI, configure it, install desktop, run both (§8/`70`).
+
+**Authentication is out of scope.** The journey runs anonymous throughout —
+`deadrop init`, vault creation, and config resolution, with no `deadrop login`.
+Drop and grab both work signed out, so this is the genuine first-run path for
+most users, and it avoids putting real credentials or a login bypass in a test
+container. Consequence: `cli/actions/login.ts` is never exercised here, and the
+missing headless-login path (`open(url)` + a loopback server on port 1337) stays
+a known, deliberate gap.
+
 **In scope: install and setup mechanics.**
 
 - `cli/install.sh` end-to-end
@@ -120,7 +146,8 @@ tests/sandbox/
 │   ├── 30-config-paths.sh
 │   ├── 40-keychain-degradation.sh
 │   ├── 50-glibc-floor.sh
-│   └── 60-desktop-integration.sh
+│   ├── 60-desktop-integration.sh
+│   └── 70-first-run.sh       # the whole journey in one $HOME
 └── .logs/                   # gitignored, written every run
 ```
 
@@ -138,7 +165,7 @@ Wiring:
 ```bash
 pnpm sandbox doctor                    # verify podman + machine state, print exact fixes
 pnpm sandbox list                      # profiles × scenarios
-pnpm sandbox run                       # full matrix (11 cells)
+pnpm sandbox run                       # full matrix (13 cells)
 pnpm sandbox run --profile fedora
 pnpm sandbox run --scenario install-cli # substring match
 pnpm sandbox affected                  # map `git diff --name-only` → scenarios
@@ -159,6 +186,7 @@ Flags: `--verbose` (stream everything), `--json` (machine summary), `--live`
 | `cli/lib/auth/**` | `40` |
 | `.github/workflows/desktop_publish_workflow.yml` | `50` |
 | `tests/sandbox/fixtures/deadrop.desktop.tmpl` | `60` |
+| `cli/actions/init.ts` | `30`, `70` |
 
 ## 5. Runner mechanics
 
@@ -282,11 +310,17 @@ tradeoff, and it is opt-in.
 
 ## 8. Scenario catalog
 
-Eleven cells: five scenarios × two profiles, plus one profile-independent
+Thirteen cells: six scenarios × two profiles, plus one profile-independent
 artifact check (`50`) that runs once per run.
 
 ### `10-install-cli` — `cli/install.sh`
 
+- **The installed binary runs.** `deadrop --version` exits 0 and prints the
+  expected version. This is the assertion that matters — placement and mode bits
+  are necessary, not sufficient. It is also the only check that catches a
+  wrong-libc binary, an unresolvable shared library, or a native module
+  (`libsql`, `@napi-rs/keyring`, `node-datachannel`) that failed to resolve for
+  this platform, none of which are visible from the filesystem
 - Exits 0; binary lands at `$DEADROP_INSTALL_DIR/deadrop`, executable
 - Checksum is verified, and a **tampered** payload aborts nonzero without installing
 - Runs to completion non-interactively (no TTY) without hanging — `install.sh:74`
@@ -301,6 +335,17 @@ artifact check (`50`) that runs once per run.
 
 ### `20-install-desktop` — `install-desktop.sh` + `deadrop desktop install`
 
+- **The installed AppImage runs**, as far as a headless container allows:
+  `--appimage-extract` succeeds (valid AppImage structure), the inner ELF's
+  architecture matches the host, `ldd` reports no unresolved libraries, and
+  executing it with `DISPLAY` unset fails with a *display* error rather than
+  `exec format error` or a missing-library error. That distinction is the whole
+  check — reaching the display layer proves arch, permissions, AppImage
+  structure, and the entire shared-library chain are correct.
+  On arm64 this fails today, correctly: `desktop_publish_workflow.yml` ships no
+  aarch64 build (§11), so there is genuinely nothing an arm64 Linux user could
+  run. That is a finding about the product, not a defect in the sandbox, and it
+  should be reported as a failure rather than skipped
 - AppImage lands at `~/.local/bin/deadrop-desktop.AppImage`, mode `0755`
 - Version sidecar `.deadrop-desktop.version` is written, and
   `getInstalledDesktopVersion()` reads it back correctly
@@ -422,6 +467,31 @@ actually produces a window under Wayland — the `WEBKIT_DISABLE_DMABUF_RENDERER
 compositor and a GPU, which is §13.5. Do not let a green `60` be read as "the
 app launches on Wayland." It means "the entry is well-formed."
 
+### `70-first-run` — the whole journey, one home directory
+
+Scenarios `10`-`60` each run in an isolated container with a clean `$HOME`,
+which is the right default for attribution: a failure names one thing. But no
+real user does one step. They install the CLI, configure it, install the desktop
+app, and run both — in sequence, in the same home directory, where each step
+inherits whatever the previous one left behind.
+
+This scenario runs that sequence in a single container:
+
+1. `install.sh` → run `deadrop --version`
+2. `deadrop init` → a usable config and vault (§13.7)
+3. `install-desktop.sh` → run the AppImage headlessly per §8/`20`
+4. Both binaries coexist in `~/.local/bin`, and the `PATH` guidance printed
+   along the way is consistent rather than contradictory
+
+It exists to catch what isolation hides — ordering effects, one installer
+clobbering another's files, a second `PATH` warning that contradicts the first,
+and config written by the CLI that the desktop app cannot read. It is deliberately
+the least isolated thing here, and that is its entire value.
+
+Being a composition, it should be read as a smoke test: when it fails alongside
+a focused scenario, fix the focused one first. When it fails *alone*, the bug is
+in how the steps interact, and that is a class nothing else here can find.
+
 ## 9. Output and exit codes
 
 Quiet by default. One line per cell:
@@ -433,12 +503,14 @@ tests/sandbox › ubuntu
   PASS  30-config-paths             0.6s
   PASS  40-keychain-degradation     1.2s
   PASS  60-desktop-integration      0.5s
+  PASS  70-first-run                4.9s
 
 tests/sandbox › fedora
   PASS  10-install-cli              2.0s
   PASS  20-install-desktop          3.6s
   PASS  30-config-paths             0.7s
   PASS  60-desktop-integration      0.5s
+  PASS  70-first-run                5.1s
   FAIL  40-keychain-degradation     1.1s
         assert_contains: expected stderr to name a fedora-installable package
         got: "Secure credential storage is unavailable. Install libsecret
@@ -450,7 +522,7 @@ tests/sandbox › fedora
 tests/sandbox › artifact
   PASS  50-glibc-floor              0.4s
 
-10 passed, 1 failed (11 cells, 15.9s)
+12 passed, 1 failed (13 cells, 25.9s)
 ```
 
 Failures print the assertion plus its immediate context and nothing else. Full
@@ -537,7 +609,9 @@ becomes a blocking CI step, start there — not with the install scenarios.
 7. Scenario `60` — also independent, and worth pulling forward while the field
    report is fresh; it is the workbench for §13.6 rather than a guard on
    existing behavior
-8. `affected`, `--json`, docs in `tests/CLAUDE.md`, pointers in root and
+8. Scenario `70` — last, since it composes the others; needs §13.7 to get past
+   `deadrop init`
+9. `affected`, `--json`, docs in `tests/CLAUDE.md`, pointers in root and
    `cli/CLAUDE.md`
 
 Step 3 is the checkpoint worth pausing at. If a scenario at that point is not
@@ -610,7 +684,7 @@ guard on the Linux system-dependencies step to cover both runners. Keep the
 
 ### 13.5 GUI profile
 
-A separate opt-in profile, never part of the 11-cell matrix — this is an
+A separate opt-in profile, never part of the 13-cell matrix — this is an
 experimentation shell, not a test suite, and the headless suite's speed is a
 feature worth protecting.
 
@@ -672,3 +746,19 @@ one is its own defect. Items 1-4 above are not blocked by this — only the exac
 Worth separating two symptoms that arrived described as one: an app missing from
 the launcher (items 1-3) and an app that launches but renders blank (the env
 prefix). They have different fixes and can occur independently.
+
+### 13.7 Non-interactive `deadrop init`
+
+`cli/actions/init.ts:41` calls Inquirer's `confirm()` to ask about updating
+`.gitignore`, with no flag to answer it in advance. In a non-TTY environment
+there is nothing to read from, so `init` cannot complete unattended — it blocks
+§8/`70` step 2, and it blocks every real user scripting a setup: Dockerfiles,
+CI, provisioning, devcontainers.
+
+Add `--yes` (and honor `CI`), matching the non-TTY guard `install.sh:74` already
+implements correctly for its own prompt. That script is the in-repo precedent
+for how this should behave.
+
+Not Linux-specific — it fails identically on macOS in a non-TTY shell. It
+surfaced here only because this is the first thing that ever tried to run the
+setup path unattended.
