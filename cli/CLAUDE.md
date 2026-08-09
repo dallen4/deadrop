@@ -45,7 +45,7 @@ deadrop login           # Authenticate with Clerk
 deadrop logout
 deadrop whoami           # Check signed-in identity
 deadrop update           # Update to the latest version (npm or standalone binary); also offers to update desktop if installed
-deadrop desktop install # Install (or update) the deadrop desktop app (macOS only)
+deadrop desktop install # Install (or update) the deadrop desktop app (macOS/Windows/Linux)
 deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
 deadrop inject           # Run a command with vault secrets injected as env vars

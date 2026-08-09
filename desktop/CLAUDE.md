@@ -87,7 +87,11 @@ time; it still needs a running D-Bus session + Secret Service provider
 - `inject` / `secret` command parity with the CLI (`vault` CRUD is done via
   the in-app UI).
 - CLI-driven install/update (`deadrop desktop install`, `cli/lib/update/desktop.ts`)
-  is still macOS-only (`hdiutil`/`ditto`/`plutil`, hardcoded `/Applications`).
-  `desktop_publish_workflow.yml` now builds and publishes Linux (AppImage) and
-  Windows (NSIS) bundles alongside macOS, but nothing installs them yet.
+  now covers macOS (`hdiutil`/`ditto`/`plutil`, `/Applications`), Windows (silent
+  NSIS install via `/S`, version read from the uninstall registry key — untested
+  against a real Windows box, best-effort), and Linux (AppImage in `~/.local/bin`,
+  version tracked via a sidecar file since AppImages don't expose it directly).
+  `install-desktop.sh` mirrors macOS/Linux; no native Windows shell support yet
+  (`install-desktop.ps1` is a tracked fast-follow — Windows installs go through
+  the CLI for now).
 - Signing — every platform ships unsigned (Gatekeeper/SmartScreen warnings).

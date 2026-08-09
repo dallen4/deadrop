@@ -56,7 +56,7 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 ### Desktop app
 
-- **Native desktop app**: a Tauri-based hub for drop, grab, and a native local/cloud-synced vault, sharing your CLI sign-in via the OS keychain. Builds publish for macOS, Windows, and Linux; `deadrop desktop install`/`install-desktop.sh` (macOS only for now) is the only CLI-driven install path — Windows/Linux users grab the build directly from [GitHub Releases](https://github.com/dallen4/deadrop/releases). Unsigned build; code-signing is still to come. See the [Desktop docs](/docs/features/desktop) for details.
+- **Native desktop app**: a Tauri-based hub for drop, grab, and a native local/cloud-synced vault, sharing your CLI sign-in via the OS keychain. Builds publish for macOS, Windows, and Linux. `deadrop desktop install` works (silently) on all three; `install-desktop.sh` covers macOS/Linux only (no native Windows shell) — Windows users use the CLI or grab the build directly from [GitHub Releases](https://github.com/dallen4/deadrop/releases). A native PowerShell installer is a tracked fast-follow. Unsigned build; code-signing is still to come. See the [Desktop docs](/docs/features/desktop) for details.
 - **Shared default vault**: the desktop app and CLI automatically share one default vault (same OS app-data location), so a vault created in either is immediately usable in the other with no setup. Project-scoped CLI vaults can also be linked into the desktop app via its "Import vault" option.
 
 ### Vaults
