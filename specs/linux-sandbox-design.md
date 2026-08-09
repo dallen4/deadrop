@@ -141,30 +141,30 @@ test and verify; it does not ship.
 ```
 tests/sandbox/
 ├── sandbox                  # bash entrypoint (the only thing a human/agent runs)
-├── README.md
 ├── images/
-│   ├── Containerfile.ubuntu
-│   └── Containerfile.fedora
+│   ├── Containerfile.builder  # the ONLY image with a toolchain
+│   ├── Containerfile.ubuntu   # bare target
+│   └── Containerfile.fedora   # bare target
 ├── lib/
-│   ├── runner.sh            # the ONLY container-aware code
-│   ├── harness.sh           # scenario preamble: env contract + result protocol
-│   ├── assert.sh            # assertion primitives
-│   └── fixture-server.js    # ~30-line static server for the fake release registry
-├── fixtures/
-│   ├── releases.json.tmpl   # canned GitHub releases payload, templated with the live port
-│   ├── deadrop-linux-arm64  # a real, tiny, executable stand-in binary
-│   ├── deadrop-desktop.AppImage  # likewise
-│   └── deadrop.desktop.tmpl # CANDIDATE launcher entry — the thing being experimented on (§8/`60`)
+│   ├── runner.sh            # the ONLY container-aware code; also hosts the registry
+│   ├── harness.sh           # scenario preamble: env contract
+│   └── assert.sh            # assertion primitives + result protocol
 ├── scenarios/
-│   ├── 10-install-cli.sh
-│   ├── 20-install-desktop.sh
-│   ├── 30-config-paths.sh
-│   ├── 40-keychain-degradation.sh
-│   ├── 50-glibc-floor.sh
-│   ├── 60-desktop-integration.sh
-│   └── 70-first-run.sh       # the whole journey in one $HOME
+│   ├── 10-install-cli.sh          # built
+│   ├── 20-install-desktop.sh      # todo
+│   ├── 30-config-paths.sh         # todo
+│   ├── 40-keychain-degradation.sh # todo
+│   ├── 50-glibc-floor.sh          # todo
+│   ├── 60-desktop-integration.sh  # todo
+│   └── 70-first-run.sh            # todo
+├── .work/                   # gitignored — artifacts the builder produced
 └── .logs/                   # gitignored, written every run
 ```
+
+There is no `fixtures/` directory of canned binaries. Artifacts are **built**,
+not committed: the builder emits them into `.work/artifacts/`, which the
+registry then serves. A checked-in stand-in binary would test the download
+plumbing while proving nothing about the thing we actually ship.
 
 Wiring:
 
@@ -180,15 +180,17 @@ Wiring:
 ```bash
 pnpm sandbox doctor                    # verify podman + machine state, print exact fixes
 pnpm sandbox list                      # profiles × scenarios
-pnpm sandbox run                       # full matrix (13 cells)
+pnpm sandbox run                       # full matrix
 pnpm sandbox run --profile fedora
 pnpm sandbox run --scenario install-cli # substring match
-pnpm sandbox affected                  # map `git diff --name-only` → scenarios
-pnpm sandbox shell --profile ubuntu    # interactive container, everything prepared
+pnpm sandbox shell --profile ubuntu    # interactive bare target, registry running
 ```
 
-Flags: `--verbose` (stream everything), `--json` (machine summary), `--live`
-(hit real GitHub instead of fixtures, see §7), `--keep` (don't remove containers).
+Built: `doctor`, `list`, `run`, `shell`, `--profile`, `--scenario`, `--verbose`.
+
+Not yet built: `affected` (map `git diff --name-only` → scenarios), `--json`
+(machine summary), `--live` (real GitHub instead of the local registry, §7),
+`--keep` (leave containers for inspection).
 
 `affected` reads a path → scenario map:
 
@@ -200,35 +202,51 @@ Flags: `--verbose` (stream everything), `--json` (machine summary), `--live`
 | `cli/lib/global-config.ts`, `shared/lib/constants.ts` | `30` |
 | `cli/lib/auth/**` | `40` |
 | `.github/workflows/desktop_publish_workflow.yml` | `50` |
-| `tests/sandbox/fixtures/deadrop.desktop.tmpl` | `60` |
+| `cli/lib/update/desktop-entry.ts` | `60` |
 | `cli/actions/init.ts` | `30`, `70` |
 
 ## 5. Runner mechanics
 
-**Image build bakes dependencies.** `Containerfile.*` copies only
-`pnpm-lock.yaml`, `pnpm-workspace.yaml`, and the workspace `package.json` files,
-then runs `pnpm install --frozen-lockfile --filter cli...`. `cli` declares
-`"shared": "workspace:*"`, so that pulls `cli` + `shared` and skips `web`,
-`desktop`, `worker`, and `vscode-extension` entirely. Layer caching keys this on
-the lockfile, so it only rebuilds when dependencies genuinely change.
+**Build somewhere, install somewhere else.** This separation is the entire
+point, and getting it wrong makes the suite worthless. A user never compiles
+deadrop — they download an artifact built on a GitHub runner and run it on their
+own distro, and the gap between "built there" and "runs here" is exactly the bug
+class this exists to catch. Compiling inside the machine under test resolves
+native modules for that machine and papers over every one of those bugs.
 
-**Source is projected, never bind-mounted.** The working tree is mounted
-read-only at `/src` and `tar`-piped into `/work` excluding `node_modules`,
-`.git`, `dist`, `target`, `.next`, `.logs`. Two reasons: the host's
-`node_modules` holds macOS-arm64 native binaries (`libsql`, `@napi-rs/keyring`,
-`node-datachannel`) that would poison the container, and tar extraction overlays
-without deleting, so the image's baked `node_modules` survives. Side benefit:
-**uncommitted work is testable** without committing.
+Three roles, mirroring the real pipeline:
 
-**Prepare once per profile, isolate per scenario.** One prepare container per
-run per profile projects source and runs `pnpm -F cli build` into a named
-volume. Each scenario then gets its own throwaway `podman run --rm` container
-mounting that volume **read-only**, with a fresh `$HOME`. Every scenario mutates
-only `$HOME` (`~/.local/bin`, `~/.local/share`, keyring state), so this gives
-real isolation where it matters without rebuilding the CLI once per scenario.
+| Role | Image | Has | Plays |
+|---|---|---|---|
+| **Builder** | `ubuntu:24.04` | Node 24, pnpm, bun, projected source | the `ubuntu-24.04-arm` runner in `cli_publish_workflow.yml` |
+| **Registry** | — | static file server on loopback | GitHub Releases |
+| **Target** | `ubuntu:24.04`, `fedora:*` | **nothing** — bare distro | the user's machine |
 
-Containers run `--user sandbox`. Running as root would mask permission problems
-that real users hit.
+The builder runs `pnpm compile` (`cli/scripts/bun-build.ts`) and emits
+`deadrop-linux-<arch>` plus a checksum. Note there is no cross-compilation:
+that script resolves the host's libsql `.node` and targets the host platform
+only, which is why CI builds each target on a native runner and why the builder
+here must be a Linux container rather than the macOS host.
+
+**The target image installs nothing.** No Node, no pnpm, no `node_modules`, no
+repo. Anything pre-installed is an unearned assumption about the user's machine.
+The only thing copied in is the script under test — `install.sh` and
+`install-desktop.sh` are single files. Scenarios that legitimately need a
+runtime (the `npm i -g deadrop` path) install it themselves, as that user would.
+
+**Source is projected into the builder only**, never bind-mounted: the tree is
+mounted read-only at `/src` and `tar`-piped in, excluding `node_modules`,
+`.git`, `dist`, `target`, `.next`. The host's `node_modules` holds macOS-arm64
+native binaries that would poison the build. Side benefit: **uncommitted work is
+testable** without committing, which is the whole reason the builder exists
+rather than just consuming published releases.
+
+`--live` skips the builder entirely and points the target at real GitHub, which
+validates published artifacts instead of working-tree ones. Both matter: the
+builder catches unreleased regressions, `--live` catches bad releases.
+
+Targets run `--user sandbox`. Running as root would mask permission problems
+real users hit.
 
 **The EXDEV mount.** `installOrUpdateDesktopLinux` uses `copyFileSync`, not
 `renameSync`, specifically because `mkdtempSync(tmpdir())` and
@@ -249,36 +267,46 @@ harness and reads a fixed env contract:
 
 | Variable | Meaning |
 |---|---|
-| `SANDBOX_REPO` | projected source root (`/work`) |
-| `SANDBOX_CLI` | built CLI entry (`/work/cli/dist/deadrop.js`) |
-| `SANDBOX_FIXTURES` | fixture directory |
-| `SANDBOX_PROFILE` | `ubuntu` \| `fedora` \| `artifact` (scenario `50` only) |
-| `SANDBOX_GLIBC_FLOOR` | declared compatibility floor, e.g. `2.35` (scenario `50` only) |
+| `SANDBOX_SCRIPTS` | the installers under test, mounted read-only (`/scripts`) |
+| `SANDBOX_PROFILE` | `ubuntu` \| `fedora` |
 | `SANDBOX_PKG_REMOVE` | profile-appropriate removal command (`apt-get remove -y` / `dnf remove -y`) |
+| `DEADROP_RELEASES_API` | registry stand-in for the GitHub releases list |
+| `DEADROP_RELEASES_DOWNLOAD_BASE` | ditto, for asset downloads |
 | `HOME` | fresh, empty, writable |
+
+Note there is no `SANDBOX_REPO` or `SANDBOX_CLI`. A target has no repo and no
+prebuilt CLI — it gets a binary the only way a user does, by installing one.
 
 ```bash
 #!/usr/bin/env bash
-source "$(dirname "$0")/../lib/harness.sh"
+. "$(dirname "$0")/../lib/harness.sh"
 
-scenario "install-cli"
+scenario "10-install-cli"
 
-with_fixture_registry            # starts fixture-server.js, exports the two base URLs
+assert_registry_reachable
 
-run_ok bash "$SANDBOX_REPO/cli/install.sh"
-assert_file_exists "$HOME/.local/bin/deadrop"
-assert_executable  "$HOME/.local/bin/deadrop"
-assert_contains "$LAST_STDOUT" "Checksum verified"
+run_ok bash "$SANDBOX_SCRIPTS/install.sh"
+assert_contains "$LAST_STDOUT$LAST_STDERR" "Checksum verified"
+
+BIN="$HOME/.local/bin/deadrop"
+assert_file_exists "$BIN"
+run_ok "$BIN" --version     # placement proves nothing; running it does
+
+finish
 ```
 
-`assert.sh` primitives: `run_ok`, `run_fails`, `assert_file_exists`,
+`assert.sh` primitives: `run`, `run_ok`, `run_fails`, `assert_file_exists`,
 `assert_executable`, `assert_contains`, `assert_not_contains`, `assert_eq`,
-`skip <reason>`.
+`pass`, `fail`, `skip`.
 
-**Result protocol.** Every assertion writes one tab-delimited line to fd 3:
-`PASS|FAIL|SKIP<TAB>scenario<TAB>message`. The scenario exits nonzero if any
-`FAIL` was emitted. `runner.sh` aggregates. Nothing else about the transport is
-the scenario's business, which is what makes §10 possible.
+**Result protocol.** Every assertion prints one tab-delimited line to stdout
+prefixed `##RESULT`: `##RESULT<TAB>PASS|FAIL|SKIP<TAB>scenario<TAB>message`.
+The scenario exits nonzero if any `FAIL` was emitted; `runner.sh` greps the log
+and aggregates.
+
+Not fd 3, which an earlier draft specified — podman forwards only stdio into a
+container, so a scenario writing to fd 3 dies with `Bad file descriptor`. A
+stdout marker also survives any CI log pipeline unchanged, which §10 needs.
 
 **Profile-conditional strips** use `SANDBOX_PKG_REMOVE` rather than hardcoding a
 package manager, so a scenario that needs `jq` gone works identically on both.
@@ -289,11 +317,16 @@ Live GitHub is a bad dependency here. Unauthenticated API calls are capped at 60
 requests/hour/IP, so a full matrix run is both rate-limited and
 non-deterministic — disqualifying for something agents run repeatedly.
 
-Default runs are **fully offline** against a local fixture registry: a small
-Node static server bound to `127.0.0.1` **inside the scenario's own container**
-(no extra container, no network config). `.sha256` files are generated from the
-fixture payloads at prepare time, so a checksum can never drift out of sync with
-what it describes. `releases.json.tmpl` is rendered with the live port.
+Default runs are **fully offline** against a local registry: a `python3 -m
+http.server` on the **host**, reached from the target at
+`host.containers.internal`. Deliberately not inside the target — a machine
+hosting its own file server is not a bare distro any more, and installing
+python3 there would be an unearned assumption about the user.
+
+It serves what the builder produced: the binary, a `.sha256` generated from
+those exact bytes, a minimal releases list, and a `/tampered` copy with a byte
+appended so the checksum genuinely mismatches. Nothing is checked in, so a
+checksum can never drift from what it describes.
 
 This requires a small **production change** — two env overrides that default to
 exactly today's hardcoded values:
@@ -440,41 +473,29 @@ running system, so a second profile would re-derive an identical answer. It is
 also the most CI-shaped scenario here, since it is a pure post-build property —
 see §10.
 
-### `60-desktop-integration` — launcher entry (experimental)
+### `60-desktop-integration` — launcher entry
 
-**This scenario is a workbench, not a regression guard.** The feature it covers
-does not exist: nothing in `install-desktop.sh` or `installOrUpdateDesktopLinux`
-writes a `.desktop` entry, installs an icon, or refreshes the desktop database.
-Today a Linux "install" places an AppImage in `~/.local/bin` and stops, so the
-user's desktop environment never learns the app exists — no launcher entry, no
-icon, and no way to start it but typing an absolute path, since `~/.local/bin`
-is not reliably on `PATH` (`install-desktop.sh:120` warns about exactly this).
+Reported from the field by an Arch/Wayland user: the app never appeared in the
+launcher. Confirmed and fixed — `cli/lib/update/desktop-entry.ts` and the Linux
+branch of `install-desktop.sh` now write the entry and install the icon. This
+scenario is the regression guard for that, asserting the **installer's real
+output**, not a candidate template.
 
-Reported from the field by an Arch/Wayland user, and the reason this scenario is
-shaped as an experiment: we do not yet know the correct `Exec=` line.
-
-**Phase 1 — validate a candidate (now).** `fixtures/deadrop.desktop.tmpl` holds
-a proposed entry. The scenario renders it against the real install path and
-proves the mechanics headlessly, with no installer changes required:
-
-- `desktop-file-validate` passes (package `desktop-file-utils`, present on both
-  profiles — a real cross-distro packaging check in its own right)
-- `Exec=` is an **absolute** path, not a bare command name
-- Env prefixes, if any, use the spec-legal `env VAR=value /path/to/app` form —
-  `Exec=` is not a shell, so `VAR=value /path` alone is invalid and silently
-  fails to launch in some DEs
-- Icon lands at `~/.local/share/icons/hicolor/128x128/apps/deadrop.png`
-  (source: `desktop/src-tauri/icons/128x128.png`, currently shipped only
-  *inside* the AppImage)
-- `update-desktop-database` and `gtk-update-icon-cache` succeed, and degrade
-  cleanly when absent — neither is guaranteed installed
-
-`pnpm sandbox shell` is the intended loop here: edit the template, re-validate,
-iterate. That is what "try it during troubleshooting" means in practice.
-
-**Phase 2 — flip to a guard (after §13.6).** Once the installer writes the entry,
-the same assertions retarget from the fixture to the installer's real output,
-and the scenario becomes an ordinary regression test.
+- `desktop-file-validate` passes on both profiles (`desktop-file-utils` — a
+  cross-distro packaging check in its own right)
+- `Exec=` is an **absolute** path, not a bare command name. The bundled entry
+  inside the AppImage ships `Exec=deadrop`, which resolves only if
+  `~/.local/bin` is on `PATH` — often it isn't
+- Exactly one main category. `Utility;Security;Network;` declares three, which
+  makes `desktop-file-validate` warn about the app appearing twice in the menu;
+  `Network;FileTransfer;` validates clean
+- Env prefixes, if any, use the spec-legal `env VAR=value /path` form — `Exec=`
+  is not a shell, so a bare `VAR=value /path` is invalid and silently fails in
+  some DEs
+- The icon is the **128 or 256** variant, not `.DirIcon`, which symlinks to the
+  32x32 and looks poor in a launcher
+- `update-desktop-database` and `gtk-update-icon-cache` degrade cleanly when
+  absent — neither is guaranteed installed, and neither should fail an install
 
 **What this cannot answer.** Validity is not rendering. Whether the `Exec=` line
 actually produces a window under Wayland — the `WEBKIT_DISABLE_DMABUF_RENDERER`
@@ -562,10 +583,11 @@ Not built now. Designed for.
 
 Scenarios depend only on the §6 env contract, never on podman. `runner.sh` is
 the sole container-aware file. GitHub's `ubuntu-latest` *is* Linux, so a future
-workflow sets `SANDBOX_REPO` / `SANDBOX_CLI` / `SANDBOX_FIXTURES` / a fresh
-`HOME` and loops the same scenario files unchanged; the `fedora` profile maps to
-the workflow `container:` key. Document this in `tests/CLAUDE.md` so the
-eventual CI work is transcription, not redesign.
+workflow builds the artifact in its own job (which is what `cli_publish_workflow.yml`
+already does), serves it, sets `SANDBOX_SCRIPTS` / the two `DEADROP_RELEASES_*`
+vars / a fresh `HOME`, and loops the same scenario files unchanged; the `fedora`
+profile maps to the workflow `container:` key. Document this in
+`tests/CLAUDE.md` so the eventual CI work is transcription, not redesign.
 
 Two things must hold to keep that true, and both are review criteria:
 
@@ -613,11 +635,10 @@ becomes a blocking CI step, start there — not with the install scenarios.
 
 ## 12. Implementation order
 
-1. `doctor` + `Containerfile.ubuntu` + `runner.sh` prepare step — prove a
-   container can build the CLI from projected source
-2. `harness.sh` / `assert.sh` / fixture registry + the base-URL override (§7)
-3. `10-install-cli` on `ubuntu` — the first real cell, end to end
-4. `Containerfile.fedora` — second profile, same scenario
+1. ~~`doctor`, builder + target images, `runner.sh`~~ — **done**
+2. ~~`harness.sh` / `assert.sh` / registry + the base-URL override (§7)~~ — **done**
+3. ~~`10-install-cli` on `ubuntu`~~ — **done**
+4. ~~`Containerfile.fedora`~~ — **done**, `10` green on both
 5. Scenarios `20`, `30`, `40`
 6. Scenario `50` — independent of everything above; can be pulled earlier if the
    build-runner pin is being touched
@@ -672,6 +693,16 @@ opt-in pre-release signoff and unacceptable as a default.
 Explicitly **not** the same problem as §13.5 — emulating `install.sh` is fine,
 emulating WebKitGTK is not.
 
+**Covers the CLI only. It cannot test the desktop AppImage.** Measured, not
+assumed: an AppImage stamps its own magic (`AI\x02`) into ELF header bytes 8-10,
+and the `binfmt_misc` magic/mask qemu registers for x86-64 requires those bytes
+to be zero. The kernel therefore does not recognise an AppImage as an x86-64
+ELF and refuses to exec it — `cannot execute binary file: Exec format error`,
+on a host where ordinary x86-64 binaries emulate fine. This is structural, not
+a configuration problem, and no amount of qemu tuning fixes it. Consequence:
+running the desktop app on an arm64 host requires a native aarch64 build
+(§13.4). There is no emulated shortcut.
+
 ### 13.3 Architecture-aware desktop asset selection
 
 (CPU architecture — nothing to do with Arch Linux.)
@@ -688,8 +719,12 @@ a regression for every existing Linux desktop user.
 
 Not justified by user demand — Linux desktop is overwhelmingly x86_64, and the
 arm64 Linux story is servers and containers, which is the CLI, which already
-publishes `deadrop-linux-arm64`. It is justified as developer infrastructure:
-without it, 13.5 requires emulating a browser engine.
+publishes `deadrop-linux-arm64`. It is justified as developer infrastructure,
+and after the §13.2 measurement it is the **only** way to run the desktop app
+on an Apple Silicon host at all: emulation is structurally impossible for
+AppImages, so without an aarch64 build no local container will ever launch this
+app. That promotes it from convenience to prerequisite — for §13.5, and for the
+"installed means runnable" bar in §1.
 
 Cost is low. The repo is public, so GitHub's `ubuntu-22.04-arm` hosted runners
 are free, and `desktop_publish_workflow.yml`'s matrix is already parameterized —
