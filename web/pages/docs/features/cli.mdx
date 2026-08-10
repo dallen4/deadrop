@@ -255,7 +255,7 @@ deadrop inject -v prod -- pnpm build
 
 ### `desktop install`
 
-Install (or update, if already installed) the [desktop app](/docs/features/desktop). Works on macOS, Windows, and Linux — silent install on all three (macOS via `.dmg`, Windows via a silent NSIS install, Linux via an AppImage placed in `~/.local/bin`).
+Install (or update, if already installed) the [desktop app](/docs/features/desktop). Works on macOS, Windows, and Linux, installing silently on all three (macOS via `.dmg`, Windows via a silent NSIS install, Linux via an AppImage placed in `~/.local/bin`).
 
 ```
 deadrop desktop install
@@ -263,6 +263,16 @@ deadrop desktop install --force   # reinstall even if already on the latest vers
 ```
 
 `deadrop update` also offers to update desktop automatically if it's already installed (pass `--skip-desktop` to opt out).
+
+### `desktop uninstall`
+
+Remove the desktop app. On Linux this also removes the `.desktop` entry and the icon that the install registered, so no dead launcher is left behind in the application menu. On macOS it removes `/Applications/deadrop.app`. On Windows it points you at Settings > Apps, since the NSIS installer owns its own uninstaller.
+
+```
+deadrop desktop uninstall
+```
+
+This manages the AppImage install only. If you installed a `.deb` or `.rpm`, remove it with your package manager instead.
 
 ### `secret`
 
