@@ -3,6 +3,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   unlinkSync,
@@ -125,8 +126,21 @@ export function installDesktopEntry(appImagePath: string): void {
   refreshDesktopDatabase();
 }
 
+// The install picks its hicolor bucket from the extracted PNG's own size, so
+// uninstall can't recompute it — sweep every bucket instead.
+function removeIcons(): void {
+  const hicolor = join(dataHome(), 'icons', 'hicolor');
+  if (!existsSync(hicolor)) return;
+
+  for (const bucket of readdirSync(hicolor)) {
+    const icon = join(hicolor, bucket, 'apps', `${ICON_NAME}.png`);
+    if (existsSync(icon)) unlinkSync(icon);
+  }
+}
+
 export function removeDesktopEntry(): void {
   const entry = desktopEntryPath();
   if (existsSync(entry)) unlinkSync(entry);
+  removeIcons();
   refreshDesktopDatabase();
 }

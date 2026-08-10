@@ -21,6 +21,7 @@ import logout from 'actions/logout';
 import whoami from 'actions/whoami';
 import update from 'actions/update';
 import { desktopInstall } from 'actions/desktop/install';
+import { desktopUninstall } from 'actions/desktop/uninstall';
 import { displayWelcomeMessage } from 'lib/log';
 
 const deadrop = new Command();
@@ -114,6 +115,13 @@ desktopRoot
   )
   .option('--force', 'reinstall even if already on the latest version')
   .action(desktopInstall);
+
+desktopRoot
+  .command('uninstall')
+  .description(
+    'remove the deadrop desktop app and its desktop-environment entry',
+  )
+  .action(desktopUninstall);
 
 // vault commands
 

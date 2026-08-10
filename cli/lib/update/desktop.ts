@@ -13,7 +13,11 @@ import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 import { GITHUB_RELEASES_URL } from 'lib/constants';
 import { fetchExpectedChecksum, verifyChecksum } from './checksum';
-import { installDesktopEntry } from './desktop-entry';
+import {
+  desktopEntryPath,
+  installDesktopEntry,
+  removeDesktopEntry,
+} from './desktop-entry';
 import { downloadWithProgress } from './download';
 
 export const DESKTOP_APP_PATH = '/Applications/deadrop.app';
@@ -279,6 +283,58 @@ export async function installOrUpdateDesktop(
       return installOrUpdateDesktopWindows(release);
     case 'linux':
       return installOrUpdateDesktopLinux(release);
+    default:
+      throw new Error(`Unsupported platform: ${process.platform}`);
+  }
+}
+
+export type UninstallResult = { removed: string[]; note?: string };
+
+// Mirrors installOrUpdateDesktopLinux: AppImage, version sidecar, and the
+// desktop entry + icon it registered. Leaving those behind puts a dead
+// launcher in the app menu pointing at a deleted binary.
+function uninstallDesktopLinux(): UninstallResult {
+  const removed: string[] = [];
+
+  for (const path of [LINUX_APPIMAGE_PATH, LINUX_VERSION_FILE]) {
+    if (existsSync(path)) {
+      rmSync(path, { force: true });
+      removed.push(path);
+    }
+  }
+
+  const entry = desktopEntryPath();
+  const hadEntry = existsSync(entry);
+  removeDesktopEntry();
+  if (hadEntry) removed.push(entry);
+
+  return { removed };
+}
+
+function uninstallDesktopMac(): UninstallResult {
+  if (!existsSync(DESKTOP_APP_PATH)) return { removed: [] };
+  rmSync(DESKTOP_APP_PATH, { recursive: true, force: true });
+  return { removed: [DESKTOP_APP_PATH] };
+}
+
+// The NSIS installer owns its own uninstaller and registry entries — running
+// it is the supported path, and second-guessing it would strip the registry
+// keys out from under it.
+function uninstallDesktopWindows(): UninstallResult {
+  return {
+    removed: [],
+    note: 'On Windows, uninstall deadrop desktop from Settings > Apps > Installed apps.',
+  };
+}
+
+export function uninstallDesktop(): UninstallResult {
+  switch (process.platform) {
+    case 'darwin':
+      return uninstallDesktopMac();
+    case 'win32':
+      return uninstallDesktopWindows();
+    case 'linux':
+      return uninstallDesktopLinux();
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }
