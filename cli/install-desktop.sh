@@ -1,5 +1,7 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+# POSIX sh, not bash: the documented install is `curl ... | sh`, and /bin/sh is
+# dash on Debian/Ubuntu. Keep this file free of bashisms.
+set -eu
 
 REPO="dallen4/deadrop"
 APP_NAME="deadrop.app"
@@ -11,7 +13,7 @@ OS="$(uname -s)"
 case "$OS" in
   Darwin|Linux) ;;
   *)
-    # Bash doesn't run natively on Windows (no PowerShell/cmd support) —
+    # No POSIX shell runs natively on Windows (no PowerShell/cmd support) —
     # `deadrop desktop install` (Node, cross-platform) is the real Windows
     # install path for now. A native install-desktop.ps1 is a tracked
     # fast-follow, not built yet.

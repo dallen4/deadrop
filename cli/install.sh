@@ -1,5 +1,7 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+# POSIX sh, not bash: the documented install is `curl ... | sh`, and /bin/sh is
+# dash on Debian/Ubuntu. Keep this file free of bashisms.
+set -eu
 
 REPO="dallen4/deadrop"
 BINARY="deadrop"
@@ -75,7 +77,7 @@ mv "$TMP/$BINARY" "$INSTALL_DIR/$BINARY"
 
 echo "deadrop ${TAG} installed to ${INSTALL_DIR}/${BINARY}"
 
-if ! command -v deadrop &>/dev/null; then
+if ! command -v deadrop >/dev/null 2>&1; then
   if [ -t 1 ] && [ -z "${CI:-}" ] && [ -r /dev/tty ]; then
     SHELL_RC=""
     case "${SHELL:-}" in
@@ -85,12 +87,15 @@ if ! command -v deadrop &>/dev/null; then
     esac
     printf "\n%s is not in your PATH. Add it now? [y/N] " "$INSTALL_DIR" >/dev/tty
     read -r REPLY </dev/tty
-    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-      echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "$SHELL_RC"
-      echo "Added to ${SHELL_RC}. Run: source ${SHELL_RC}"
-    else
-      echo "Skipped. Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
-    fi
+    case "$REPLY" in
+      [Yy]*)
+        echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "$SHELL_RC"
+        echo "Added to ${SHELL_RC}. Run: source ${SHELL_RC}"
+        ;;
+      *)
+        echo "Skipped. Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
+        ;;
+    esac
   else
     echo "${INSTALL_DIR} is not in your PATH."
     echo "Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
