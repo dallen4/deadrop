@@ -8,12 +8,14 @@ scenario "10-install-cli"
 
 assert_registry_reachable
 
+INSTALL_SH=$(install_script install.sh)
+
 # `sh`, not `bash`: the documented install is `curl ... | sh`, and /bin/sh is
 # dash on Debian/Ubuntu. Running this under bash hid a `set -o pipefail` that
 # killed the real install on line 2.
 # No TTY here either, which is the point — install.sh must not block on its
 # PATH prompt in a pipe, a Dockerfile, or CI.
-run_ok sh "$SANDBOX_SCRIPTS/install.sh"
+run_ok sh "$INSTALL_SH"
 INSTALL_OUT="$LAST_STDOUT$LAST_STDERR"
 
 assert_contains "$INSTALL_OUT" "Checksum verified"
@@ -35,17 +37,22 @@ else
 fi
 
 # A payload that doesn't match its checksum must abort, and must not leave a
-# binary behind. The registry serves a corrupted copy under /tampered.
-rm -f "$BIN"
-run_fails env \
-  DEADROP_RELEASES_DOWNLOAD_BASE="${DEADROP_RELEASES_DOWNLOAD_BASE%/download}/tampered" \
-  sh "$SANDBOX_SCRIPTS/install.sh"
-assert_contains "$LAST_STDERR" "Checksum verification failed"
-
-if [ -f "$BIN" ]; then
-  fail "install proceeded despite a checksum mismatch"
+# binary behind. The registry serves a corrupted copy under /tampered; there is
+# no equivalent against live GitHub, so released mode can't cover this.
+if released_mode; then
+  skip "tamper test needs the local registry"
 else
-  pass "no binary installed after checksum failure"
+  rm -f "$BIN"
+  run_fails env \
+    DEADROP_RELEASES_DOWNLOAD_BASE="${DEADROP_RELEASES_DOWNLOAD_BASE%/download}/tampered" \
+    sh "$INSTALL_SH"
+  assert_contains "$LAST_STDERR" "Checksum verification failed"
+
+  if [ -f "$BIN" ]; then
+    fail "install proceeded despite a checksum mismatch"
+  else
+    pass "no binary installed after checksum failure"
+  fi
 fi
 
 finish

@@ -26,6 +26,8 @@ usage: pnpm sandbox <command> [options]
 options:
   --profile <name>      limit to one profile (ubuntu|fedora)
   --scenario <substr>   limit to matching scenarios
+  --released            test the published scripts + live GitHub release
+                        instead of building from the working tree
   --verbose             stream scenario output
 EOF
 }
@@ -78,10 +80,15 @@ cmd_run() {
   doctor >/dev/null
   RUN_ID=$(date +%Y-%m-%dT%H-%M-%S)
 
-  printf 'building artifacts (builder container)...\n'
-  build_artifacts
-  start_registry
-  trap 'stop_registry' EXIT
+  if [ "$SANDBOX_MODE" = "released" ]; then
+    printf 'released mode: %s + live GitHub releases (no local build)\n' \
+      "$SANDBOX_PUBLIC_BASE"
+  else
+    printf 'building artifacts (builder container)...\n'
+    build_artifacts
+    start_registry
+    trap 'stop_registry' EXIT
+  fi
 
   local profile f
   for profile in "${PROFILES[@]}"; do
@@ -100,18 +107,27 @@ cmd_run() {
 cmd_shell() {
   doctor >/dev/null
   local profile="${SELECTED:-ubuntu}"
-  build_artifacts
-  start_registry
-  trap 'stop_registry' EXIT
+  local -a mode_env
+  if [ "$SANDBOX_MODE" = "released" ]; then
+    mode_env=(-e SANDBOX_PUBLIC_BASE="$SANDBOX_PUBLIC_BASE")
+  else
+    build_artifacts
+    start_registry
+    trap 'stop_registry' EXIT
+    local base="http://host.containers.internal:${REGISTRY_PORT}"
+    mode_env=(
+      -e DEADROP_RELEASES_API="$base/releases"
+      -e DEADROP_RELEASES_DOWNLOAD_BASE="$base/download"
+    )
+  fi
   build_image "${TARGET_IMAGE_PREFIX}-${profile}" "Containerfile.${profile}"
 
-  local base="http://host.containers.internal:${REGISTRY_PORT}"
   podman run --rm -it --user sandbox \
     -e HOME=/home/sandbox \
     -e SANDBOX_SCRIPTS=/scripts \
+    -e SANDBOX_MODE="$SANDBOX_MODE" \
     -e SANDBOX_PROFILE="$profile" \
-    -e DEADROP_RELEASES_API="$base/releases" \
-    -e DEADROP_RELEASES_DOWNLOAD_BASE="$base/download" \
+    "${mode_env[@]}" \
     -v "$REPO_ROOT/cli:/scripts:ro" \
     -v "$SANDBOX_DIR/lib:/sandbox/lib:ro" \
     -v "$SANDBOX_DIR/scenarios:/sandbox/scenarios:ro" \
@@ -125,6 +141,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --profile) SELECTED="$2"; PROFILES=("$2"); shift 2 ;;
     --scenario) FILTER="$2"; shift 2 ;;
+    --released) SANDBOX_MODE="released"; shift ;;
     --verbose) VERBOSE=1; shift ;;
     *) printf 'unknown option: %s\n' "$1" >&2; exit 2 ;;
   esac

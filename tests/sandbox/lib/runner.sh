@@ -6,6 +6,13 @@ REPO_ROOT="$(cd "$SANDBOX_DIR/../.." && pwd)"
 WORK="$SANDBOX_DIR/.work"
 LOGS="$SANDBOX_DIR/.logs"
 
+# local:    build from the working tree, serve from an on-host registry.
+# released: no build, no registry — curl the published scripts and install the
+#           real GitHub release, which is the only way to catch breakage that
+#           exists in what users are served rather than in the working tree.
+SANDBOX_MODE="local"
+SANDBOX_PUBLIC_BASE="${SANDBOX_PUBLIC_BASE:-https://deadrop.io}"
+
 BUILDER_IMAGE="deadrop-sandbox-builder"
 TARGET_IMAGE_PREFIX="deadrop-sandbox"
 
@@ -127,7 +134,19 @@ run_scenario() {
   local pkg_remove="apt-get remove -y"
   [ "$profile" = "fedora" ] && pkg_remove="dnf remove -y"
 
-  local base="http://host.containers.internal:${REGISTRY_PORT}"
+  # released mode deliberately passes no DEADROP_RELEASES_* overrides, so the
+  # scripts use their own GitHub defaults — the real user path.
+  local -a mode_env
+  if [ "$SANDBOX_MODE" = "released" ]; then
+    mode_env=(-e SANDBOX_PUBLIC_BASE="$SANDBOX_PUBLIC_BASE")
+  else
+    local base="http://host.containers.internal:${REGISTRY_PORT}"
+    mode_env=(
+      -e DEADROP_RELEASES_API="$base/releases"
+      -e DEADROP_RELEASES_DOWNLOAD_BASE="$base/download"
+    )
+  fi
+
   local started ended
   started=$(date +%s)
 
@@ -135,10 +154,10 @@ run_scenario() {
     --user sandbox \
     -e HOME=/home/sandbox \
     -e SANDBOX_SCRIPTS=/scripts \
+    -e SANDBOX_MODE="$SANDBOX_MODE" \
     -e SANDBOX_PROFILE="$profile" \
     -e SANDBOX_PKG_REMOVE="$pkg_remove" \
-    -e DEADROP_RELEASES_API="$base/releases" \
-    -e DEADROP_RELEASES_DOWNLOAD_BASE="$base/download" \
+    "${mode_env[@]}" \
     -v "$REPO_ROOT/cli:/scripts:ro" \
     -v "$SANDBOX_DIR/lib:/sandbox/lib:ro" \
     -v "$SANDBOX_DIR/scenarios:/sandbox/scenarios:ro" \
