@@ -38,6 +38,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Tauri names bundles from tauri.conf.json, not package.json, so drift
+      # here ships assets labelled with the wrong version.
+      - name: Check desktop version sync
+        run: pnpm -F desktop sync-version --check
+
       # Prod secrets only (never dev `vars.*`) — mixing dev Clerk creds with the prod Worker breaks auth.
       - name: Build desktop frontend
         env:
