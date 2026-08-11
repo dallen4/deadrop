@@ -1,9 +1,12 @@
 [package]
 name = "deadrop"
 version = "0.2.2"
-description = "A Tauri App"
-authors = ["you"]
+description = "End-to-end encrypted secret sharing"
+authors = ["Nieky Allen <nieky.allen@gmail.com>"]
 edition = "2021"
+license = "MIT"
+homepage = "https://deadrop.io"
+repository = "https://github.com/dallen4/deadrop"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
