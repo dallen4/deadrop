@@ -12,7 +12,7 @@ import {
   STORAGE_DIR_NAME,
 } from '@shared/lib/constants';
 
-export default async function () {
+export default async function (options: { yes?: boolean } = {}) {
   const defaultConfigPath = resolve(cwd(), CONFIG_FILE_NAME);
   const defaultVaultPath = resolve(
     STORAGE_DIR_NAME,
@@ -39,9 +39,16 @@ We recommend adding the following to your .gitignore:
 ${CONFIG_FILE_NAME}
 ${STORAGE_DIR_NAME}/`);
 
-  const updateGitignore = await confirm({
-    message: 'Would you like to add these?',
-  });
+  // `init` has to complete unattended — Dockerfiles, CI, provisioning
+  // scripts and devcontainers all run it with no TTY, where Inquirer has
+  // nothing to read from and the prompt would hang or throw. Same guard
+  // install.sh:74 already applies to its own prompt.
+  const canPrompt =
+    !options.yes && Boolean(process.stdout.isTTY) && !process.env.CI;
+
+  const updateGitignore = canPrompt
+    ? await confirm({ message: 'Would you like to add these?' })
+    : Boolean(options.yes);
 
   if (updateGitignore) {
     await appendFile(

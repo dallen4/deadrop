@@ -21,6 +21,7 @@ import logout from 'actions/logout';
 import whoami from 'actions/whoami';
 import update from 'actions/update';
 import { desktopInstall } from 'actions/desktop/install';
+import { desktopUninstall } from 'actions/desktop/uninstall';
 import { displayWelcomeMessage } from 'lib/log';
 
 const deadrop = new Command();
@@ -34,7 +35,14 @@ deadrop
     return '';
   });
 
-deadrop.command('init').action(init);
+deadrop
+  .command('init')
+  .description('set up a default vault and config in the current directory')
+  .option(
+    '-y, --yes',
+    'skip prompts and accept defaults (also implied by a non-TTY shell or CI)',
+  )
+  .action(init);
 
 deadrop.command('login').action(login);
 
@@ -107,6 +115,13 @@ desktopRoot
   )
   .option('--force', 'reinstall even if already on the latest version')
   .action(desktopInstall);
+
+desktopRoot
+  .command('uninstall')
+  .description(
+    'remove the deadrop desktop app and its desktop-environment entry',
+  )
+  .action(desktopUninstall);
 
 // vault commands
 

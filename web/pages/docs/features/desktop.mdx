@@ -3,8 +3,8 @@ import { DocsSectionTitle } from 'molecules/sections/SectionTitle';
 # 🖥️ Desktop App
 
 > **Experimental, macOS/Windows/Linux.** `deadrop desktop install` installs silently on all
-> three; `install-desktop.sh` covers macOS/Linux only (no native Windows shell support yet —
-> use the CLI there, or grab the build directly from
+> three; `install-desktop.sh` covers macOS/Linux only (no native Windows shell support yet,
+> so use the CLI there, or grab the build directly from
 > [GitHub Releases](https://github.com/dallen4/deadrop/releases)). The app is unsigned on
 > every platform, so expect an "unidentified developer"/SmartScreen warning on first launch.
 
@@ -37,6 +37,45 @@ curl -fsSL https://deadrop.io/install-desktop.sh | sh
 `deadrop update` also offers to update desktop automatically if it's already installed. See
 the [CLI docs](/docs/features/cli#commands) for flags.
 
+To remove it again:
+
+```
+deadrop desktop uninstall
+```
+
+or, if you installed with the script and don't have the CLI:
+
+```
+curl -fsSL https://deadrop.io/install-desktop.sh | sh -s -- --uninstall
+```
+
+<DocsSectionTitle
+  id={'linux-packages'}
+  label={'🐧 Linux packages (.deb / .rpm)'}
+/>
+
+The script and the CLI both install an AppImage, which runs on any distribution and needs no
+root. Every release also publishes native packages, which you may prefer if you'd rather your
+package manager own the install, the menu entry, and the updates. These are x86_64 only for
+now, so on ARM machines use the AppImage.
+
+Download the package for your release from
+[GitHub Releases](https://github.com/dallen4/deadrop/releases), then:
+
+```
+# Debian, Ubuntu, and derivatives
+sudo apt install ./deadrop_<version>_amd64.deb
+
+# Fedora, RHEL, and derivatives
+sudo dnf install ./deadrop-<version>-1.x86_64.rpm
+```
+
+Both register the application menu entry and icon for you, so there's no `.desktop` file to
+write by hand. Uninstall through the package manager as usual, with `sudo apt remove deadrop`
+or `sudo dnf remove deadrop`. Note that `deadrop desktop install` and `deadrop update` manage
+the AppImage only, so a package-manager install should be updated the same way it was
+installed.
+
 <DocsSectionTitle
   id={'dropping-and-grabbing'}
   label={'Dropping and grabbing'}
@@ -53,7 +92,7 @@ transfer runs the same peer-to-peer path as the browser, not the CLI's Node.js W
 
 The Vault tab prompts you to create a vault the first time you visit it, rather than
 creating one silently. It's stored on-device, and shares a default vault with the CLI
-automatically — no setup needed. Signed-in users with cloud access can enable Turso-backed
+automatically, with no setup needed. Signed-in users with cloud access can enable Turso-backed
 cloud sync for a vault from the same view, so its secrets stay available across devices. You
 can also link an existing project-scoped vault created by the CLI or the VS Code extension
 into the desktop app via "Import vault" in the vault switcher.

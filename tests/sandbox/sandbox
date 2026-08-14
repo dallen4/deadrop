@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# Local Linux install/setup sandbox. See specs/linux-sandbox-design.md.
+#
+#   0  all passed
+#   1  a scenario failed (a real code problem)
+#   2  environment problem (podman missing, image build failed)
+set -uo pipefail
+
+SANDBOX_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SANDBOX_DIR/lib/runner.sh"
+
+PROFILES=(ubuntu fedora)
+VERBOSE=0
+FILTER=""
+SELECTED=""
+
+usage() {
+  cat <<'EOF'
+usage: pnpm sandbox <command> [options]
+
+  doctor                verify podman is usable, print exact fixes
+  list                  show profiles and scenarios
+  run                   run the matrix
+  shell                 interactive target container
+
+options:
+  --profile <name>      limit to one profile (ubuntu|fedora)
+  --scenario <substr>   limit to matching scenarios
+  --released            test the published scripts + live GitHub release
+                        instead of building from the working tree
+  --verbose             stream scenario output
+EOF
+}
+
+PASSED=0
+FAILED=0
+FAILED_NAMES=()
+
+report_scenario() {
+  local profile="$1" name="$2" status="$3" secs="$4" log="$5"
+
+  if [ "$status" -eq 0 ]; then
+    PASSED=$((PASSED + 1))
+    printf '  \033[32mPASS\033[0m  %-28s %ss\n' "$name" "$secs"
+  else
+    FAILED=$((FAILED + 1))
+    FAILED_NAMES+=("$profile/$name")
+    printf '  \033[31mFAIL\033[0m  %-28s %ss\n' "$name" "$secs"
+    # Only the failed assertions, then where to read everything.
+    if [ -f "$log.results" ]; then
+      awk -F'\t' '$2=="FAIL"{printf "        %s\n", $4}' "$log.results"
+    fi
+    printf '        log: %s\n' "${log#"$SANDBOX_DIR/"}"
+  fi
+
+  [ "$VERBOSE" -eq 1 ] && sed 's/^/        | /' "$log"
+  return 0
+}
+
+scenario_files() {
+  local f
+  for f in "$SANDBOX_DIR"/scenarios/*.sh; do
+    [ -f "$f" ] || continue
+    if [ -n "$FILTER" ]; then
+      case "$(basename "$f")" in *"$FILTER"*) ;; *) continue ;; esac
+    fi
+    printf '%s\n' "$f"
+  done
+}
+
+cmd_list() {
+  printf 'profiles:  %s\n' "${PROFILES[*]}"
+  printf 'scenarios:\n'
+  scenario_files | while read -r f; do
+    printf '  %s\n' "$(basename "$f" .sh)"
+  done
+}
+
+cmd_run() {
+  doctor >/dev/null
+  RUN_ID=$(date +%Y-%m-%dT%H-%M-%S)
+
+  if [ "$SANDBOX_MODE" = "released" ]; then
+    printf 'released mode: %s + live GitHub releases (no local build)\n' \
+      "$SANDBOX_PUBLIC_BASE"
+  else
+    printf 'building artifacts (builder container)...\n'
+    build_artifacts
+    start_registry
+    trap 'stop_registry' EXIT
+  fi
+
+  local profile f
+  for profile in "${PROFILES[@]}"; do
+    build_image "${TARGET_IMAGE_PREFIX}-${profile}" "Containerfile.${profile}"
+    printf '\ntests/sandbox \342\200\272 %s\n' "$profile"
+    while read -r f; do
+      run_scenario "$profile" "$f"
+    done < <(scenario_files)
+  done
+
+  printf '\n%d passed, %d failed\n' "$PASSED" "$FAILED"
+  [ "$FAILED" -eq 0 ] || return 1
+  return 0
+}
+
+cmd_shell() {
+  doctor >/dev/null
+  local profile="${SELECTED:-ubuntu}"
+  local -a mode_env
+  if [ "$SANDBOX_MODE" = "released" ]; then
+    mode_env=(-e SANDBOX_PUBLIC_BASE="$SANDBOX_PUBLIC_BASE")
+  else
+    build_artifacts
+    start_registry
+    trap 'stop_registry' EXIT
+    local base="http://host.containers.internal:${REGISTRY_PORT}"
+    mode_env=(
+      -e DEADROP_RELEASES_API="$base/releases"
+      -e DEADROP_RELEASES_DOWNLOAD_BASE="$base/download"
+    )
+  fi
+  build_image "${TARGET_IMAGE_PREFIX}-${profile}" "Containerfile.${profile}"
+
+  podman run --rm -it --user sandbox \
+    -e HOME=/home/sandbox \
+    -e SANDBOX_SCRIPTS=/scripts \
+    -e SANDBOX_MODE="$SANDBOX_MODE" \
+    -e SANDBOX_PROFILE="$profile" \
+    "${mode_env[@]}" \
+    -v "$REPO_ROOT/cli:/scripts:ro" \
+    -v "$SANDBOX_DIR/lib:/sandbox/lib:ro" \
+    -v "$SANDBOX_DIR/scenarios:/sandbox/scenarios:ro" \
+    "${TARGET_IMAGE_PREFIX}-${profile}" bash
+}
+
+COMMAND="${1:-}"
+[ $# -gt 0 ] && shift
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --profile) SELECTED="$2"; PROFILES=("$2"); shift 2 ;;
+    --scenario) FILTER="$2"; shift 2 ;;
+    --released) SANDBOX_MODE="released"; shift ;;
+    --verbose) VERBOSE=1; shift ;;
+    *) printf 'unknown option: %s\n' "$1" >&2; exit 2 ;;
+  esac
+done
+
+case "$COMMAND" in
+  doctor) doctor ;;
+  list) cmd_list ;;
+  run) cmd_run ;;
+  shell) cmd_shell ;;
+  ''|-h|--help|help) usage ;;
+  *) printf 'unknown command: %s\n\n' "$COMMAND" >&2; usage; exit 2 ;;
+esac

@@ -1,9 +1,16 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+# POSIX sh, not bash: the documented install is `curl ... | sh`, and /bin/sh is
+# dash on Debian/Ubuntu. Keep this file free of bashisms.
+set -eu
 
 REPO="dallen4/deadrop"
 BINARY="deadrop"
 INSTALL_DIR="${DEADROP_INSTALL_DIR:-$HOME/.local/bin}"
+
+# Overridable so installs can be pointed at a mirror, a staging release, or a
+# local registry; defaults are the real GitHub endpoints.
+RELEASES_API="${DEADROP_RELEASES_API:-https://api.github.com/repos/${REPO}/releases}"
+DOWNLOAD_BASE="${DEADROP_RELEASES_DOWNLOAD_BASE:-https://github.com/${REPO}/releases/download}"
 
 case "$(uname -s)" in
   Darwin) OS="darwin" ;;
@@ -31,7 +38,7 @@ esac
 # same releases list — /releases/latest can't tell them apart, so fetch the
 # list and take the newest tag that's actually a CLI release. `"deadrop@`
 # (with the trailing `@`) naturally excludes `"deadrop-desktop@`.
-RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases") || {
+RELEASE_JSON=$(curl -fsSL "$RELEASES_API") || {
   echo "No published deadrop release found (or network error)." >&2
   echo "See https://github.com/${REPO}/releases" >&2
   exit 1
@@ -39,7 +46,7 @@ RELEASE_JSON=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases") || {
 TAG=$(printf '%s' "$RELEASE_JSON" | grep -o '"tag_name": *"deadrop@[^"]*"' | head -1 | sed 's/.*"deadrop@\([^"]*\)".*/deadrop@\1/')
 [ -z "$TAG" ] && { echo "Could not determine latest release tag" >&2; exit 1; }
 
-URL="https://github.com/${REPO}/releases/download/${TAG}/${BINARY}-${OS}-${ARCH}"
+URL="${DOWNLOAD_BASE}/${TAG}/${BINARY}-${OS}-${ARCH}"
 
 echo "Downloading deadrop ${TAG} (${OS}/${ARCH})..."
 
@@ -70,7 +77,7 @@ mv "$TMP/$BINARY" "$INSTALL_DIR/$BINARY"
 
 echo "deadrop ${TAG} installed to ${INSTALL_DIR}/${BINARY}"
 
-if ! command -v deadrop &>/dev/null; then
+if ! command -v deadrop >/dev/null 2>&1; then
   if [ -t 1 ] && [ -z "${CI:-}" ] && [ -r /dev/tty ]; then
     SHELL_RC=""
     case "${SHELL:-}" in
@@ -80,12 +87,15 @@ if ! command -v deadrop &>/dev/null; then
     esac
     printf "\n%s is not in your PATH. Add it now? [y/N] " "$INSTALL_DIR" >/dev/tty
     read -r REPLY </dev/tty
-    if [[ "$REPLY" =~ ^[Yy]$ ]]; then
-      echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "$SHELL_RC"
-      echo "Added to ${SHELL_RC}. Run: source ${SHELL_RC}"
-    else
-      echo "Skipped. Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
-    fi
+    case "$REPLY" in
+      [Yy]*)
+        echo "export PATH=\"${INSTALL_DIR}:\$PATH\"" >> "$SHELL_RC"
+        echo "Added to ${SHELL_RC}. Run: source ${SHELL_RC}"
+        ;;
+      *)
+        echo "Skipped. Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""
+        ;;
+    esac
   else
     echo "${INSTALL_DIR} is not in your PATH."
     echo "Add manually: export PATH=\"${INSTALL_DIR}:\$PATH\""

@@ -13,6 +13,11 @@ import { homedir, tmpdir } from 'os';
 import { join } from 'path';
 import { GITHUB_RELEASES_URL } from 'lib/constants';
 import { fetchExpectedChecksum, verifyChecksum } from './checksum';
+import {
+  desktopEntryPath,
+  installDesktopEntry,
+  removeDesktopEntry,
+} from './desktop-entry';
 import { downloadWithProgress } from './download';
 
 export const DESKTOP_APP_PATH = '/Applications/deadrop.app';
@@ -41,6 +46,21 @@ export type DesktopRelease = {
   assetUrl: string;
   assetSha256Url: string;
 };
+
+// Tauri names Linux bundles `<product>_<version>_<arch>.AppImage` — e.g.
+// `deadrop_0.1.0_amd64.AppImage`. Matching on the extension alone picks
+// whichever build the releases API happens to list first, which would hand
+// an x64 user an aarch64 binary as soon as a second Linux target ships.
+const LINUX_APPIMAGE_ARCH: Record<string, string> = {
+  x64: 'amd64',
+  arm64: 'aarch64',
+};
+
+function matchesLinuxAppImage(name: string): boolean {
+  const arch = LINUX_APPIMAGE_ARCH[process.arch];
+  if (!arch) return false;
+  return name.endsWith(`_${arch}.AppImage`);
+}
 
 function getInstalledDesktopVersionMac(): string | null {
   if (!existsSync(DESKTOP_APP_PATH)) return null;
@@ -139,7 +159,7 @@ export async function fetchLatestDesktopRelease(): Promise<DesktopRelease | null
     process.platform === 'win32'
       ? a.name.endsWith('-setup.exe')
       : process.platform === 'linux'
-        ? a.name.endsWith('.AppImage')
+        ? matchesLinuxAppImage(a.name)
         : a.name.endsWith('.dmg'),
   );
   const assetSha256 = release.assets.find(
@@ -241,6 +261,9 @@ async function installOrUpdateDesktopLinux(
     // can be on different filesystems, where rename() fails with EXDEV.
     copyFileSync(tmpPath, LINUX_APPIMAGE_PATH);
     writeFileSync(LINUX_VERSION_FILE, release.version);
+
+    // Otherwise the AppImage is runnable but absent from the app menu.
+    installDesktopEntry(LINUX_APPIMAGE_PATH);
   } finally {
     rmSync(scratchDir, { recursive: true, force: true });
   }
@@ -260,6 +283,58 @@ export async function installOrUpdateDesktop(
       return installOrUpdateDesktopWindows(release);
     case 'linux':
       return installOrUpdateDesktopLinux(release);
+    default:
+      throw new Error(`Unsupported platform: ${process.platform}`);
+  }
+}
+
+export type UninstallResult = { removed: string[]; note?: string };
+
+// Mirrors installOrUpdateDesktopLinux: AppImage, version sidecar, and the
+// desktop entry + icon it registered. Leaving those behind puts a dead
+// launcher in the app menu pointing at a deleted binary.
+function uninstallDesktopLinux(): UninstallResult {
+  const removed: string[] = [];
+
+  for (const path of [LINUX_APPIMAGE_PATH, LINUX_VERSION_FILE]) {
+    if (existsSync(path)) {
+      rmSync(path, { force: true });
+      removed.push(path);
+    }
+  }
+
+  const entry = desktopEntryPath();
+  const hadEntry = existsSync(entry);
+  removeDesktopEntry();
+  if (hadEntry) removed.push(entry);
+
+  return { removed };
+}
+
+function uninstallDesktopMac(): UninstallResult {
+  if (!existsSync(DESKTOP_APP_PATH)) return { removed: [] };
+  rmSync(DESKTOP_APP_PATH, { recursive: true, force: true });
+  return { removed: [DESKTOP_APP_PATH] };
+}
+
+// The NSIS installer owns its own uninstaller and registry entries — running
+// it is the supported path, and second-guessing it would strip the registry
+// keys out from under it.
+function uninstallDesktopWindows(): UninstallResult {
+  return {
+    removed: [],
+    note: 'On Windows, uninstall deadrop desktop from Settings > Apps > Installed apps.',
+  };
+}
+
+export function uninstallDesktop(): UninstallResult {
+  switch (process.platform) {
+    case 'darwin':
+      return uninstallDesktopMac();
+    case 'win32':
+      return uninstallDesktopWindows();
+    case 'linux':
+      return uninstallDesktopLinux();
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }

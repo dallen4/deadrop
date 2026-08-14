@@ -1,0 +1,20 @@
+# A user's machine, not a dev box. Deliberately has no Node, no pnpm, no
+# toolchain — only what a stock desktop install ships. Anything added here is
+# an assumption about the user we haven't earned.
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# curl + ca-certificates: install.sh's only hard prerequisites.
+# jq: install-desktop.sh guards on it, and scenarios strip it to prove that.
+# libsecret-1-0: present on a normal desktop; scenarios remove it to test
+# keychain degradation.
+# desktop-file-utils: validates the .desktop entry we write.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      bash ca-certificates curl file jq \
+      libsecret-1-0 desktop-file-utils binutils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --create-home --shell /bin/bash sandbox
+USER sandbox
+WORKDIR /home/sandbox

@@ -71,3 +71,7 @@ cli/lib/bun-inject.ts
 # tauri (desktop) build artifacts
 desktop/src-tauri/target/
 desktop/src-tauri/gen/
+
+# linux sandbox run artifacts
+tests/sandbox/.logs/
+tests/sandbox/.work/
