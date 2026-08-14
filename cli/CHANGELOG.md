@@ -1,5 +1,29 @@
 # cli
 
+## 1.8.0
+
+### Minor Changes
+
+- 733aa0b: Added `deadrop desktop uninstall`, and an `--uninstall` flag to `install-desktop.sh`. Installing the desktop app on Linux writes to three places (the AppImage in `~/.local/bin`, a `.desktop` entry, and an icon under the hicolor theme), and nothing removed any of them — anyone who tried the app and deleted the AppImage by hand was left with a dead launcher in their application menu pointing at a missing binary.
+
+  Both paths remove the AppImage, its version sidecar, the desktop entry, and the installed icon, then refresh the desktop and icon caches. Icons are swept across every hicolor size bucket, since the install picks its bucket from the extracted PNG's own dimensions and uninstall can't recompute it. On macOS this removes `/Applications/deadrop.app`; on Windows it points at Settings > Apps, since the NSIS installer owns its own uninstaller.
+
+  The flag exists on the shell script as well as the CLI because installing via `curl … | sh` doesn't get you the CLI, which would have left those users with no way to undo the install.
+
+### Patch Changes
+
+- c96cb92: Installing the desktop app on Linux now registers it with the desktop environment. `deadrop desktop install` and `install-desktop.sh` previously placed an AppImage in `~/.local/bin` and stopped, so it never appeared in the application menu. Both now write a freedesktop `.desktop` entry and install the app icon, degrading gracefully when the icon can't be extracted or the desktop-database tools aren't present.
+- 507dd22: Three Linux setup fixes found while building the Linux sandbox:
+  - The keychain-unavailable message no longer hardcodes `apt-get` — it now lists the Ubuntu/Debian, Fedora/RHEL, and Arch commands, matching what `install.sh` already prints. Fedora and Arch users were being told to run a command that doesn't exist on their system.
+  - Desktop AppImage selection is now architecture-aware in both `deadrop desktop install` and `install-desktop.sh`. Previously either would take the first `.AppImage` on a release regardless of arch, which would have handed x64 users an aarch64 binary as soon as a second Linux build shipped. A release with no build for your platform now says so explicitly instead of reporting "no release found".
+  - `deadrop init` accepts `-y`/`--yes` and skips its `.gitignore` prompt automatically in a non-TTY shell or when `CI` is set, so it can complete unattended in Dockerfiles, CI, and provisioning scripts.
+
+- b8fb954: `install.sh` and `install-desktop.sh` are now POSIX sh instead of bash. Both are documented as `curl -fsSL https://deadrop.io/install.sh | sh`, but both opened with `set -euo pipefail` — and `/bin/sh` is dash on Debian and Ubuntu, which has no `pipefail`. The documented command therefore failed on line 2 with `set: Illegal option -o pipefail` on the two most common desktop Linux distributions, installing nothing. Fedora and macOS were unaffected because `/bin/sh` is bash there, which is why this went unnoticed.
+
+  `install.sh` also used two further bashisms (`&>` redirection and `[[ =~ ]]`), now replaced with POSIX equivalents. Dropping `pipefail` additionally makes the "Could not determine latest release tag" error reachable — previously a release-tag lookup that matched nothing aborted the script silently, before its own error message could print.
+
+  The Linux sandbox now runs `install.sh` under `sh` rather than `bash`, so this class of bug fails the suite instead of shipping.
+
 ## 1.7.0
 
 ### Minor Changes
