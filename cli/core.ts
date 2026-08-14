@@ -14,6 +14,7 @@ import {
   vaultEnvList,
   vaultExport,
   vaultImport,
+  vaultList,
   vaultSync,
   vaultUse,
 } from 'actions/vault';
@@ -144,9 +145,17 @@ add cloud-based replica for ease of sharing`,
   .action(vaultCreate);
 
 vaultRoot
+  .command('list')
+  .description('list all vaults available in the config')
+  .action(vaultList);
+
+vaultRoot
   .command('use')
   .description('change the current active vault deadrop is using')
-  .argument('<name>', 'name of the vault to switch to as active')
+  .argument(
+    '[name]',
+    'name of the vault to switch to as active (prompts to select when omitted)',
+  )
   .option('-e, --environment <env>', 'environment to switch to')
   .action(vaultUse);
 

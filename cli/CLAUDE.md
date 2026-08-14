@@ -50,7 +50,8 @@ deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
 deadrop inject           # Run a command with vault secrets injected as env vars
 deadrop vault create    # Create a local vault (seeds development + production envs)
-deadrop vault use       # Switch active vault (--environment to also switch env)
+deadrop vault list      # List all vaults in the config
+deadrop vault use       # Switch active vault (--environment to also switch env; prompts to select when name omitted)
 deadrop vault sync      # Sync vault ↔ .env file
 deadrop vault export
 deadrop vault import

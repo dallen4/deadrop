@@ -1,3 +1,4 @@
+import { select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import { vaultExists } from 'db/vaults';
 import { loadConfig, saveConfig } from 'lib/config';
@@ -7,7 +8,7 @@ import { exit } from 'process';
 import { DeadropConfig } from '@shared/types/config';
 
 export async function vaultUse(
-  vaultNameInput: string,
+  vaultNameInput: string | undefined,
   options: { environment?: string } = {},
 ) {
   const { config, filepath: configPath } = await loadConfig();
@@ -15,8 +16,22 @@ export async function vaultUse(
   const { vaults, active_vault } = config;
 
   if (!vaultNameInput) {
-    logError('Vault name is required to delete!');
-    return exit(1);
+    const vaultNames = Object.keys(vaults);
+
+    if (!vaultNames.length) {
+      logError('No vaults configured, run `deadrop vault create` first!');
+      return exit(1);
+    }
+
+    vaultNameInput = await select({
+      message: 'Select a vault to switch to',
+      choices: vaultNames.map((name) => ({
+        name:
+          name === active_vault.name ? `${name} (active)` : name,
+        value: name,
+      })),
+      default: active_vault.name,
+    });
   }
 
   if (!vaultExists(vaults, vaultNameInput)) {
