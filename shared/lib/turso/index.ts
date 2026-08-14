@@ -22,17 +22,28 @@ const sha256hex = async (input: string) => {
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 };
+const userIdToIndex = async (userId: string) =>
+  (await sha256hex(userId)).substring(0, 13);
 
 export const vaultNameFromUserId = async (
   userId: string,
   vaultName?: string,
 ) => {
-  const userIdHash = await sha256hex(userId);
-  const nameParts = [userIdHash.substring(0, 13)];
+  const userIndex = await userIdToIndex(userId);
+  const nameParts = [userIndex];
 
   if (vaultName) nameParts.push(vaultName);
 
   return nameParts.join('-').substring(0, 63);
+};
+
+export const userOwnsVault = async (
+  userId: string,
+  vaultName: string,
+) => {
+  const userIndex = await userIdToIndex(userId);
+
+  return vaultName.startsWith(`${userIndex}-`);
 };
 
 export const createVaultUtils = (

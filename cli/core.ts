@@ -84,7 +84,7 @@ deadrop
   .argument('<command...>', 'command to run (after --)')
   .option(
     '-v, --vault <name>',
-    'vault to inject (optional: defaults to your default vault)',
+    'vault to inject (optional: defaults to your active vault)',
   )
   .option('-e, --environment <env>', 'environment to inject')
   .option(
@@ -113,7 +113,10 @@ desktopRoot
   .description(
     'install (or update, if already installed) the deadrop desktop app',
   )
-  .option('--force', 'reinstall even if already on the latest version')
+  .option(
+    '--force',
+    'reinstall even if already on the latest version',
+  )
   .action(desktopInstall);
 
 desktopRoot
