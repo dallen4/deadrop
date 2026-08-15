@@ -10,6 +10,7 @@ export { createLifecycleHandlers } from './lifecycle';
 export {
   fileUrl,
   syncUrl,
+  vaultSyncUrl,
   syncUrlToHttps,
   tursoUploadUrl,
 } from './utils';

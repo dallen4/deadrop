@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { vaultSyncUrl } from '@shared/lib/turso/utils';
 import type { VaultDBConfig } from '@shared/types/config';
 
 // Thin, dumb passthrough to the Rust vault_* commands
@@ -12,10 +13,15 @@ type VaultDbConfigDto = {
   cloud?: { syncUrl: string; authToken?: string };
 };
 
+// Rust opens the replica by URL, so the webview derives it here rather
+// than Rust duplicating the org constant.
 const toDto = (vault: VaultDBConfig): VaultDbConfigDto => ({
   location: vault.location,
   cloud: vault.cloud
-    ? { syncUrl: vault.cloud.syncUrl, authToken: vault.cloud.authToken }
+    ? {
+        syncUrl: vaultSyncUrl(vault.cloud.name),
+        authToken: vault.cloud.authToken,
+      }
     : undefined,
 });
 

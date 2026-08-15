@@ -1,5 +1,4 @@
 import { createClient } from '@shared/client';
-import { syncUrl } from '@shared/lib/turso/utils';
 import type { CloudVaultConfig } from '@shared/types/config';
 import { DEADROP_API_URL } from '../env';
 
@@ -22,9 +21,9 @@ export async function provisionCloudVault(
     throw new Error(await response.text());
   }
 
-  const { name, hostname, token } = await response.json();
+  const { name, token } = await response.json();
 
-  return { name, syncUrl: syncUrl(hostname), authToken: token };
+  return { name, authToken: token };
 }
 
 export async function deleteCloudVault(

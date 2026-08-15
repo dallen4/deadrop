@@ -25,7 +25,7 @@ describe('mintVaultToken', () => {
     expect(result).toBeNull();
   });
 
-  it('mints a read-only token and builds a sync url', async () => {
+  it('returns the resolved remote name with the token', async () => {
     const { getSessionToken } = await import('lib/auth/clerk');
     const { createClient } = await import('@shared/client');
     const { mintVaultToken } = await import('lib/auth/vault-token');
@@ -36,7 +36,8 @@ describe('mintVaultToken', () => {
       status: 201,
       json: async () => ({
         token: 'minted-token',
-        hostname: 'my-vault.turso.io',
+        name: 'a1b2c3d4e5f67-my-vault',
+        hostname: 'a1b2c3d4e5f67-my-vault-dallen4.turso.io',
       }),
     });
     vi.mocked(createClient).mockReturnValue({
@@ -48,7 +49,7 @@ describe('mintVaultToken', () => {
     expect($post).toHaveBeenCalledWith({ json: { name: 'my-vault' } });
     expect(result).toEqual({
       authToken: 'minted-token',
-      syncUrl: 'libsql://my-vault.turso.io',
+      name: 'a1b2c3d4e5f67-my-vault',
     });
   });
 
@@ -63,7 +64,7 @@ describe('mintVaultToken', () => {
       status: 201,
       json: async () => ({
         token: 'minted-token',
-        hostname: 'default.turso.io',
+        name: 'a1b2c3d4e5f67',
       }),
     });
     vi.mocked(createClient).mockReturnValue({

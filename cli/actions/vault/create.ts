@@ -1,6 +1,5 @@
 import { createClient } from '@shared/client';
 import { vault } from '@shared/lib/vault';
-import { syncUrl } from '@shared/lib/turso/utils';
 import { migrateToCloudSync } from '@shared/db/migrate';
 import type { CloudVaultConfig } from '@shared/types/config';
 import type { CreateVaultResponse } from '@shared/types/fetch';
@@ -43,10 +42,9 @@ async function provisionCloudVault(
       return null;
     }
 
-    const { name, hostname, token: authToken } =
-      data as CreateVaultResponse;
+    const { name, token: authToken } = data as CreateVaultResponse;
 
-    return { name, syncUrl: syncUrl(hostname), authToken };
+    return { name, authToken };
   } catch (err) {
     console.error(err);
     return null;

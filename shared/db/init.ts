@@ -2,7 +2,7 @@ import { Client, Config } from '@libsql/client';
 import { DrizzleConfig } from 'drizzle-orm';
 import { CloudVaultConfig } from '../types/config';
 import { secretsTable } from './schema';
-import { fileUrl } from '../lib/turso/utils';
+import { fileUrl, vaultSyncUrl } from '../lib/turso/utils';
 import { LibSQLDatabase } from 'drizzle-orm/libsql';
 
 export const initDBConfig = (
@@ -14,7 +14,7 @@ export const initDBConfig = (
   };
 
   if (cloudConfig) {
-    config.syncUrl = cloudConfig.syncUrl;
+    config.syncUrl = vaultSyncUrl(cloudConfig.name);
     config.authToken = cloudConfig.authToken;
   }
 

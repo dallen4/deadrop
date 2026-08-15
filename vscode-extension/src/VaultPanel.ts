@@ -16,7 +16,6 @@ import {
 } from './lib/vault';
 import { initEnvKey } from '@shared/lib/vault';
 import { createClient } from '@shared/client';
-import { syncUrl } from '@shared/lib/turso';
 import type { VaultDBConfig } from '@shared/types/config';
 import type { CreateVaultResponse } from '@shared/types/fetch';
 
@@ -298,7 +297,6 @@ export class VaultPanel {
 
     vaultConfig.cloud = {
       name: data.name,
-      syncUrl: syncUrl(data.hostname),
       authToken: data.token,
     };
   }
