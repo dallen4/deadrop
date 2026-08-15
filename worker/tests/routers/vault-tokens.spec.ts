@@ -206,15 +206,19 @@ describe('POST /vault/tokens', () => {
   });
 });
 
-describe('POST /vault/:name/rotate', () => {
+describe('POST /vault/rotate', () => {
   it('invalidates every token for the caller’s own vault', async () => {
     vi.clearAllMocks();
     invalidateTokens.mockResolvedValue(undefined);
 
     const vaultRouter = (await import('../../src/routers/vault')).default;
     const res = await vaultRouter.request(
-      '/demo/rotate',
-      { method: 'POST' },
+      '/rotate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'demo' }),
+      },
       testEnv,
     );
 
@@ -223,8 +227,29 @@ describe('POST /vault/:name/rotate', () => {
       rotated: true,
       name: 'hash13-demo',
     });
-    // Name is derived from the caller's userId, never the path alone.
+    // Name is derived from the caller's userId, never the body alone.
     expect(invalidateTokens).toHaveBeenCalledWith('hash13-demo');
+  });
+
+  // The default vault's remote name is the bare `<hash13>`, so a required
+  // path param would leave it unrotatable.
+  it('rotates the default vault when no name is given', async () => {
+    vi.clearAllMocks();
+    invalidateTokens.mockResolvedValue(undefined);
+
+    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const res = await vaultRouter.request(
+      '/rotate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      },
+      testEnv,
+    );
+
+    expect(res.status).toBe(200);
+    expect(invalidateTokens).toHaveBeenCalledWith('hash13');
   });
 
   it('returns a clean 404 when the vault does not exist', async () => {
@@ -235,8 +260,12 @@ describe('POST /vault/:name/rotate', () => {
 
     const vaultRouter = (await import('../../src/routers/vault')).default;
     const res = await vaultRouter.request(
-      '/missing/rotate',
-      { method: 'POST' },
+      '/rotate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'missing' }),
+      },
       testEnv,
     );
 
@@ -252,8 +281,12 @@ describe('POST /vault/:name/rotate', () => {
 
     const vaultRouter = (await import('../../src/routers/vault')).default;
     const res = await vaultRouter.request(
-      '/demo/rotate',
-      { method: 'POST' },
+      '/rotate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'demo' }),
+      },
       testEnv,
     );
 

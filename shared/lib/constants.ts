@@ -81,6 +81,12 @@ export const TURSO_ORGANIZATION = 'dallen4';
 
 export const SECRET_VALUE_DELIMITER = ' | ';
 
+// Turso fixes access level at mint time; it can never be changed after.
+export enum VaultTokenAccess {
+  FullAccess = 'full-access',
+  ReadOnly = 'read-only',
+}
+
 // Vault shares ride the existing `raw` payload mode and discriminate on
 // `DropMessageMeta.type`, so a grabber that doesn't recognize it still
 // renders readable YAML instead of hitting an unhandled mode.

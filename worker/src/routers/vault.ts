@@ -7,7 +7,10 @@ import {
   vaultNameFromUserId,
   TursoApiError,
 } from '@shared/lib/turso';
-import { TURSO_ORGANIZATION } from '@shared/lib/constants';
+import {
+  TURSO_ORGANIZATION,
+  VaultTokenAccess,
+} from '@shared/lib/constants';
 import {
   authenticated,
   restricted,
@@ -19,13 +22,16 @@ const CreateVaultSchema = VaultNameSchema.partial().extend({
   seed: z.enum(['database_upload']).optional(),
 });
 const VaultOwnerSchema = z.object({ userId: z.string() });
+// Optional `name` mirrors VaultTokenSchema so the default vault (bare
+// `<hash13>`, no suffix) stays addressable.
+const VaultRotateSchema = z.object({ name: z.string().optional() });
 // `access` defaults to read-only so the CLI `inject` path, which sends no
 // access at all, keeps minting read-only tokens.
 const VaultTokenSchema = z.object({
   name: z.string().optional(),
   access: z
-    .enum(['full-access', 'read-only'])
-    .default('read-only'),
+    .nativeEnum(VaultTokenAccess)
+    .default(VaultTokenAccess.ReadOnly),
   expiration: z.string().optional(),
 });
 
@@ -52,7 +58,7 @@ const vaultRouter = hono()
 
         const vaultToken = await createVaultToken(
           vaultName,
-          'full-access',
+          VaultTokenAccess.FullAccess,
         );
 
         return c.json(
@@ -170,11 +176,11 @@ const vaultRouter = hono()
     AppRouteParts.Rotate,
     authenticated(),
     restricted(),
-    zValidator('param', VaultNameSchema),
+    zValidator('json', VaultRotateSchema),
     async (c) => {
       const userId = c.get('userId')!;
 
-      const { name } = c.req.valid('param');
+      const { name } = c.req.valid('json');
 
       const vaultName = await vaultNameFromUserId(userId!, name);
 

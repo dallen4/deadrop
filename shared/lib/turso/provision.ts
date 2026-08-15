@@ -5,6 +5,7 @@ import type {
   ListDatabasesResponse,
 } from '../../types/db';
 import type { TursoClient } from './client';
+import { VaultTokenAccess } from '../constants';
 
 export const createProvisionHandlers = (
   client: TursoClient,
@@ -32,7 +33,7 @@ export const createProvisionHandlers = (
   // callers keep their current behavior.
   const createVaultToken = async (
     vaultName: string,
-    access: 'full-access' | 'read-only',
+    access: VaultTokenAccess,
     expiration?: string,
   ) => {
     const path =

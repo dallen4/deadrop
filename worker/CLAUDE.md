@@ -53,7 +53,7 @@ worker/
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
 | POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true })` + `restricted()`) |
 | POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true })` + `restricted()`) |
-| POST | `/vault/:name/rotate` | Invalidate **every** token for a vault (`authenticated()` + `restricted()`, deliberately no `allowApiKey`) |
+| POST | `/vault/rotate` | Invalidate **every** token for a vault — optional `name` in the body, same as `/vault/tokens`, so the default vault stays addressable (`authenticated()` + `restricted()`, deliberately no `allowApiKey`) |
 | GET | `/vault/:name` | Get vault metadata (`authenticated({ allowApiKey: true })`) |
 | DELETE | `/vault/:name` | Delete a vault (`authenticated()` + `restricted()`) |
 | POST | `/vault/lock` | Lock all of a user's vaults on cancel (`service()`, `{ userId }`) |
