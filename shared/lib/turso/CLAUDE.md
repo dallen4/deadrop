@@ -16,7 +16,8 @@ which were collapsed into this module.
 - `lifecycle.ts` — `createLifecycleHandlers(client)` → `updateConfiguration`,
   `invalidateTokens`, `suspendVault`, `restoreVault`, `deleteVault`.
 - `utils.ts` — pure URL protocol helpers (`fileUrl`, `syncUrl`,
-  `syncUrlToHttps`, `tursoUploadUrl`). Safe to import anywhere (no I/O).
+  `vaultSyncUrl`, `syncUrlToHttps`, `tursoUploadUrl`). Safe to import
+  anywhere (no I/O).
 - `index.ts` — `vaultNameFromUserId`, `createVaultUtils` (merges provision +
   lifecycle handlers), and re-exports.
 
@@ -26,9 +27,12 @@ Worker.
 
 ## Credentials & topology
 
+- The org slug is the shared `TURSO_ORGANIZATION` constant (`dallen4`) in
+  `shared/lib/constants.ts`, read by all four surfaces. It was a worker-only
+  `[vars]` entry until clients needed it to derive sync URLs. One Turso org
+  backs every environment.
 - **One** Worker (`deadrop.nieky.dev`, single wrangler env) holds
-  `TURSO_ORGANIZATION` (`dallen4`, in `[vars]`) and `TURSO_PLATFORM_API_TOKEN`
-  (secret). One Turso org backs every environment.
+  `TURSO_PLATFORM_API_TOKEN` (secret).
 - The platform token lives **only** in the Worker. Never replicate it into
   Vercel/web. Anything web needs (billing webhooks locking vaults, etc.) goes
   **through a Worker endpoint**, not direct Turso calls — see "Lifecycle" below.
@@ -46,7 +50,10 @@ Worker.
 ## Vault data model (see `shared/types/config.ts`)
 
 - **One Turso database per cloud vault.** `CloudVaultConfig` is singular
-  (`{ name, syncUrl, authToken }` under `VaultDBConfig.cloud`).
+  (`{ name, authToken }` under `VaultDBConfig.cloud`). The sync URL is
+  derived via `vaultSyncUrl(name)`, never stored — see
+  `specs/vault-config-derive-sync-url.md`. `authToken` *is* stored: for a
+  vault you don't own it can't be reminted, so it's the only way in.
 - **Environments are local-only.** `VaultEnvironments` maps env-name → local
   file path; they do **not** spawn separate Turso databases today.
 - A user may hold **multiple** cloud vaults. Plan caps in

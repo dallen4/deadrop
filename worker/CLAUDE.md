@@ -52,7 +52,8 @@ worker/
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
 | POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true })` + `restricted()`) |
-| POST | `/vault/tokens` | Mint a read-only Turso token for a vault (`authenticated({ allowApiKey: true })` + `restricted()`) |
+| POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true })` + `restricted()`) |
+| POST | `/vault/:name/rotate` | Invalidate **every** token for a vault (`authenticated()` + `restricted()`, deliberately no `allowApiKey`) |
 | GET | `/vault/:name` | Get vault metadata (`authenticated({ allowApiKey: true })`) |
 | DELETE | `/vault/:name` | Delete a vault (`authenticated()` + `restricted()`) |
 | POST | `/vault/lock` | Lock all of a user's vaults on cancel (`service()`, `{ userId }`) |
@@ -88,7 +89,7 @@ worker/
 
 ### Vaults — Turso
 - Provisioning + lifecycle live in `shared/lib/turso/` (`createVaultUtils`) — see `shared/lib/turso/CLAUDE.md`. The former `worker/src/lib/vault.ts` was collapsed into it.
-- `vault.ts` router: create/tokens layer `authenticated({ allowApiKey: true })` + `restricted()`; get is `authenticated({ allowApiKey: true })` alone; delete is `authenticated()` + `restricted()`. API keys (`DEADROP_API_KEY`) are accepted on create/tokens/get for CI/`inject`; `lock`/`unlock` are `service()`-gated for billing webhooks
+- `vault.ts` router: create/tokens layer `authenticated({ allowApiKey: true })` + `restricted()`; get is `authenticated({ allowApiKey: true })` alone; delete and rotate are `authenticated()` + `restricted()`. API keys (`DEADROP_API_KEY`) are accepted on create/tokens/get for CI/`inject`, but **not** on rotate — it is destructive and needs an interactive session; `lock`/`unlock` are `service()`-gated for billing webhooks
 - Cancel-on-billing fans out over **all** of a user's vaults via `listVaults(<hash13>)`; org-payer cancellations are a known gap (vaults are named per user, not per org)
 
 ### Billing/plans (`src/lib/billing.ts`)
@@ -104,7 +105,7 @@ worker/
 - Main: `src/index.ts`
 - Domain: `deadrop.nieky.dev`
 - DO: `PeerServerDO` class (binding `PEER_SERVER`)
-- Vars: `DAILY_DROP_LIMIT=5`, `TURSO_ORGANIZATION=dallen4`
+- Vars: `DAILY_DROP_LIMIT=5` (the Turso org slug is the shared `TURSO_ORGANIZATION` constant in `shared/lib/constants.ts`, not an env var)
 - Observability: logs + invocation logs enabled
 
 ## Path Aliases (tsconfig.json)

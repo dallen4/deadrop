@@ -7,6 +7,7 @@ import {
   vaultNameFromUserId,
   TursoApiError,
 } from '@shared/lib/turso';
+import { TURSO_ORGANIZATION } from '@shared/lib/constants';
 import {
   authenticated,
   restricted,
@@ -18,7 +19,15 @@ const CreateVaultSchema = VaultNameSchema.partial().extend({
   seed: z.enum(['database_upload']).optional(),
 });
 const VaultOwnerSchema = z.object({ userId: z.string() });
-const VaultTokenSchema = z.object({ name: z.string().optional() });
+// `access` defaults to read-only so the CLI `inject` path, which sends no
+// access at all, keeps minting read-only tokens.
+const VaultTokenSchema = z.object({
+  name: z.string().optional(),
+  access: z
+    .enum(['full-access', 'read-only'])
+    .default('read-only'),
+  expiration: z.string().optional(),
+});
 
 const vaultRouter = hono()
   .post(
@@ -30,7 +39,7 @@ const vaultRouter = hono()
       const userId = c.get('userId')!;
 
       const { createVault, createVaultToken } = createVaultUtils(
-        c.env.TURSO_ORGANIZATION,
+        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
@@ -72,21 +81,26 @@ const vaultRouter = hono()
       const userId = c.get('userId')!;
 
       const { createVaultToken, getVault } = createVaultUtils(
-        c.env.TURSO_ORGANIZATION,
+        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
-      const { name } = c.req.valid('json');
+      const { name, access, expiration } = c.req.valid('json');
 
       try {
         const vaultName = await vaultNameFromUserId(userId!, name);
 
         const [vault, token] = await Promise.all([
           getVault(vaultName),
-          createVaultToken(vaultName, 'read-only'),
+          createVaultToken(vaultName, access, expiration),
         ]);
 
-        return c.json({ token, hostname: vault?.Hostname }, 201);
+        // `name` is the resolved remote database name — callers derive
+        // the sync URL from it rather than storing one.
+        return c.json(
+          { token, name: vaultName, hostname: vault?.Hostname },
+          201,
+        );
       } catch (error) {
         if (error instanceof TursoApiError && error.status === 404) {
           return c.json(
@@ -117,7 +131,7 @@ const vaultRouter = hono()
       const vaultName = await vaultNameFromUserId(userId!, name);
 
       const { getVault } = createVaultUtils(
-        c.env.TURSO_ORGANIZATION,
+        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
@@ -139,13 +153,49 @@ const vaultRouter = hono()
       const vaultName = await vaultNameFromUserId(userId!, name);
 
       const { deleteVault } = createVaultUtils(
-        c.env.TURSO_ORGANIZATION,
+        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
       const deleted = await deleteVault(vaultName);
 
       return c.json({ success: deleted }, 200);
+    },
+  )
+  // Break-glass credential reset. Turso has no single-token revoke, so
+  // this invalidates *every* token for the database — the owner's other
+  // surfaces and every share recipient included. Deliberately not
+  // `allowApiKey`: destructive, so it needs an interactive session.
+  .post(
+    AppRouteParts.Rotate,
+    authenticated(),
+    restricted(),
+    zValidator('param', VaultNameSchema),
+    async (c) => {
+      const userId = c.get('userId')!;
+
+      const { name } = c.req.valid('param');
+
+      const vaultName = await vaultNameFromUserId(userId!, name);
+
+      const { invalidateTokens } = createVaultUtils(
+        TURSO_ORGANIZATION,
+        c.env.TURSO_PLATFORM_API_TOKEN,
+      );
+
+      try {
+        await invalidateTokens(vaultName);
+
+        return c.json({ rotated: true, name: vaultName }, 200);
+      } catch (error) {
+        if (error instanceof TursoApiError && error.status === 404) {
+          return c.json({ error: `Vault '${name}' not found.` }, 404);
+        }
+        return c.json(
+          { error: `Unexpected error: ${(error as Error).message}` },
+          500,
+        );
+      }
     },
   )
   // Service-to-service: lock every cloud vault owned by `userId` (billing
@@ -159,7 +209,7 @@ const vaultRouter = hono()
       const { userId } = c.req.valid('json');
 
       const { listVaults, suspendVault } = createVaultUtils(
-        c.env.TURSO_ORGANIZATION,
+        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
@@ -190,7 +240,7 @@ const vaultRouter = hono()
       const { userId } = c.req.valid('json');
 
       const { listVaults, restoreVault } = createVaultUtils(
-        c.env.TURSO_ORGANIZATION,
+        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 

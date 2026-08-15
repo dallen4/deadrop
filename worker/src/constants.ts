@@ -29,6 +29,7 @@ export const AppRouteParts = {
   VaultRoot: '/vault',
   NameParam: '/:name',
   Tokens: '/tokens',
+  Rotate: '/:name/rotate',
   Lock: '/lock',
   Unlock: '/unlock',
 
