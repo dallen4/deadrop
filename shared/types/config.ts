@@ -27,6 +27,11 @@ export type VaultDBConfig = {
 
 export type VaultStore = Record<string, VaultDBConfig>;
 
+// A vault in a drop payload: the recipient supplies `location` themselves.
+export type SharedVault = Omit<VaultDBConfig, 'location'> & {
+  cloud: CloudVaultConfig;
+};
+
 export type DeadropConfig = {
   active_vault: ActiveVaultConfig;
   vaults: VaultStore;
