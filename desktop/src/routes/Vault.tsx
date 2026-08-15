@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
   Alert,
@@ -22,6 +23,7 @@ import {
   IconCloudOff,
   IconFileImport,
   IconPlus,
+  IconShare,
 } from '@tabler/icons-react';
 import { MainWrapper } from '../components/MainWrapper';
 import { useVault } from '../hooks/use-vault';
@@ -29,6 +31,7 @@ import { AddSecretForm } from '../components/vault/AddSecretForm';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
 import { CredentialsTab } from '../components/vault/CredentialsTab';
 import { SecretRow } from '../components/vault/SecretRow';
+import { ShareVaultModal } from '../components/vault/ShareVaultModal';
 
 const NewEnvironmentInput = ({
   onAdd,
@@ -81,7 +84,25 @@ const NewEnvironmentInput = ({
 
 export const VaultPage = () => {
   const vault = useVault();
+  const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+
+  // Only the owner can mint the read-only token a share carries.
+  const canShare = vault.cloudSync && vault.ownsActiveCloudVault;
+
+  const shareVault = async (envs: string[], expiration: string) => {
+    const payload = await vault.composeShare(envs, expiration);
+    setShareModalOpen(false);
+    navigate('/drop', {
+      state: {
+        staged: {
+          summary: `Vault: ${vault.activeVaultName} (${envs.join(', ')})`,
+          payload,
+        },
+      },
+    });
+  };
 
   if (vault.loading) {
     return (
@@ -184,32 +205,46 @@ export const VaultPage = () => {
             </Menu>
           </Group>
 
-          <Tooltip
-            label={
-              vault.canCloudSync
-                ? undefined
-                : 'Cloud sync is an early-access feature.'
-            }
-            disabled={vault.canCloudSync}
-          >
-            <Button
-              size={'xs'}
-              variant={vault.cloudSync ? 'filled' : 'default'}
-              color={vault.cloudSync ? 'teal' : undefined}
-              leftSection={
-                vault.cloudSync ? (
-                  <IconCloud size={14} />
-                ) : (
-                  <IconCloudOff size={14} />
-                )
+          <Group gap={'sm'}>
+            {canShare && (
+              <Button
+                size={'xs'}
+                variant={'default'}
+                leftSection={<IconShare size={14} />}
+                onClick={() => setShareModalOpen(true)}
+              >
+                Share vault
+              </Button>
+            )}
+            <Tooltip
+              label={
+                vault.canCloudSync
+                  ? undefined
+                  : 'Cloud sync is an early-access feature.'
               }
-              disabled={!vault.canCloudSync}
-              loading={vault.busy}
-              onClick={() => void vault.toggleCloudSync()}
+              disabled={vault.canCloudSync}
             >
-              {vault.cloudSync ? 'Cloud synced' : 'Enable cloud sync'}
-            </Button>
-          </Tooltip>
+              <Button
+                size={'xs'}
+                variant={vault.cloudSync ? 'filled' : 'default'}
+                color={vault.cloudSync ? 'teal' : undefined}
+                leftSection={
+                  vault.cloudSync ? (
+                    <IconCloud size={14} />
+                  ) : (
+                    <IconCloudOff size={14} />
+                  )
+                }
+                disabled={!vault.canCloudSync}
+                loading={vault.busy}
+                onClick={() => void vault.toggleCloudSync()}
+              >
+                {vault.cloudSync
+                  ? 'Cloud synced'
+                  : 'Enable cloud sync'}
+              </Button>
+            </Tooltip>
+          </Group>
         </Group>
 
         {vault.error && (
@@ -292,6 +327,15 @@ export const VaultPage = () => {
         canCloudSync={vault.canCloudSync}
         busy={vault.busy}
         onCreate={vault.createVault}
+      />
+
+      <ShareVaultModal
+        opened={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        vaultName={vault.activeVaultName}
+        environments={vault.environments}
+        busy={vault.busy}
+        onShare={shareVault}
       />
     </MainWrapper>
   );

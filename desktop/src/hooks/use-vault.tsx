@@ -3,7 +3,10 @@ import { useAuth } from '@clerk/react';
 import { showNotification } from '@mantine/notifications';
 import { initEnvKey } from '@shared/lib/vault';
 import { unwrapSecret, wrapSecret } from '@shared/lib/secrets';
-import type { DeadropConfig } from '@shared/types/config';
+import type {
+  DeadropConfig,
+  SharedVault,
+} from '@shared/types/config';
 import { isExperimental } from '../lib/billing';
 import { useApiHeaders } from '../lib/api-headers';
 import {
@@ -12,6 +15,7 @@ import {
   pickExternalVaultConfig,
   resolveImportedVault,
   saveVaultConfig,
+  vaultPathForName,
 } from '../lib/vault-config';
 import {
   deleteCloudVault,
@@ -21,6 +25,10 @@ import {
 } from '../lib/vault-cloud';
 import { VaultTokenAccess } from '@shared/lib/constants';
 import { userOwnsVault } from '@shared/lib/turso/utils';
+import {
+  composeVaultShare,
+  pickEnvironments,
+} from '@shared/lib/vault-share';
 import {
   addEncryptedSecret,
   deleteSecret as deleteSecretRow,
@@ -288,6 +296,41 @@ export const useVault = () => {
       await saveVaultConfig(next);
     });
 
+  // Composes the share payload; routing it into the drop flow is the
+  // caller's job, since only the page knows about navigation.
+  const composeShare = async (
+    envs: string[],
+    expiration: string,
+  ): Promise<string> => {
+    if (!activeVault?.cloud) throw new Error('Vault is local only.');
+
+    const authToken = await issueVaultToken(
+      activeVaultName,
+      VaultTokenAccess.ReadOnly,
+      expiration,
+      await getApiHeaders(),
+    );
+
+    return composeVaultShare(activeVaultName, {
+      environments: pickEnvironments(activeVault, envs),
+      cloud: { name: activeVault.cloud.name, authToken },
+    });
+  };
+
+  // Throws rather than setting error state; the grab UI reports inline.
+  const adoptVault = async (name: string, shared: SharedVault) => {
+    const [firstEnv] = Object.keys(shared.environments);
+    const next: DeadropConfig = {
+      active_vault: { name, environment: firstEnv ?? 'development' },
+      vaults: {
+        ...config?.vaults,
+        [name]: { ...shared, location: await vaultPathForName(name) },
+      },
+    };
+    setConfig(next);
+    await saveVaultConfig(next);
+  };
+
   const addSecret = (name: string, value: string) =>
     withBusy(async () => {
       if (!activeVault) return;
@@ -372,6 +415,8 @@ export const useVault = () => {
     issueToken,
     saveCloudToken,
     rotateTokens,
+    composeShare,
+    adoptVault,
     addSecret,
     updateSecret,
     renameSecret,
