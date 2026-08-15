@@ -12,28 +12,42 @@ import {
   globalConfigPath,
 } from './global-config';
 
-type CustomConfigResult = Omit<
+export type CustomConfigResult = Omit<
   NonNullable<CosmiconfigResult>,
   'config'
 > & {
   config: DeadropConfig;
 };
 
+// Non-fatal variant of loadConfig: "not found" is a normal outcome for
+// callers that are about to create a config (e.g. grabbing a vault).
+export const findConfig =
+  async (): Promise<CustomConfigResult | null> => {
+    const { search } = cosmiconfig('deadrop');
+
+    const configFile = await search();
+    if (configFile) return configFile;
+
+    // No project-scoped .deadroprc found walking up from cwd — fall back
+    // to the global config shared with the desktop app (same app-data
+    // dir, see lib/global-config.ts), rather than requiring every
+    // directory to have its own vault.
+    if (globalConfigExists()) {
+      const filepath = globalConfigPath();
+      const raw = await readFile(filepath, 'utf-8');
+      return {
+        config: parse(raw) as DeadropConfig,
+        filepath,
+        isEmpty: false,
+      };
+    }
+
+    return null;
+  };
+
 export const loadConfig = async (): Promise<CustomConfigResult> => {
-  const { search } = cosmiconfig('deadrop');
-
-  const configFile = await search();
+  const configFile = await findConfig();
   if (configFile) return configFile;
-
-  // No project-scoped .deadroprc found walking up from cwd — fall back to
-  // the global config shared with the desktop app (same app-data dir,
-  // see lib/global-config.ts), rather than requiring every directory to
-  // have its own vault.
-  if (globalConfigExists()) {
-    const filepath = globalConfigPath();
-    const raw = await readFile(filepath, 'utf-8');
-    return { config: parse(raw) as DeadropConfig, filepath, isEmpty: false };
-  }
 
   logError('No config found, please run `deadrop init` to get started.');
   process.exit(1);
