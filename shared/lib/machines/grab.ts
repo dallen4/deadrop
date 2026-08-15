@@ -13,6 +13,7 @@ export const initGrabContext = (): GrabContext => ({
   keyPair: null,
   grabKey: null,
   nonce: null,
+  meta: null,
 });
 
 export const raise = baseRaise<Record<string, never>, AnyGrabEvent>;

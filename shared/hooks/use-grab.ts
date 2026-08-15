@@ -69,6 +69,8 @@ export const useGrab = <FileType extends string | File = File>(
 
   const getSecret = () => contextRef.current.message;
 
+  const getMeta = () => contextRef.current.meta;
+
   const init = async (dropId: string) => {
     contextRef.current.id = dropId;
 
@@ -81,6 +83,7 @@ export const useGrab = <FileType extends string | File = File>(
     getLogs,
     getMode,
     getSecret,
+    getMeta,
   };
 };
 
