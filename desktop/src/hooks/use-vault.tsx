@@ -13,7 +13,14 @@ import {
   resolveImportedVault,
   saveVaultConfig,
 } from '../lib/vault-config';
-import { deleteCloudVault, provisionCloudVault } from '../lib/vault-cloud';
+import {
+  deleteCloudVault,
+  issueVaultToken,
+  provisionCloudVault,
+  rotateVaultTokens,
+} from '../lib/vault-cloud';
+import { VaultTokenAccess } from '@shared/lib/constants';
+import { userOwnsVault } from '@shared/lib/turso/utils';
 import {
   addEncryptedSecret,
   deleteSecret as deleteSecretRow,
@@ -27,7 +34,7 @@ import {
 type SecretName = { name: string; environment: string };
 
 export const useVault = () => {
-  const { sessionClaims } = useAuth();
+  const { sessionClaims, userId } = useAuth();
   const getApiHeaders = useApiHeaders();
   const canCloudSync = isExperimental(sessionClaims);
 
@@ -36,12 +43,25 @@ export const useVault = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ownsActiveCloudVault, setOwnsActiveCloudVault] =
+    useState(false);
 
   const activeVaultName = config?.active_vault.name ?? '';
   const activeVault = config?.vaults[activeVaultName];
   const activeEnv = config?.active_vault.environment ?? '';
   const environments = Object.keys(activeVault?.environments ?? {});
   const cloudSync = !!activeVault?.cloud;
+  const cloudName = activeVault?.cloud?.name;
+
+  // A UI affordance only — every worker vault route derives the vault
+  // name from the caller's own userId regardless of what we send.
+  useEffect(() => {
+    if (!userId || !cloudName) {
+      setOwnsActiveCloudVault(false);
+      return;
+    }
+    userOwnsVault(userId, cloudName).then(setOwnsActiveCloudVault);
+  }, [userId, cloudName]);
 
   const refreshSecretNames = useCallback(async () => {
     if (!activeVault) return;
@@ -204,6 +224,70 @@ export const useVault = () => {
       await ensureVaultSchema(nextVault);
     });
 
+  const issueToken = async (
+    access: VaultTokenAccess,
+    expiration?: string,
+  ): Promise<string> => {
+    if (!activeVault?.cloud) throw new Error('Vault is local only.');
+
+    return issueVaultToken(
+      activeVaultName,
+      access,
+      expiration,
+      await getApiHeaders(),
+    );
+  };
+
+  // Persists a minted token as the vault's sync credential.
+  const saveCloudToken = (authToken: string) =>
+    withBusy(async () => {
+      if (!config || !activeVault?.cloud) return;
+
+      const next: DeadropConfig = {
+        ...config,
+        vaults: {
+          ...config.vaults,
+          [activeVaultName]: {
+            ...activeVault,
+            cloud: { ...activeVault.cloud, authToken },
+          },
+        },
+      };
+      setConfig(next);
+      await saveVaultConfig(next);
+    });
+
+  // Rotation kills this app's own token too, so a replacement is minted
+  // and persisted in the same step to avoid leaving sync broken.
+  const rotateTokens = () =>
+    withBusy(async () => {
+      if (!config || !activeVault?.cloud) return;
+
+      const headers = await getApiHeaders();
+
+      await rotateVaultTokens(activeVaultName, headers);
+
+      const authToken = await issueVaultToken(
+        activeVaultName,
+        VaultTokenAccess.FullAccess,
+        undefined,
+        headers,
+      );
+
+      const next: DeadropConfig = {
+        ...config,
+        vaults: {
+          ...config.vaults,
+          [activeVaultName]: {
+            ...activeVault,
+            cloud: { ...activeVault.cloud, authToken },
+          },
+        },
+      };
+      setConfig(next);
+      await saveVaultConfig(next);
+    });
+
   const addSecret = (name: string, value: string) =>
     withBusy(async () => {
       if (!activeVault) return;
@@ -273,6 +357,8 @@ export const useVault = () => {
     error,
     canCloudSync,
     cloudSync,
+    activeVault,
+    ownsActiveCloudVault,
     activeVaultName,
     activeEnv,
     environments,
@@ -283,6 +369,9 @@ export const useVault = () => {
     importVault,
     createEnvironment,
     toggleCloudSync,
+    issueToken,
+    saveCloudToken,
+    rotateTokens,
     addSecret,
     updateSecret,
     renameSecret,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   ActionIcon,
   Alert,
+  Box,
   Button,
   Center,
   Group,
@@ -26,6 +27,7 @@ import { MainWrapper } from '../components/MainWrapper';
 import { useVault } from '../hooks/use-vault';
 import { AddSecretForm } from '../components/vault/AddSecretForm';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
+import { CredentialsTab } from '../components/vault/CredentialsTab';
 import { SecretRow } from '../components/vault/SecretRow';
 
 const NewEnvironmentInput = ({
@@ -36,38 +38,44 @@ const NewEnvironmentInput = ({
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
 
-  if (!adding) {
-    return (
-      <ActionIcon
-        size={'sm'}
-        variant={'subtle'}
-        onClick={() => setAdding(true)}
-      >
-        <IconPlus size={14} />
-      </ActionIcon>
-    );
-  }
-
   const submit = async () => {
     if (name.trim()) await onAdd(name.trim());
     setAdding(false);
     setName('');
   };
 
+  // Tabs.List is a flex row sized by the tabs; a bare control in it sits
+  // off the tab baseline, so center it and match the tab's height.
   return (
-    <TextInput
-      size={'xs'}
-      w={120}
-      placeholder={'staging'}
-      value={name}
-      autoFocus
-      onChange={(e) => setName(e.currentTarget.value)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter') void submit();
-        if (e.key === 'Escape') setAdding(false);
-      }}
-      onBlur={() => void submit()}
-    />
+    <Box style={{ alignSelf: 'center' }} ml={4}>
+      {adding ? (
+        <TextInput
+          size={'xs'}
+          w={130}
+          placeholder={'staging'}
+          value={name}
+          autoFocus
+          onChange={(e) => setName(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void submit();
+            if (e.key === 'Escape') setAdding(false);
+          }}
+          onBlur={() => void submit()}
+        />
+      ) : (
+        <Tooltip label={'Add environment'}>
+          <ActionIcon
+            size={'md'}
+            variant={'subtle'}
+            color={'gray'}
+            aria-label={'Add environment'}
+            onClick={() => setAdding(true)}
+          >
+            <IconPlus size={16} />
+          </ActionIcon>
+        </Tooltip>
+      )}
+    </Box>
   );
 };
 
@@ -214,41 +222,68 @@ export const VaultPage = () => {
           </Alert>
         )}
 
-        <Tabs
-          value={vault.activeEnv}
-          onChange={(env) => env && vault.switchEnv(env)}
-        >
-          <Tabs.List>
-            {vault.environments.map((env) => (
-              <Tabs.Tab key={env} value={env}>
-                {env}
-              </Tabs.Tab>
-            ))}
-            <NewEnvironmentInput onAdd={vault.createEnvironment} />
+        <Tabs defaultValue={'secrets'}>
+          <Tabs.List mb={'md'}>
+            <Tabs.Tab value={'secrets'}>Secrets</Tabs.Tab>
+            <Tabs.Tab value={'credentials'}>Credentials</Tabs.Tab>
           </Tabs.List>
-        </Tabs>
 
-        <Stack gap={4}>
-          {filtered.length === 0 ? (
-            <Text size={'sm'} c={'dimmed'}>
-              No secrets yet for <b>{vault.activeEnv}</b>.
-            </Text>
-          ) : (
-            filtered.map((s) => (
-              <SecretRow
-                key={`${s.environment}:${s.name}`}
-                name={s.name}
-                environment={s.environment}
-                onReveal={vault.revealSecret}
-                onUpdate={vault.updateSecret}
-                onRename={vault.renameSecret}
-                onDelete={vault.deleteSecret}
+          <Tabs.Panel value={'secrets'}>
+            <Stack gap={'lg'}>
+              <Tabs
+                value={vault.activeEnv}
+                onChange={(env) => env && vault.switchEnv(env)}
+              >
+                <Tabs.List>
+                  {vault.environments.map((env) => (
+                    <Tabs.Tab key={env} value={env}>
+                      {env}
+                    </Tabs.Tab>
+                  ))}
+                  <NewEnvironmentInput onAdd={vault.createEnvironment} />
+                </Tabs.List>
+              </Tabs>
+
+              <Stack gap={4}>
+                {filtered.length === 0 ? (
+                  <Text size={'sm'} c={'dimmed'}>
+                    No secrets yet for <b>{vault.activeEnv}</b>.
+                  </Text>
+                ) : (
+                  filtered.map((s) => (
+                    <SecretRow
+                      key={`${s.environment}:${s.name}`}
+                      name={s.name}
+                      environment={s.environment}
+                      onReveal={vault.revealSecret}
+                      onUpdate={vault.updateSecret}
+                      onRename={vault.renameSecret}
+                      onDelete={vault.deleteSecret}
+                    />
+                  ))
+                )}
+              </Stack>
+
+              <AddSecretForm
+                disabled={vault.busy}
+                onSubmit={vault.addSecret}
               />
-            ))
-          )}
-        </Stack>
+            </Stack>
+          </Tabs.Panel>
 
-        <AddSecretForm disabled={vault.busy} onSubmit={vault.addSecret} />
+          <Tabs.Panel value={'credentials'}>
+            <CredentialsTab
+              vaultName={vault.activeVaultName}
+              cloudName={vault.activeVault?.cloud?.name}
+              authToken={vault.activeVault?.cloud?.authToken}
+              owned={vault.ownsActiveCloudVault}
+              busy={vault.busy}
+              onIssue={vault.issueToken}
+              onSaveToken={vault.saveCloudToken}
+              onRotate={vault.rotateTokens}
+            />
+          </Tabs.Panel>
+        </Tabs>
       </Stack>
 
       <CreateVaultModal

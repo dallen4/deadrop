@@ -15,11 +15,13 @@ which were collapsed into this module.
   `createVaultToken`, `getVault`.
 - `lifecycle.ts` — `createLifecycleHandlers(client)` → `updateConfiguration`,
   `invalidateTokens`, `suspendVault`, `restoreVault`, `deleteVault`.
-- `utils.ts` — pure URL protocol helpers (`fileUrl`, `syncUrl`,
-  `vaultSyncUrl`, `syncUrlToHttps`, `tursoUploadUrl`). Safe to import
-  anywhere (no I/O).
-- `index.ts` — `vaultNameFromUserId`, `createVaultUtils` (merges provision +
-  lifecycle handlers), and re-exports.
+- `utils.ts` — pure helpers, no I/O, safe to import anywhere: URL protocol
+  (`fileUrl`, `syncUrl`, `vaultSyncUrl`, `syncUrlToHttps`,
+  `tursoUploadUrl`) plus name derivation (`vaultNameFromUserId`,
+  `userOwnsVault`). The latter two live here rather than the barrel so
+  client surfaces can check ownership without pulling the HTTP layer.
+- `index.ts` — `createVaultUtils` (merges provision + lifecycle handlers)
+  and re-exports.
 
 Import `utils` directly (`@shared/lib/turso/utils`) from client-side code to
 avoid pulling the HTTP layer; import the barrel (`@shared/lib/turso`) from the

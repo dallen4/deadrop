@@ -4,6 +4,7 @@ import { open as openFileDialog } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { parse, stringify } from 'yaml';
 import { vault as buildVaultConfig } from '@shared/lib/vault';
+import { CONFIG_FILE_NAME } from '@shared/lib/constants';
 import type { DeadropConfig, VaultDBConfig } from '@shared/types/config';
 
 // Same `.deadroprc` YAML pattern CLI (lib/config.ts) and vscode-extension
@@ -27,6 +28,11 @@ export async function saveVaultConfig(
   config: DeadropConfig,
 ): Promise<void> {
   await invoke('write_app_vault_config', { contents: stringify(config) });
+}
+
+// Mirrors app_config_path in src-tauri/src/config_import.rs.
+export async function appConfigPath(): Promise<string> {
+  return join(await appDataDir(), CONFIG_FILE_NAME);
 }
 
 async function ensureVaultsDir(): Promise<void> {

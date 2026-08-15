@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { TURSO_ORGANIZATION } from '../../lib/constants';
-import { vaultSyncUrl } from '../../lib/turso/utils';
 import {
   userOwnsVault,
   vaultNameFromUserId,
-} from '../../lib/turso';
+  vaultSyncUrl,
+} from '../../lib/turso/utils';
 
 describe('vaultSyncUrl', () => {
   it('derives the hostname from the remote name and org', () => {

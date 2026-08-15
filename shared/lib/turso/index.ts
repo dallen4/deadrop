@@ -1,4 +1,3 @@
-import { getSubtle } from '../crypto';
 import { createTursoClient } from './client';
 import { createLifecycleHandlers } from './lifecycle';
 import { createProvisionHandlers } from './provision';
@@ -13,39 +12,9 @@ export {
   vaultSyncUrl,
   syncUrlToHttps,
   tursoUploadUrl,
+  vaultNameFromUserId,
+  userOwnsVault,
 } from './utils';
-
-const sha256hex = async (input: string) => {
-  const data = new TextEncoder().encode(input);
-  const digest = await getSubtle().digest('SHA-256', data);
-
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-};
-const userIdToIndex = async (userId: string) =>
-  (await sha256hex(userId)).substring(0, 13);
-
-export const vaultNameFromUserId = async (
-  userId: string,
-  vaultName?: string,
-) => {
-  const userIndex = await userIdToIndex(userId);
-  const nameParts = [userIndex];
-
-  if (vaultName) nameParts.push(vaultName);
-
-  return nameParts.join('-').substring(0, 63);
-};
-
-export const userOwnsVault = async (
-  userId: string,
-  vaultName: string,
-) => {
-  const userIndex = await userIdToIndex(userId);
-
-  return vaultName.startsWith(`${userIndex}-`);
-};
 
 export const createVaultUtils = (
   organization: string,
