@@ -10,6 +10,7 @@ import { secretRemove } from 'actions/secret/remove';
 import {
   vaultCreate,
   vaultDelete,
+  vaultDrop,
   vaultEnvAdd,
   vaultEnvList,
   vaultExport,
@@ -183,6 +184,20 @@ vaultRoot
   )
   .argument('<path>', 'path to the .env file')
   .action(vaultImport);
+
+vaultRoot
+  .command('drop')
+  .description(
+    'share a cloud vault with someone via a drop (they run `deadrop grab`)',
+  )
+  .argument('[name]', 'vault to share (defaults to the active vault)')
+  .option(
+    '-e, --env <env...>',
+    'environments to include (defaults to the active environment)',
+  )
+  .option('--expires <duration>', 'token lifetime', '30d')
+  .option('-g, --grabbers <n>', 'number of recipients')
+  .action(vaultDrop);
 
 vaultRoot
   .command('delete')

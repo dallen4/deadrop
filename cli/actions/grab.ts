@@ -16,6 +16,8 @@ import {
 import { initPeer } from 'lib/peer';
 import { cleanupSession } from 'lib/session';
 import { getSessionToken } from 'lib/auth/clerk';
+import { tryParseVaultShare } from '@shared/lib/vault-share';
+import { saveGrabbedVault } from 'logic/vault-grab';
 
 export const grab = async (id: string) => {
   const ctx = initGrabContext();
@@ -35,12 +37,25 @@ export const grab = async (id: string) => {
     return currState;
   };
 
-  const cleanup = (ctx: GrabContext | DropContext) => {
-    cleanupSession(ctx);
+  // A vault share validates against its schema; anything else is an
+  // ordinary secret and prints as usual.
+  const finish = async (ctx: GrabContext | DropContext) => {
+    const share =
+      succeeded && ctx.mode === 'raw'
+        ? tryParseVaultShare(ctx.message as string)
+        : null;
+
+    if (share) await saveGrabbedVault(share.name, share.vault);
+
     // Exit 0 only on a verified grab. Every other teardown path (validation
     // failed, drop not found, connection/init errors) never emits Confirm, so
     // it exits non-zero.
     process.exit(succeeded ? 0 : 1);
+  };
+
+  const cleanup = (ctx: GrabContext | DropContext) => {
+    cleanupSession(ctx);
+    void finish(ctx);
   };
 
   ctx.id = id;

@@ -1,5 +1,6 @@
 export * from './create';
 export * from './delete';
+export * from './drop';
 export * from './env';
 export * from './export';
 export * from './import';
