@@ -272,45 +272,96 @@ Handles Pro/Org subscription lifecycle:
 
 ### Artifacts issued per service token
 
-When a user creates a CI key in the dashboard they receive **two** things:
+When a user creates a CI key they need **two** things:
 
 1. `deadrop-ci.json` — config file with the wrapped vault key (same shape as `~/.deadrop/config`). Mount as a file secret in the CI platform.
-2. `drk_live_<random>` — the API key. Set as `DEADROP_API_KEY` env var in CI.
+2. A **Clerk API key** for the user. Set as `DEADROP_API_KEY` env var in CI.
 
 Both are required. Either alone is useless.
 
-### Issue flow (server-side)
+> **Superseded design.** An earlier draft minted a bespoke `drk_live_<random>`
+> key and stored `lookup_hash -> { vault_id, turso_token, created_at,
+> last_used_at, label }` in KV, with a `POST /service-tokens/exchange` route to
+> redeem it. That is dropped. It duplicated infrastructure Clerk already
+> provides and held a long-lived Turso token server-side, violating the rule
+> that deadrop does not mirror state Turso or Clerk already owns.
 
-1. User clicks "Create CI key" → Worker:
-   - Verifies `has({ feature: 'ci_tokens' })` + checks active token count against `PLAN_LIMITS[plan].ciTokens`
-   - Mints a Turso token scoped to the vault DB
-   - Generates `drk_live_<random>`
-   - Derives `lookup_hash = HKDF(api_key, "lookup")`
-   - Stores in KV: `lookup_hash → { vault_id, turso_token, created_at, last_used_at, label }`
-   - Generates `deadrop-ci.json` with the vault's wrapped data key
-2. Returns `{ deadrop-ci.json, drk_live_xxx }` to the user **once**. Neither is stored in plaintext server-side.
+### Why no custom key format or registry
+
+Clerk already mints per-user API keys, stores them hashed, resolves them to a
+`userId`, and revokes them. `worker/src/lib/middleware.ts` already accepts them:
+`authenticated({ allowApiKey: true })` admits `TokenType.ApiKey` and sets
+`userId` from it, and `worker/src/routers/vault.ts` already applies that to
+`POST /vault` and `POST /vault/tokens`.
+
+So there is nothing left for a registry to do. A bespoke key format would mean
+reimplementing minting, hashing, lookup, and revocation that already exists, and
+the KV row's `turso_token` would be a long-lived credential sitting in worker
+storage for no reason: the worker holds `TURSO_PLATFORM_API_TOKEN` and can mint
+a fresh scoped token on demand.
+
+### Enforcing `ciTokens` without a registry
+
+Clerk has no built-in per-plan quota on API key count, so `PLAN_LIMITS[plan].ciTokens`
+stays and remains ours to enforce. That does not require a registry, because
+Clerk can be asked:
+
+```ts
+const { totalCount } = await clerkClient.apiKeys.list({ subject: userId });
+if (totalCount >= PLAN_LIMITS[plan].ciTokens) return c.json(PermissionDenied, 401);
+```
+
+`apiKeys.list({ subject })` filters by user or organization id and excludes
+revoked and expired keys unless `includeInvalid` is set, which is the correct
+semantics for an active-key count. Reading the live count from the system of
+record is not the same as mirroring it: there is no second copy to drift, and
+revoking a key in the Clerk dashboard immediately frees a slot with no
+reconciliation on our side.
+
+This is the same shape as the rest of `PLAN_LIMITS` enforcement in
+`worker/src/lib/billing.ts`, which already reads plan from session claims
+rather than caching it.
+
+Clerk API key creation also accepts `secondsUntilExpiration` (default: never),
+so CI keys should be issued bounded for the same reason vault tokens are.
+
+### Issue flow
+
+1. Worker checks `has({ feature: 'ci_tokens' })`, then counts existing keys via `apiKeys.list({ subject: userId })` against `PLAN_LIMITS[plan].ciTokens`.
+2. Worker creates the API key through Clerk with a bounded `secondsUntilExpiration`, and returns it once.
+3. deadrop generates `deadrop-ci.json` with the vault's wrapped data key, client-side, and hands it over once.
+
+The Worker stores nothing in any step.
 
 ### Inject flow (CI-side, `deadrop inject -- pnpm build`)
 
 1. CLI reads `DEADROP_API_KEY` + local `deadrop-ci.json`
-2. CLI hits Worker `POST /service-tokens/exchange` with the API key
-3. Worker computes `lookup_hash`, looks up KV row, returns a **short-lived Turso token** (15 min TTL)
+2. CLI calls `POST /vault/tokens` with the API key as bearer (route already accepts API keys)
+3. Worker resolves `userId` from the key, derives the vault name via `vaultNameFromUserId`, and mints a **short-lived read-only Turso token** against the platform API
 4. CLI uses libSQL embedded replica sync to pull the vault DB locally
 5. CLI decrypts rows locally using vault key from `deadrop-ci.json`
 6. CLI injects plaintext env vars into the wrapped child process
 7. On process exit, CLI tears down the local DB file
 
+This is the route `cli/lib/auth/vault-token.ts` already calls. The only change
+needed is passing a short `expiration` so CI tokens age out on their own (see
+`specs/desktop-vault-credentials.md`).
+
 ### Revocation
 
-Delete the KV row → API key stops working immediately. Optionally revoke the underlying Turso token. The vault's data key and other tokens are untouched.
+Revoke the API key in Clerk → it stops resolving to a `userId`, so no further
+Turso tokens can be minted. Already-minted tokens are short-lived and expire on
+their own; to kill them immediately, rotate the vault (`POST /vault/:name/rotate`),
+noting that rotation invalidates **every** token for that database. The vault's
+data key is never involved.
 
 ### What the Worker stores vs. doesn't
 
 | | Stored | Not stored |
 |---|---|---|
-| API key (`drk_live_xxx`) | hash only | plaintext |
+| API key | nothing (Clerk owns it) | plaintext, hash, or any local copy |
 | `deadrop-ci.json` contents | ✗ | wrapped vault key (user's hands only) |
-| Turso token (long-lived) | ✓ (KV, encrypted at rest) | ✗ |
+| Turso token | ✗ | minted on demand, short-lived, never persisted worker-side |
 | Plaintext secrets | ✗ | always client-side decryption |
 
 ---
