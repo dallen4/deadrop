@@ -48,12 +48,18 @@ export async function createNamedVault(
   return buildVaultConfig(await vaultPathForName(name));
 }
 
-// Lets a project-scoped `.deadroprc` (written by `deadrop init`/CLI `vault
-// create`, or vscode-extension) be linked into the desktop app's config.
-// Vault `location` paths in those files are always absolute (resolved
-// against the project's cwd at write time), so they can be opened as-is by
-// vault_store.rs without copying the DB file — desktop stays the single
-// source of truth for *which* vaults are known, the DB itself stays put.
+// A cloud vault's `location` is a replica path from another machine.
+export async function resolveImportedVault(
+  name: string,
+  vaultConfig: VaultDBConfig,
+): Promise<VaultDBConfig> {
+  if (!vaultConfig.cloud) return vaultConfig;
+
+  return { ...vaultConfig, location: await vaultPathForName(name) };
+}
+
+// Links a project-scoped `.deadroprc` (CLI/vscode-extension) into the
+// desktop config. Entries go through resolveImportedVault at the call site.
 export async function pickExternalVaultConfig(): Promise<DeadropConfig | null> {
   const path = await openFileDialog({
     multiple: false,

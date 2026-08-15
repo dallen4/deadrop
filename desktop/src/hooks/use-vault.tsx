@@ -10,6 +10,7 @@ import {
   createNamedVault,
   loadVaultConfig,
   pickExternalVaultConfig,
+  resolveImportedVault,
   saveVaultConfig,
 } from '../lib/vault-config';
 import { deleteCloudVault, provisionCloudVault } from '../lib/vault-cloud';
@@ -121,8 +122,6 @@ export const useVault = () => {
 
   // Links vaults from a project-scoped `.deadroprc` (CLI `deadrop init` /
   // `vault create`, or vscode-extension) into this config, keyed by name.
-  // The DB `location` stays wherever the project put it — desktop just
-  // starts tracking it alongside vaults created in-app.
   const importVault = () =>
     withBusy(async () => {
       const imported = await pickExternalVaultConfig();
@@ -139,7 +138,10 @@ export const useVault = () => {
           finalName = `${name}-${suffix++}`;
         }
         existingNames.add(finalName);
-        nextVaults[finalName] = vaultConfig;
+        nextVaults[finalName] = await resolveImportedVault(
+          finalName,
+          vaultConfig,
+        );
         importedNames.push(finalName);
       }
 
