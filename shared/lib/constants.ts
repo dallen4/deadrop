@@ -87,11 +87,6 @@ export enum VaultTokenAccess {
   ReadOnly = 'read-only',
 }
 
-// Vault shares ride the existing `raw` payload mode and discriminate on
-// `DropMessageMeta.type`, so a grabber that doesn't recognize it still
-// renders readable YAML instead of hitting an unhandled mode.
-export const VAULT_PAYLOAD_TYPE = 'application/vnd.deadrop.vault';
-
 // Shared secret header for first-party service-to-service calls
 // (e.g. web billing webhooks → Worker vault lock/unlock)
 export const SERVICE_TOKEN_HEADER = 'x-deadrop-service-token';

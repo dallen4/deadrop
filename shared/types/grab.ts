@@ -5,16 +5,12 @@ import type {
   HashFile,
 } from './common';
 import { GrabEventType } from '../lib/constants';
-import type { DropMessageMeta } from './messages';
 import type { EventObject } from 'xstate/lib/types';
 import type Peer from 'peerjs';
 
 export type GrabContext = BaseContext & {
   grabKey: CryptoKey | null;
   dropperId: string | null;
-  // Surfaced so platforms can branch on the payload type (e.g. a vault
-  // share); the handler stays platform-neutral and never acts on it.
-  meta: DropMessageMeta | null;
 };
 
 export type GrabEvent<EventType extends GrabEventType> =

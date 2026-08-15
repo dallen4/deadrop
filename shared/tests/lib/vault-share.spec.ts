@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { VAULT_PAYLOAD_TYPE } from '../../lib/constants';
 import {
   composeVaultShare,
-  isVaultShareMeta,
   parseVaultShare,
   pickEnvironments,
+  tryParseVaultShare,
 } from '../../lib/vault-share';
 import type { SharedVault } from '../../types/config';
 
@@ -98,18 +97,18 @@ describe('parseVaultShare', () => {
   });
 });
 
-describe('isVaultShareMeta', () => {
-  it('matches the vault payload type', () => {
+describe('tryParseVaultShare', () => {
+  it('returns the share when the payload validates', () => {
     expect(
-      isVaultShareMeta({ type: VAULT_PAYLOAD_TYPE, name: 'acme' }),
-    ).toBe(true);
+      tryParseVaultShare(composeVaultShare('acme', share)),
+    ).toEqual({ name: 'acme', vault: share });
   });
 
-  it('does not match file or missing meta', () => {
-    expect(isVaultShareMeta({ type: 'text/plain', name: 'a.txt' })).toBe(
-      false,
-    );
-    expect(isVaultShareMeta(null)).toBe(false);
-    expect(isVaultShareMeta(undefined)).toBe(false);
+  it('returns null for an ordinary secret rather than throwing', () => {
+    expect(tryParseVaultShare('hunter2')).toBeNull();
+  });
+
+  it('returns null for YAML that is not a vault share', () => {
+    expect(tryParseVaultShare('foo: bar\n')).toBeNull();
   });
 });

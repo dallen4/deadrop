@@ -1,12 +1,10 @@
 import { parse, stringify } from 'yaml';
 import { z } from 'zod';
-import { VAULT_PAYLOAD_TYPE } from './constants';
 import type {
   SharedVault,
   VaultDBConfig,
   VaultEnvironments,
 } from '../types/config';
-import type { DropMessageMeta } from '../types/messages';
 
 // The payload arrives from an untrusted peer, so it is validated rather
 // than cast — YAML alone says nothing about shape.
@@ -22,14 +20,6 @@ const VaultSharePayloadSchema = z.object({
   vaults: z.record(z.string(), SharedVaultSchema),
 });
 
-export const vaultShareMeta = (name: string): DropMessageMeta => ({
-  type: VAULT_PAYLOAD_TYPE,
-  name,
-});
-
-export const isVaultShareMeta = (meta?: DropMessageMeta | null) =>
-  meta?.type === VAULT_PAYLOAD_TYPE;
-
 export const composeVaultShare = (
   name: string,
   vault: SharedVault,
@@ -44,6 +34,18 @@ export const pickEnvironments = (
       .filter((env) => vault.environments[env])
       .map((env) => [env, vault.environments[env]]),
   );
+
+// A vault share identifies itself: the schema rejects anything else, so
+// grabbers detect one by parsing rather than by a wire discriminator.
+export const tryParseVaultShare = (
+  payload: string,
+): { name: string; vault: SharedVault } | null => {
+  try {
+    return parseVaultShare(payload);
+  } catch {
+    return null;
+  }
+};
 
 export const parseVaultShare = (
   payload: string,

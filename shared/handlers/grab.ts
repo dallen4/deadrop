@@ -132,7 +132,6 @@ export const createGrabHandlers = <
           : await file.decrypt(grabKey!, nonce!, payload, meta!);
 
       ctx.mode = mode;
-      ctx.meta = meta ?? null;
       ctx.message = decryptedMessage;
 
       logger.info('Payload decrypted successfully...');
