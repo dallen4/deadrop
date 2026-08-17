@@ -68,7 +68,18 @@ desktop app share one default vault automatically — the CLI falls back to
 this same app-data-scoped config when it finds no project-scoped
 `.deadroprc` (`cli/lib/global-config.ts`). Project-scoped vaults created by
 the CLI/vscode-extension can also be explicitly linked in via "Import
-vault" (`src/lib/vault-config.ts`'s `pickExternalVaultConfig`).
+vault" (`src/lib/vault-config.ts`'s `pickExternalVaultConfig`). Any imported
+or grabbed cloud vault gets a fresh replica path (`resolveImportedVault`) —
+the incoming `location` is the sender's, and means nothing here.
+
+`Vault.tsx` splits into Secrets and Credentials tabs. Credentials
+(`src/components/vault/CredentialsTab.tsx`) issues sync tokens with an
+access level + expiry and offers a break-glass rotate, both owner-gated on
+`userOwnsVault` — a vault you don't own can't be reminted, so its stored
+token is the only way in and must never be cleared. "Share vault"
+(`ShareVaultModal.tsx`) mints a read-only token, composes the payload with
+`shared/lib/vault-share.ts`, and routes it into the drop flow via router
+state; the grab side adopts one through `useVault`'s `adoptVault`.
 
 ## Auth keychain backend
 
