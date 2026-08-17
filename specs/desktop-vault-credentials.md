@@ -4,6 +4,10 @@ A `Credentials` tab on the desktop `/vault` page for viewing, issuing, and
 invalidating the Turso auth tokens behind a cloud-synced vault. Visible only
 for vaults the signed-in user owns.
 
+## Status
+
+**Shipped** in [#153](https://github.com/dallen4/deadrop/pull/153).
+
 ## Motivation
 
 Cloud vault tokens today are invisible and permanent:

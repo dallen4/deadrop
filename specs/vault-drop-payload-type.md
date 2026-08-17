@@ -3,6 +3,14 @@
 Share a cloud vault by dropping its config. The payload is one vault entry
 with a read-only token and whichever environment keys the owner selects.
 
+## Status
+
+**Shipped** in [#153](https://github.com/dallen4/deadrop/pull/153), with one
+deviation: recognition is by validating the payload against a schema
+(`shared/lib/vault-share.ts`), not by the `meta.type` discriminator described
+below. The wire format is unchanged. Open items at the bottom of this doc
+(read-only affordances, plan gating, write delegation) are still open.
+
 ## Why this is the right shape
 
 deadrop already has an E2E encrypted, peer-to-peer, one-time-ish channel for

@@ -3,6 +3,11 @@
 `CloudVaultConfig.syncUrl` is redundant. It can be derived, or refetched, from
 data already present. This documents the analysis and the recommended change.
 
+## Status
+
+**Shipped** in [#153](https://github.com/dallen4/deadrop/pull/153). `authToken`
+stays persisted, for the reason in "Resulting shape" below.
+
 ## Finding: the hostname is fully deterministic
 
 Turso database URLs follow a fixed pattern
