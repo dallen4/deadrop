@@ -1,5 +1,22 @@
 # worker
 
+## 1.3.0
+
+### Minor Changes
+
+- 6dfbfb2: Manage vault sync credentials from the desktop app. A new Credentials tab shows the vault's current token and issues fresh ones with an explicit access level and expiry, and a break-glass rotate invalidates every token for the database at once, immediately minting and saving a replacement so your own sync keeps working. Tokens still default to read-only when no access level is given.
+
+### Patch Changes
+
+- 6dfbfb2: Vault sync URLs are now derived from the vault's remote name rather than stored in `.deadroprc`. Existing configs keep working with no migration, since the derived URL is identical to the one previously written. Importing a cloud vault also allocates a fresh local replica path instead of trusting the sender's, which fixes vaults imported from another machine.
+- bb15b91: Grant read-only vault sharing to Supporter. Sharing gates on owning a
+  cloud vault, not on Pro, so `vault_sharing_read` is now part of
+  `SUPPORTER_FEATURES` and shows on the Supporter pricing tier.
+- Updated dependencies [6dfbfb2]
+- Updated dependencies [bb15b91]
+- Updated dependencies [6dfbfb2]
+  - shared@1.2.0
+
 ## 1.2.1
 
 ### Patch Changes

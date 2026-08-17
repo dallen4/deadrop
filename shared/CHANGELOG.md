@@ -1,5 +1,15 @@
 # shared
 
+## 1.2.0
+
+### Minor Changes
+
+- 6dfbfb2: Vault sync URLs are now derived from the vault's remote name rather than stored in `.deadroprc`. Existing configs keep working with no migration, since the derived URL is identical to the one previously written. Importing a cloud vault also allocates a fresh local replica path instead of trusting the sender's, which fixes vaults imported from another machine.
+- bb15b91: Grant read-only vault sharing to Supporter. Sharing gates on owning a
+  cloud vault, not on Pro, so `vault_sharing_read` is now part of
+  `SUPPORTER_FEATURES` and shows on the Supporter pricing tier.
+- 6dfbfb2: Share a cloud vault by dropping it. "Share vault" on the desktop vault page and the new `deadrop vault drop` command mint a read-only, expiring token for the environments you pick and hand it over the same peer-to-peer drop everything else uses. The recipient gets an "Add to my vaults" action on the desktop grab screen, and `deadrop grab` writes the vault into a local or global config and makes it active. Only the vault's owner can share it, and access lapses on its own when the token expires.
+
 ## 1.1.0
 
 ### Minor Changes
