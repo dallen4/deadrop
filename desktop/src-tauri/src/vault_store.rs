@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 
 // Mirrors shared/types/config.ts's CloudVaultConfig/VaultDBConfig, minus
 // `environments` (encryption keys never leave the webview — see
-// shared/lib/secrets.ts) and `name` (not needed to open the DB).
+// shared/lib/secrets.ts) and `name`. Config no longer stores a sync URL;
+// the webview derives it (vaultSyncUrl) and passes it down, so the org
+// slug lives in one place instead of being duplicated in Rust.
 #[derive(Deserialize)]
 pub struct CloudConfigDto {
     #[serde(rename = "syncUrl")]

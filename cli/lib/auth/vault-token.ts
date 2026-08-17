@@ -1,10 +1,11 @@
 import { createClient } from '@shared/client';
-import { syncUrl as toSyncUrl } from '@shared/lib/turso/utils';
 import { getSessionToken } from './clerk';
 
 export class VaultNotFoundError extends Error {}
 
-export type MintedVaultCreds = { authToken: string; syncUrl: string };
+// `name` is the resolved remote database name, not the local label — the
+// sync URL is derived from it (vaultSyncUrl), never stored.
+export type MintedVaultCreds = { authToken: string; name: string };
 
 export async function mintVaultToken(
   vaultName?: string,
@@ -26,9 +27,9 @@ export async function mintVaultToken(
   }
   if (response.status !== 201) return null;
 
-  const { token: authToken, hostname } = (await response.json()) as {
+  const { token: authToken, name } = (await response.json()) as {
     token: string;
-    hostname: string;
+    name: string;
   };
-  return { authToken, syncUrl: toSyncUrl(hostname) };
+  return { authToken, name };
 }

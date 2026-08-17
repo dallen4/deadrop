@@ -11,6 +11,8 @@ export { SharePane } from './molecules/SharePane';
 export type { SharePaneProps } from './molecules/SharePane';
 export { SecretInputCard } from './molecules/SecretInputCard';
 export type { SecretInputCardProps } from './molecules/SecretInputCard';
+export { VaultShareCard } from './molecules/VaultShareCard';
+export type { VaultShareCardProps } from './molecules/VaultShareCard';
 
 export { DropFlow } from './organisms/DropFlow';
 export type { DropFlowProps } from './organisms/DropFlow';

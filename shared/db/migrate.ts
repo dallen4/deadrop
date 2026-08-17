@@ -2,7 +2,11 @@ import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql/node';
 import { initDBConfig, syncWithRetry } from './init';
 import { secretsTable } from './schema';
-import { fileUrl, tursoUploadUrl } from '../lib/turso/utils';
+import {
+  fileUrl,
+  tursoUploadUrl,
+  vaultSyncUrl,
+} from '../lib/turso/utils';
 import type { VaultDBConfig } from '../types/config';
 import { readFile, unlink } from 'fs/promises';
 
@@ -36,7 +40,9 @@ export async function migrateToCloudSync(
 
   // 2. Upload the local .db file to Turso
   const dbBytes = await readFile(dbPath);
-  const uploadUrl = tursoUploadUrl(vault.cloud.syncUrl);
+  const uploadUrl = tursoUploadUrl(
+    vaultSyncUrl(vault.cloud.name),
+  );
 
   const uploadRes = await fetch(uploadUrl, {
     method: 'POST',

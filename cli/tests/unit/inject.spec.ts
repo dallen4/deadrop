@@ -115,7 +115,7 @@ describe('inject', () => {
     const secrets = { FOO: 'bar' };
     const minted = {
       authToken: 'minted-token',
-      syncUrl: 'libsql://default.turso.io',
+      name: 'a1b2c3d4e5f67-default',
     };
 
     vi.mocked(loadConfig).mockResolvedValue({
@@ -127,7 +127,6 @@ describe('inject', () => {
             environments: {},
             cloud: {
               name: 'default',
-              syncUrl: 'libsql://default.turso.io',
             },
           },
         },
@@ -151,10 +150,7 @@ describe('inject', () => {
     await inject(['node', '-e', 'process.exit(3)'], { override: true });
 
     expect(mintVaultToken).toHaveBeenCalledWith('default');
-    expect(initDBClient).toHaveBeenCalledWith('./vault.db', {
-      name: 'default',
-      ...minted,
-    });
+    expect(initDBClient).toHaveBeenCalledWith('./vault.db', minted);
     expect(runWithEnvSpy).toHaveBeenCalledWith(
       'node',
       ['-e', 'process.exit(3)'],
@@ -180,7 +176,6 @@ describe('inject', () => {
     const close = vi.fn();
     const cloud = {
       name: 'default',
-      syncUrl: 'libsql://default.turso.io',
       authToken: 'existing-token',
     };
 
@@ -253,12 +248,11 @@ describe('inject', () => {
     const close = vi.fn();
     const cloud = {
       name: 'default',
-      syncUrl: 'libsql://default.turso.io',
       authToken: 'existing-token',
     };
     const minted = {
       authToken: 'refreshed-token',
-      syncUrl: 'libsql://default.turso.io',
+      name: 'a1b2c3d4e5f67-default',
     };
 
     vi.mocked(loadConfig).mockResolvedValue({
@@ -282,10 +276,7 @@ describe('inject', () => {
     await inject(['node'], { override: true, refreshToken: true });
 
     expect(mintVaultToken).toHaveBeenCalledWith('default');
-    expect(initDBClient).toHaveBeenCalledWith('./vault.db', {
-      name: 'default',
-      ...minted,
-    });
+    expect(initDBClient).toHaveBeenCalledWith('./vault.db', minted);
   });
 
   it('surfaces VaultNotFoundError cleanly instead of the generic message', async () => {
@@ -305,7 +296,6 @@ describe('inject', () => {
             environments: {},
             cloud: {
               name: 'default',
-              syncUrl: 'libsql://default.turso.io',
             },
           },
         },
@@ -344,7 +334,7 @@ describe('inject', () => {
     const secrets = { FOO: 'bar' };
     const minted = {
       authToken: 'minted-token',
-      syncUrl: 'libsql://default.turso.io',
+      name: 'a1b2c3d4e5f67-default',
     };
 
     process.env.DEADROP_VAULT_KEY = 'aes-key';
@@ -388,7 +378,7 @@ describe('inject', () => {
     } as any);
     vi.mocked(mintVaultToken).mockResolvedValue({
       authToken: 'minted-token',
-      syncUrl: 'libsql://default.turso.io',
+      name: 'a1b2c3d4e5f67-default',
     });
     vi.mocked(initDBClient).mockResolvedValue({
       $client: { close },
@@ -436,7 +426,7 @@ describe('inject', () => {
     });
     vi.mocked(mintVaultToken).mockResolvedValue({
       authToken: 'minted-token',
-      syncUrl: 'libsql://default.turso.io',
+      name: 'a1b2c3d4e5f67-default',
     });
     vi.mocked(createSecretsHelpers).mockReturnValue({
       getAllSecrets: vi.fn().mockResolvedValue({ FOO: 'bar' }),
@@ -476,7 +466,6 @@ describe('inject', () => {
             // Cached token present, so inject won't try to re-mint.
             cloud: {
               name: 'default',
-              syncUrl: 'libsql://default.turso.io',
               authToken: 'cached-token',
             },
           },

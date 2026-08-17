@@ -17,7 +17,7 @@ shared/
 │   ├── machines/       # dropMachine/grabMachine (XState v4) — see XState Machines below
 │   ├── crypto/         # getCrypto()/getSubtle() + ECDH/AES-256-GCM/SHA-256 ops — see Crypto below
 │   ├── turso/          # Turso vault provisioning/lifecycle — own CLAUDE.md, read it before touching
-│   └── ...             # messages, secrets, vault, redis, peer, data, fetch, constants, util
+│   └── ...             # messages, secrets, vault, vault-share, redis, peer, data, fetch, constants, util
 ├── db/                 # Drizzle schema shared between cli (libsql) and worker (vault provisioning)
 ├── tests/lib/ + mocks/ # Vitest specs + fixtures; tests/http.ts has the e2e test-bypass constants
 ├── scripts/hydrate-test-token.ts  # Seeds the stable e2e DROP_TEST_TOKEN into Redis

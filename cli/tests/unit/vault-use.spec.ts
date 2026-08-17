@@ -14,6 +14,10 @@ vi.mock('db/vaults', () => ({
   vaultExists: vi.fn(),
 }));
 
+vi.mock('@inquirer/prompts', () => ({
+  select: vi.fn(),
+}));
+
 vi.mock('process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('process')>();
   return { ...actual, exit: vi.fn() };
@@ -108,6 +112,39 @@ describe('vaultUse', () => {
       expect.anything(),
       expect.objectContaining({
         active_vault: { name: 'default', environment: 'production' },
+      }),
+      true,
+    );
+  });
+
+  it('prompts to select a vault when no name is passed', async () => {
+    const { loadConfig, saveConfig } = await import('lib/config');
+    const { vaultExists } = await import('db/vaults');
+    const { select } = await import('@inquirer/prompts');
+    const { vaultUse } = await import('actions/vault/use');
+
+    const vaults = {
+      default: { location: '/tmp/default.db', environments: {} },
+      other: { location: '/tmp/other.db', environments: {} },
+    };
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'production' },
+        vaults,
+      },
+      filepath: '/tmp/.deadroprc',
+    } as any);
+    vi.mocked(vaultExists).mockReturnValue(vaults.other as any);
+    vi.mocked(select).mockResolvedValue('other');
+
+    await vaultUse(undefined as any);
+
+    expect(select).toHaveBeenCalled();
+    expect(saveConfig).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        active_vault: { name: 'other', environment: 'production' },
       }),
       true,
     );

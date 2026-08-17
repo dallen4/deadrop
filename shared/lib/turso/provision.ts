@@ -5,6 +5,7 @@ import type {
   ListDatabasesResponse,
 } from '../../types/db';
 import type { TursoClient } from './client';
+import { VaultTokenAccess } from '../constants';
 
 export const createProvisionHandlers = (
   client: TursoClient,
@@ -28,12 +29,16 @@ export const createProvisionHandlers = (
     return database;
   };
 
+  // Omitting `expiration` leaves Turso's default of `never`, so existing
+  // callers keep their current behavior.
   const createVaultToken = async (
     vaultName: string,
-    access: 'full-access' | 'read-only',
+    access: VaultTokenAccess,
+    expiration?: string,
   ) => {
     const path =
-      `/${vaultName}/auth/tokens?authorization=${access}`;
+      `/${vaultName}/auth/tokens?authorization=${access}` +
+      (expiration ? `&expiration=${expiration}` : '');
 
     const { jwt } = await client.post<{ jwt: string }>(path);
 

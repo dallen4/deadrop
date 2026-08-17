@@ -159,6 +159,8 @@ The grabbed secret is printed to stdout, so you can pipe or redirect:
 deadrop grab abc123 > .env.local
 ```
 
+If the drop turns out to be a shared vault (see [`vault drop`](#vault) below), the CLI offers to add it to your config instead of printing it. It writes to the project-scoped `.deadroprc` if there is one, otherwise your global config, and asks which you want when neither exists. Pass `--local` or `--global` to skip that prompt in scripts.
+
 ### `vault`
 
 Manage local and cloud-synced encrypted vaults.
@@ -173,13 +175,22 @@ deadrop vault create staging --cloud
 deadrop vault create scratch ~/projects/scratch
 ```
 
-#### `vault use <name> [--environment <env>]`
+#### `vault list`
 
-Switch the active vault. Subsequent `secret` and `drop` commands operate against this vault. Pass `--environment` to switch the active environment at the same time; without it the current environment is kept.
+List every vault in the config, marking the active one.
+
+```
+deadrop vault list
+```
+
+#### `vault use [name] [--environment <env>]`
+
+Switch the active vault. Subsequent `secret` and `drop` commands operate against this vault. Pass `--environment` to switch the active environment at the same time; without it the current environment is kept. Omit the name and you'll be prompted to pick from your vaults.
 
 ```
 deadrop vault use staging
 deadrop vault use staging -e production
+deadrop vault use              # pick from a list
 ```
 
 #### `vault sync`
@@ -201,6 +212,24 @@ Read a `.env` file and add its keys and values to the active vault.
 ```
 deadrop vault import ./.env.production
 ```
+
+#### `vault drop [name]`
+
+Share a cloud vault by dropping it. deadrop mints a read-only, expiring token for the environments you pick and hands it over a normal drop, so the recipient just runs `deadrop grab`. Cloud vaults only, since a local vault has nothing for them to connect to.
+
+| Argument                | Description                                                     |
+| ----------------------- | --------------------------------------------------------------- |
+| `[name]`                | Vault to share. Defaults to the active vault.                   |
+| `-e, --env <env...>`    | Environments to include. Defaults to the active environment.    |
+| `--expires <duration>`  | How long the recipient's access lasts. Defaults to `30d`.       |
+| `-g, --grabbers <n>`    | Number of recipients (requires a plan with multidrop).          |
+
+```
+deadrop vault drop
+deadrop vault drop work -e production -e staging --expires 7d
+```
+
+You can only share a vault you own, since the token is minted against your account. To cut access before the token expires you have to rotate the vault's credentials, which kills every token including your own.
 
 #### `vault delete <name>`
 

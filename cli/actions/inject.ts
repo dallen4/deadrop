@@ -112,7 +112,9 @@ export async function inject(
       );
       process.exit(1);
     }
-    cloud = { name: vaultName ?? 'default', ...minted };
+    // minted.name is the resolved remote name, which the local label
+    // (`vaultName`) is not — the sync URL is derived from it.
+    cloud = minted;
   }
 
   const db = await initDBClient(vault.location, cloud);

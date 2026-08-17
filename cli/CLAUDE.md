@@ -19,7 +19,7 @@ cli/
 ├── index.ts        # Entry point (shebang, signal handlers, bootstrap)
 ├── core.ts         # Commander.js CLI definition (all commands)
 ├── actions/        # One handler file per command/subcommand — see "CLI Commands" below for the full list
-├── logic/          # Workflow helpers kept out of actions/ (currently just drop session logic)
+├── logic/          # Workflow helpers kept out of actions/ (drop session logic, grabbed-vault merge)
 ├── lib/
 │   ├── auth/       # clerk.ts (getSessionToken(), see Key Patterns) + cache.ts (OS keychain via keytar/Bun.secrets — never plaintext) + the login OAuth loopback server
 │   ├── update/     # Self-update: binary.ts (download+checksum+atomic replace) vs npm.ts (package-manager detection), shared by version.ts/download.ts/checksum.ts
@@ -50,10 +50,12 @@ deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
 deadrop inject           # Run a command with vault secrets injected as env vars
 deadrop vault create    # Create a local vault (seeds development + production envs)
-deadrop vault use       # Switch active vault (--environment to also switch env)
+deadrop vault list      # List all vaults in the config
+deadrop vault use       # Switch active vault (--environment to also switch env; prompts to select when name omitted)
 deadrop vault sync      # Sync vault ↔ .env file
 deadrop vault export
 deadrop vault import
+deadrop vault drop      # Share a cloud vault over a drop (owner-only, read-only token)
 deadrop vault delete
 deadrop vault env list  # List environments in the active vault
 deadrop vault env add   # Add a new environment (fresh key) to the active vault

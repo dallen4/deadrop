@@ -73,7 +73,19 @@ export const APP_IDENTIFIER = 'com.deadrop';
 
 export const DEFAULT_VAULT_NAME = 'default.db';
 
+// Turso organization slug backing every cloud vault. Part of every vault
+// hostname (`libsql://<db>-<org>.turso.io`), so all four surfaces derive
+// sync URLs from it rather than storing one. Changing it means migrating
+// every database, so it is a code change, not configuration.
+export const TURSO_ORGANIZATION = 'dallen4';
+
 export const SECRET_VALUE_DELIMITER = ' | ';
+
+// Turso fixes access level at mint time; it can never be changed after.
+export enum VaultTokenAccess {
+  FullAccess = 'full-access',
+  ReadOnly = 'read-only',
+}
 
 // Shared secret header for first-party service-to-service calls
 // (e.g. web billing webhooks → Worker vault lock/unlock)

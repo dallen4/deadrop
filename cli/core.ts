@@ -10,10 +10,12 @@ import { secretRemove } from 'actions/secret/remove';
 import {
   vaultCreate,
   vaultDelete,
+  vaultDrop,
   vaultEnvAdd,
   vaultEnvList,
   vaultExport,
   vaultImport,
+  vaultList,
   vaultSync,
   vaultUse,
 } from 'actions/vault';
@@ -84,7 +86,7 @@ deadrop
   .argument('<command...>', 'command to run (after --)')
   .option(
     '-v, --vault <name>',
-    'vault to inject (optional: defaults to your default vault)',
+    'vault to inject (optional: defaults to your active vault)',
   )
   .option('-e, --environment <env>', 'environment to inject')
   .option(
@@ -113,7 +115,10 @@ desktopRoot
   .description(
     'install (or update, if already installed) the deadrop desktop app',
   )
-  .option('--force', 'reinstall even if already on the latest version')
+  .option(
+    '--force',
+    'reinstall even if already on the latest version',
+  )
   .action(desktopInstall);
 
 desktopRoot
@@ -141,9 +146,17 @@ add cloud-based replica for ease of sharing`,
   .action(vaultCreate);
 
 vaultRoot
+  .command('list')
+  .description('list all vaults available in the config')
+  .action(vaultList);
+
+vaultRoot
   .command('use')
   .description('change the current active vault deadrop is using')
-  .argument('<name>', 'name of the vault to switch to as active')
+  .argument(
+    '[name]',
+    'name of the vault to switch to as active (prompts to select when omitted)',
+  )
   .option('-e, --environment <env>', 'environment to switch to')
   .action(vaultUse);
 
@@ -171,6 +184,20 @@ vaultRoot
   )
   .argument('<path>', 'path to the .env file')
   .action(vaultImport);
+
+vaultRoot
+  .command('drop')
+  .description(
+    'share a cloud vault with someone via a drop (they run `deadrop grab`)',
+  )
+  .argument('[name]', 'vault to share (defaults to the active vault)')
+  .option(
+    '-e, --env <env...>',
+    'environments to include (defaults to the active environment)',
+  )
+  .option('--expires <duration>', 'token lifetime', '30d')
+  .option('-g, --grabbers <n>', 'number of recipients')
+  .action(vaultDrop);
 
 vaultRoot
   .command('delete')

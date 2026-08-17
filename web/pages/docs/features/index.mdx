@@ -63,6 +63,8 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 - **Local vaults** (web): browser-based encrypted vault using OPFS. CLI version is stable. [#58](https://github.com/dallen4/deadrop/issues/58)
 - **Cloud-synced vaults** (Supporter+): encrypted Turso replica for cross-device access. [#58](https://github.com/dallen4/deadrop/issues/58)
+- **Vault sharing** (cloud vaults, so Supporter+): hand a vault to someone else over a drop, via `deadrop vault drop` or "Share vault" in the desktop app. They get read-only access to the environments you pick, expiring on a schedule you set.
+- **Vault credentials**: issue vault sync tokens with a chosen access level and expiry, or rotate a vault's credentials outright, from the desktop app's Credentials tab.
 
 ### Multidrop
 
@@ -97,8 +99,8 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 ### Collaboration
 
-- **Read-only sharing for humans** (Pro+): grant collaborators view-only access to vault entries.
-- **Write delegation** (Pro+): allow named collaborators to update specific vault entries.
+- **Write delegation** (Pro+): allow named collaborators to update specific vault entries, rather than the read-only access vault sharing grants today.
+- **Per-recipient revocation**: cut off one recipient's access without rotating the vault's credentials for everyone.
 
 ### CI/CD
 

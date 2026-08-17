@@ -34,6 +34,8 @@ export type DropFlowProps = {
   generateGrabUrl: (id: string) => string;
   // Optional captcha slot forwarded to SecretInputCard.
   renderCaptcha?: SecretInputCardProps['renderCaptcha'];
+  // Payload composed elsewhere; the input step summarises it instead.
+  staged?: { summary: string; payload: string };
 };
 
 export const DropFlow = ({
@@ -41,6 +43,7 @@ export const DropFlow = ({
   experimental = false,
   generateGrabUrl,
   renderCaptcha,
+  staged,
 }: DropFlowProps) => {
   const theme = useMantineTheme();
   const isMobile = useMediaQuery(
@@ -133,10 +136,25 @@ export const DropFlow = ({
           label={'Input'}
           description={isMobile && 'Add your secrets'}
         >
-          <SecretInputCard
-            setPayload={drop.setPayload}
-            renderCaptcha={renderCaptcha}
-          />
+          {staged ? (
+            <StepCard title={'input'}>
+              <Stack gap={'sm'}>
+                <Text>{staged.summary}</Text>
+                <Button
+                  onClick={() =>
+                    drop.setPayload(staged.payload, 'raw')
+                  }
+                >
+                  Continue
+                </Button>
+              </Stack>
+            </StepCard>
+          ) : (
+            <SecretInputCard
+              setPayload={drop.setPayload}
+              renderCaptcha={renderCaptcha}
+            />
+          )}
         </Stepper.Step>
         <Stepper.Step
           label={'Share'}

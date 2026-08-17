@@ -113,7 +113,7 @@
     "react": "^19",
     "react-dom": "^19",
     "shared": "workspace:*",
-    "yaml": "^2.8.3"
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",

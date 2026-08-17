@@ -92,7 +92,7 @@ No. deadrop has four surfaces:
 - **Web app**: `deadrop.io`, also installable as a PWA
 - **CLI**: `deadrop` on npm or via the install script. Runs on macOS, Linux, and Windows
 - **VS Code extension**: drop, grab, and manage local or cloud-synced vaults directly from your editor (experimental, Supporter+ plans)
-- **Desktop app**: a native app with drop, grab, and a local/cloud-synced vault in one window (experimental, macOS/Windows/Linux). Install on macOS via `deadrop desktop install`; on Windows/Linux, download the build from [GitHub Releases](https://github.com/dallen4/deadrop/releases)
+- **Desktop app**: a native app with drop, grab, and a local/cloud-synced vault in one window (experimental, macOS/Windows/Linux). Install via `deadrop desktop install` on any of the three, or download the build from [GitHub Releases](https://github.com/dallen4/deadrop/releases)
 
 All four implement the same cryptographic protocol and can interoperate. For example, you can drop from the CLI and grab in the browser.
 
@@ -113,6 +113,14 @@ A vault is a collection of secrets organised by environment (e.g. `production`, 
 
 Local vaults are stored as encrypted SQLite databases on the device you created them on. Cloud-synced vaults additionally back up the encrypted store to our managed Turso database so you can access the same secrets from multiple devices. In both cases, the contents are encrypted client-side, so we cannot read them.
 
+### Can I share a vault with someone else?
+
+Any cloud-synced vault can be shared read-only, so any plan that includes one. `deadrop vault drop` and the desktop app's "Share vault" hand it over an ordinary drop, for the environments and duration you pick. Only the owner can share.
+
+### Can I revoke someone's access to a shared vault early?
+
+Only by rotating the vault's credentials, which kills every token including your own. Set a short expiry when you share; rotation is break-glass.
+
 <DocsSectionTitle
   id={'plans-and-pricing'}
   label={'💳 Plans & pricing'}
@@ -120,7 +128,7 @@ Local vaults are stored as encrypted SQLite databases on the device you created 
 
 ### What features require a paid plan?
 
-The free tier covers unlimited drops, grabs, local vaults, and the CLI. Paid plans add cloud-synced vaults, the VS Code extension, CI/CD service tokens, and (on Pro+) delegated access for collaborators. See the [pricing page](/pricing) for the full comparison.
+The free tier covers unlimited drops, grabs, local vaults, and the CLI. Paid plans add cloud-synced vaults, the VS Code extension, CI/CD service tokens, sharing a vault read-only with someone else, and (on Pro+) write delegation for collaborators. See the [pricing page](/pricing) for the full comparison.
 
 ### Can I self-host deadrop?
 

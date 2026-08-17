@@ -55,6 +55,7 @@ export const TIERS: TierDef[] = [
       { label: 'VSCode extension', included: true },
       { label: 'CI/CD service tokens (up to 10)', included: true },
       { label: 'No captcha on drops', included: true },
+      { label: 'Read-only sharing for humans', included: true },
       { label: 'Share write access with humans', included: false },
     ],
     ctaLabel: 'Become a Supporter',

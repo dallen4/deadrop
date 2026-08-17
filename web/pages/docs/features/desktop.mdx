@@ -97,6 +97,21 @@ cloud sync for a vault from the same view, so its secrets stay available across 
 can also link an existing project-scoped vault created by the CLI or the VS Code extension
 into the desktop app via "Import vault" in the vault switcher.
 
+Cloud-synced vaults also get a Credentials tab: it shows the token the app syncs with, issues
+new ones with an access level and expiry, and offers a break-glass rotate. Rotating kills every
+token for that vault, including your other machines and anyone you've shared it with, so the
+app mints itself a replacement on the spot.
+
+<DocsSectionTitle
+  id={'sharing-a-vault'}
+  label={'Sharing a vault'}
+/>
+
+"Share vault" hands a cloud-synced vault to someone else over a normal drop. Pick the
+environments and how long access lasts; the app mints a read-only token and stages the drop.
+The recipient sees "Add to my vaults" when they grab it, or adds it from the CLI with
+`deadrop grab`. Only the owner can share.
+
 <DocsSectionTitle
   id={'related'}
   label={'🔗 Related'}
