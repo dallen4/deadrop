@@ -55,7 +55,7 @@ Extending drops would blur that line and cannibalize the vault upsell path.
 | Environments per vault | — | 3 (renamable) | Unlimited | Unlimited |
 | CI/CD service tokens | ✗ | ✓ (cap: 10 active) | ✓ (unlimited) | ✓ (unlimited) |
 | hCaptcha on drops | Yes | No | No | No |
-| Read-only vault sharing (humans) | ✗ | ✗ | ✓ | ✓ |
+| Read-only vault sharing (humans) | ✗ | ✓ (own vault) | ✓ | ✓ |
 | Write delegation to humans | ✗ | ✗ | ✓ (up to 5) | Unlimited |
 | Audit log | ✗ | ✗ | Last 30d | Full + export |
 | SSO | ✗ | ✗ | ✗ | ✓ |
@@ -110,7 +110,7 @@ The Cloudflare Worker reads these from `sessionClaims` via `@hono/clerk-auth`. N
 | `vscode_extension` | yes | yes | yes | VSCode extension access |
 | `no_captcha` | yes | yes | yes | Skip hCaptcha on drops |
 | `ci_tokens` | yes | yes | yes | CI/CD service token issuance |
-| `vault_sharing_read` | no | yes | yes | Read-only vault sharing |
+| `vault_sharing_read` | yes | yes | yes | Read-only vault sharing |
 | `vault_sharing_write` | no | yes | yes | Write delegation (cap differs by plan) |
 | `audit_log` | no | yes | yes | Audit log (30d at Pro, full at Org) |
 | `sso` | no | no | yes | SSO (SAML/OIDC) |
@@ -464,6 +464,7 @@ export const TIERS = [
       { label: 'VSCode extension', included: true },
       { label: 'CI/CD service tokens (up to 10)', included: true },
       { label: 'No captcha on drops', included: true },
+      { label: 'Read-only sharing for humans', included: true },
       { label: 'Share write access with humans', included: false },
     ],
     ctaLabel: 'Become a Supporter', ctaVariant: 'filled',
