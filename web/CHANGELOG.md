@@ -1,5 +1,14 @@
 # web
 
+## 1.0.4
+
+### Patch Changes
+
+- Updated dependencies [6dfbfb2]
+- Updated dependencies [bb15b91]
+- Updated dependencies [6dfbfb2]
+  - shared@1.2.0
+
 ## 1.0.3
 
 ### Patch Changes

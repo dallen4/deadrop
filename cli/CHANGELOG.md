@@ -1,5 +1,20 @@
 # cli
 
+## 1.9.0
+
+### Minor Changes
+
+- 58ce7e1: Added `deadrop vault list` to show every vault in the config, marking the active one. `deadrop vault use` now prompts you to pick from that list when you run it without a name, instead of failing.
+- 6dfbfb2: Share a cloud vault by dropping it. "Share vault" on the desktop vault page and the new `deadrop vault drop` command mint a read-only, expiring token for the environments you pick and hand it over the same peer-to-peer drop everything else uses. The recipient gets an "Add to my vaults" action on the desktop grab screen, and `deadrop grab` writes the vault into a local or global config and makes it active. Only the vault's owner can share it, and access lapses on its own when the token expires.
+
+### Patch Changes
+
+- 6dfbfb2: Vault sync URLs are now derived from the vault's remote name rather than stored in `.deadroprc`. Existing configs keep working with no migration, since the derived URL is identical to the one previously written. Importing a cloud vault also allocates a fresh local replica path instead of trusting the sender's, which fixes vaults imported from another machine.
+- Updated dependencies [6dfbfb2]
+- Updated dependencies [bb15b91]
+- Updated dependencies [6dfbfb2]
+  - shared@1.2.0
+
 ## 1.8.0
 
 ### Minor Changes

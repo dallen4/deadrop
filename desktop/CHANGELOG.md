@@ -1,5 +1,19 @@
 # desktop
 
+## 0.3.0
+
+### Minor Changes
+
+- 6dfbfb2: Manage vault sync credentials from the desktop app. A new Credentials tab shows the vault's current token and issues fresh ones with an explicit access level and expiry, and a break-glass rotate invalidates every token for the database at once, immediately minting and saving a replacement so your own sync keeps working. Tokens still default to read-only when no access level is given.
+- 6dfbfb2: Share a cloud vault by dropping it. "Share vault" on the desktop vault page and the new `deadrop vault drop` command mint a read-only, expiring token for the environments you pick and hand it over the same peer-to-peer drop everything else uses. The recipient gets an "Add to my vaults" action on the desktop grab screen, and `deadrop grab` writes the vault into a local or global config and makes it active. Only the vault's owner can share it, and access lapses on its own when the token expires.
+
+### Patch Changes
+
+- Updated dependencies [6dfbfb2]
+- Updated dependencies [bb15b91]
+- Updated dependencies [6dfbfb2]
+  - shared@1.2.0
+
 ## 0.2.3
 
 ### Patch Changes
