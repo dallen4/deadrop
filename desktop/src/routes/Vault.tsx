@@ -91,6 +91,9 @@ export const VaultPage = () => {
   // Only the owner can mint the read-only token a share carries.
   const canShare = vault.cloudSync && vault.ownsActiveCloudVault;
 
+  // Not !canShare — a local vault has no owner and stays writable.
+  const readOnly = vault.cloudSync && !vault.ownsActiveCloudVault;
+
   const shareVault = async (envs: string[], expiration: string) => {
     const payload = await vault.composeShare(envs, expiration);
     setShareModalOpen(false);
@@ -275,7 +278,11 @@ export const VaultPage = () => {
                       {env}
                     </Tabs.Tab>
                   ))}
-                  <NewEnvironmentInput onAdd={vault.createEnvironment} />
+                  {!readOnly && (
+                    <NewEnvironmentInput
+                      onAdd={vault.createEnvironment}
+                    />
+                  )}
                 </Tabs.List>
               </Tabs>
 
@@ -290,6 +297,7 @@ export const VaultPage = () => {
                       key={`${s.environment}:${s.name}`}
                       name={s.name}
                       environment={s.environment}
+                      readOnly={readOnly}
                       onReveal={vault.revealSecret}
                       onUpdate={vault.updateSecret}
                       onRename={vault.renameSecret}
@@ -299,10 +307,16 @@ export const VaultPage = () => {
                 )}
               </Stack>
 
-              <AddSecretForm
-                disabled={vault.busy}
-                onSubmit={vault.addSecret}
-              />
+              {readOnly ? (
+                <Text size={'xs'} c={'dimmed'}>
+                  Shared with you, read-only.
+                </Text>
+              ) : (
+                <AddSecretForm
+                  disabled={vault.busy}
+                  onSubmit={vault.addSecret}
+                />
+              )}
             </Stack>
           </Tabs.Panel>
 
