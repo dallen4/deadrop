@@ -17,7 +17,8 @@ const exitSignals: NodeJS.Signals[] = [
   'SIGQUIT',
 ];
 
-for (const signal in exitSignals)
+// `in` iterated array indices, so these bound to "0"/"1"/"2" and never fired
+for (const signal of exitSignals)
   process.on(signal, async (code) => {
     console.log('PROGRAM EXITING');
     process.exit(1);
