@@ -9,6 +9,7 @@ import { cwd } from 'process';
 import { VaultDBConfig } from '@shared/types/config';
 import { createSecretsHelpers } from '@shared/db/secrets';
 import { initDBClient } from 'db/init';
+import { logDebug } from './log';
 
 type EnvVars = Record<string, string>;
 
@@ -31,7 +32,7 @@ export async function syncEnv(
 
 export async function loadEnvFromFile(filePath: string) {
   const fullPath = resolve(cwd(), filePath);
-  console.log(fullPath);
+  logDebug(fullPath);
   const envContent = await readFile(fullPath, encoding);
 
   const parsedEnv = parse(envContent);

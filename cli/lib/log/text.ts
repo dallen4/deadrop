@@ -42,6 +42,7 @@ export const logError = (msg: string) => {
   console.log(chalk.bgRedBright(msg));
 };
 
-export const logDebug = (msg: string) => {
-  if (process.env.DEBUG_MODE) console.log(msg);
+// Variadic so callers can hand it raw errors and response bodies, not just text
+export const logDebug = (...args: unknown[]) => {
+  if (process.env.DEBUG_MODE) console.log(...args);
 };

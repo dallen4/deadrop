@@ -32,6 +32,11 @@ deadrop
   .name('deadrop')
   .description(description)
   .version(version)
+  .option('--debug', 'log verbose diagnostic output')
+  // logDebug reads the env var, so set it before any action runs
+  .hook('preAction', (thisCommand) => {
+    if (thisCommand.opts().debug) process.env.DEBUG_MODE = '1';
+  })
   .addHelpText('beforeAll', () => {
     displayWelcomeMessage();
     return '';

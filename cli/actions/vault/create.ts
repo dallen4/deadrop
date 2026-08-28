@@ -8,7 +8,7 @@ import { vaultExists } from 'db/vaults';
 import { createClerkClient } from 'lib/auth/clerk';
 import { loadConfig, saveConfig } from 'lib/config';
 import { STORAGE_DIR_NAME } from '@shared/lib/constants';
-import { logError, logInfo } from 'lib/log';
+import { logDebug, logError, logInfo } from 'lib/log';
 import { dirname, resolve } from 'path';
 import { cwd, exit } from 'process';
 
@@ -46,7 +46,7 @@ async function provisionCloudVault(
 
     return { name, authToken };
   } catch (err) {
-    console.error(err);
+    logDebug(err);
     return null;
   }
 }

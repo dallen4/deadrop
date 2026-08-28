@@ -10,6 +10,7 @@ vi.mock('lib/auth/localhostServer', () => ({
 
 vi.mock('lib/log', () => ({
   loader: { start: vi.fn(), stop: vi.fn(), text: '' },
+  logDebug: vi.fn(),
   logError: vi.fn(),
   logInfo: vi.fn(),
 }));
