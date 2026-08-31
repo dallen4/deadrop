@@ -8,6 +8,7 @@ export type HonoCtx = {
     ipAddress?: string;
     error?: boolean;
     userId?: string;
+    claims?: Record<string, any>;
 
     redis: Redis;
   } & RequestIdVariables;

@@ -1,39 +1,30 @@
 import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
-import { AppRouteParts } from '../constants';
+import { AppRouteParts, AuthScopes } from '../constants';
 import { hono } from '../lib/http/core';
 import {
   createVaultUtils,
   vaultNameFromUserId,
   TursoApiError,
 } from '@shared/lib/turso';
+import { VaultTokenAccess } from '@shared/lib/constants';
 import {
-  TURSO_ORGANIZATION,
-  VaultTokenAccess,
-} from '@shared/lib/constants';
+  MintedVaultCreds,
+  VaultApiKeyCreds,
+} from '@shared/lib/vault-tokens';
 import {
+  apiKey,
   authenticated,
   restricted,
   service,
 } from '../lib/middleware';
-
-const VaultNameSchema = z.object({ name: z.string() });
-const CreateVaultSchema = VaultNameSchema.partial().extend({
-  seed: z.enum(['database_upload']).optional(),
-});
-const VaultOwnerSchema = z.object({ userId: z.string() });
-// Optional `name` mirrors VaultTokenSchema so the default vault (bare
-// `<hash13>`, no suffix) stays addressable.
-const VaultRotateSchema = z.object({ name: z.string().optional() });
-// `access` defaults to read-only so the CLI `inject` path, which sends no
-// access at all, keeps minting read-only tokens.
-const VaultTokenSchema = z.object({
-  name: z.string().optional(),
-  access: z
-    .nativeEnum(VaultTokenAccess)
-    .default(VaultTokenAccess.ReadOnly),
-  expiration: z.string().optional(),
-});
+import {
+  CreateVaultSchema,
+  VaultInjectClaims,
+  VaultNameSchema,
+  VaultOwnerSchema,
+  VaultRotateSchema,
+  VaultTokenSchema,
+} from 'lib/vault';
 
 const vaultRouter = hono()
   .post(
@@ -45,14 +36,13 @@ const vaultRouter = hono()
       const userId = c.get('userId')!;
 
       const { createVault, createVaultToken } = createVaultUtils(
-        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
       try {
         const { name, seed } = c.req.valid('json');
 
-        const vaultName = await vaultNameFromUserId(userId!, name);
+        const vaultName = await vaultNameFromUserId(userId, name);
 
         const vaultDatabase = await createVault(vaultName, seed);
 
@@ -86,33 +76,76 @@ const vaultRouter = hono()
     async (c) => {
       const userId = c.get('userId')!;
 
-      const { createVaultToken, getVault } = createVaultUtils(
-        TURSO_ORGANIZATION,
+      const { createVaultToken } = createVaultUtils(
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
       const { name, access, expiration } = c.req.valid('json');
 
       try {
-        const vaultName = await vaultNameFromUserId(userId!, name);
+        const vaultName = await vaultNameFromUserId(userId, name);
 
-        const [vault, token] = await Promise.all([
-          getVault(vaultName),
-          createVaultToken(vaultName, access, expiration),
-        ]);
-
-        // `name` is the resolved remote database name — callers derive
-        // the sync URL from it rather than storing one.
-        return c.json(
-          { token, name: vaultName, hostname: vault?.Hostname },
-          201,
+        const token = await createVaultToken(
+          vaultName,
+          access,
+          expiration,
         );
+
+        // Typed so a rename breaks the build, not the CLI's sync.
+        const creds: MintedVaultCreds = { name: vaultName, token };
+
+        return c.json(creds, 201);
       } catch (error) {
         if (error instanceof TursoApiError && error.status === 404) {
           return c.json(
             {
               error: name
                 ? `Vault '${name}' not found.`
+                : 'No default vault found for this account.',
+            },
+            404,
+          );
+        }
+        return c.json(
+          { error: `Unexpected error: ${(error as Error).message}` },
+          500,
+        );
+      }
+    },
+  )
+  .post(
+    AppRouteParts.CiTokens,
+    apiKey({ scopes: [AuthScopes.VaultInject] }),
+    restricted(),
+    async (c) => {
+      const { vaultName, environment } = c.get(
+        'claims',
+      )! as VaultInjectClaims;
+
+      try {
+        const { createVaultToken } = createVaultUtils(
+          c.env.TURSO_PLATFORM_API_TOKEN,
+        );
+
+        const token = await createVaultToken(
+          vaultName,
+          VaultTokenAccess.ReadOnly,
+          '5m',
+        );
+
+        const creds: VaultApiKeyCreds = {
+          name: vaultName,
+          token,
+          environment,
+        };
+
+        return c.json(creds, 201);
+      } catch (error) {
+        if (error instanceof TursoApiError && error.status === 404) {
+          return c.json(
+            {
+              error: vaultName
+                ? `Vault '${vaultName}' not found.`
                 : 'No default vault found for this account.',
             },
             404,
@@ -137,7 +170,6 @@ const vaultRouter = hono()
       const vaultName = await vaultNameFromUserId(userId!, name);
 
       const { getVault } = createVaultUtils(
-        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
@@ -159,7 +191,6 @@ const vaultRouter = hono()
       const vaultName = await vaultNameFromUserId(userId!, name);
 
       const { deleteVault } = createVaultUtils(
-        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
@@ -185,7 +216,6 @@ const vaultRouter = hono()
       const vaultName = await vaultNameFromUserId(userId!, name);
 
       const { invalidateTokens } = createVaultUtils(
-        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
@@ -215,7 +245,6 @@ const vaultRouter = hono()
       const { userId } = c.req.valid('json');
 
       const { listVaults, suspendVault } = createVaultUtils(
-        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
@@ -246,7 +275,6 @@ const vaultRouter = hono()
       const { userId } = c.req.valid('json');
 
       const { listVaults, restoreVault } = createVaultUtils(
-        TURSO_ORGANIZATION,
         c.env.TURSO_PLATFORM_API_TOKEN,
       );
 
