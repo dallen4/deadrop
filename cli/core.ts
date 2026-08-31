@@ -44,7 +44,9 @@ deadrop
 
 deadrop
   .command('init')
-  .description('set up a default vault and config in the current directory')
+  .description(
+    'set up a default vault and config in the current directory',
+  )
   .option(
     '-y, --yes',
     'skip prompts and accept defaults (also implied by a non-TTY shell or CI)',
@@ -105,6 +107,10 @@ deadrop
   .option(
     '--refresh-token',
     'mint a fresh read-only Turso token via /vault/tokens',
+  )
+  .option(
+    '--ci',
+    'mint a fresh read-only Turso token for CI/CD via /vault/tokens/ci',
   )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
