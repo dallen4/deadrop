@@ -1,0 +1,55 @@
+{
+  "root": true,
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": true
+  },
+  "plugins": ["@typescript-eslint"],
+  "ignorePatterns": [
+    "dist/",
+    "fonts/",
+    "db/migrations/",
+    "scripts/",
+    "**/*.js",
+    "**/*.cjs",
+    "**/*.mjs",
+    "*.config.*"
+  ],
+  "rules": {
+    "@typescript-eslint/no-floating-promises": "error",
+    "@typescript-eslint/no-misused-promises": "error",
+    "@typescript-eslint/await-thenable": "error",
+    "@typescript-eslint/require-await": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-unused-vars": "off"
+  },
+  "overrides": [
+    {
+      // Deferring the native keyring import is what lets the keychain
+      // backend fail gracefully instead of at module load.
+      "files": ["lib/auth/cache.ts", "tests/unit/cache.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-require-imports": "off"
+      }
+    },
+    {
+      // Manual dev harness, run by hand — a rejection belongs on the
+      // terminal, not routed through a handler.
+      "files": ["tests/runLocal.ts"],
+      "rules": {
+        "@typescript-eslint/no-floating-promises": "off"
+      }
+    }
+  ]
+}

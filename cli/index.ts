@@ -20,7 +20,7 @@ const exitSignals: NodeJS.Signals[] = [
 
 // `in` iterated array indices, so these bound to "0"/"1"/"2" and never fired
 for (const signal of exitSignals)
-  process.on(signal, async (code) => {
+  process.on(signal, () => {
     logDebug('PROGRAM EXITING');
     process.exit(1);
   });

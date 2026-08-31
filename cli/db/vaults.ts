@@ -6,12 +6,10 @@ export const vaultExists = (vaults: VaultStore, name: string) => {
 
   if (!config) return null;
 
-  let dbExists = config
-    ? existsSync(config.location)
-    : false;
+  const dbExists = existsSync(config.location);
 
   // TODO convert to async and check if db exists on turso
-  if (config.cloud) {}
+  // if (config.cloud) {}
 
   return dbExists ? config : null;
 };
