@@ -9,6 +9,14 @@ vi.mock('../../src/lib/middleware', () => ({
       c.set('userId', 'user_123');
       await next();
     }),
+  apiKey: () =>
+    createMiddleware(async (c, next) => {
+      c.set('claims', {
+        vaultName: 'hash13-ci',
+        environment: 'production',
+      });
+      await next();
+    }),
   service: () => createMiddleware(async (_c, next) => next()),
 }));
 
@@ -17,13 +25,14 @@ const createVaultToken = vi.fn();
 const invalidateTokens = vi.fn();
 
 vi.mock('@shared/lib/turso', async () => {
-  const actual = await vi.importActual<typeof import('@shared/lib/turso')>(
-    '@shared/lib/turso',
-  );
+  const actual = await vi.importActual<
+    typeof import('@shared/lib/turso')
+  >('@shared/lib/turso');
   return {
     ...actual,
-    vaultNameFromUserId: vi.fn(async (userId: string, name?: string) =>
-      name ? `hash13-${name}` : 'hash13',
+    vaultNameFromUserId: vi.fn(
+      async (userId: string, name?: string) =>
+        name ? `hash13-${name}` : 'hash13',
     ),
     createVaultUtils: () => ({
       getVault,
@@ -36,12 +45,12 @@ vi.mock('@shared/lib/turso', async () => {
 const testEnv = { TURSO_PLATFORM_API_TOKEN: 'test-token' };
 
 describe('POST /vault/tokens', () => {
-  it('mints a read-only token and returns the hostname', async () => {
+  it('mints a read-only token and returns the resolved name', async () => {
     vi.clearAllMocks();
-    getVault.mockResolvedValue({ Hostname: 'my-vault.turso.io' });
     createVaultToken.mockResolvedValue('read-only-jwt');
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/tokens',
       {
@@ -56,7 +65,6 @@ describe('POST /vault/tokens', () => {
     expect(await res.json()).toEqual({
       token: 'read-only-jwt',
       name: 'hash13',
-      hostname: 'my-vault.turso.io',
     });
     expect(createVaultToken).toHaveBeenCalledWith(
       'hash13',
@@ -67,10 +75,10 @@ describe('POST /vault/tokens', () => {
 
   it('resolves a named vault via vaultNameFromUserId(userId, name)', async () => {
     vi.clearAllMocks();
-    getVault.mockResolvedValue({ Hostname: 'named-vault.turso.io' });
     createVaultToken.mockResolvedValue('read-only-jwt');
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/tokens',
       {
@@ -93,10 +101,10 @@ describe('POST /vault/tokens', () => {
   // schema default is the only thing keeping its tokens read-only.
   it('defaults access to read-only when omitted', async () => {
     vi.clearAllMocks();
-    getVault.mockResolvedValue({ Hostname: 'my-vault.turso.io' });
     createVaultToken.mockResolvedValue('read-only-jwt');
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     await vaultRouter.request(
       '/tokens',
       {
@@ -116,10 +124,10 @@ describe('POST /vault/tokens', () => {
 
   it('honors an explicit access level and expiration', async () => {
     vi.clearAllMocks();
-    getVault.mockResolvedValue({ Hostname: 'my-vault.turso.io' });
     createVaultToken.mockResolvedValue('full-access-jwt');
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/tokens',
       {
@@ -145,7 +153,8 @@ describe('POST /vault/tokens', () => {
   it('rejects an unknown access level', async () => {
     vi.clearAllMocks();
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/tokens',
       {
@@ -162,14 +171,17 @@ describe('POST /vault/tokens', () => {
 
   it('returns a clean 404 when the vault does not exist', async () => {
     vi.clearAllMocks();
-    getVault.mockRejectedValue(
-      new TursoApiError(404, 'GET', '/missing', 'not found'),
-    );
     createVaultToken.mockRejectedValue(
-      new TursoApiError(404, 'POST', '/missing/auth/tokens', 'not found'),
+      new TursoApiError(
+        404,
+        'POST',
+        '/missing/auth/tokens',
+        'not found',
+      ),
     );
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/tokens',
       {
@@ -188,10 +200,10 @@ describe('POST /vault/tokens', () => {
 
   it('returns 500 for any other error', async () => {
     vi.clearAllMocks();
-    getVault.mockRejectedValue(new Error('boom'));
-    createVaultToken.mockResolvedValue('read-only-jwt');
+    createVaultToken.mockRejectedValue(new Error('boom'));
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/tokens',
       {
@@ -211,7 +223,8 @@ describe('POST /vault/rotate', () => {
     vi.clearAllMocks();
     invalidateTokens.mockResolvedValue(undefined);
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/rotate',
       {
@@ -237,7 +250,8 @@ describe('POST /vault/rotate', () => {
     vi.clearAllMocks();
     invalidateTokens.mockResolvedValue(undefined);
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/rotate',
       {
@@ -255,10 +269,16 @@ describe('POST /vault/rotate', () => {
   it('returns a clean 404 when the vault does not exist', async () => {
     vi.clearAllMocks();
     invalidateTokens.mockRejectedValue(
-      new TursoApiError(404, 'POST', '/missing/auth/rotate', 'not found'),
+      new TursoApiError(
+        404,
+        'POST',
+        '/missing/auth/rotate',
+        'not found',
+      ),
     );
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/rotate',
       {
@@ -279,7 +299,8 @@ describe('POST /vault/rotate', () => {
     vi.clearAllMocks();
     invalidateTokens.mockRejectedValue(new Error('boom'));
 
-    const vaultRouter = (await import('../../src/routers/vault')).default;
+    const vaultRouter = (await import('../../src/routers/vault'))
+      .default;
     const res = await vaultRouter.request(
       '/rotate',
       {
