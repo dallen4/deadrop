@@ -1,14 +1,13 @@
-import { createClient } from '@shared/client';
-import { vault } from '@shared/lib/vault';
 import { migrateToCloudSync } from '@shared/db/migrate';
+import { STORAGE_DIR_NAME } from '@shared/lib/constants';
+import { vault } from '@shared/lib/vault';
 import type { CloudVaultConfig } from '@shared/types/config';
 import type { CreateVaultResponse } from '@shared/types/fetch';
 import { initDBClient } from 'db/init';
 import { vaultExists } from 'db/vaults';
-import { createClerkClient } from 'lib/auth/clerk';
+import { createDeadropClient } from 'lib/api';
 import { loadConfig, saveConfig } from 'lib/config';
-import { STORAGE_DIR_NAME } from '@shared/lib/constants';
-import { logError, logInfo } from 'lib/log';
+import { logDebug, logError, logInfo } from 'lib/log';
 import { dirname, resolve } from 'path';
 import { cwd, exit } from 'process';
 
@@ -16,20 +15,10 @@ async function provisionCloudVault(
   vaultNameInput: string,
   seed?: 'database_upload',
 ): Promise<CloudVaultConfig | null> {
-  const clerkClient = await createClerkClient();
-
-  if (!clerkClient.session) {
-    logError('You must be signed in to create a cloud-synced vault!');
-    return null;
-  }
-
   try {
     logInfo('Cloud flag passed, creating cloud-synced instance');
 
-    const sessionToken = await clerkClient.session.getToken();
-    const deadropClient = createClient(process.env.DEADROP_API_URL!, {
-      headers: { Authorization: `Bearer ${sessionToken}` },
-    });
+    const deadropClient = await createDeadropClient(true);
 
     const response = await deadropClient.vault.$post({
       json: { name: vaultNameInput, seed },
@@ -46,7 +35,7 @@ async function provisionCloudVault(
 
     return { name, authToken };
   } catch (err) {
-    console.error(err);
+    logDebug(err);
     return null;
   }
 }

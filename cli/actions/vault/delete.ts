@@ -3,7 +3,7 @@ import { vaultExists } from 'db/vaults';
 import { unlink } from 'fs/promises';
 import { createDeadropClient } from 'lib/api';
 import { loadConfig, saveConfig } from 'lib/config';
-import { logError, logInfo, logWarning } from 'lib/log';
+import { logDebug, logError, logInfo, logWarning } from 'lib/log';
 import { dirname } from 'path';
 import { exit } from 'process';
 
@@ -31,7 +31,7 @@ export async function vaultDelete(vaultNameInput: string) {
     }
     const { location, cloud } = vaults[vaultNameInput];
 
-    const deadropClient = await createDeadropClient();
+    const deadropClient = await createDeadropClient(true);
 
     if (cloud) {
       logInfo(
@@ -45,7 +45,7 @@ export async function vaultDelete(vaultNameInput: string) {
       if (resp.status == 200)
         logInfo('Cloud-based replica deleted successfully!');
       else {
-        console.log(await resp.json())
+        logDebug(await resp.json());
         logError(
           'Failed to delete cloud-based replica!\nCancelling deletion!',
         );

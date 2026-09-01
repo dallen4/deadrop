@@ -21,6 +21,7 @@ const REVEAL_TIMEOUT_MS = 15_000;
 export const SecretRow = ({
   name,
   environment,
+  readOnly,
   onReveal,
   onUpdate,
   onRename,
@@ -28,6 +29,8 @@ export const SecretRow = ({
 }: {
   name: string;
   environment: string;
+  // A vault shared with you carries a read-only token; writes fail at Turso.
+  readOnly?: boolean;
   onReveal: (name: string, environment: string) => Promise<string>;
   onUpdate: (
     name: string,
@@ -126,6 +129,7 @@ export const SecretRow = ({
           style={{ flex: 1, minWidth: 0, cursor: 'text' }}
           truncate
           onDoubleClick={() => {
+            if (readOnly) return;
             setRenameValue(name);
             setRenaming(true);
           }}
@@ -176,25 +180,29 @@ export const SecretRow = ({
             </Tooltip>
           )}
         </CopyButton>
-        <Tooltip label={'Edit value'}>
-          <ActionIcon
-            size={'sm'}
-            variant={'subtle'}
-            onClick={() => setEditingValue('')}
-          >
-            <IconEdit size={14} />
-          </ActionIcon>
-        </Tooltip>
-        <Tooltip label={'Delete'}>
-          <ActionIcon
-            size={'sm'}
-            variant={'subtle'}
-            color={'red'}
-            onClick={() => void onDelete(name, environment)}
-          >
-            <IconTrash size={14} />
-          </ActionIcon>
-        </Tooltip>
+        {!readOnly && (
+          <>
+            <Tooltip label={'Edit value'}>
+              <ActionIcon
+                size={'sm'}
+                variant={'subtle'}
+                onClick={() => setEditingValue('')}
+              >
+                <IconEdit size={14} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={'Delete'}>
+              <ActionIcon
+                size={'sm'}
+                variant={'subtle'}
+                color={'red'}
+                onClick={() => void onDelete(name, environment)}
+              >
+                <IconTrash size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </>
+        )}
       </Group>
     </Group>
   );

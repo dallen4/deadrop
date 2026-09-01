@@ -4,6 +4,7 @@ import 'dotenv/config';
 import { deadrop } from 'core';
 import { checkNodeVersion, checkBunVersion } from 'lib/util';
 import { migrateLegacyCreds } from 'lib/auth/cache';
+import { logDebug } from 'lib/log';
 
 checkBunVersion();
 checkNodeVersion();
@@ -17,8 +18,9 @@ const exitSignals: NodeJS.Signals[] = [
   'SIGQUIT',
 ];
 
-for (const signal in exitSignals)
-  process.on(signal, async (code) => {
-    console.log('PROGRAM EXITING');
+// `in` iterated array indices, so these bound to "0"/"1"/"2" and never fired
+for (const signal of exitSignals)
+  process.on(signal, () => {
+    logDebug('PROGRAM EXITING');
     process.exit(1);
   });

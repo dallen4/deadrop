@@ -1,24 +1,25 @@
+import { TURSO_ORGANIZATION } from '../constants';
 import { createTursoClient } from './client';
 import { createLifecycleHandlers } from './lifecycle';
 import { createProvisionHandlers } from './provision';
 
 export { createTursoClient, TursoApiError } from './client';
 export type { TursoClient } from './client';
-export { createProvisionHandlers } from './provision';
 export { createLifecycleHandlers } from './lifecycle';
+export { createProvisionHandlers } from './provision';
 export {
   fileUrl,
   syncUrl,
-  vaultSyncUrl,
   syncUrlToHttps,
   tursoUploadUrl,
-  vaultNameFromUserId,
   userOwnsVault,
+  vaultNameFromUserId,
+  vaultSyncUrl,
 } from './utils';
 
 export const createVaultUtils = (
-  organization: string,
   apiToken: string,
+  organization: string = TURSO_ORGANIZATION,
 ) => {
   const client = createTursoClient(organization, apiToken);
 

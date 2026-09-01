@@ -1,17 +1,20 @@
-import { randomBytes } from 'crypto';
-import { rmSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { initDBClient } from 'db/init';
 import { createSecretsHelpers } from '@shared/db/secrets';
-import { loadConfig, loadConfigFromPath } from 'lib/config';
+import { VaultDBConfig } from '@shared/types/config';
+import { randomBytes } from 'crypto';
+import { initDBClient } from 'db/init';
+import { rmSync } from 'fs';
 import {
+  MintStrategy,
   mintVaultToken,
+  mintVaultTokenWithApiKey,
+  resolveMintStrategy,
   VaultNotFoundError,
 } from 'lib/auth/vault-token';
+import { loadConfig, loadConfigFromPath } from 'lib/config';
+import { logError, logInfo, logWarning } from 'lib/log';
 import { runWithEnv } from 'lib/process';
-import { logError, logInfo } from 'lib/log';
-import { VaultDBConfig } from '@shared/types/config';
+import { tmpdir } from 'os';
+import { join } from 'path';
 
 type InjectOptions = {
   vault?: string;
@@ -20,26 +23,78 @@ type InjectOptions = {
   override: boolean;
   refreshToken?: boolean;
   verbose?: boolean;
+  ci?: boolean;
 };
 
 type ResolvedVault = {
-  vaultName?: string;
+  // What this run calls the vault: the config key, what CI passed, or the
+  // cloud name once a mint resolves one. Local to the run — never sent
+  // anywhere except as the mint input on the session path.
+  vaultName: string;
   environment: string;
   vault: VaultDBConfig;
   // vault.location is a temp replica we own and must clean up on exit.
   ephemeral: boolean;
+  strategy: MintStrategy;
 };
 
-async function resolveVault(
-  options: InjectOptions,
-): Promise<ResolvedVault> {
-  const decryptionKey = process.env.DEADROP_VAULT_KEY;
+// `--ci` asserts the machine path is available rather than selecting it, so
+// a misconfigured pipeline fails here instead of silently falling back to an
+// interactive session that has no way to authenticate.
+function assertCiCredentials(options: InjectOptions) {
+  if (!options.ci) return;
 
-  // Config-free path: DEADROP_VAULT_KEY present means CI is supplying
-  // everything itself — skip loadConfig/loadConfigFromPath entirely, even
-  // if a .deadroprc happens to be discoverable on this machine.
-  if (decryptionKey) {
-    const vaultName = options.vault ?? process.env.DEADROP_VAULT;
+  const missing: string[] = [];
+
+  if (!process.env.DEADROP_API_KEY) missing.push('DEADROP_API_KEY');
+  if (!process.env.DEADROP_VAULT_KEY)
+    missing.push('DEADROP_VAULT_KEY');
+
+  if (missing.length) {
+    logError(`--ci requires ${missing.join(' and ')} to be set.`);
+    process.exit(1);
+  }
+}
+
+// The only writer of the environment binding. Both callers are on the
+// ephemeral path, which exists only because DEADROP_VAULT_KEY is set — and
+// that key decrypts exactly one environment.
+function bindEnvironment(
+  resolved: ResolvedVault,
+  environment: string,
+) {
+  resolved.environment = environment;
+  resolved.vault.environments[environment] =
+    process.env.DEADROP_VAULT_KEY!;
+}
+
+// CI supplies the vault, key and environment through env vars, so there is
+// no config to load and the replica is a throwaway we delete on exit.
+function resolveEphemeralVault(
+  options: InjectOptions,
+): ResolvedVault {
+  const base: Omit<ResolvedVault, 'strategy'> = {
+    vaultName:
+      options.vault ?? process.env.DEADROP_VAULT ?? 'default',
+    environment: '',
+    vault: {
+      location: join(
+        tmpdir(),
+        `deadrop-inject-${randomBytes(8).toString('hex')}.db`,
+      ),
+      environments: {},
+    },
+    ephemeral: true,
+  };
+
+  const resolved: ResolvedVault = {
+    ...base,
+    strategy: resolveMintStrategy(base, options.refreshToken),
+  };
+
+  // An API key's claims carry the environment; every other path has to be
+  // told which one to decrypt.
+  if (resolved.strategy !== MintStrategy.ApiKey) {
     const environment =
       options.environment ?? process.env.DEADROP_ENVIRONMENT;
 
@@ -51,32 +106,108 @@ async function resolveVault(
       process.exit(1);
     }
 
-    const vault: VaultDBConfig = {
-      location: join(
-        tmpdir(),
-        `deadrop-inject-${randomBytes(8).toString('hex')}.db`,
-      ),
-      environments: { [environment]: decryptionKey },
-    };
-
-    return { vaultName, environment, vault, ephemeral: true };
+    bindEnvironment(resolved, environment);
   }
 
+  return resolved;
+}
+
+async function resolveConfigVault(
+  options: InjectOptions,
+): Promise<ResolvedVault> {
   const { config } = options.config
     ? await loadConfigFromPath(options.config)
     : await loadConfig();
 
   const vaultName = options.vault ?? config.active_vault.name;
-  const environment =
-    options.environment ?? config.active_vault.environment;
-
   const vault = config.vaults[vaultName];
+
   if (!vault) {
     logError(`Vault '${vaultName}' not found in config.`);
     process.exit(1);
   }
 
-  return { vaultName, environment, vault, ephemeral: false };
+  const base: Omit<ResolvedVault, 'strategy'> = {
+    vaultName,
+    environment:
+      options.environment ?? config.active_vault.environment,
+    vault,
+    ephemeral: false,
+  };
+
+  return {
+    ...base,
+    strategy: resolveMintStrategy(base, options.refreshToken),
+  };
+}
+
+// The single mint site for every path. `cloud` is built *from* the mint
+// result so the local label can never leak into the derived sync URL.
+async function applyMintStrategy(resolved: ResolvedVault) {
+  const { strategy, vaultName } = resolved;
+
+  if (
+    strategy === MintStrategy.None ||
+    strategy === MintStrategy.Cached
+  )
+    return;
+
+  const isApiKey = strategy === MintStrategy.ApiKey;
+
+  try {
+    // The worker prefixes the label it is given, so send the label — an
+    // already-resolved name would get prefixed a second time.
+    const { name, token, environment } = isApiKey
+      ? await mintVaultTokenWithApiKey()
+      : await mintVaultToken(vaultName);
+
+    resolved.vault.cloud = { name, authToken: token };
+
+    // The key's claims, not the local label, decide which vault an API key
+    // run reads — adopt the resolved name so logs name what actually synced.
+    if (isApiKey) resolved.vaultName = name;
+
+    if (environment) bindEnvironment(resolved, environment);
+  } catch (err) {
+    if (err instanceof VaultNotFoundError) {
+      logError(err.message);
+      process.exit(1);
+    }
+
+    const reason = (err as Error).message;
+
+    logError(
+      isApiKey
+        ? `Could not mint a CI token for this key: ${reason}`
+        : `Could not mint a Turso token for '${vaultName}': ` +
+            `${reason} — sign in with 'deadrop login' or set ` +
+            `DEADROP_API_KEY.`,
+    );
+    process.exit(1);
+  }
+}
+
+async function parseVaultFromOptions(options: InjectOptions) {
+  assertCiCredentials(options);
+
+  const configFree = !!process.env.DEADROP_VAULT_KEY;
+
+  // The config-free path reads no config at all, so say so rather than
+  // silently dropping a path the caller explicitly pointed us at.
+  if (configFree && options.config)
+    logWarning(
+      `Ignoring --config: DEADROP_VAULT_KEY is set, so the vault is ` +
+        `resolved from the environment.`,
+    );
+
+  const resolved = configFree
+    ? resolveEphemeralVault(options)
+    : await resolveConfigVault(options);
+
+  // Must run before reading `environment` — the API key path supplies it.
+  await applyMintStrategy(resolved);
+
+  return resolved;
 }
 
 export async function inject(
@@ -84,66 +215,50 @@ export async function inject(
   options: InjectOptions,
 ) {
   if (!command?.length) {
-    logError('No command provided. Usage: deadrop inject -- <command>');
+    logError(
+      'No command provided. Usage: deadrop inject -- <command>',
+    );
     process.exit(1);
   }
 
   const { vaultName, environment, vault, ephemeral } =
-    await resolveVault(options);
+    await parseVaultFromOptions(options);
 
-  let cloud = vault.cloud;
-  // only cloud vaults or the config-free CI path mint a token
-  const usesCloud = ephemeral || !!cloud;
-  if (usesCloud && (!cloud?.authToken || options.refreshToken)) {
-    let minted;
-    try {
-      minted = await mintVaultToken(vaultName);
-    } catch (err) {
-      if (err instanceof VaultNotFoundError) {
-        logError(err.message);
-        process.exit(1);
-      }
-      throw err;
-    }
-    if (!minted) {
-      logError(
-        `Could not mint a Turso token for '${vaultName ?? 'default vault'}' ` +
-          `— sign in (deadrop login) or set DEADROP_API_KEY.`,
-      );
-      process.exit(1);
-    }
-    // minted.name is the resolved remote name, which the local label
-    // (`vaultName`) is not — the sync URL is derived from it.
-    cloud = minted;
-  }
+  const db = await initDBClient(vault.location, vault.cloud);
 
-  const db = await initDBClient(vault.location, cloud);
-  const { getAllSecrets } = createSecretsHelpers({ ...vault, cloud }, db);
+  const { getAllSecrets } = createSecretsHelpers(vault, db);
+
   const secrets = await getAllSecrets(environment);
 
   const names = Object.keys(secrets);
+
   logInfo(
-    `Injecting ${names.length} secret(s) from ` +
-      `'${vaultName ?? 'default vault'}' (${environment})`,
+    `Injecting ${names.length} secret(s) from '${vaultName}' (${environment})`,
   );
+
   if (options.verbose && names.length)
     logInfo(`Variables: ${names.join(', ')}`);
 
   let exitCode = 0;
+
   try {
     const [cmd, ...args] = command;
+
     exitCode = await runWithEnv(cmd, args, secrets, {
       override: options.override,
     });
   } catch (err) {
     logError((err as Error).message);
+
     exitCode = 127;
   } finally {
     db.$client.close();
+
     // Remove the throwaway CI replica (db + sync sidecars); never a real vault.
     if (ephemeral)
       for (const suffix of ['', '-wal', '-shm', '-info'])
         rmSync(`${vault.location}${suffix}`, { force: true });
   }
+
   process.exit(exitCode);
 }

@@ -1,4 +1,5 @@
 export enum AppHeaders {
+  Authorization = 'Authorization',
   ContentType = 'content-type',
   IpAddress = 'cf-connecting-ip',
 }
@@ -7,6 +8,10 @@ export enum ContentType {
   Plaintext = 'text/plain',
   FormData = 'application/x-www-form-urlencoded',
   Json = 'application/json',
+}
+
+export enum AuthScopes {
+  VaultInject = 'vault:inject',
 }
 
 export type AppRouteParts =
@@ -20,6 +25,7 @@ export const AppRouteParts = {
   AuthRoot: '/auth',
   CreateSignInToken: '/token',
   Me: '/me',
+  CreateApiKey: '/key',
 
   // peerjs
   PeerJsRoot: '/peerjs',
@@ -29,6 +35,7 @@ export const AppRouteParts = {
   VaultRoot: '/vault',
   NameParam: '/:name',
   Tokens: '/tokens',
+  CiTokens: '/tokens/ci',
   Rotate: '/rotate',
   Lock: '/lock',
   Unlock: '/unlock',
@@ -45,17 +52,23 @@ export const AppRoutes = {
 
   // auth
   AuthRoot: AppRouteParts.AuthRoot,
-  AuthCreateSignInToken: `${AppRouteParts.AuthRoot}${AppRouteParts.CreateSignInToken}` as const,
+  AuthCreateSignInToken:
+    `${AppRouteParts.AuthRoot}${AppRouteParts.CreateSignInToken}` as const,
   AuthMe: `${AppRouteParts.AuthRoot}${AppRouteParts.Me}` as const,
 
   // peerjs paths
   PeerJsRoot: AppRouteParts.PeerJsRoot,
-  PeerJsGenerateId: `${AppRouteParts.PeerJsRoot}${AppRouteParts.GenerateId}` as const,
+  PeerJsGenerateId:
+    `${AppRouteParts.PeerJsRoot}${AppRouteParts.GenerateId}` as const,
 
   // vault paths
   VaultRoot: AppRouteParts.VaultRoot,
-  VaultTokens: `${AppRouteParts.VaultRoot}${AppRouteParts.Tokens}` as const,
-  RotateVault: `${AppRouteParts.VaultRoot}${AppRouteParts.Rotate}` as const,
-  LockVault: `${AppRouteParts.VaultRoot}${AppRouteParts.Lock}` as const,
-  UnlockVault: `${AppRouteParts.VaultRoot}${AppRouteParts.Unlock}` as const,
+  VaultTokens:
+    `${AppRouteParts.VaultRoot}${AppRouteParts.Tokens}` as const,
+  RotateVault:
+    `${AppRouteParts.VaultRoot}${AppRouteParts.Rotate}` as const,
+  LockVault:
+    `${AppRouteParts.VaultRoot}${AppRouteParts.Lock}` as const,
+  UnlockVault:
+    `${AppRouteParts.VaultRoot}${AppRouteParts.Unlock}` as const,
 } as const;

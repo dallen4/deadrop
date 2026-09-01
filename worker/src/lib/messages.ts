@@ -13,3 +13,15 @@ export const PermissionDenied = {
 export const ServiceForbidden = {
   message: 'Invalid service token!',
 };
+
+export const InvalidApiKey = {
+  message: 'Provided key has invalid scope(s) and/or claims!',
+};
+
+export const AuthUnavailable = {
+  message: 'Unable to verify credentials, try again shortly!',
+};
+
+export const KeyNotIssued = {
+  message: 'API key was created without a usable secret!',
+};

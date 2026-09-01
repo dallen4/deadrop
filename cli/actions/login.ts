@@ -1,7 +1,7 @@
 import { createClerkClient } from 'lib/auth/clerk';
 import { createLocalAuthServer } from 'lib/auth/localhostServer';
 import { LOCALHOST_AUTH_URL, LOGIN_URL } from 'lib/constants';
-import { loader, logError, logInfo } from 'lib/log';
+import { loader, logDebug, logError, logInfo } from 'lib/log';
 import open from 'open';
 
 export default async function login() {
@@ -44,7 +44,7 @@ export default async function login() {
       success = (res && res.status === 'complete') || false;
     } else throw new Error('Failed to authenticate!');
   } catch (err) {
-    console.error(err);
+    logDebug(err);
   }
 
   loader.stop();

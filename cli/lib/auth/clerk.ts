@@ -1,11 +1,10 @@
-import type { Clerk as ClerkType } from '@clerk/clerk-js';
 import { Clerk } from '@clerk/clerk-js';
 import { getToken, setSession } from './cache';
 
 global.window = global.window || {};
 
 const clerkFactory = () => {
-  let clerkInstance: ClerkType;
+  let clerkInstance: Clerk;
 
   return async () => {
     if (clerkInstance) return clerkInstance;

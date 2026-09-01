@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { description, version } from './package.json';
+import { createApiKey } from 'actions/apiKeys';
 import init from 'actions/init';
 import login from 'actions/login';
 import { drop } from 'actions/drop';
@@ -32,6 +33,11 @@ deadrop
   .name('deadrop')
   .description(description)
   .version(version)
+  .option('--debug', 'log verbose diagnostic output')
+  // logDebug reads the env var, so set it before any action runs
+  .hook('preAction', (thisCommand) => {
+    if (thisCommand.opts().debug) process.env.DEBUG_MODE = '1';
+  })
   .addHelpText('beforeAll', () => {
     displayWelcomeMessage();
     return '';
@@ -39,7 +45,9 @@ deadrop
 
 deadrop
   .command('init')
-  .description('set up a default vault and config in the current directory')
+  .description(
+    'set up a default vault and config in the current directory',
+  )
   .option(
     '-y, --yes',
     'skip prompts and accept defaults (also implied by a non-TTY shell or CI)',
@@ -100,6 +108,10 @@ deadrop
   .option(
     '--refresh-token',
     'mint a fresh read-only Turso token via /vault/tokens',
+  )
+  .option(
+    '--ci',
+    'mint a fresh read-only Turso token for CI/CD via /vault/tokens/ci',
   )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
@@ -238,5 +250,31 @@ secretRoot
   .command('remove')
   .argument('[name]', 'name of the secret to remove')
   .action(secretRemove);
+
+// api key commands
+
+const apiKeysRoot = deadrop
+  .command('apiKeys')
+  .description('manage API keys for CI/CD secret injection');
+
+apiKeysRoot
+  .command('create')
+  .description(
+    `issue an API key scoped to one cloud vault and environment
+use it as DEADROP_API_KEY with 'deadrop inject --ci'`,
+  )
+  .option(
+    '-v, --vault <name>',
+    'cloud vault to scope the key to (prompts to select when omitted)',
+  )
+  .option(
+    '-e, --environment <env>',
+    'environment to scope the key to (prompts to select when omitted)',
+  )
+  .option(
+    '-y, --yes',
+    'skip the confirmation prompt (also implied by a non-TTY shell or CI)',
+  )
+  .action(createApiKey);
 
 export { deadrop };

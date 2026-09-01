@@ -9,8 +9,6 @@ export async function vaultImport(envPath: string) {
 
   const { vaults, active_vault } = config;
 
-  const { key } = vaults[active_vault.name];
-
   const vaultConfig = vaultExists(vaults, active_vault.name);
 
   if (!vaultConfig) {
