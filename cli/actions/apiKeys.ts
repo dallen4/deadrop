@@ -1,15 +1,25 @@
 import { confirm, select } from '@inquirer/prompts';
 import { VaultStore } from '@shared/types/config';
 import chalk from 'chalk';
+import { copyToClipboard } from 'lib/clipboard';
 import { createDeadropClient } from 'lib/api';
 import { loadConfig } from 'lib/config';
-import { logDebug, logError, logInfo, logWarning } from 'lib/log';
+import {
+  canReveal,
+  logDebug,
+  logError,
+  logInfo,
+  logWarning,
+  revealSecret,
+} from 'lib/log';
 import { exit } from 'process';
 
 type CreateApiKeyOptions = {
   vault?: string;
   environment?: string;
   yes?: boolean;
+  print?: boolean;
+  copy?: boolean;
 };
 
 // A key mints Turso tokens for a remote database, so a local-only vault
@@ -82,6 +92,55 @@ async function pickEnvironment(
   });
 }
 
+// The key is shown once and is never retrievable again, so the default is
+// the alternate screen — it leaves nothing behind in scrollback. Raw stdout
+// is opt-in, since that is the path a pipe or a capturing agent reads.
+async function handOffKey(
+  name: string,
+  environment: string,
+  key: string,
+  options: CreateApiKeyOptions,
+) {
+  const pairWith =
+    `Pair it with the '${environment}' DEADROP_VAULT_KEY ` +
+    'in your CI secrets.';
+
+  if (options.copy) {
+    if (await copyToClipboard(key)) {
+      logInfo(
+        `Created '${chalk.bold(name)}', copied to your clipboard.`,
+      );
+      logWarning(pairWith);
+      return;
+    }
+
+    logWarning(
+      'Could not reach a clipboard, showing the key instead.',
+    );
+  }
+
+  if (options.print) {
+    process.stdout.write(`${key}\n`);
+    return;
+  }
+
+  if (!canReveal()) {
+    logError(
+      'Refusing to print an API key to a non-interactive stream. Run ' +
+        'this in a terminal, or pass --print to pipe it deliberately.',
+    );
+    return exit(1);
+  }
+
+  await revealSecret({
+    title: `Created '${name}' — this is the only time it is shown.`,
+    value: `DEADROP_API_KEY=${key}`,
+    hint: pairWith,
+  });
+
+  logInfo(`Created '${chalk.bold(name)}'`);
+}
+
 export async function createApiKey(
   options: CreateApiKeyOptions = {},
 ) {
@@ -135,12 +194,7 @@ export async function createApiKey(
       key: string;
     };
 
-    logInfo(`Created '${chalk.bold(name)}'`);
-    logInfo(`DEADROP_API_KEY=${chalk.bold(key)}`);
-    logWarning(
-      'Copy this now, it is not retrievable later. Pair it with the ' +
-        `'${environment}' DEADROP_VAULT_KEY in your CI secrets.`,
-    );
+    await handOffKey(name, environment, key, options);
 
     return exit(0);
   } catch (err) {

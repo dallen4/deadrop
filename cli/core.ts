@@ -275,6 +275,14 @@ use it as DEADROP_API_KEY with 'deadrop inject --ci'`,
     '-y, --yes',
     'skip the confirmation prompt (also implied by a non-TTY shell or CI)',
   )
+  .option(
+    '--print',
+    'write the key to stdout instead of showing it on a scrollback-free screen',
+  )
+  .option(
+    '--copy',
+    'copy the key to your clipboard without showing it',
+  )
   .action(createApiKey);
 
 export { deadrop };
