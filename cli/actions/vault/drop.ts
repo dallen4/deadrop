@@ -1,11 +1,11 @@
-import { createClient } from '@shared/client';
-import { initDropContext } from '@shared/lib/machines/drop';
 import { VaultTokenAccess } from '@shared/lib/constants';
+import { initDropContext } from '@shared/lib/machines/drop';
 import { userOwnsVault } from '@shared/lib/turso/utils';
 import {
   composeVaultShare,
   pickEnvironments,
 } from '@shared/lib/vault-share';
+import { createDeadropClient } from 'lib/api';
 import { createClerkClient } from 'lib/auth/clerk';
 import { loadConfig } from 'lib/config';
 import { logError, logInfo } from 'lib/log';
@@ -73,9 +73,7 @@ export async function vaultDrop(
   }
 
   const sessionToken = await clerkClient.session.getToken();
-  const deadropClient = createClient(process.env.DEADROP_API_URL!, {
-    headers: { Authorization: `Bearer ${sessionToken}` },
-  });
+  const deadropClient = await createDeadropClient(true);
 
   const response = await deadropClient.vault.tokens.$post({
     json: {
@@ -86,7 +84,9 @@ export async function vaultDrop(
   });
 
   if (response.status !== 201) {
-    logError(`Could not mint a read-only token: ${await response.text()}`);
+    logError(
+      `Could not mint a read-only token: ${await response.text()}`,
+    );
     return process.exit(1);
   }
 
@@ -109,7 +109,9 @@ export async function vaultDrop(
     environments,
     cloud: { name: remoteName, authToken: token },
   });
-  ctx.maxGrabbers = options.grabbers ? Number(options.grabbers) : null;
+  ctx.maxGrabbers = options.grabbers
+    ? Number(options.grabbers)
+    : null;
 
   await dropSecret(ctx, sessionToken);
 }

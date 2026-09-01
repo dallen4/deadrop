@@ -31,7 +31,7 @@ export async function vaultDelete(vaultNameInput: string) {
     }
     const { location, cloud } = vaults[vaultNameInput];
 
-    const deadropClient = await createDeadropClient();
+    const deadropClient = await createDeadropClient(true);
 
     if (cloud) {
       logInfo(
