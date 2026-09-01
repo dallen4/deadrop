@@ -1,12 +1,7 @@
 import { z } from 'zod';
 
-// The mint routes are the one place a worker-side field rename goes
-// unnoticed: the CLI reads the JSON body straight into credentials, so a
-// mismatch surfaces as an unauthenticated sync that injects nothing and
-// still exits 0. Both ends derive their shape from here instead.
-
-// `name` is the resolved remote database name, not the local label — the
-// sync URL is derived from it (vaultSyncUrl), never stored.
+// `name` is the resolved remote database name, not the local label —
+// vaultSyncUrl derives the sync URL from it.
 export const MintedVaultCredsSchema = z.object({
   token: z.string().min(1),
   name: z.string().min(1),

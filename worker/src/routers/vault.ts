@@ -24,7 +24,7 @@ import {
   VaultOwnerSchema,
   VaultRotateSchema,
   VaultTokenSchema,
-} from 'lib/vault';
+} from '../lib/vault';
 
 const vaultRouter = hono()
   .post(

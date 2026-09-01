@@ -21,3 +21,7 @@ export const InvalidApiKey = {
 export const AuthUnavailable = {
   message: 'Unable to verify credentials, try again shortly!',
 };
+
+export const KeyNotIssued = {
+  message: 'API key was created without a usable secret!',
+};
