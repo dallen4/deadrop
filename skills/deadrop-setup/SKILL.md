@@ -26,13 +26,16 @@ asked to protect.
   means it lands in shell history and in this transcript. If a secret is not
   already in a file, stop and ask the user to add it themselves (in Claude
   Code they can run `! deadrop secret add NAME VALUE`).
+- **Never run `deadrop apiKeys create`.** It prints the key to stdout, once —
+  running it here puts a live credential in the transcript and nowhere the
+  user can retrieve it. Tell them to run it themselves.
 - **Verify by name, never by value.** `--verbose` prints variable names only.
 
 If you cannot complete a step without breaking one of these, stop and say so.
 
 `allowed-tools` above deliberately lists individual subcommands rather than
-`deadrop:*`, so `vault export`, `vault sync`, and `secret add` are not
-permitted at all rather than merely discouraged. Keep it that way.
+`deadrop:*`, so `vault export`, `vault sync`, `secret add`, and `apiKeys` are
+not permitted at all rather than merely discouraged. Keep it that way.
 
 ## Scope
 
@@ -166,6 +169,32 @@ deadrop vault env add staging
 deadrop vault drop
 ```
 
-In CI, skip the config file entirely — `DEADROP_API_KEY` plus
-`DEADROP_VAULT_KEY` and `DEADROP_ENVIRONMENT` let `deadrop inject` run with no
-`.deadroprc` at all, minting a short-lived read-only token per job.
+## CI
+
+CI skips the config file entirely. Two variables, nothing else:
+
+```yaml
+env:
+  DEADROP_API_KEY: ${{ secrets.DEADROP_API_KEY }}
+  DEADROP_VAULT_KEY: ${{ secrets.DEADROP_VAULT_KEY }}
+run: deadrop inject --ci -- npm run build
+```
+
+The API key is scoped to one vault and one environment at issue time, so both
+come off its claims — no `.deadroprc`, no `DEADROP_VAULT`, no
+`DEADROP_ENVIRONMENT`. Each run mints its own read-only token that expires in
+five minutes. `--ci` fails immediately naming whichever variable is missing,
+rather than falling back to an interactive sign-in that cannot succeed in a
+container. Needs 1.10.0.
+
+The user issues the key themselves — see the hard rule above:
+
+```
+deadrop apiKeys create -v <vault> -e <environment>
+```
+
+`DEADROP_VAULT_KEY` is that environment's decryption key from `.deadroprc`,
+which you must not read. Have them copy it out.
+
+Secrets reach only the one command `inject` spawns, so each step that needs
+them takes its own `deadrop inject --ci --` wrapper.
