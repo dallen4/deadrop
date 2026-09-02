@@ -1,5 +1,28 @@
 # cli
 
+## 1.10.0
+
+### Minor Changes
+
+- 7e9f58e: Issue and use scoped API keys for CI. `deadrop apiKeys create` walks you through picking one of your cloud vaults and one of its environments, then prints a key bound to exactly that pair — pass `-v`/`-e` to skip the prompts, or `-y` to skip the confirmation. Keys are named with the vault, environment and issue time so they are easy to tell apart and revoke in your Clerk account.
+
+  Set that key as `DEADROP_API_KEY` alongside `DEADROP_VAULT_KEY` and `deadrop inject --ci -- <command>` needs nothing else: the vault and environment both come from the key's own claims, so a pipeline needs no config file, no `DEADROP_VAULT`, and no `DEADROP_ENVIRONMENT`. The token it mints is read-only and expires in five minutes. `--ci` fails immediately naming whichever variable is missing, instead of falling back to an interactive sign-in that cannot succeed in a container.
+
+  Token minting is also more dependable everywhere. A cloud vault configured in `.deadroprc` mints again when its cached token is absent or `--refresh-token` is given, the minted token is applied to the vault it was issued for, and a vault that no longer exists, a rejected key, or an unexpected response now stop the run with a readable message rather than injecting nothing and exiting successfully.
+
+- 40ca91a: Add a `--debug` flag for verbose diagnostic output, and route stray `console` calls through it. `vault import` no longer prints the resolved `.env` path on every run, and failed logins, vault creations, and cloud replica deletions no longer dump raw errors or response bodies unless `--debug` is set.
+
+### Patch Changes
+
+- 8675f04: Commands that talk to the deadrop API now share one client, so being signed out reports the same "run `deadrop login`" message everywhere instead of a different one per command. `deadrop vault delete` checks up front rather than discovering it through a rejected request.
+- 9bef92f: Fix `npm install deadrop` failing with `ETARGET No matching version found for shared@1.2.0`.
+
+  The private `shared` workspace package was declared in `dependencies`, so publishing rewrote `workspace:*` into a concrete version of an unrelated public package named `shared`. It is now stripped from the manifest at publish time, alongside the existing `cli` to `deadrop` rename. `shared` stays a real dependency in the repo so a shared-only change still cascades a version bump to the CLI, which is required because esbuild bundles it into the published artifact.
+
+- 7d51678: Bind the `SIGINT`/`SIGTERM`/`SIGQUIT` handlers to the signals they were meant for. `for...in` iterated the array's indices, so they registered against `"0"`, `"1"`, and `"2"` and never fired.
+- Updated dependencies [9786cb6]
+  - shared@1.3.0
+
 ## 1.9.0
 
 ### Minor Changes
