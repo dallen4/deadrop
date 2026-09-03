@@ -52,6 +52,10 @@ deadrop
     '-y, --yes',
     'skip prompts and accept defaults (also implied by a non-TTY shell or CI)',
   )
+  .option(
+    '--global',
+    'initialize globally instead of in the current directory',
+  )
   .action(init);
 
 deadrop.command('login').action(login);

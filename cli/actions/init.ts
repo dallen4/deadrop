@@ -2,8 +2,13 @@ import { confirm } from '@inquirer/prompts';
 import { initDBClient } from 'db/init';
 import { existsSync } from 'fs';
 import { appendFile, mkdir } from 'fs/promises';
-import { initConfig, loadConfig, saveConfig } from 'lib/config';
+import {
+  initConfig,
+  loadConfigFromPath,
+  saveConfig,
+} from 'lib/config';
 import { CONFIG_FILE_NAME } from '@shared/lib/constants';
+import { globalConfigDir } from 'lib/global-config';
 import { logInfo } from 'lib/log';
 import { resolve } from 'path';
 import { cwd } from 'process';
@@ -12,30 +17,47 @@ import {
   STORAGE_DIR_NAME,
 } from '@shared/lib/constants';
 
-export default async function (options: { yes?: boolean } = {}) {
-  const defaultConfigPath = resolve(cwd(), CONFIG_FILE_NAME);
-  const defaultVaultPath = resolve(
-    STORAGE_DIR_NAME,
-    DEFAULT_VAULT_NAME,
-  );
+export default async function (
+  options: { yes?: boolean; global?: boolean } = {},
+) {
+  // The global dir is what loadConfig falls back to, and the same one the
+  // desktop app writes — an init there is shared between both.
+  const targetDir = options.global ? globalConfigDir() : cwd();
+
+  const defaultConfigPath = resolve(targetDir, CONFIG_FILE_NAME);
+  const storageDir = resolve(targetDir, STORAGE_DIR_NAME);
+  const defaultVaultPath = resolve(storageDir, DEFAULT_VAULT_NAME);
+
+  if (!existsSync(targetDir))
+    await mkdir(targetDir, { recursive: true });
 
   const defaultConfig = await initConfig(defaultVaultPath);
 
-  await saveConfig(cwd(), defaultConfig);
+  await saveConfig(targetDir, defaultConfig);
 
-  // validate it can be loaded
-  const { config } = await loadConfig();
+  // Validate the file just written, not whatever loadConfig would discover
+  // — a project-scoped .deadroprc in cwd would shadow a global init.
+  const { config } = await loadConfigFromPath(defaultConfigPath);
 
-  if (!existsSync(STORAGE_DIR_NAME))
-    await mkdir(STORAGE_DIR_NAME, { recursive: true });
+  if (!existsSync(storageDir))
+    await mkdir(storageDir, { recursive: true });
 
   const { location } = config.vaults.default;
 
   // TODO consider writing NODE_ENV to vault
   const db = await initDBClient(location);
 
-  logInfo(`Default vault initalized & config created at '${defaultConfigPath}'!
-We recommend adding the following to your .gitignore:
+  logInfo(
+    `Default vault initalized & config created at '${defaultConfigPath}'!`,
+  );
+
+  // Nothing to ignore outside a project directory.
+  if (options.global) {
+    logInfo('Deadrop setup complete!');
+    process.exit(0);
+  }
+
+  logInfo(`We recommend adding the following to your .gitignore:
 ${CONFIG_FILE_NAME}
 ${STORAGE_DIR_NAME}/`);
 
