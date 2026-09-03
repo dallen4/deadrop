@@ -24,7 +24,7 @@ worker/
 │   │   └── vault.ts          # Vault create/tokens/get/delete/lock/unlock (Turso via @shared/lib/turso)
 │   └── lib/
 │       ├── http/core.ts      # Hono instance + custom context/middleware types
-│       ├── middleware.ts     # cors, tracing, redis, authenticated(), restricted(), service()
+│       ├── middleware.ts     # cors, tracing, redis, authenticated(), restricted(), apiKey(), service()
 │       ├── billing.ts        # getUserPlan/getPlanLimits/hasFeature from Clerk claims
 │       ├── messages.ts       # Message validation helpers
 │       ├── durable_objects/
@@ -49,10 +49,12 @@ worker/
 |--------|------|-------------|
 | GET | `/` | Health check (API metadata) |
 | `*` | `/auth/*` | Clerk auth endpoints |
+| POST | `/auth/key` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated()` + `restricted()`) |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
 | POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true })` + `restricted()`) |
 | POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true })` + `restricted()`) |
+| POST | `/vault/tokens/ci` | Exchange a `vault:inject` API key for a 5m read-only Turso token — vault and environment come off the key's claims, no request body (`apiKey()` + `restricted()`) |
 | POST | `/vault/rotate` | Invalidate **every** token for a vault — optional `name` in the body, same as `/vault/tokens`, so the default vault stays addressable (`authenticated()` + `restricted()`, deliberately no `allowApiKey`) |
 | GET | `/vault/:name` | Get vault metadata (`authenticated({ allowApiKey: true })`) |
 | DELETE | `/vault/:name` | Delete a vault (`authenticated()` + `restricted()`) |
