@@ -15,6 +15,9 @@ const SOURCE = join(root, 'package.json');
 const TAURI_CONF = join(root, 'src-tauri/tauri.conf.json');
 const CARGO_TOML = join(root, 'src-tauri/Cargo.toml');
 const CARGO_LOCK = join(root, 'src-tauri/Cargo.lock');
+const SHARED_CONSTANTS = join(root, '../shared/lib/constants.ts');
+
+const APP_IDENTIFIER = /APP_IDENTIFIER = '([^']*)'/;
 
 // Anchored so they can only ever match the package's own version, never a
 // dependency's.
@@ -24,6 +27,33 @@ const CARGO_LOCK_VERSION =
 
 const check = process.argv.includes('--check');
 const { version } = JSON.parse(readFileSync(SOURCE, 'utf8'));
+
+// Tauri derives app_data_dir from this identifier, and the CLI derives its
+// global config dir from APP_IDENTIFIER. If the two disagree they silently
+// keep separate global vaults. Never auto-written: changing a shipped
+// identifier moves every installed user's data.
+const expectedIdentifier = readFileSync(
+  SHARED_CONSTANTS,
+  'utf8',
+).match(APP_IDENTIFIER)?.[1];
+
+if (!expectedIdentifier) {
+  console.error(`No APP_IDENTIFIER found in ${SHARED_CONSTANTS}`);
+  process.exit(1);
+}
+
+const { identifier } = JSON.parse(readFileSync(TAURI_CONF, 'utf8'));
+
+if (identifier !== expectedIdentifier) {
+  console.error(
+    `tauri.conf.json identifier "${identifier}" does not match ` +
+      `APP_IDENTIFIER "${expectedIdentifier}".\n` +
+      'The CLI and desktop app would use different global vaults. ' +
+      'Reconcile them by hand — changing a shipped identifier orphans ' +
+      "existing users' app data.",
+  );
+  process.exit(1);
+}
 
 if (!version) {
   console.error('No version field in desktop/package.json');
@@ -41,8 +71,16 @@ const targets = [
       return JSON.stringify(conf, null, 2) + '\n';
     },
   },
-  { path: CARGO_TOML, label: 'Cargo.toml', pattern: CARGO_TOML_VERSION },
-  { path: CARGO_LOCK, label: 'Cargo.lock', pattern: CARGO_LOCK_VERSION },
+  {
+    path: CARGO_TOML,
+    label: 'Cargo.toml',
+    pattern: CARGO_TOML_VERSION,
+  },
+  {
+    path: CARGO_LOCK,
+    label: 'Cargo.lock',
+    pattern: CARGO_LOCK_VERSION,
+  },
 ];
 
 const drifted = [];
@@ -55,7 +93,9 @@ for (const target of targets) {
   if (target.pattern) {
     const match = text.match(target.pattern);
     if (!match) {
-      console.error(`Could not find a version to sync in ${target.label}`);
+      console.error(
+        `Could not find a version to sync in ${target.label}`,
+      );
       process.exit(1);
     }
     current = match[0].slice(match[1].length).replaceAll('"', '');
