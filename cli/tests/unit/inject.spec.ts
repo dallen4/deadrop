@@ -821,6 +821,144 @@ describe('inject', () => {
       expect(existsSync(`${replicaPath}${suffix}`)).toBe(false);
   });
 
+  // A shared preview/prod environment holds a superset, so a given job
+  // narrows and renames rather than getting its own environment.
+  const injectWithSecrets = async (
+    secrets: Record<string, string>,
+    options: Record<string, unknown>,
+  ) => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'preview' },
+        vaults: {
+          default: { location: './vault.db', environments: {} },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue(secrets),
+    } as any);
+
+    const runWithEnvSpy = vi
+      .spyOn(processModule, 'runWithEnv')
+      .mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(
+      () => undefined as never,
+    );
+
+    await inject(['node'], { override: true, ...options });
+
+    return runWithEnvSpy;
+  };
+
+  it('--only injects just the named secrets', async () => {
+    const runWithEnv = await injectWithSecrets(
+      { API_URL: 'a', TURN_PWD: 'b', UNRELATED: 'c' },
+      { only: 'API_URL,TURN_PWD' },
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({
+      API_URL: 'a',
+      TURN_PWD: 'b',
+    });
+  });
+
+  it('--only tolerates whitespace between names', async () => {
+    const runWithEnv = await injectWithSecrets(
+      { API_URL: 'a', TURN_PWD: 'b' },
+      { only: 'API_URL, TURN_PWD' },
+    );
+
+    expect(Object.keys(runWithEnv.mock.calls[0][2])).toEqual([
+      'API_URL',
+      'TURN_PWD',
+    ]);
+  });
+
+  it('--only exits 1 on a name the environment does not have', async () => {
+    const { logError } = await import('lib/log');
+    const { inject } = await import('actions/inject');
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'preview' },
+        vaults: {
+          default: { location: './vault.db', environments: {} },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({ API_URL: 'a' }),
+    } as any);
+
+    const exitSpy = vi
+      .spyOn(process, 'exit')
+      .mockImplementation(() => {
+        throw new Error('exit');
+      });
+
+    await expect(
+      inject(['node'], { override: true, only: 'API_URL,TYPOED' }),
+    ).rejects.toThrow('exit');
+
+    // A typo would otherwise inject nothing and exit 0.
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('TYPOED'),
+    );
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    exitSpy.mockRestore();
+  });
+
+  it('--prefix renames every injected variable', async () => {
+    const runWithEnv = await injectWithSecrets(
+      { DEADROP_API_URL: 'a', WEB_URL: 'b' },
+      { prefix: 'VITE_' },
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({
+      VITE_DEADROP_API_URL: 'a',
+      VITE_WEB_URL: 'b',
+    });
+  });
+
+  it('--only filters on stored names, then --prefix renames', async () => {
+    const runWithEnv = await injectWithSecrets(
+      { DEADROP_API_URL: 'a', WEB_URL: 'b', SERVER_ONLY: 'c' },
+      { only: 'DEADROP_API_URL,WEB_URL', prefix: 'VITE_' },
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({
+      VITE_DEADROP_API_URL: 'a',
+      VITE_WEB_URL: 'b',
+    });
+  });
+
+  it('injects everything when neither flag is given', async () => {
+    const runWithEnv = await injectWithSecrets(
+      { A: '1', B: '2' },
+      {},
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({ A: '1', B: '2' });
+  });
+
   it('config-based: never deletes the real vault db file', async () => {
     const { loadConfig } = await import('lib/config');
     const { initDBClient } = await import('db/init');

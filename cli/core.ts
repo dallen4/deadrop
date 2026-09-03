@@ -117,6 +117,14 @@ deadrop
     '--ci',
     'mint a fresh read-only Turso token for CI/CD via /vault/tokens/ci',
   )
+  .option(
+    '--only <names>',
+    'inject only these secrets, comma-separated',
+  )
+  .option(
+    '--prefix <prefix>',
+    'prepend this to every injected variable name',
+  )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
 
