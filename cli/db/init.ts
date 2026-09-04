@@ -11,17 +11,13 @@ export const initDBClient = async (
   path: string,
   cloudConfig?: CloudVaultConfig,
 ) => {
-  const [config, drizzleConfig] = initDBConfig(
-    path,
-    cloudConfig,
-  );
+  const [config, drizzleConfig] = initDBConfig(path, cloudConfig);
 
   const client = drizzle(createClient(config), drizzleConfig);
 
-  // Cloud vaults sync their schema from Turso; local file dbs can't sync.
+  // Turso provisions the table; a read-only token forbids the write.
   if (cloudConfig) await syncWithRetry(client.$client);
-
-  await ensureSecretsSchema(client.$client);
+  else await ensureSecretsSchema(client.$client);
 
   return client;
 };
