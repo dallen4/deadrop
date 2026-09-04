@@ -1,6 +1,6 @@
 [package]
 name = "deadrop"
-version = "0.3.1"
+version = "0.3.2"
 description = "End-to-end encrypted secret sharing"
 authors = ["Nieky Allen <nieky.allen@gmail.com>"]
 edition = "2021"
