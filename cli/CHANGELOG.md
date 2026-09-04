@@ -1,5 +1,24 @@
 # cli
 
+## 1.11.0
+
+### Minor Changes
+
+- 513aca6: `deadrop apiKeys create` now hands back both variables a pipeline needs — the API key and the environment's `DEADROP_VAULT_KEY` — instead of leaving you to dig the second out of `.deadroprc`. They are shown on an alternate screen, the same one `less` and `vim` use, so nothing is left in your terminal scrollback once you dismiss it.
+
+  `--copy` puts both on your clipboard without displaying them, and `--print` writes them to stdout so they can be piped. Writing to a non-interactive stream now requires `--print` rather than happening by default, so a script or agent capturing output cannot pick a key up by accident.
+
+- aba5283: `deadrop init --global` initializes deadrop in your OS app-data directory rather than the current one. That is the config the CLI falls back to when a project has no `.deadroprc` of its own, and the same one the desktop app uses — until now it could only be created by the desktop app or by grabbing a shared vault.
+- 532b198: `deadrop inject` gains `--only` and `--prefix`, so one environment can serve jobs that need different slices of it. `--only NAME,NAME` injects just those secrets and fails on a name the environment does not have, rather than silently injecting nothing. `--prefix VITE_` renames every injected variable, so a value can be stored once and handed to a bundler that expects its own prefix.
+
+  `--only` matches the names as stored, so the list reads the same as `vault env list`; `--prefix` applies afterwards.
+
+### Patch Changes
+
+- 427a642: Fix `deadrop inject` failing on a read-only cloud vault with "SQL write operations are forbidden". It bootstrapped the `secrets` table on every connection, which a read-only sync token rejects — so a CI run using an API key, or anyone reading a vault shared with them, could not open the vault at all. Cloud vaults already carry that table from Turso, so it is only created for local ones now.
+
+  Replication is a write too, so `--no-sync` reads the cloud vault directly over the network instead of building a local replica. That is the right mode for a cold read in CI, where the replica is a throwaway and there is nothing to keep in sync.
+
 ## 1.10.0
 
 ### Minor Changes
