@@ -24,6 +24,9 @@ type InjectOptions = {
   refreshToken?: boolean;
   verbose?: boolean;
   ci?: boolean;
+  only?: string;
+  prefix?: string;
+  sync?: boolean;
 };
 
 type ResolvedVault = {
@@ -210,6 +213,44 @@ async function parseVaultFromOptions(options: InjectOptions) {
   return resolved;
 }
 
+// --only names the stored secrets, so the list matches `vault env list`;
+// --prefix is applied after, renaming whatever survived the filter.
+function shapeSecrets(
+  secrets: Record<string, string>,
+  { only, prefix }: InjectOptions,
+) {
+  let shaped = secrets;
+
+  if (only) {
+    const wanted = only
+      .split(',')
+      .map((name) => name.trim())
+      .filter(Boolean);
+
+    const missing = wanted.filter((name) => !(name in secrets));
+
+    // A typo here would otherwise inject nothing and exit 0.
+    if (missing.length) {
+      logError(`Not in this environment: ${missing.join(', ')}`);
+      process.exit(1);
+    }
+
+    shaped = Object.fromEntries(
+      wanted.map((name) => [name, secrets[name]]),
+    );
+  }
+
+  if (prefix)
+    shaped = Object.fromEntries(
+      Object.entries(shaped).map(([name, value]) => [
+        `${prefix}${name}`,
+        value,
+      ]),
+    );
+
+  return shaped;
+}
+
 export async function inject(
   command: string[],
   options: InjectOptions,
@@ -224,11 +265,18 @@ export async function inject(
   const { vaultName, environment, vault, ephemeral } =
     await parseVaultFromOptions(options);
 
-  const db = await initDBClient(vault.location, vault.cloud);
+  const db = await initDBClient(
+    vault.location,
+    vault.cloud,
+    options.sync,
+  );
 
   const { getAllSecrets } = createSecretsHelpers(vault, db);
 
-  const secrets = await getAllSecrets(environment);
+  const secrets = shapeSecrets(
+    await getAllSecrets(environment),
+    options,
+  );
 
   const names = Object.keys(secrets);
 

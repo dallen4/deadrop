@@ -52,6 +52,10 @@ deadrop
     '-y, --yes',
     'skip prompts and accept defaults (also implied by a non-TTY shell or CI)',
   )
+  .option(
+    '--global',
+    'initialize globally instead of in the current directory',
+  )
   .action(init);
 
 deadrop.command('login').action(login);
@@ -112,6 +116,18 @@ deadrop
   .option(
     '--ci',
     'mint a fresh read-only Turso token for CI/CD via /vault/tokens/ci',
+  )
+  .option(
+    '--no-sync',
+    'read the cloud vault directly instead of replicating it locally',
+  )
+  .option(
+    '--only <names>',
+    'inject only these secrets, comma-separated',
+  )
+  .option(
+    '--prefix <prefix>',
+    'prepend this to every injected variable name',
   )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
@@ -274,6 +290,14 @@ use it as DEADROP_API_KEY with 'deadrop inject --ci'`,
   .option(
     '-y, --yes',
     'skip the confirmation prompt (also implied by a non-TTY shell or CI)',
+  )
+  .option(
+    '--print',
+    'write the key to stdout instead of showing it on a scrollback-free screen',
+  )
+  .option(
+    '--copy',
+    'copy the key to your clipboard without showing it',
   )
   .action(createApiKey);
 

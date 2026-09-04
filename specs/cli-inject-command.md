@@ -7,15 +7,20 @@
   `cli/core.ts`), reusing the config-load + cloud-sync + decrypt path. See
   "Command design" and "Files" below for the current shape — kept in this
   doc as the baseline the rest of it extends.
-- **CI credential minting + `--github-env` — this session's scope.** See
-  "Part A/B/C/D" below. `deadrop inject` today requires a vault config that
-  already has a Turso `authToken` baked in, and only wraps a single spawned
-  command. This session adds: (1) minting a fresh read-only Turso token from
-  just a Clerk API key, so CI never needs a long-lived token stored
-  anywhere; (2) a config-free input path (no `.deadroprc`/`--config` file at
-  all — just env vars); (3) a `--github-env` output mode that persists
-  secrets across an entire CI job instead of wrapping one command; (4) a
-  fix to `cli/install.sh` that would otherwise hang/fail in CI.
+- **CI credential minting — DONE** ([#157](https://github.com/dallen4/deadrop/pull/157)).
+  (1) Minting a fresh read-only Turso token from just a Clerk API key, so CI
+  never needs a long-lived token stored anywhere; (2) a config-free input
+  path (no `.deadroprc`/`--config` file at all — just env vars); (4) the
+  `cli/install.sh` fix that would otherwise hang in CI. Issuance landed too,
+  which this doc never specced: `deadrop apiKeys create` and `POST
+  /auth/key` scope a key to one vault + environment, and `--ci` reads both
+  off its claims, so `DEADROP_VAULT`/`DEADROP_ENVIRONMENT` are unnecessary.
+- **`--github-env` — still open.** Item (3): an output mode that persists
+  secrets across an entire CI job instead of wrapping one command. The
+  design in "`--github-env` semantics" below still stands. `--only` and
+  `--prefix` shipped alongside `--ci` and narrow/rename what a single
+  wrapped command receives, but they do not cross step boundaries — which
+  is what blocks multi-step workflows like `desktop_publish`.
 
 No GitHub Action wrapper is being built as part of this. Docs will show
 users installing `deadrop` directly (existing `install.sh` curl pattern)

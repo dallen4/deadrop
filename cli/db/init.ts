@@ -10,18 +10,20 @@ import { drizzle } from 'drizzle-orm/libsql/node';
 export const initDBClient = async (
   path: string,
   cloudConfig?: CloudVaultConfig,
+  sync: boolean = true,
 ) => {
   const [config, drizzleConfig] = initDBConfig(
     path,
     cloudConfig,
+    sync,
   );
 
   const client = drizzle(createClient(config), drizzleConfig);
 
-  // Cloud vaults sync their schema from Turso; local file dbs can't sync.
-  if (cloudConfig) await syncWithRetry(client.$client);
-
-  await ensureSecretsSchema(client.$client);
+  // Replication and CREATE TABLE are both writes a read-only token blocks.
+  if (cloudConfig) {
+    if (sync) await syncWithRetry(client.$client);
+  } else await ensureSecretsSchema(client.$client);
 
   return client;
 };

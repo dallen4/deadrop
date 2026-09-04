@@ -40,7 +40,7 @@ cli/
 ## CLI Commands
 
 ```
-deadrop init            # First-time setup
+deadrop init            # First-time setup (--global for the shared app-data config)
 deadrop login           # Authenticate with Clerk
 deadrop logout
 deadrop whoami           # Check signed-in identity
@@ -49,6 +49,7 @@ deadrop desktop install # Install (or update) the deadrop desktop app (macOS/Win
 deadrop drop            # Share a secret (drives dropMachine)
 deadrop grab            # Receive a secret (drives grabMachine)
 deadrop inject           # Run a command with vault secrets injected as env vars
+                        # (--ci for API-key auth, --only/--prefix to narrow and rename)
 deadrop vault create    # Create a local vault (seeds development + production envs)
 deadrop vault list      # List all vaults in the config
 deadrop vault use       # Switch active vault (--environment to also switch env; prompts to select when name omitted)
@@ -61,6 +62,7 @@ deadrop vault env list  # List environments in the active vault
 deadrop vault env add   # Add a new environment (fresh key) to the active vault
 deadrop secret add      # Add secret to vault
 deadrop secret remove
+deadrop apiKeys create  # Issue a CI key scoped to one cloud vault + environment
 ```
 
 ## Key Patterns
