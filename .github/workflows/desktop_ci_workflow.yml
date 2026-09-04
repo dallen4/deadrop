@@ -43,16 +43,16 @@ jobs:
       - name: Check desktop version sync
         run: pnpm -F desktop sync-version --check
 
-      # Prod secrets only (never dev `vars.*`) — mixing dev Clerk creds with the prod Worker breaks auth.
+      - name: Install deadrop
+        run: npm install -g deadrop
+
+      # Prod values come from the key's vault env. --no-sync: the CI token
+      # is read-only and replication writes.
       - name: Build desktop frontend
         env:
-          VITE_DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
-          VITE_PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
-          VITE_TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          VITE_TURN_PWD: ${{ secrets.TURN_PWD }}
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
-          VITE_WEB_URL: ${{ secrets.DEADROP_APP_URL }}
-        run: pnpm -F desktop build
+          DEADROP_API_KEY: ${{ secrets.DEADROP_API_KEY }}
+          DEADROP_VAULT_KEY: ${{ secrets.DEADROP_VAULT_KEY }}
+        run: deadrop inject --ci --no-sync -- pnpm -F desktop build
 
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
