@@ -97,30 +97,30 @@ async function pickEnvironment(
 // is opt-in, since that is the path a pipe or a capturing agent reads.
 async function handOffKey(
   name: string,
-  environment: string,
   key: string,
+  vaultKey: string,
   options: CreateApiKeyOptions,
 ) {
-  const pairWith =
-    `Pair it with the '${environment}' DEADROP_VAULT_KEY ` +
-    'in your CI secrets.';
+  // Both are needed together and neither is useful alone, so hand over the
+  // pair rather than making the caller dig the vault key out of .deadroprc.
+  const pair = `DEADROP_API_KEY=${key}\nDEADROP_VAULT_KEY=${vaultKey}`;
 
   if (options.copy) {
-    if (await copyToClipboard(key)) {
+    if (await copyToClipboard(pair)) {
       logInfo(
-        `Created '${chalk.bold(name)}', copied to your clipboard.`,
+        `Created '${chalk.bold(name)}', copied both values to your ` +
+          'clipboard.',
       );
-      logWarning(pairWith);
       return;
     }
 
     logWarning(
-      'Could not reach a clipboard, showing the key instead.',
+      'Could not reach a clipboard, showing the values instead.',
     );
   }
 
   if (options.print) {
-    process.stdout.write(`${key}\n`);
+    process.stdout.write(`${pair}\n`);
     return;
   }
 
@@ -133,9 +133,9 @@ async function handOffKey(
   }
 
   await revealSecret({
-    title: `Created '${name}' — this is the only time it is shown.`,
-    value: `DEADROP_API_KEY=${key}`,
-    hint: pairWith,
+    title: `Created '${name}' — this is the only time the API key is shown.`,
+    value: pair,
+    hint: 'Add both to your CI secrets.',
   });
 
   logInfo(`Created '${chalk.bold(name)}'`);
@@ -194,7 +194,12 @@ export async function createApiKey(
       key: string;
     };
 
-    await handOffKey(name, environment, key, options);
+    await handOffKey(
+      name,
+      key,
+      config.vaults[vaultName].environments[environment],
+      options,
+    );
 
     return exit(0);
   } catch (err) {

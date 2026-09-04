@@ -2,6 +2,6 @@
 'cli': minor
 ---
 
-`deadrop apiKeys create` now shows the key on an alternate screen — the same one `less` and `vim` use — so it leaves nothing behind in your terminal scrollback once you dismiss it. Press Enter after copying and it is gone.
+`deadrop apiKeys create` now hands back both variables a pipeline needs — the API key and the environment's `DEADROP_VAULT_KEY` — instead of leaving you to dig the second out of `.deadroprc`. They are shown on an alternate screen, the same one `less` and `vim` use, so nothing is left in your terminal scrollback once you dismiss it.
 
-Two escapes for when you want the raw value: `--copy` puts it straight on your clipboard without displaying it at all, and `--print` writes it to stdout so it can be piped. Writing a key to a non-interactive stream now requires `--print` rather than happening by default, so a script or agent capturing output cannot pick one up by accident.
+`--copy` puts both on your clipboard without displaying them, and `--print` writes them to stdout so they can be piped. Writing to a non-interactive stream now requires `--print` rather than happening by default, so a script or agent capturing output cannot pick a key up by accident.
