@@ -15,14 +15,16 @@ import {
   TextInput,
   Title,
   Tooltip,
+  UnstyledButton,
 } from '@mantine/core';
 import {
   IconAlertCircle,
-  IconChevronDown,
+  IconCheck,
   IconCloud,
   IconCloudOff,
   IconFileImport,
   IconPlus,
+  IconSelector,
   IconShare,
 } from '@tabler/icons-react';
 import { MainWrapper } from '../components/MainWrapper';
@@ -170,43 +172,46 @@ export const VaultPage = () => {
     <MainWrapper>
       <Stack gap={'lg'} w={'100%'}>
         <Group justify={'space-between'}>
-          <Group gap={'sm'}>
-            <Title order={2}>Vault</Title>
-            <Menu>
-              <Menu.Target>
-                <Button
-                  size={'xs'}
-                  variant={'light'}
-                  rightSection={<IconChevronDown size={14} />}
-                >
-                  {vault.activeVaultName}
-                </Button>
-              </Menu.Target>
-              <Menu.Dropdown>
-                {vaultNames.map((name) => (
-                  <Menu.Item
-                    key={name}
-                    onClick={() => vault.switchVault(name)}
-                  >
-                    {name}
-                  </Menu.Item>
-                ))}
-                <Menu.Divider />
+          <Menu position={'bottom-start'} width={220}>
+            <Menu.Target>
+              <UnstyledButton aria-label={'Switch vault'}>
+                <Group gap={6} wrap={'nowrap'}>
+                  <Title order={2}>{vault.activeVaultName}</Title>
+                  <IconSelector size={20} stroke={1.5} />
+                </Group>
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>
+              {vaultNames.map((name) => (
                 <Menu.Item
-                  leftSection={<IconPlus size={14} />}
-                  onClick={() => setCreateModalOpen(true)}
+                  key={name}
+                  onClick={() => vault.switchVault(name)}
+                  // The name is the heading now, so the dropdown is the
+                  // only place the active vault is marked.
+                  rightSection={
+                    name === vault.activeVaultName ? (
+                      <IconCheck size={14} />
+                    ) : undefined
+                  }
                 >
-                  New vault
+                  {name}
                 </Menu.Item>
-                <Menu.Item
-                  leftSection={<IconFileImport size={14} />}
-                  onClick={() => void vault.importVault()}
-                >
-                  Import vault
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
-          </Group>
+              ))}
+              <Menu.Divider />
+              <Menu.Item
+                leftSection={<IconPlus size={14} />}
+                onClick={() => setCreateModalOpen(true)}
+              >
+                New vault
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconFileImport size={14} />}
+                onClick={() => void vault.importVault()}
+              >
+                Import vault
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
 
           <Group gap={'sm'}>
             {canShare && (

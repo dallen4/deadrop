@@ -1,4 +1,3 @@
-import z from 'zod';
 import { AppRouteParts, AuthScopes } from '../constants';
 import { hono } from '../lib/http/core';
 import { authenticated, restricted } from '../lib/middleware';
