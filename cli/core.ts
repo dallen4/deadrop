@@ -118,6 +118,10 @@ deadrop
     'mint a fresh read-only Turso token for CI/CD via /vault/tokens/ci',
   )
   .option(
+    '--no-sync',
+    'read the cloud vault directly instead of replicating it locally',
+  )
+  .option(
     '--only <names>',
     'inject only these secrets, comma-separated',
   )

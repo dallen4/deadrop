@@ -26,6 +26,7 @@ type InjectOptions = {
   ci?: boolean;
   only?: string;
   prefix?: string;
+  sync?: boolean;
 };
 
 type ResolvedVault = {
@@ -264,7 +265,11 @@ export async function inject(
   const { vaultName, environment, vault, ephemeral } =
     await parseVaultFromOptions(options);
 
-  const db = await initDBClient(vault.location, vault.cloud);
+  const db = await initDBClient(
+    vault.location,
+    vault.cloud,
+    options.sync,
+  );
 
   const { getAllSecrets } = createSecretsHelpers(vault, db);
 

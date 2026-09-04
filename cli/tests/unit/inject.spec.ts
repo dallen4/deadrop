@@ -282,10 +282,11 @@ describe('inject', () => {
     // The local label is sent; the worker prefixes it into a remote name.
     expect(mintVaultToken).toHaveBeenCalledWith('default');
     // cloud is rebuilt from the mint, so the sync URL uses the remote name.
-    expect(initDBClient).toHaveBeenCalledWith('./vault.db', {
-      name: 'a1b2c3d4e5f67-default',
-      authToken: 'minted-token',
-    });
+    expect(initDBClient).toHaveBeenCalledWith(
+      './vault.db',
+      { name: 'a1b2c3d4e5f67-default', authToken: 'minted-token' },
+      undefined,
+    );
     expect(runWithEnvSpy).toHaveBeenCalledWith(
       'node',
       ['-e', 'process.exit(3)'],
@@ -339,7 +340,11 @@ describe('inject', () => {
     await inject(['node'], { override: true });
 
     expect(mintVaultToken).not.toHaveBeenCalled();
-    expect(initDBClient).toHaveBeenCalledWith('./vault.db', cloud);
+    expect(initDBClient).toHaveBeenCalledWith(
+      './vault.db',
+      cloud,
+      undefined,
+    );
   });
 
   it('local vault (no cloud config): does not mint, reads locally', async () => {
@@ -375,6 +380,7 @@ describe('inject', () => {
     expect(mintVaultToken).not.toHaveBeenCalled();
     expect(initDBClient).toHaveBeenCalledWith(
       './vault.db',
+      undefined,
       undefined,
     );
   });
@@ -426,10 +432,11 @@ describe('inject', () => {
     await inject(['node'], { override: true, refreshToken: true });
 
     expect(mintVaultToken).toHaveBeenCalledWith('default');
-    expect(initDBClient).toHaveBeenCalledWith('./vault.db', {
-      name: 'a1b2c3d4e5f67-default',
-      authToken: 'refreshed-token',
-    });
+    expect(initDBClient).toHaveBeenCalledWith(
+      './vault.db',
+      { name: 'a1b2c3d4e5f67-default', authToken: 'refreshed-token' },
+      undefined,
+    );
   });
 
   it('surfaces VaultNotFoundError cleanly instead of the generic message', async () => {
@@ -620,6 +627,7 @@ describe('inject', () => {
     expect(initDBClient).toHaveBeenCalledWith(
       expect.stringContaining('deadrop-inject-'),
       { name: 'a1b2c3d4e5f67-my-app', authToken: 'ci-token' },
+      undefined,
     );
     expect(
       vi.mocked(createSecretsHelpers).mock.calls[0][0],

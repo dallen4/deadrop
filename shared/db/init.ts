@@ -8,7 +8,19 @@ import { LibSQLDatabase } from 'drizzle-orm/libsql';
 export const initDBConfig = (
   path: string,
   cloudConfig?: CloudVaultConfig,
+  sync: boolean = true,
 ) => {
+  // Without sync there is no replica to seed, so read straight from Turso.
+  // A read-only token can serve that; replication cannot.
+  if (cloudConfig && !sync)
+    return [
+      {
+        url: vaultSyncUrl(cloudConfig.name),
+        authToken: cloudConfig.authToken,
+      },
+      { schema: { secrets: secretsTable } },
+    ] as [Config, DrizzleConfig<{ secrets: typeof secretsTable }>];
+
   const config: Config = {
     url: fileUrl(path),
   };
