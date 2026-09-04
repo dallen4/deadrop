@@ -262,6 +262,7 @@ Run a command with a vault's secrets injected directly into its environment. Sec
 | `--no-override`           | Let pre-existing environment variables win over vault values (default: vault values win).  |
 | `--refresh-token`         | Mint a fresh read-only Turso token before running, instead of reusing a cached one.        |
 | `--ci`                    | Authenticate with a `DEADROP_API_KEY` instead of your signed-in session. See below.        |
+| `--no-sync`               | Read a cloud vault directly instead of replicating it locally. Needed for read-only tokens. |
 | `--only <names>`          | Inject only these secrets, comma-separated. Errors on a name the environment doesn't have. |
 | `--prefix <prefix>`       | Prepend this to every injected variable name, e.g. `--prefix VITE_`.                        |
 | `--verbose`               | Log the names of injected variables. Values are never logged.                              |
@@ -287,6 +288,8 @@ deadrop inject --ci -- pnpm build
 ```
 
 Those two variables are all a pipeline needs. `--ci` fails immediately naming whichever one is missing, rather than falling back to an interactive sign-in that can't succeed in a container. The token it mints is read-only and expires in five minutes.
+
+Pair it with `--no-sync` for a cold read. Building a local replica is itself a write, which a read-only token forbids, so `--no-sync` reads the vault straight over the network instead — there's nothing to keep in sync when the replica is thrown away at the end of the job anyway. The same applies to a vault someone shared with you.
 
 Secrets reach only the command `inject` spawns, so each step that needs them takes its own wrapper. Use `--only` and `--prefix` when one environment serves several jobs — `--only` matches the names as stored, and `--prefix` renames whatever survives the filter:
 
