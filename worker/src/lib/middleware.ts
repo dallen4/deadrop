@@ -1,7 +1,4 @@
-import {
-  TokenType,
-  SignedInAuthObject,
-} from '@clerk/backend/internal';
+import { TokenType } from '@clerk/backend/internal';
 import { getAuth } from '@clerk/hono';
 import { SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
 import { TEST_TOKEN_HEADER } from '@shared/tests/http';
