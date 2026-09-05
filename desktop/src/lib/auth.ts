@@ -1,49 +1,61 @@
-import { createClient, DeadropApiClient } from '@shared/client';
+import { createClient } from '@shared/client';
 import { useApiHeaders } from './api-headers';
-import { DEADROP_API_URL } from 'src/env';
+import { DEADROP_API_URL } from '../env';
 import { AuthScopes } from '@shared/lib/constants';
-import { useRef } from 'react';
+import { useCallback } from 'react';
 
-export async function useApiKeys() {
+export type VaultApiKeyTarget = {
+  vaultName: string;
+  environment: string;
+};
+
+export const useApiKeys = () => {
   const getApiHeaders = useApiHeaders();
-  const clientRef = useRef<DeadropApiClient>(null);
 
-  const initClient = async () => {
-    if (clientRef.current) return clientRef.current;
+  // Clerk session tokens are short-lived, so headers are resolved per
+  // call rather than baked into a cached client.
+  const initClient = useCallback(
+    async () =>
+      createClient(DEADROP_API_URL, {
+        init: { headers: await getApiHeaders() },
+      }),
+    [getApiHeaders],
+  );
 
-    return (clientRef.current = createClient(DEADROP_API_URL, {
-      init: { headers: await getApiHeaders() },
-    }));
-  };
+  const listApiKeys = useCallback(
+    async (target: VaultApiKeyTarget) => {
+      const client = await initClient();
 
-  const listApiKeys = async (claims: {
-    vaultName: string;
-    environment: string;
-  }) => {
-    const client = await initClient();
+      const response = await client.auth.keys.$get({
+        query: {
+          scopes: [AuthScopes.VaultInject],
+          ...target,
+        },
+      });
 
-    const listApiKeysResponse = await client.auth.keys.$get({
-      query: {
-        scopes: [AuthScopes.VaultInject],
-        ...claims,
-      },
-    });
+      if (!response.ok)
+        throw new Error('Could not load API keys for this vault.');
 
-    return listApiKeysResponse.json();
-  };
+      return response.json();
+    },
+    [initClient],
+  );
 
-  const createApiKey = async (claims: {
-    vaultName: string;
-    environment: string;
-  }) => {
-    const client = await initClient();
+  const createApiKey = useCallback(
+    async (target: VaultApiKeyTarget) => {
+      const client = await initClient();
 
-    const apiKeysResponse = await client.auth.keys.$post({
-      json: claims,
-    });
+      const response = await client.auth.keys.$post({
+        json: target,
+      });
 
-    return apiKeysResponse.json();
-  };
+      if (response.status !== 201)
+        throw new Error('Could not issue an API key for this vault.');
+
+      return response.json();
+    },
+    [initClient],
+  );
 
   return { listApiKeys, createApiKey };
-}
+};
