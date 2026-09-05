@@ -285,7 +285,7 @@ describe('inject', () => {
     expect(initDBClient).toHaveBeenCalledWith(
       './vault.db',
       { name: 'a1b2c3d4e5f67-default', authToken: 'minted-token' },
-      undefined,
+      true,
     );
     expect(runWithEnvSpy).toHaveBeenCalledWith(
       'node',
@@ -343,7 +343,7 @@ describe('inject', () => {
     expect(initDBClient).toHaveBeenCalledWith(
       './vault.db',
       cloud,
-      undefined,
+      true,
     );
   });
 
@@ -381,7 +381,7 @@ describe('inject', () => {
     expect(initDBClient).toHaveBeenCalledWith(
       './vault.db',
       undefined,
-      undefined,
+      true,
     );
   });
 
@@ -435,7 +435,7 @@ describe('inject', () => {
     expect(initDBClient).toHaveBeenCalledWith(
       './vault.db',
       { name: 'a1b2c3d4e5f67-default', authToken: 'refreshed-token' },
-      undefined,
+      true,
     );
   });
 
@@ -626,8 +626,9 @@ describe('inject', () => {
     expect(mintVaultToken).not.toHaveBeenCalled();
     expect(initDBClient).toHaveBeenCalledWith(
       expect.stringContaining('deadrop-inject-'),
+      // --ci is always a cold read, so it never replicates.
       { name: 'a1b2c3d4e5f67-my-app', authToken: 'ci-token' },
-      undefined,
+      false,
     );
     expect(
       vi.mocked(createSecretsHelpers).mock.calls[0][0],

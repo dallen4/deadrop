@@ -262,14 +262,14 @@ export async function inject(
     process.exit(1);
   }
 
-  const { vaultName, environment, vault, ephemeral } =
+  const { vaultName, environment, vault, ephemeral, strategy } =
     await parseVaultFromOptions(options);
 
-  const db = await initDBClient(
-    vault.location,
-    vault.cloud,
-    options.sync,
-  );
+  // CI tokens are read-only, and the replica is discarded anyway.
+  const sync =
+    strategy !== MintStrategy.ApiKey && options.sync !== false;
+
+  const db = await initDBClient(vault.location, vault.cloud, sync);
 
   const { getAllSecrets } = createSecretsHelpers(vault, db);
 
