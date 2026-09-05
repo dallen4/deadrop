@@ -20,7 +20,11 @@ import '@mantine/notifications/styles.css';
 import '@mantine/dropzone/styles.css';
 
 import { router } from './router';
+import { applyNativeFetchPatch } from './lib/native-fetch';
 import { createNativeClerkClient } from './lib/native-clerk';
+
+// Must land before any Clerk or worker request goes out.
+applyNativeFetchPatch();
 
 // Runs Clerk in native mode (see desktop/src/lib/native-clerk.ts +
 // desktop/src-tauri/src/keychain_store.rs) so desktop shares one session

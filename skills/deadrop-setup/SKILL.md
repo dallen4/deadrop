@@ -1,7 +1,7 @@
 ---
 name: deadrop-setup
 description: Move a project's existing .env file into an encrypted deadrop vault and switch its scripts over to `deadrop inject`, so plaintext secrets stop living on disk. Use when the user wants to set up deadrop, adopt a secrets vault, get rid of a committed or lingering .env, or stop passing secrets around as files.
-allowed-tools: Bash(deadrop --version), Bash(deadrop init:*), Bash(deadrop vault list:*), Bash(deadrop vault env:*), Bash(deadrop vault use:*), Bash(deadrop vault import:*), Bash(deadrop inject:*), Bash(git check-ignore:*), Bash(git status:*), Bash(ls:*), Bash(test:*), Read, Edit, Write
+allowed-tools: Bash(deadrop --version), Bash(deadrop whoami:*), Bash(deadrop init:*), Bash(deadrop vault list:*), Bash(deadrop vault create:*), Bash(deadrop vault env:*), Bash(deadrop vault use:*), Bash(deadrop vault import:*), Bash(deadrop inject:*), Bash(deadrop desktop install:*), Bash(git check-ignore:*), Bash(git status:*), Bash(ls:*), Bash(test:*), Read, Edit, Write
 ---
 
 # deadrop setup from an existing .env
@@ -26,9 +26,10 @@ asked to protect.
   means it lands in shell history and in this transcript. If a secret is not
   already in a file, stop and ask the user to add it themselves (in Claude
   Code they can run `! deadrop secret add NAME VALUE`).
-- **Never run `deadrop apiKeys create`.** It prints the key to stdout, once —
-  running it here puts a live credential in the transcript and nowhere the
-  user can retrieve it. Tell them to run it themselves.
+- **Never run `deadrop apiKeys create`.** Since 1.11.0 the CLI defends itself
+  here (it refuses a non-interactive stream, and needs `--print` to pipe), so
+  you will get an error rather than a leak. Have the user run it anyway: the
+  key is shown once, and a run you own is a run they cannot read.
 - **Verify by name, never by value.** `--verbose` prints variable names only.
 
 If you cannot complete a step without breaking one of these, stop and say so.
@@ -41,8 +42,13 @@ not permitted at all rather than merely discouraged. Keep it that way.
 
 This skill handles: *a project that already has a `.env`.*
 
-It does not handle creating brand-new secrets from scratch — there is no
-agent-safe input path for that yet (see the `secret add` rule above).
+It does not handle creating brand-new secrets from scratch, because you have no
+agent-safe input path for a value (see the `secret add` rule above). The user
+does: `! deadrop secret add NAME VALUE` in Claude Code, or "Add secret" on the
+desktop vault page. Point them at one and carry on.
+
+Importing a `.env` is CLI-only. The desktop app imports a vault, not an env
+file, so the steps below stay on the CLI even for a desktop user.
 
 ## 1. Check state
 
@@ -70,19 +76,46 @@ binary exists.
 
 Test for `.deadroprc` **as a file in the project directory**. Do not infer it
 from a deadrop command succeeding — when no project config exists, deadrop
-falls back to the user's global vault (shared with the desktop app). Importing
-against that fallback would write the project's secrets into their global
-vault, which is not what was asked.
+falls back to the user's global vault (shared with the desktop app). Landing in
+that fallback is a fine outcome if the user chose it in step 2, and a bad one
+if you drifted into it, so establish which config you are writing to before you
+import.
 
-## 2. Initialize
+## 2. Pick a scope, then initialize
 
-```bash
-deadrop init -y
-```
+**Ask the user which they want before running anything.** This decides where
+the vault lives, and there is no supported move afterwards that does not go
+through `vault export`, which you must not run.
 
-Creates `.deadroprc` and a `.deadrop/` vault directory, seeded with
-`development` and `production` environments. `-y` also appends both to
-`.gitignore`. Re-running is safe — an existing config is left alone.
+| | Project | Global |
+|---|---|---|
+| Command | `deadrop init -y` | `deadrop init --global` (1.11.0) |
+| Config lands in | `.deadroprc` in the repo | OS app-data directory |
+| Reach | this directory | every directory with no `.deadroprc` |
+| Trade | encapsulation | ease of use |
+
+**Recommend project when the secrets belong to the repo.** Each project gets
+its own vault and environments, values cannot bleed between codebases, and the
+config sits gitignored next to the code it serves. This is what you want for
+anything with teammates, with CI, or with more than one set of credentials.
+
+**Recommend global when it is one person with one set of secrets.** It is the
+config the CLI falls back to anywhere, and the same one the desktop app reads,
+so secrets are available everywhere with no per-repo setup and nothing to
+gitignore.
+
+Default to project when the user has no preference. It is the reversible
+direction: a global vault can be added later, while pulling one project's
+secrets back out of a shared global vault means exporting them to plaintext,
+which this skill will not do.
+
+Either way you get a vault seeded with `development` and `production`
+environments. Re-running is safe, an existing config is left alone. `-y` on the
+project path also appends `.deadroprc` and `.deadrop/` to `.gitignore`; the
+global path has nothing to ignore and never prompts.
+
+The vault this creates is **local**. That is all `inject` needs. Cloud is only
+required for sharing and for CI keys, and step 6 covers it.
 
 ## 3. Import
 
@@ -156,22 +189,17 @@ If it was ever committed, say so plainly — it is in the git history and
 rotating those values is the only real fix. Removing the working-tree file does
 not undo that.
 
-## Common follow-ups
+## 6. CI (optional)
+
+**An API key needs a cloud vault.** `apiKeys create` only offers vaults marked
+`cloud`, and a local one from step 2 is not eligible. If the user wants CI,
+that comes first:
 
 ```bash
-# run any one-off command with secrets present
-deadrop inject -- <cmd>
-
-# add an environment
-deadrop vault env add staging
-
-# share the vault with a teammate (needs a cloud vault; they run `deadrop grab`)
-deadrop vault drop
+deadrop vault create <name> --cloud     # needs `deadrop login`
 ```
 
-## CI
-
-CI skips the config file entirely. Two variables, nothing else:
+Then CI skips the config file entirely. Two variables, nothing else:
 
 ```yaml
 env:
@@ -181,20 +209,77 @@ run: deadrop inject --ci -- npm run build
 ```
 
 The API key is scoped to one vault and one environment at issue time, so both
-come off its claims — no `.deadroprc`, no `DEADROP_VAULT`, no
+come off its claims. No `.deadroprc`, no `DEADROP_VAULT`, no
 `DEADROP_ENVIRONMENT`. Each run mints its own read-only token that expires in
 five minutes. `--ci` fails immediately naming whichever variable is missing,
 rather than falling back to an interactive sign-in that cannot succeed in a
-container. Needs 1.10.0.
+container. Needs 1.10.0. Do not pair it with `--no-sync`; `--ci` already reads
+the vault directly.
 
-The user issues the key themselves — see the hard rule above:
+The user issues the key themselves. See the hard rule above:
 
 ```
-deadrop apiKeys create -v <vault> -e <environment>
+deadrop apiKeys create -v <vault> -e <environment> --copy
 ```
 
-`DEADROP_VAULT_KEY` is that environment's decryption key from `.deadroprc`,
-which you must not read. Have them copy it out.
+**`--copy` is the one to recommend** (1.11.0). It puts *both* variables on the
+clipboard and prints only the key's name, so nothing sensitive reaches the
+terminal or this transcript. Without it the pair is shown on an alternate
+screen that leaves no scrollback. `--print` writes to stdout and only exists
+for deliberate piping.
+
+As of 1.11.0 `apiKeys create` hands back `DEADROP_VAULT_KEY` alongside the key.
+Do not send the user digging it out of `.deadroprc`, which you must not read
+anyway. Older CLIs printed the key alone.
 
 Secrets reach only the one command `inject` spawns, so each step that needs
 them takes its own `deadrop inject --ci --` wrapper.
+
+## Desktop app
+
+The desktop app and the CLI are two faces of one vault, so a user on both does
+not set up twice.
+
+```bash
+deadrop desktop install     # 1.5.0; macOS, Windows, Linux
+```
+
+- **They share the global config.** With no project `.deadroprc`, the CLI falls
+  back to the OS app-data config the desktop app writes. This is exactly the
+  fallback step 1 warns you not to import into by accident.
+- **A project vault shows up in the app** via "Import vault" on the vault page,
+  which points at the `.deadroprc` you created in step 2.
+- **API keys have a UI now** (desktop 0.4.0). A cloud vault the user owns
+  splits each environment into Secrets and API Keys, and "Add API key" issues
+  one against the same route as `apiKeys create`. Offer it as the alternative
+  to step 6, since it keeps the key off their terminal entirely.
+- **New secrets have a UI too**, under "Add secret". That is the agent-safe
+  input path the Scope section points at.
+- **Sharing** is "Share vault" in the app or `deadrop vault drop` (1.9.0). Both
+  mint a read-only expiring token and hand it over a normal drop; the recipient
+  runs `deadrop grab` or takes "Add to my vaults" on the desktop grab screen.
+  Owner only, and the vault must be cloud.
+
+A user who picked global in step 2 gets the most out of the app, since it is
+the same config on both sides. A project vault still shows up, it just has to
+be imported once.
+
+## Common follow-ups
+
+```bash
+# run any one-off command with secrets present
+deadrop inject -- <cmd>
+
+# add an environment
+deadrop vault env add staging
+
+# inject a subset, or namespace what you inject
+deadrop inject --only DATABASE_URL,REDIS_URL -- <cmd>
+deadrop inject --prefix VITE_ -- <cmd>
+
+# let real env vars win over vault values (default is vault wins)
+deadrop inject --no-override -- <cmd>
+
+# share the vault with a teammate (needs a cloud vault; they run `deadrop grab`)
+deadrop vault drop
+```

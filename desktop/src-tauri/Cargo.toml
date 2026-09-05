@@ -17,6 +17,11 @@ repository = "https://github.com/dallen4/deadrop"
 name = "deadrop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+# Release builds ship without an inspector; opt in with
+# `pnpm tauri build --features devtools` to debug a packaged app.
+devtools = ["tauri/devtools"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
