@@ -35,8 +35,8 @@ import {
 import { MainWrapper } from '../components/MainWrapper';
 import classes from './Vault.module.css';
 import { useVault } from '../hooks/use-vault';
-import { AddRowButton } from '../components/vault/AddRowButton';
 import { AddSecretForm } from '../components/vault/AddSecretForm';
+import { ApiKeysSection } from '../components/vault/ApiKeysSection';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
 import { CredentialsTab } from '../components/vault/CredentialsTab';
 import { SecretRow } from '../components/vault/SecretRow';
@@ -391,13 +391,10 @@ export const VaultPage = () => {
                       {API_KEYS_SECTION.title}
                     </Accordion.Control>
                     <Accordion.Panel>
-                      <Text size={'sm'} c={'dimmed'}>
-                        No API keys yet for <b>{vault.activeEnv}</b>.
-                      </Text>
-                      {/* Issuing keys isn't wired up yet. */}
-                      <AddRowButton
-                        label={'Add API key'}
-                        onClick={() => {}}
+                      <ApiKeysSection
+                        vaultName={vault.activeVaultName}
+                        cloudName={vault.activeVault?.cloud?.name}
+                        environment={vault.activeEnv}
                       />
                     </Accordion.Panel>
                   </Accordion.Item>
