@@ -9,7 +9,7 @@ export const MainWrapper = ({
 } & ContainerProps) => {
   return (
     <Container
-      maw={'700px'}
+      maw={'750px'}
       mih={'calc(100vh - 225px)'}
       p={0}
       display={'flex'}
