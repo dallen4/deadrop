@@ -11,7 +11,9 @@
       "identifier": "http:default",
       "allow": [
         { "url": "https://clerk.deadrop.io/*" },
-        { "url": "https://*.clerk.accounts.dev/*" }
+        { "url": "https://*.clerk.accounts.dev/*" },
+        { "url": "https://deadrop.nieky.dev/*" },
+        { "url": "http://localhost:8787/*" }
       ]
     },
     {

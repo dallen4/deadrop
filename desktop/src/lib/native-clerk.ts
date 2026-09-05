@@ -4,7 +4,7 @@ import { loadClerkUIScript } from '@clerk/shared/loadClerkJsScript';
 import type { ClerkUIConstructor } from '@clerk/shared/types';
 import { invoke } from '@tauri-apps/api/core';
 import { CLERK_PUBLISHABLE_KEY } from '../env';
-import { applyNativeFetchPatch } from './native-clerk-fetch-patch';
+import { applyNativeFetchPatch } from './native-fetch';
 
 // Runs Clerk in native mode (standardBrowser: false) so desktop shares one
 // session with the CLI via the OS keychain, instead of cookies/localStorage.
@@ -39,7 +39,7 @@ export const createNativeClerkClient = (): Promise<ClerkType> => {
     const headers = requestInit.headers as Headers;
     headers.set('authorization', token ?? '');
     headers.set('x-mobile', '1');
-    // Consumed by native-clerk-fetch-patch.ts to route this request
+    // Consumed by native-fetch.ts to route this request
     // through Rust and suppress the webview's auto-attached Origin header.
     headers.set('x-tauri-fetch', '1');
     headers.set('x-no-origin', '1');
