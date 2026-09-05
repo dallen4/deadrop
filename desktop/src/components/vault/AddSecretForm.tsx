@@ -1,30 +1,14 @@
 import { useState } from 'react';
 import {
   Button,
-  Code,
   Divider,
   Group,
   Modal,
   Stack,
-  Text,
   TextInput,
 } from '@mantine/core';
 import { AddRowButton } from './AddRowButton';
-
-const Detail = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) => (
-  <Stack gap={2}>
-    <Text size={'xs'} c={'dimmed'} tt={'uppercase'}>
-      {label}
-    </Text>
-    {children}
-  </Stack>
-);
+import { TargetDetails } from './TargetDetails';
 
 export const AddSecretForm = ({
   disabled,
@@ -68,19 +52,11 @@ export const AddSecretForm = ({
         title={'New secret'}
       >
         <Stack gap={'md'}>
-          <Group gap={'xl'} align={'flex-start'}>
-            <Detail label={'Vault'}>
-              <Text size={'sm'} fw={500}>
-                {vaultName}
-              </Text>
-              {cloudName && <Code>{cloudName}</Code>}
-            </Detail>
-            <Detail label={'Environment'}>
-              <Text size={'sm'} fw={500}>
-                {environment}
-              </Text>
-            </Detail>
-          </Group>
+          <TargetDetails
+            vaultName={vaultName}
+            cloudName={cloudName}
+            environment={environment}
+          />
 
           <Divider />
 
