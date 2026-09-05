@@ -1,12 +1,12 @@
 import { zValidator } from '@hono/zod-validator';
-import { AppRouteParts, AuthScopes } from '../constants';
+import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import {
   createVaultUtils,
   vaultNameFromUserId,
   TursoApiError,
 } from '@shared/lib/turso';
-import { VaultTokenAccess } from '@shared/lib/constants';
+import { AuthScopes, VaultTokenAccess } from '@shared/lib/constants';
 import {
   MintedVaultCreds,
   VaultApiKeyCreds,

@@ -90,3 +90,7 @@ export enum VaultTokenAccess {
 // Shared secret header for first-party service-to-service calls
 // (e.g. web billing webhooks → Worker vault lock/unlock)
 export const SERVICE_TOKEN_HEADER = 'x-deadrop-service-token';
+
+export enum AuthScopes {
+  VaultInject = 'vault:inject',
+}

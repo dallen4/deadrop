@@ -1,4 +1,4 @@
-import { AppRouteParts, AuthScopes } from '../constants';
+import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { authenticated, restricted } from '../lib/middleware';
 import { KeyNotIssued } from '../lib/messages';
@@ -10,6 +10,7 @@ import {
   ApiKeyClaimsFilterSchema,
   ListApiKeysOptionsSchema,
 } from '../lib/auth';
+import { AuthScopes } from '@shared/lib/constants';
 
 const authRouter = hono()
   .get(

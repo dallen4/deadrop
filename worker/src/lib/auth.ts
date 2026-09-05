@@ -1,6 +1,6 @@
 import z from 'zod';
 import { VaultInjectClaimsSchema } from './vault';
-import { AuthScopes } from '../constants';
+import { AuthScopes } from '@shared/lib/constants';
 
 export const ApiKeyClaimsFilterSchema =
   VaultInjectClaimsSchema.partial();

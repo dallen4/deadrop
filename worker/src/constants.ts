@@ -10,10 +10,6 @@ export enum ContentType {
   Json = 'application/json',
 }
 
-export enum AuthScopes {
-  VaultInject = 'vault:inject',
-}
-
 export type AppRouteParts =
   (typeof AppRouteParts)[keyof typeof AppRouteParts];
 
