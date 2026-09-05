@@ -23,9 +23,11 @@ import {
   IconCloud,
   IconCloudOff,
   IconFileImport,
+  IconKey,
   IconPlus,
   IconSelector,
   IconShare,
+  IconStack2,
 } from '@tabler/icons-react';
 import { MainWrapper } from '../components/MainWrapper';
 import { useVault } from '../hooks/use-vault';
@@ -265,13 +267,34 @@ export const VaultPage = () => {
           </Alert>
         )}
 
-        <Tabs defaultValue={'secrets'}>
-          <Tabs.List mb={'md'}>
-            <Tabs.Tab value={'secrets'}>Secrets</Tabs.Tab>
-            <Tabs.Tab value={'credentials'}>Credentials</Tabs.Tab>
+        <Tabs
+          defaultValue={'environments'}
+          orientation={'vertical'}
+          variant={'pills'}
+        >
+          <Tabs.List
+            w={190}
+            pr={'md'}
+            style={{
+              borderRight:
+                '1px solid var(--mantine-color-default-border)',
+            }}
+          >
+            <Tabs.Tab
+              value={'environments'}
+              leftSection={<IconStack2 size={16} />}
+            >
+              Environments
+            </Tabs.Tab>
+            <Tabs.Tab
+              value={'credentials'}
+              leftSection={<IconKey size={16} />}
+            >
+              Credentials
+            </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value={'secrets'}>
+          <Tabs.Panel value={'environments'} pl={'lg'}>
             <Stack gap={'lg'}>
               <Tabs
                 value={vault.activeEnv}
@@ -325,7 +348,7 @@ export const VaultPage = () => {
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value={'credentials'}>
+          <Tabs.Panel value={'credentials'} pl={'lg'}>
             <CredentialsTab
               vaultName={vault.activeVaultName}
               cloudName={vault.activeVault?.cloud?.name}
