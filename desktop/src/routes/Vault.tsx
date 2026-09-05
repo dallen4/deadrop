@@ -33,7 +33,9 @@ import {
   IconStack2,
 } from '@tabler/icons-react';
 import { MainWrapper } from '../components/MainWrapper';
+import classes from './Vault.module.css';
 import { useVault } from '../hooks/use-vault';
+import { AddRowButton } from '../components/vault/AddRowButton';
 import { AddSecretForm } from '../components/vault/AddSecretForm';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
 import { CredentialsTab } from '../components/vault/CredentialsTab';
@@ -105,10 +107,11 @@ export const VaultPage = () => {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
-  // Only the owner can mint the read-only token a share carries.
-  const canShare = vault.cloudSync && vault.ownsActiveCloudVault;
+  // Only the owner can mint the read-only token a share carries, and
+  // only an owned cloud vault has API keys to section off.
+  const owned = vault.cloudSync && vault.ownsActiveCloudVault;
 
-  // Not !canShare — a local vault has no owner and stays writable.
+  // Not !owned — a local vault has no owner and stays writable.
   const readOnly = vault.cloudSync && !vault.ownsActiveCloudVault;
 
   const shareVault = async (envs: string[], expiration: string) => {
@@ -183,6 +186,42 @@ export const VaultPage = () => {
     (s) => s.environment === vault.activeEnv,
   );
 
+  const secretsSection = (
+    <>
+      <Stack gap={4}>
+        {filtered.length === 0 ? (
+          <Text size={'sm'} c={'dimmed'}>
+            No secrets yet for <b>{vault.activeEnv}</b>.
+          </Text>
+        ) : (
+          filtered.map((s) => (
+            <SecretRow
+              key={`${s.environment}:${s.name}`}
+              name={s.name}
+              environment={s.environment}
+              readOnly={readOnly}
+              onReveal={vault.revealSecret}
+              onUpdate={vault.updateSecret}
+              onRename={vault.renameSecret}
+              onDelete={vault.deleteSecret}
+            />
+          ))
+        )}
+      </Stack>
+
+      {readOnly ? (
+        <Text size={'xs'} c={'dimmed'}>
+          Shared with you, read-only.
+        </Text>
+      ) : (
+        <AddSecretForm
+          disabled={vault.busy}
+          onSubmit={vault.addSecret}
+        />
+      )}
+    </>
+  );
+
   return (
     <MainWrapper>
       <Stack gap={'xl'} w={'100%'}>
@@ -229,7 +268,7 @@ export const VaultPage = () => {
           </Menu>
 
           <Group gap={'sm'}>
-            {canShare && (
+            {owned && (
               <Button
                 size={'xs'}
                 variant={'default'}
@@ -305,11 +344,11 @@ export const VaultPage = () => {
           </Tabs.List>
 
           <Tabs.Panel value={'environments'}>
-            <Stack gap={'lg'} pl={'md'}>
+            <Stack gap={'sm'} pl={'md'}>
               <Tabs
                 value={vault.activeEnv}
                 onChange={(env) => env && vault.switchEnv(env)}
-                variant="outline"
+                classNames={{ root: classes.envTabs }}
               >
                 <Tabs.List>
                   {vault.environments.map((env) => (
@@ -325,62 +364,48 @@ export const VaultPage = () => {
                 </Tabs.List>
               </Tabs>
 
-              <Accordion
-                multiple
-                defaultValue={[
-                  SECRETS_SECTION.id,
-                  API_KEYS_SECTION.id,
-                ]}
-              >
-                <Accordion.Item value={SECRETS_SECTION.id}>
-                  <Accordion.Control icon={<IconLockOpen size={20} />} p={0}>
-                    {SECRETS_SECTION.title}
-                  </Accordion.Control>
-                  <Accordion.Panel>
-                    <Stack gap={4}>
-                      {filtered.length === 0 ? (
-                        <Text size={'sm'} c={'dimmed'}>
-                          No secrets yet for <b>{vault.activeEnv}</b>.
-                        </Text>
-                      ) : (
-                        filtered.map((s) => (
-                          <SecretRow
-                            key={`${s.environment}:${s.name}`}
-                            name={s.name}
-                            environment={s.environment}
-                            readOnly={readOnly}
-                            onReveal={vault.revealSecret}
-                            onUpdate={vault.updateSecret}
-                            onRename={vault.renameSecret}
-                            onDelete={vault.deleteSecret}
-                          />
-                        ))
-                      )}
-                    </Stack>
-
-                    {readOnly ? (
-                      <Text size={'xs'} c={'dimmed'}>
-                        Shared with you, read-only.
+              {owned ? (
+                <Accordion
+                  multiple
+                  classNames={{ control: classes.sectionControl }}
+                  defaultValue={[
+                    SECRETS_SECTION.id,
+                    API_KEYS_SECTION.id,
+                  ]}
+                >
+                  <Accordion.Item value={SECRETS_SECTION.id}>
+                    <Accordion.Control
+                      icon={<IconLockOpen size={20} />}
+                    >
+                      {SECRETS_SECTION.title}
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      {secretsSection}
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  <Accordion.Item value={API_KEYS_SECTION.id}>
+                    <Accordion.Control icon={<IconKey size={20} />}>
+                      {API_KEYS_SECTION.title}
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <Text size={'sm'} c={'dimmed'}>
+                        No API keys yet for <b>{vault.activeEnv}</b>.
                       </Text>
-                    ) : (
-                      <AddSecretForm
-                        disabled={vault.busy}
-                        onSubmit={vault.addSecret}
+                      {/* Issuing keys isn't wired up yet. */}
+                      <AddRowButton
+                        label={'Add API key'}
+                        onClick={() => {}}
                       />
-                    )}
-                  </Accordion.Panel>
-                </Accordion.Item>
-                <Accordion.Item value={API_KEYS_SECTION.id}>
-                  <Accordion.Control icon={<IconKey size={20} />}>
-                    {API_KEYS_SECTION.title}
-                  </Accordion.Control>
-                  <Accordion.Panel>{'API keys here'}</Accordion.Panel>
-                </Accordion.Item>
-              </Accordion>
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                </Accordion>
+              ) : (
+                secretsSection
+              )}
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value={'credentials'}>
+          <Tabs.Panel value={'credentials'} pl={'md'}>
             <CredentialsTab
               vaultName={vault.activeVaultName}
               cloudName={vault.activeVault?.cloud?.name}
