@@ -45,9 +45,13 @@ const authRouter = hono()
 
       const {
         scopes: scopesFilter,
-        vaultName: vaultNameFilter,
+        vaultName: name,
         environment: environmentFilter,
       } = c.req.valid('query');
+
+      // Claims carry the resolved cloud name, so match how issuance
+      // derives it rather than comparing the caller's local name.
+      const vaultNameFilter = await vaultNameFromUserId(userId, name);
 
       const keys = userApiKeys
         .filter(({ scopes, claims }) => {
