@@ -1,5 +1,19 @@
 # worker
 
+## 1.5.0
+
+### Minor Changes
+
+- 0817197: API keys move from `POST /auth/key` to an `/auth/keys` collection that serves both issuance and listing. `GET /auth/keys` returns the caller's `vault:inject` keys for a vault and environment, filtered by scope and by the claims the key was minted with, and returns only each key's id, name, and expired/revoked state. It resolves the vault name the same way issuance does, so a caller passes the local vault name it already knows and never has to construct the hashed cloud name itself.
+
+  `deadrop apiKeys create` follows the route to its new path. The old `/auth/key` path is gone, so a CLI older than this release cannot create keys once the worker deploys.
+
+### Patch Changes
+
+- 0817197: Signed-in droppers count against their own account rather than their IP address. Previously everyone behind one address shared a single daily allowance, so colleagues on an office network or a VPN could exhaust each other's drops. Anonymous drops are still counted per IP.
+- Updated dependencies [0817197]
+  - shared@1.4.0
+
 ## 1.4.0
 
 ### Minor Changes

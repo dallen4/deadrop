@@ -1,5 +1,26 @@
 # desktop
 
+## 0.4.0
+
+### Minor Changes
+
+- 0817197: Manage CI service tokens from the desktop app. Each environment in a cloud vault you own now splits into Secrets and API Keys sections: the API Keys section lists the keys already scoped to that vault and environment with their active, expired, or revoked state, and issues new ones without dropping to the CLI. A new key is shown once when it is created, since that is the only time it can be read back. A local vault, or a cloud vault shared with you, keeps the plain secrets list it had before, because neither has keys to manage.
+
+  Adding a secret moved into a dialog behind an "Add secret" row rather than a form sitting open at the bottom of the list, and both dialogs name the vault and environment being written to so a secret cannot be added to the wrong environment by accident.
+
+  `shared` gains the `AuthScopes` enum, previously worker-only, so any surface can name the scope it is filtering keys on.
+
+### Patch Changes
+
+- Updated dependencies [0817197]
+  - shared@1.4.0
+
+## 0.3.3
+
+### Patch Changes
+
+- b24199d: The vault page splits into a sidebar and a content pane. Environments and Credentials move to a left rail, and the environment tabs, secrets and credential controls render beside it instead of stacking underneath.
+
 ## 0.3.2
 
 ### Patch Changes
