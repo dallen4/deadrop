@@ -72,7 +72,7 @@ For per-surface usage, see the [CLI](/docs/features/cli) and [VS Code](/docs/fea
 
 ### CI/CD
 
-- **CI service tokens**: issue a key scoped to one vault and environment with `deadrop apiKeys create`, then `deadrop inject --ci` runs a pipeline step with nothing but that key and the environment's decryption key set. Each run mints its own read-only token that expires in five minutes, replacing the long-lived token in a CI config. Currently gated to early-access accounts.
+- **CI service tokens**: issue a key scoped to one vault and environment with `deadrop apiKeys create`, or from the API Keys section of the desktop app's vault page, which also lists the keys already issued for that environment. Then `deadrop inject --ci` runs a pipeline step with nothing but that key and the environment's decryption key set. Each run mints its own read-only token that expires in five minutes, replacing the long-lived token in a CI config. Currently gated to early-access accounts.
 
 <DocsSectionTitle
   id={'in-progress'}
