@@ -1,6 +1,7 @@
 import { Hono, MiddlewareHandler } from 'hono';
 import { RequestIdVariables } from 'hono/request-id';
 import { Redis } from '@upstash/redis/cloudflare';
+import { ClerkHonoVariables } from '@clerk/hono';
 
 export type HonoCtx = {
   Bindings: Env;
@@ -11,7 +12,8 @@ export type HonoCtx = {
     claims?: Record<string, any>;
 
     redis: Redis;
-  } & RequestIdVariables;
+  } & RequestIdVariables &
+    ClerkHonoVariables;
 };
 
 export type Middleware = MiddlewareHandler<HonoCtx, string, {}>;

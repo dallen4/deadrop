@@ -174,7 +174,7 @@ export async function createApiKey(
   }
 
   try {
-    const response = await deadropClient.auth.key.$post({
+    const response = await deadropClient.auth.keys.$post({
       json: { vaultName, environment },
     });
 

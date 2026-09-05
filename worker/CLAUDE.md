@@ -49,7 +49,7 @@ worker/
 |--------|------|-------------|
 | GET | `/` | Health check (API metadata) |
 | `*` | `/auth/*` | Clerk auth endpoints |
-| POST | `/auth/key` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated()` + `restricted()`) |
+| POST | `/auth/keys` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated()` + `restricted()`) |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
 | POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true })` + `restricted()`) |

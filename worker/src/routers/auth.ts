@@ -5,6 +5,11 @@ import { KeyNotIssued } from '../lib/messages';
 import { zValidator } from '@hono/zod-validator';
 import { vaultNameFromUserId } from '@shared/lib/turso';
 import { VaultInjectClaimsSchema } from '../lib/vault';
+import z from 'zod';
+import {
+  ApiKeyClaimsFilterSchema,
+  ListApiKeysOptionsSchema,
+} from '../lib/auth';
 
 const authRouter = hono()
   .get(
@@ -24,8 +29,35 @@ const authRouter = hono()
       return c.json({ token }, 200);
     },
   )
+  .get(
+    AppRouteParts.ApiKeys,
+    authenticated(),
+    restricted(),
+    zValidator('json', ListApiKeysOptionsSchema),
+    async (c) => {
+      const userId = c.get('userId')!;
+
+      const clerkClient = c.get('clerk');
+
+      const { data: userApiKeys } = await clerkClient.apiKeys.list({
+        subject: userId,
+      });
+
+      userApiKeys.filter(({ scopes, claims }) => {
+        let includeKey = false;
+
+        if (scopes.length === 0) return includeKey;
+
+        if (scopes.includes(AuthScopes.VaultInject) && claims)
+          includeKey =
+            ApiKeyClaimsFilterSchema.safeParse(claims).success;
+
+        return includeKey;
+      });
+    },
+  )
   .post(
-    AppRouteParts.CreateApiKey,
+    AppRouteParts.ApiKeys,
     authenticated(),
     restricted(),
     zValidator('json', VaultInjectClaimsSchema),

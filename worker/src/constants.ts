@@ -25,7 +25,7 @@ export const AppRouteParts = {
   AuthRoot: '/auth',
   CreateSignInToken: '/token',
   Me: '/me',
-  CreateApiKey: '/key',
+  ApiKeys: '/keys',
 
   // peerjs
   PeerJsRoot: '/peerjs',
