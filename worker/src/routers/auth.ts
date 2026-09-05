@@ -5,10 +5,9 @@ import { KeyNotIssued } from '../lib/messages';
 import { zValidator } from '@hono/zod-validator';
 import { vaultNameFromUserId } from '@shared/lib/turso';
 import { VaultInjectClaimsSchema } from '../lib/vault';
-import z from 'zod';
 import {
   ApiKeyClaimsFilterSchema,
-  ListApiKeysOptionsSchema,
+  ListApiKeysQuerySchema,
 } from '../lib/auth';
 import { AuthScopes } from '@shared/lib/constants';
 
@@ -34,7 +33,7 @@ const authRouter = hono()
     AppRouteParts.ApiKeys,
     authenticated(),
     restricted(),
-    zValidator('json', ListApiKeysOptionsSchema),
+    zValidator('query', ListApiKeysQuerySchema),
     async (c) => {
       const userId = c.get('userId')!;
 
@@ -44,17 +43,40 @@ const authRouter = hono()
         subject: userId,
       });
 
-      userApiKeys.filter(({ scopes, claims }) => {
-        let includeKey = false;
+      const {
+        scopes: scopesFilter,
+        vaultName: vaultNameFilter,
+        environment: environmentFilter,
+      } = c.req.valid('query');
 
-        if (scopes.length === 0) return includeKey;
+      const keys = userApiKeys
+        .filter(({ scopes, claims }) => {
+          if (scopes.length === 0) return false;
 
-        if (scopes.includes(AuthScopes.VaultInject) && claims)
-          includeKey =
-            ApiKeyClaimsFilterSchema.safeParse(claims).success;
+          if (
+            scopesFilter &&
+            !scopes.some((scope) =>
+              scopesFilter.includes(scope as AuthScopes),
+            )
+          )
+            return false;
 
-        return includeKey;
-      });
+          if (!ApiKeyClaimsFilterSchema.safeParse(claims).success)
+            return false;
+
+          return (
+            claims?.vaultName === vaultNameFilter &&
+            claims?.environment === environmentFilter
+          );
+        })
+        .map((key) => ({
+          id: key.id,
+          name: key.name,
+          expired: key.expired,
+          revoked: key.revoked,
+        }));
+
+      return c.json(keys, 200);
     },
   )
   .post(
