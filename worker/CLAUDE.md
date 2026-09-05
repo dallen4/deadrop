@@ -49,6 +49,7 @@ worker/
 |--------|------|-------------|
 | GET | `/` | Health check (API metadata) |
 | `*` | `/auth/*` | Clerk auth endpoints |
+| GET | `/auth/keys` | List the caller's `vault:inject` API keys for a vault + environment, filtered by scope and claims, returning `id`/`name`/`expired`/`revoked` only (`authenticated()` + `restricted()`) |
 | POST | `/auth/keys` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated()` + `restricted()`) |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
@@ -107,7 +108,7 @@ worker/
 - Main: `src/index.ts`
 - Domain: `deadrop.nieky.dev`
 - DO: `PeerServerDO` class (binding `PEER_SERVER`)
-- Vars: `DAILY_DROP_LIMIT=5` (the Turso org slug is the shared `TURSO_ORGANIZATION` constant in `shared/lib/constants.ts`, not an env var)
+- Vars: `DAILY_DROP_LIMIT=5` — anonymous drops only, counted per IP; signed-in droppers count per `userId` against `PLAN_LIMITS.free.dailyDrops` (`shared/config/plans.ts`) until the limit reads off the user's plan (the Turso org slug is the shared `TURSO_ORGANIZATION` constant in `shared/lib/constants.ts`, not an env var)
 - Observability: logs + invocation logs enabled
 
 ## Path Aliases (tsconfig.json)

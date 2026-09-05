@@ -72,7 +72,11 @@ vault" (`src/lib/vault-config.ts`'s `pickExternalVaultConfig`). Any imported
 or grabbed cloud vault gets a fresh replica path (`resolveImportedVault`) —
 the incoming `location` is the sender's, and means nothing here.
 
-`Vault.tsx` splits into Secrets and Credentials tabs. Credentials
+`Vault.tsx` splits into Environments and Credentials panes. Environments
+holds the per-environment tabs; for a cloud vault you own it sections into
+Secrets and API Keys accordions (`ApiKeysSection.tsx`, backed by
+`src/lib/auth.ts`'s `useApiKeys` against `GET`/`POST /auth/keys`), while a
+local vault or one shared with you keeps the flat secrets list. Credentials
 (`src/components/vault/CredentialsTab.tsx`) issues sync tokens with an
 access level + expiry and offers a break-glass rotate, both owner-gated on
 `userOwnsVault` — a vault you don't own can't be reminted, so its stored
