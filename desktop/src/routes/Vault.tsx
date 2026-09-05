@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Accordion,
   ActionIcon,
   Alert,
   Box,
@@ -19,11 +20,13 @@ import {
 } from '@mantine/core';
 import {
   IconAlertCircle,
+  IconCertificate,
   IconCheck,
   IconCloud,
   IconCloudOff,
   IconFileImport,
   IconKey,
+  IconLockOpen,
   IconPlus,
   IconSelector,
   IconShare,
@@ -84,6 +87,16 @@ const NewEnvironmentInput = ({
       )}
     </Box>
   );
+};
+
+const SECRETS_SECTION = {
+  id: 'secrets',
+  title: 'Secrets',
+};
+
+const API_KEYS_SECTION = {
+  id: 'api-keys',
+  title: 'API Keys',
 };
 
 export const VaultPage = () => {
@@ -172,7 +185,7 @@ export const VaultPage = () => {
 
   return (
     <MainWrapper>
-      <Stack gap={'lg'} w={'100%'}>
+      <Stack gap={'xl'} w={'100%'}>
         <Group justify={'space-between'}>
           <Menu position={'bottom-start'} width={220}>
             <Menu.Target>
@@ -223,7 +236,7 @@ export const VaultPage = () => {
                 leftSection={<IconShare size={14} />}
                 onClick={() => setShareModalOpen(true)}
               >
-                Share vault
+                Share
               </Button>
             )}
             <Tooltip
@@ -249,9 +262,7 @@ export const VaultPage = () => {
                 loading={vault.busy}
                 onClick={() => void vault.toggleCloudSync()}
               >
-                {vault.cloudSync
-                  ? 'Cloud synced'
-                  : 'Enable cloud sync'}
+                {vault.cloudSync ? 'Synced' : 'Enable cloud sync'}
               </Button>
             </Tooltip>
           </Group>
@@ -273,7 +284,6 @@ export const VaultPage = () => {
           variant={'pills'}
         >
           <Tabs.List
-            w={190}
             pr={'md'}
             style={{
               borderRight:
@@ -288,17 +298,18 @@ export const VaultPage = () => {
             </Tabs.Tab>
             <Tabs.Tab
               value={'credentials'}
-              leftSection={<IconKey size={16} />}
+              leftSection={<IconCertificate size={16} />}
             >
               Credentials
             </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value={'environments'} pl={'lg'}>
-            <Stack gap={'lg'}>
+          <Tabs.Panel value={'environments'}>
+            <Stack gap={'lg'} pl={'md'}>
               <Tabs
                 value={vault.activeEnv}
                 onChange={(env) => env && vault.switchEnv(env)}
+                variant="outline"
               >
                 <Tabs.List>
                   {vault.environments.map((env) => (
@@ -314,41 +325,62 @@ export const VaultPage = () => {
                 </Tabs.List>
               </Tabs>
 
-              <Stack gap={4}>
-                {filtered.length === 0 ? (
-                  <Text size={'sm'} c={'dimmed'}>
-                    No secrets yet for <b>{vault.activeEnv}</b>.
-                  </Text>
-                ) : (
-                  filtered.map((s) => (
-                    <SecretRow
-                      key={`${s.environment}:${s.name}`}
-                      name={s.name}
-                      environment={s.environment}
-                      readOnly={readOnly}
-                      onReveal={vault.revealSecret}
-                      onUpdate={vault.updateSecret}
-                      onRename={vault.renameSecret}
-                      onDelete={vault.deleteSecret}
-                    />
-                  ))
-                )}
-              </Stack>
+              <Accordion
+                multiple
+                defaultValue={[
+                  SECRETS_SECTION.id,
+                  API_KEYS_SECTION.id,
+                ]}
+              >
+                <Accordion.Item value={SECRETS_SECTION.id}>
+                  <Accordion.Control icon={<IconLockOpen size={20} />} p={0}>
+                    {SECRETS_SECTION.title}
+                  </Accordion.Control>
+                  <Accordion.Panel>
+                    <Stack gap={4}>
+                      {filtered.length === 0 ? (
+                        <Text size={'sm'} c={'dimmed'}>
+                          No secrets yet for <b>{vault.activeEnv}</b>.
+                        </Text>
+                      ) : (
+                        filtered.map((s) => (
+                          <SecretRow
+                            key={`${s.environment}:${s.name}`}
+                            name={s.name}
+                            environment={s.environment}
+                            readOnly={readOnly}
+                            onReveal={vault.revealSecret}
+                            onUpdate={vault.updateSecret}
+                            onRename={vault.renameSecret}
+                            onDelete={vault.deleteSecret}
+                          />
+                        ))
+                      )}
+                    </Stack>
 
-              {readOnly ? (
-                <Text size={'xs'} c={'dimmed'}>
-                  Shared with you, read-only.
-                </Text>
-              ) : (
-                <AddSecretForm
-                  disabled={vault.busy}
-                  onSubmit={vault.addSecret}
-                />
-              )}
+                    {readOnly ? (
+                      <Text size={'xs'} c={'dimmed'}>
+                        Shared with you, read-only.
+                      </Text>
+                    ) : (
+                      <AddSecretForm
+                        disabled={vault.busy}
+                        onSubmit={vault.addSecret}
+                      />
+                    )}
+                  </Accordion.Panel>
+                </Accordion.Item>
+                <Accordion.Item value={API_KEYS_SECTION.id}>
+                  <Accordion.Control icon={<IconKey size={20} />}>
+                    {API_KEYS_SECTION.title}
+                  </Accordion.Control>
+                  <Accordion.Panel>{'API keys here'}</Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value={'credentials'} pl={'lg'}>
+          <Tabs.Panel value={'credentials'}>
             <CredentialsTab
               vaultName={vault.activeVaultName}
               cloudName={vault.activeVault?.cloud?.name}
