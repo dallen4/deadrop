@@ -14,6 +14,7 @@ import {
   TEST_TOKEN_HEADER,
   testTokenKey,
 } from '@shared/tests/http';
+import { PLAN_LIMITS } from '@shared/config/plans';
 
 const dropIdSchema = z.object({ id: z.string() });
 
@@ -73,12 +74,20 @@ const dropRouter = hono()
         if (!allowed) return c.json(PermissionDenied, 403);
       }
 
-      const canDrop = isTestSession
-        ? true
-        : await checkAndIncrementUserDropCount(ipAddress!);
+      if (!isTestSession) {
+        const userId = c.get('userId');
 
-      if (!canDrop)
-        return c.json({ message: 'Daily drop limit reached' }, 500);
+        // TODO dynamic limit check based off of user plan
+        const canDrop = !!userId
+          ? await checkAndIncrementAuthUserDropCount(
+              userId,
+              PLAN_LIMITS.free.dailyDrops,
+            )
+          : await checkAndIncrementUserDropCount(ipAddress!);
+
+        if (!canDrop)
+          return c.json({ message: 'Daily drop limit reached' }, 500);
+      }
 
       const { dropId, nonce } = await createDrop(
         peerId,
