@@ -216,6 +216,9 @@ export const VaultPage = () => {
       ) : (
         <AddSecretForm
           disabled={vault.busy}
+          vaultName={vault.activeVaultName}
+          cloudName={vault.activeVault?.cloud?.name}
+          environment={vault.activeEnv}
           onSubmit={vault.addSecret}
         />
       )}
