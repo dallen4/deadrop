@@ -46,17 +46,6 @@ jobs:
           export STAGE=$STAGE
           echo "Running '$STAGE' environment tests..."
 
-          export DEADROP_API_URL=$DEADROP_API_URL
-          echo $DEADROP_API_URL
-
-          export REDIS_REST_URL=$REDIS_REST_URL
-          export REDIS_REST_TOKEN=$REDIS_REST_TOKEN
-          export STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
-          export STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET
-          export STRIPE_SUPPORTER_LOOKUP_KEY=$STRIPE_SUPPORTER_LOOKUP_KEY
-          export CLERK_WEBHOOK_SIGNING_SECRET=$CLERK_WEBHOOK_SIGNING_SECRET
-          export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-
           # Vercel deployments carry only the commit SHA, so resolve which
           # branch that commit is the head of to choose the test domain.
           # Payment/Clerk specs (RUN_AUTH_TESTS) run on Preview (alpha) ONLY:
@@ -89,7 +78,10 @@ jobs:
           fi
 
           echo "TEST_URI=$TEST_URI  RUN_AUTH_TESTS=${RUN_AUTH_TESTS:-0}"
-          CI=true pnpm test:e2e --trace on
+
+          export CI=true
+
+          pnpm test:e2e --trace on
       - uses: actions/upload-artifact@v7
         if: always()
         with:

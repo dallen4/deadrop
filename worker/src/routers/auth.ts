@@ -1,10 +1,15 @@
-import { AppRouteParts, AuthScopes } from '../constants';
+import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { authenticated, restricted } from '../lib/middleware';
 import { KeyNotIssued } from '../lib/messages';
 import { zValidator } from '@hono/zod-validator';
 import { vaultNameFromUserId } from '@shared/lib/turso';
 import { VaultInjectClaimsSchema } from '../lib/vault';
+import {
+  ApiKeyClaimsFilterSchema,
+  ListApiKeysQuerySchema,
+} from '../lib/auth';
+import { AuthScopes } from '@shared/lib/constants';
 
 const authRouter = hono()
   .get(
@@ -24,8 +29,62 @@ const authRouter = hono()
       return c.json({ token }, 200);
     },
   )
+  .get(
+    AppRouteParts.ApiKeys,
+    authenticated(),
+    restricted(),
+    zValidator('query', ListApiKeysQuerySchema),
+    async (c) => {
+      const userId = c.get('userId')!;
+
+      const clerkClient = c.get('clerk');
+
+      const { data: userApiKeys } = await clerkClient.apiKeys.list({
+        subject: userId,
+      });
+
+      const {
+        scopes: scopesFilter,
+        vaultName: name,
+        environment: environmentFilter,
+      } = c.req.valid('query');
+
+      // Claims carry the resolved cloud name, so match how issuance
+      // derives it rather than comparing the caller's local name.
+      const vaultNameFilter = await vaultNameFromUserId(userId, name);
+
+      const keys = userApiKeys
+        .filter(({ scopes, claims }) => {
+          if (scopes.length === 0) return false;
+
+          if (
+            scopesFilter &&
+            !scopes.some((scope) =>
+              scopesFilter.includes(scope as AuthScopes),
+            )
+          )
+            return false;
+
+          if (!ApiKeyClaimsFilterSchema.safeParse(claims).success)
+            return false;
+
+          return (
+            claims?.vaultName === vaultNameFilter &&
+            claims?.environment === environmentFilter
+          );
+        })
+        .map((key) => ({
+          id: key.id,
+          name: key.name,
+          expired: key.expired,
+          revoked: key.revoked,
+        }));
+
+      return c.json(keys, 200);
+    },
+  )
   .post(
-    AppRouteParts.CreateApiKey,
+    AppRouteParts.ApiKeys,
     authenticated(),
     restricted(),
     zValidator('json', VaultInjectClaimsSchema),

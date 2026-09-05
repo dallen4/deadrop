@@ -1,11 +1,11 @@
 import { TokenType } from '@clerk/backend/internal';
 import { getAuth } from '@clerk/hono';
-import { SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
+import { AuthScopes, SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
 import { TEST_TOKEN_HEADER } from '@shared/tests/http';
 import { Redis } from '@upstash/redis/cloudflare';
 import { cors as baseCors } from 'hono/cors';
 import { createMiddleware } from 'hono/factory';
-import { AppHeaders, AuthScopes } from '../constants';
+import { AppHeaders } from '../constants';
 import { HonoCtx, Middleware } from './http/core';
 import {
   AuthUnavailable,

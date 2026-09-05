@@ -97,6 +97,12 @@ cloud sync for a vault from the same view, so its secrets stay available across 
 can also link an existing project-scoped vault created by the CLI or the VS Code extension
 into the desktop app via "Import vault" in the vault switcher.
 
+If you own the cloud vault, each environment splits into Secrets and API Keys sections. The
+API Keys section lists the CI service tokens scoped to that vault and environment, with their
+status, and issues new ones without dropping to the CLI. A newly issued key is shown once, so
+copy it before closing the dialog. A local vault, or one shared with you, shows the plain
+secrets list instead, since there are no keys to manage there.
+
 Cloud-synced vaults also get a Credentials tab: it shows the token the app syncs with, issues
 new ones with an access level and expiry, and offers a break-glass rotate. Rotating kills every
 token for that vault, including your other machines and anyone you've shared it with, so the

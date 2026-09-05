@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Accordion,
   ActionIcon,
   Alert,
   Box,
@@ -19,19 +20,23 @@ import {
 } from '@mantine/core';
 import {
   IconAlertCircle,
+  IconCertificate,
   IconCheck,
   IconCloud,
   IconCloudOff,
   IconFileImport,
   IconKey,
+  IconLockOpen,
   IconPlus,
   IconSelector,
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
 import { MainWrapper } from '../components/MainWrapper';
+import classes from './Vault.module.css';
 import { useVault } from '../hooks/use-vault';
 import { AddSecretForm } from '../components/vault/AddSecretForm';
+import { ApiKeysSection } from '../components/vault/ApiKeysSection';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
 import { CredentialsTab } from '../components/vault/CredentialsTab';
 import { SecretRow } from '../components/vault/SecretRow';
@@ -86,16 +91,27 @@ const NewEnvironmentInput = ({
   );
 };
 
+const SECRETS_SECTION = {
+  id: 'secrets',
+  title: 'Secrets',
+};
+
+const API_KEYS_SECTION = {
+  id: 'api-keys',
+  title: 'API Keys',
+};
+
 export const VaultPage = () => {
   const vault = useVault();
   const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
-  // Only the owner can mint the read-only token a share carries.
-  const canShare = vault.cloudSync && vault.ownsActiveCloudVault;
+  // Only the owner can mint the read-only token a share carries, and
+  // only an owned cloud vault has API keys to section off.
+  const owned = vault.cloudSync && vault.ownsActiveCloudVault;
 
-  // Not !canShare — a local vault has no owner and stays writable.
+  // Not !owned — a local vault has no owner and stays writable.
   const readOnly = vault.cloudSync && !vault.ownsActiveCloudVault;
 
   const shareVault = async (envs: string[], expiration: string) => {
@@ -170,9 +186,48 @@ export const VaultPage = () => {
     (s) => s.environment === vault.activeEnv,
   );
 
+  const secretsSection = (
+    <>
+      <Stack gap={4}>
+        {filtered.length === 0 ? (
+          <Text size={'sm'} c={'dimmed'}>
+            No secrets yet for <b>{vault.activeEnv}</b>.
+          </Text>
+        ) : (
+          filtered.map((s) => (
+            <SecretRow
+              key={`${s.environment}:${s.name}`}
+              name={s.name}
+              environment={s.environment}
+              readOnly={readOnly}
+              onReveal={vault.revealSecret}
+              onUpdate={vault.updateSecret}
+              onRename={vault.renameSecret}
+              onDelete={vault.deleteSecret}
+            />
+          ))
+        )}
+      </Stack>
+
+      {readOnly ? (
+        <Text size={'xs'} c={'dimmed'}>
+          Shared with you, read-only.
+        </Text>
+      ) : (
+        <AddSecretForm
+          disabled={vault.busy}
+          vaultName={vault.activeVaultName}
+          cloudName={vault.activeVault?.cloud?.name}
+          environment={vault.activeEnv}
+          onSubmit={vault.addSecret}
+        />
+      )}
+    </>
+  );
+
   return (
     <MainWrapper>
-      <Stack gap={'lg'} w={'100%'}>
+      <Stack gap={'xl'} w={'100%'}>
         <Group justify={'space-between'}>
           <Menu position={'bottom-start'} width={220}>
             <Menu.Target>
@@ -216,14 +271,14 @@ export const VaultPage = () => {
           </Menu>
 
           <Group gap={'sm'}>
-            {canShare && (
+            {owned && (
               <Button
                 size={'xs'}
                 variant={'default'}
                 leftSection={<IconShare size={14} />}
                 onClick={() => setShareModalOpen(true)}
               >
-                Share vault
+                Share
               </Button>
             )}
             <Tooltip
@@ -249,9 +304,7 @@ export const VaultPage = () => {
                 loading={vault.busy}
                 onClick={() => void vault.toggleCloudSync()}
               >
-                {vault.cloudSync
-                  ? 'Cloud synced'
-                  : 'Enable cloud sync'}
+                {vault.cloudSync ? 'Synced' : 'Enable cloud sync'}
               </Button>
             </Tooltip>
           </Group>
@@ -273,7 +326,6 @@ export const VaultPage = () => {
           variant={'pills'}
         >
           <Tabs.List
-            w={190}
             pr={'md'}
             style={{
               borderRight:
@@ -288,17 +340,18 @@ export const VaultPage = () => {
             </Tabs.Tab>
             <Tabs.Tab
               value={'credentials'}
-              leftSection={<IconKey size={16} />}
+              leftSection={<IconCertificate size={16} />}
             >
               Credentials
             </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value={'environments'} pl={'lg'}>
-            <Stack gap={'lg'}>
+          <Tabs.Panel value={'environments'}>
+            <Stack gap={'sm'} pl={'md'}>
               <Tabs
                 value={vault.activeEnv}
                 onChange={(env) => env && vault.switchEnv(env)}
+                classNames={{ root: classes.envTabs }}
               >
                 <Tabs.List>
                   {vault.environments.map((env) => (
@@ -314,41 +367,45 @@ export const VaultPage = () => {
                 </Tabs.List>
               </Tabs>
 
-              <Stack gap={4}>
-                {filtered.length === 0 ? (
-                  <Text size={'sm'} c={'dimmed'}>
-                    No secrets yet for <b>{vault.activeEnv}</b>.
-                  </Text>
-                ) : (
-                  filtered.map((s) => (
-                    <SecretRow
-                      key={`${s.environment}:${s.name}`}
-                      name={s.name}
-                      environment={s.environment}
-                      readOnly={readOnly}
-                      onReveal={vault.revealSecret}
-                      onUpdate={vault.updateSecret}
-                      onRename={vault.renameSecret}
-                      onDelete={vault.deleteSecret}
-                    />
-                  ))
-                )}
-              </Stack>
-
-              {readOnly ? (
-                <Text size={'xs'} c={'dimmed'}>
-                  Shared with you, read-only.
-                </Text>
+              {owned ? (
+                <Accordion
+                  multiple
+                  classNames={{ control: classes.sectionControl }}
+                  defaultValue={[
+                    SECRETS_SECTION.id,
+                    API_KEYS_SECTION.id,
+                  ]}
+                >
+                  <Accordion.Item value={SECRETS_SECTION.id}>
+                    <Accordion.Control
+                      icon={<IconLockOpen size={20} />}
+                    >
+                      {SECRETS_SECTION.title}
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      {secretsSection}
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                  <Accordion.Item value={API_KEYS_SECTION.id}>
+                    <Accordion.Control icon={<IconKey size={20} />}>
+                      {API_KEYS_SECTION.title}
+                    </Accordion.Control>
+                    <Accordion.Panel>
+                      <ApiKeysSection
+                        vaultName={vault.activeVaultName}
+                        cloudName={vault.activeVault?.cloud?.name}
+                        environment={vault.activeEnv}
+                      />
+                    </Accordion.Panel>
+                  </Accordion.Item>
+                </Accordion>
               ) : (
-                <AddSecretForm
-                  disabled={vault.busy}
-                  onSubmit={vault.addSecret}
-                />
+                secretsSection
               )}
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value={'credentials'} pl={'lg'}>
+          <Tabs.Panel value={'credentials'} pl={'md'}>
             <CredentialsTab
               vaultName={vault.activeVaultName}
               cloudName={vault.activeVault?.cloud?.name}

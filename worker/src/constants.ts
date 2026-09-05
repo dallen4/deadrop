@@ -10,10 +10,6 @@ export enum ContentType {
   Json = 'application/json',
 }
 
-export enum AuthScopes {
-  VaultInject = 'vault:inject',
-}
-
 export type AppRouteParts =
   (typeof AppRouteParts)[keyof typeof AppRouteParts];
 
@@ -25,7 +21,7 @@ export const AppRouteParts = {
   AuthRoot: '/auth',
   CreateSignInToken: '/token',
   Me: '/me',
-  CreateApiKey: '/key',
+  ApiKeys: '/keys',
 
   // peerjs
   PeerJsRoot: '/peerjs',

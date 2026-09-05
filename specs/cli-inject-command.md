@@ -13,7 +13,7 @@
   path (no `.deadroprc`/`--config` file at all — just env vars); (4) the
   `cli/install.sh` fix that would otherwise hang in CI. Issuance landed too,
   which this doc never specced: `deadrop apiKeys create` and `POST
-  /auth/key` scope a key to one vault + environment, and `--ci` reads both
+  /auth/keys` scope a key to one vault + environment, and `--ci` reads both
   off its claims, so `DEADROP_VAULT`/`DEADROP_ENVIRONMENT` are unnecessary.
 - **`--github-env` — still open.** Item (3): an output mode that persists
   secrets across an entire CI job instead of wrapping one command. The

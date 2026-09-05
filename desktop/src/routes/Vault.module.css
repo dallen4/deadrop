@@ -1,0 +1,14 @@
+/* Mantine's `unset` var defaults are inherited, so the outer vertical Tabs' values leak in and box the line. */
+.envTabs {
+  --tabs-list-line-top: auto;
+  --tabs-list-gap: 0;
+}
+
+/* Doubled to outrank Mantine's own equal-specificity `.control:hover`. */
+.sectionControl.sectionControl {
+  padding: 0 var(--mantine-spacing-xs);
+}
+
+.sectionControl.sectionControl:hover {
+  background-color: transparent;
+}
