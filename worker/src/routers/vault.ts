@@ -4,6 +4,7 @@ import { hono } from '../lib/http/core';
 import {
   createVaultUtils,
   vaultNameFromUserId,
+  vaultPrefixFromUserId,
   TursoApiError,
 } from '@shared/lib/turso';
 import { AuthScopes, VaultTokenAccess } from '@shared/lib/constants';
@@ -249,7 +250,7 @@ const vaultRouter = hono()
       );
 
       try {
-        const prefix = await vaultNameFromUserId(userId);
+        const prefix = await vaultPrefixFromUserId(userId);
         const vaults = await listVaults(prefix);
 
         await Promise.all(
@@ -279,7 +280,7 @@ const vaultRouter = hono()
       );
 
       try {
-        const prefix = await vaultNameFromUserId(userId);
+        const prefix = await vaultPrefixFromUserId(userId);
         const vaults = await listVaults(prefix);
 
         await Promise.all(

@@ -6,8 +6,8 @@ export const CreateVaultSchema = VaultNameSchema.partial().extend({
   seed: z.enum(['database_upload']).optional(),
 });
 export const VaultOwnerSchema = z.object({ userId: z.string() });
-// Optional `name` mirrors VaultTokenSchema so the default vault (bare
-// `<hash13>`, no suffix) stays addressable.
+// Optional `name` mirrors VaultTokenSchema; omitting it resolves to the
+// `<hash13>-default` vault, never a bare `<hash13>`.
 export const VaultRotateSchema = z.object({
   name: z.string().optional(),
 });

@@ -3,6 +3,7 @@ import { TURSO_ORGANIZATION } from '../../lib/constants';
 import {
   userOwnsVault,
   vaultNameFromUserId,
+  vaultPrefixFromUserId,
   vaultSyncUrl,
 } from '../../lib/turso/utils';
 
@@ -36,8 +37,17 @@ describe('userOwnsVault', () => {
   });
 
   it('rejects the bare prefix with no vault segment', async () => {
-    const prefix = await vaultNameFromUserId(userId);
+    const prefix = await vaultPrefixFromUserId(userId);
 
-    expect(await userOwnsVault(userId, prefix)).toBe(false);
+    expect(await userOwnsVault(userId, prefix.slice(0, -1))).toBe(
+      false,
+    );
+  });
+
+  it('names an omitted vault `default` rather than leaving it bare', async () => {
+    const name = await vaultNameFromUserId(userId);
+
+    expect(name.endsWith('-default')).toBe(true);
+    expect(await userOwnsVault(userId, name)).toBe(true);
   });
 });

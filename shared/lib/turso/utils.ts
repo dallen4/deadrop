@@ -38,16 +38,22 @@ const sha256hex = async (input: string) => {
 const userIdToIndex = async (userId: string) =>
   (await sha256hex(userId)).substring(0, 13);
 
+// A bare `<hash13>` can never satisfy userOwnsVault, so every vault is suffixed.
+export const DEFAULT_VAULT_NAME = 'default';
+
+// The shared prefix of every vault a user owns. Only for filtering an
+// org-wide list down to one user — never a database name in its own right.
+export const vaultPrefixFromUserId = async (userId: string) =>
+  `${await userIdToIndex(userId)}-`;
+
 export const vaultNameFromUserId = async (
   userId: string,
-  vaultName?: string,
+  vaultName: string = DEFAULT_VAULT_NAME,
 ) => {
   const userIndex = await userIdToIndex(userId);
-  const nameParts = [userIndex];
+  const name = vaultName.trim() || DEFAULT_VAULT_NAME;
 
-  if (vaultName) nameParts.push(vaultName);
-
-  return nameParts.join('-').substring(0, 63);
+  return [userIndex, name].join('-').substring(0, 63);
 };
 
 export const userOwnsVault = async (
