@@ -6,10 +6,22 @@ import { DEADROP_API_URL } from '../env';
 // Mirrors cli/actions/vault/create.ts's provisionCloudVault — POST /vault
 // via the typed Hono client, using the Clerk session token from
 // useApiHeaders() (same pattern drop/grab already use).
+// An empty name is NOT the same as no name: the worker's
+// vaultNameFromUserId drops falsy suffixes, so '' silently resolves to the
+// bare `<hash13>` default vault instead of `<hash13>-<name>`.
+const requireVaultName = (name: string) => {
+  if (!name.trim())
+    throw new Error('A vault name is required for cloud sync.');
+
+  return name;
+};
+
 export async function provisionCloudVault(
   vaultNameInput: string,
   apiHeaders: Record<string, string>,
 ): Promise<CloudVaultConfig> {
+  requireVaultName(vaultNameInput);
+
   const client = createClient(DEADROP_API_URL, {
     init: { headers: apiHeaders },
   });
@@ -25,6 +37,29 @@ export async function provisionCloudVault(
   const { name, token } = await response.json();
 
   return { name, authToken: token };
+}
+
+// A vault detached from sync still exists at Turso, so re-enabling looks
+// it up first and mints a fresh credential instead of provisioning anew.
+export async function findCloudVaultName(
+  vaultName: string,
+  apiHeaders: Record<string, string>,
+): Promise<string | null> {
+  requireVaultName(vaultName);
+
+  const client = createClient(DEADROP_API_URL, {
+    init: { headers: apiHeaders },
+  });
+
+  const response = await client.vault[':name'].$get({
+    param: { name: vaultName },
+  });
+
+  if (response.status !== 200) return null;
+
+  const { vault } = await response.json();
+
+  return vault?.Name ?? null;
 }
 
 export async function issueVaultToken(

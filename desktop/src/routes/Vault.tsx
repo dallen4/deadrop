@@ -31,6 +31,7 @@ import {
   IconSelector,
   IconShare,
   IconStack2,
+  IconTrash,
 } from '@tabler/icons-react';
 import { MainWrapper } from '../components/MainWrapper';
 import classes from './Vault.module.css';
@@ -38,6 +39,7 @@ import { useVault } from '../hooks/use-vault';
 import { AddSecretForm } from '../components/vault/AddSecretForm';
 import { ApiKeysSection } from '../components/vault/ApiKeysSection';
 import { CreateVaultModal } from '../components/vault/CreateVaultModal';
+import { DeleteCloudVaultModal } from '../components/vault/DeleteCloudVaultModal';
 import { CredentialsTab } from '../components/vault/CredentialsTab';
 import { SecretRow } from '../components/vault/SecretRow';
 import { ShareVaultModal } from '../components/vault/ShareVaultModal';
@@ -106,6 +108,7 @@ export const VaultPage = () => {
   const navigate = useNavigate();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [deleteCloudOpen, setDeleteCloudOpen] = useState(false);
 
   // Only the owner can mint the read-only token a share carries, and
   // only an owned cloud vault has API keys to section off.
@@ -267,6 +270,18 @@ export const VaultPage = () => {
               >
                 Import vault
               </Menu.Item>
+              {owned && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item
+                    color={'red'}
+                    leftSection={<IconTrash size={14} />}
+                    onClick={() => setDeleteCloudOpen(true)}
+                  >
+                    Delete cloud vault
+                  </Menu.Item>
+                </>
+              )}
             </Menu.Dropdown>
           </Menu>
 
@@ -283,11 +298,14 @@ export const VaultPage = () => {
             )}
             <Tooltip
               label={
-                vault.canCloudSync
-                  ? undefined
-                  : 'Cloud sync is an early-access feature.'
+                !vault.canCloudSync
+                  ? 'Cloud sync is an early-access feature.'
+                  : vault.cloudSync
+                    ? 'Stop syncing. Your cloud vault is kept, so you can turn this back on any time.'
+                    : 'Sync this vault to the cloud.'
               }
-              disabled={vault.canCloudSync}
+              multiline
+              w={240}
             >
               <Button
                 size={'xs'}
@@ -426,6 +444,14 @@ export const VaultPage = () => {
         canCloudSync={vault.canCloudSync}
         busy={vault.busy}
         onCreate={vault.createVault}
+      />
+
+      <DeleteCloudVaultModal
+        opened={deleteCloudOpen}
+        onClose={() => setDeleteCloudOpen(false)}
+        vaultName={vault.activeVaultName}
+        busy={vault.busy}
+        onDelete={vault.deleteCloudCopy}
       />
 
       <ShareVaultModal
