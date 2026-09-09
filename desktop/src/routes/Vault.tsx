@@ -130,6 +130,20 @@ export const VaultPage = () => {
     });
   };
 
+  // A single secret rides the same staged-payload path a vault share does;
+  // the drop flow only ever sees an opaque string.
+  const dropSecret = async (name: string, environment: string) => {
+    const payload = await vault.revealSecret(name, environment);
+    navigate('/drop', {
+      state: {
+        staged: {
+          summary: `${name} (${environment})`,
+          payload,
+        },
+      },
+    });
+  };
+
   if (vault.loading) {
     return (
       <Center mih={'50vh'}>
@@ -207,6 +221,18 @@ export const VaultPage = () => {
               onUpdate={vault.updateSecret}
               onRename={vault.renameSecret}
               onDelete={vault.deleteSecret}
+              onDrop={(n, e) => void dropSecret(n, e)}
+              copyTargets={vault.environments
+                .filter((env) => env !== s.environment)
+                .map((environment) => ({
+                  environment,
+                  exists: vault.secretNames.some(
+                    (other) =>
+                      other.name === s.name &&
+                      other.environment === environment,
+                  ),
+                }))}
+              onCopyTo={vault.copySecretTo}
             />
           ))
         )}

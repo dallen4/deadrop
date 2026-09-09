@@ -413,6 +413,47 @@ export const useVault = () => {
       await refreshSecretNames();
     });
 
+  // Each environment holds its own key, so a cross-env copy is an
+  // unwrap-then-rewrap, and it upserts because (name, env) is the PK.
+  const copySecretTo = (
+    name: string,
+    fromEnv: string,
+    toEnv: string,
+  ) =>
+    withBusy(async () => {
+      if (!activeVault) return;
+      const encrypted = await getEncryptedSecret(
+        activeVault,
+        name,
+        fromEnv,
+      );
+      if (!encrypted) throw new Error('Secret not found.');
+      const value = await unwrapSecret(
+        activeVault.environments[fromEnv],
+        encrypted,
+      );
+      const rewrapped = await wrapSecret(
+        activeVault.environments[toEnv],
+        value,
+      );
+      const existing = await getEncryptedSecret(
+        activeVault,
+        name,
+        toEnv,
+      );
+      if (existing) {
+        await updateEncryptedSecret(
+          activeVault,
+          name,
+          toEnv,
+          rewrapped,
+        );
+      } else {
+        await addEncryptedSecret(activeVault, name, toEnv, rewrapped);
+      }
+      await refreshSecretNames();
+    });
+
   const revealSecret = async (
     name: string,
     environment: string,
@@ -457,5 +498,6 @@ export const useVault = () => {
     renameSecret,
     deleteSecret,
     revealSecret,
+    copySecretTo,
   };
 };
