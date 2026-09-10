@@ -63,8 +63,11 @@ describe('POST /drop daily limit', () => {
     const res = await drop();
 
     expect(res.status).toBe(200);
+    // Anonymous callers resolve to the free tier's limit, not a
+    // separate env-var allowance.
     expect(checkAndIncrementUserDropCount).toHaveBeenCalledWith(
       '203.0.113.7',
+      PLAN_LIMITS.free.dailyDrops,
     );
     expect(checkAndIncrementAuthUserDropCount).not.toHaveBeenCalled();
   });
@@ -74,7 +77,7 @@ describe('POST /drop daily limit', () => {
 
     const res = await drop('user_123');
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(429);
     expect(createDrop).not.toHaveBeenCalled();
   });
 
@@ -83,7 +86,7 @@ describe('POST /drop daily limit', () => {
 
     const res = await drop();
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(429);
     expect(createDrop).not.toHaveBeenCalled();
   });
 });

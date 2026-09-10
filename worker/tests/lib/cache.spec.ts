@@ -27,14 +27,13 @@ const createMockRedis = () => {
 
 const createMockContext = (
   redis: ReturnType<typeof createMockRedis>,
-  dailyDropLimit = 5,
 ) =>
   ({
     get: (key: string) => {
       if (key === 'redis') return redis;
       return undefined;
     },
-    env: { DAILY_DROP_LIMIT: dailyDropLimit },
+    env: {},
   }) as any;
 
 describe('checkAndIncrementUserDropCount', () => {
@@ -46,6 +45,7 @@ describe('checkAndIncrementUserDropCount', () => {
 
     const allowed = await checkAndIncrementUserDropCount(
       '192.168.1.1',
+      5,
     );
 
     expect(allowed).toBe(true);
@@ -54,48 +54,48 @@ describe('checkAndIncrementUserDropCount', () => {
 
   it('allows drops up to the daily limit', async () => {
     const redis = createMockRedis();
-    const ctx = createMockContext(redis, 5);
+    const ctx = createMockContext(redis);
     const { checkAndIncrementUserDropCount } =
       createCacheHandlers(ctx);
 
     for (let i = 0; i < 5; i++) {
       const allowed =
-        await checkAndIncrementUserDropCount('10.0.0.1');
+        await checkAndIncrementUserDropCount('10.0.0.1', 5);
       expect(allowed).toBe(true);
     }
   });
 
   it('rejects drops beyond the daily limit', async () => {
     const redis = createMockRedis();
-    const ctx = createMockContext(redis, 5);
+    const ctx = createMockContext(redis);
     const { checkAndIncrementUserDropCount } =
       createCacheHandlers(ctx);
 
     for (let i = 0; i < 5; i++) {
-      await checkAndIncrementUserDropCount('10.0.0.1');
+      await checkAndIncrementUserDropCount('10.0.0.1', 5);
     }
 
     const rejected =
-      await checkAndIncrementUserDropCount('10.0.0.1');
+      await checkAndIncrementUserDropCount('10.0.0.1', 5);
     expect(rejected).toBe(false);
   });
 
   it('tracks IPs independently', async () => {
     const redis = createMockRedis();
-    const ctx = createMockContext(redis, 1);
+    const ctx = createMockContext(redis);
     const { checkAndIncrementUserDropCount } =
       createCacheHandlers(ctx);
 
     const first =
-      await checkAndIncrementUserDropCount('10.0.0.1');
+      await checkAndIncrementUserDropCount('10.0.0.1', 1);
     expect(first).toBe(true);
 
     const firstRejected =
-      await checkAndIncrementUserDropCount('10.0.0.1');
+      await checkAndIncrementUserDropCount('10.0.0.1', 1);
     expect(firstRejected).toBe(false);
 
     const secondIp =
-      await checkAndIncrementUserDropCount('10.0.0.2');
+      await checkAndIncrementUserDropCount('10.0.0.2', 1);
     expect(secondIp).toBe(true);
   });
 });

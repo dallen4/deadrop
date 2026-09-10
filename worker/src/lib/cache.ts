@@ -81,6 +81,7 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
 
   const checkAndIncrementUserDropCount = async (
     ipAddress: string,
+    limit: number,
   ) => {
     const userIpHash = await hash(ipAddress);
 
@@ -89,7 +90,7 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
     if (!userDropCount) {
       await client.setex(userIpHash, DAY_IN_SEC, 1);
     } else {
-      if (userDropCount >= c.env.DAILY_DROP_LIMIT) return false;
+      if (limit !== Infinity && userDropCount >= limit) return false;
       else await client.incr(userIpHash);
     }
 
