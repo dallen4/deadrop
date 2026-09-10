@@ -2,8 +2,7 @@
 
 CLI-to-CLI mirror of the web drop/grab e2e. Two `deadrop` processes establish
 a real `node-datachannel` WebRTC connection: one drops a text secret, the other
-grabs it, and we assert the round-tripped value. See
-`../../../cli-e2e-test-suite-plan.md` for the roadmap (M1→M3).
+grabs it, and we assert the round-tripped value.
 
 ## How it works
 

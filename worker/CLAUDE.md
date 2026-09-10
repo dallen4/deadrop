@@ -99,7 +99,7 @@ worker/
 
 ### Billing/plans (`src/lib/billing.ts`)
 - Plan limits, feature slugs, `AuthScopes` and the `SCOPE_FEATURES` map (a scope is a delegation of a feature) are defined once in `shared/config/plans.ts`; the Worker derives `getUserPlan`/`getPlanLimits`/`hasFeature` from Clerk session claims (`pla` claim, `public_metadata.plan`) — this is the source of truth for enforcement, mirrored client-side in `web/lib/billing.ts` for UI gating only
-- Enforced today: `maxGrabbers` (`checkMaxGrabbers`), `dailyDrops` (per plan, and the anonymous per-IP counter resolves to the free tier through the same `getPlanLimits` call), `cloudVaults` (vault create), `apiKeys` (key issuance). Still unenforced: `envsPerVault`, `no_captcha`, vault sharing — see `specs/entitlement-enforcement-gaps.md`
+- Enforced today: `maxGrabbers` (`checkMaxGrabbers`), `dailyDrops` (per plan, and the anonymous per-IP counter resolves to the free tier through the same `getPlanLimits` call), `cloudVaults` (vault create), `apiKeys` (key issuance). Still unenforced: `envsPerVault`, `no_captcha`, vault sharing
 - A drop refused for quota returns **429**, never 500 — a client must be able to tell a limit it cannot clear from a server fault it should retry
 
 ### Typed Hono RPC
