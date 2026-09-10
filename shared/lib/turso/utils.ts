@@ -41,6 +41,10 @@ const userIdToIndex = async (userId: string) =>
 // A bare `<hash13>` can never satisfy userOwnsVault, so every vault is suffixed.
 export const DEFAULT_VAULT_NAME = 'default';
 
+export const TURSO_DB_GROUP = 'deadrop';
+
+export const TURSO_DB_SIZE_LIMIT = '100mb';
+
 // The shared prefix of every vault a user owns. Only for filtering an
 // org-wide list down to one user — never a database name in its own right.
 export const vaultPrefixFromUserId = async (userId: string) =>
