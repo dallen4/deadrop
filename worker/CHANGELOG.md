@@ -1,5 +1,34 @@
 # worker
 
+## 1.6.0
+
+### Minor Changes
+
+- 1502f27: Always give a vault a name suffix. A vault created without a name resolved to a bare `<hash13>` derived from the user id, and the ownership check requires the `<hash13>-` separator, so such a vault could never be recognised as owned by the person who created it. It rendered as read only in the desktop app, with no API keys section and no share button. An unnamed vault now resolves to `<hash13>-default`, and an empty or whitespace name resolves there too rather than silently collapsing to the bare form.
+
+  Listing a user's vaults keeps using the bare hash as a prefix filter, which is now a separate `vaultPrefixFromUserId` so plan caps and the billing lock and unlock sweeps still see every vault a user owns.
+
+  Existing API keys carry their resolved vault name in immutable claims, so any key issued without a name still points at the old bare database and needs reissuing.
+
+- 1502f27: Enforce plan entitlements on the API. Feature gating folds into `authenticated({ feature })`, replacing the separate `restricted()` middleware, so identity and entitlement resolve in one pass. Early access and internal users keep their bypass, and it is now read from live Clerk metadata as well as the session claims, so entitlement no longer depends on the session template projecting the plan.
+
+  Plan limits are enforced rather than advertised. Daily drop limits come from plan config instead of a fixed worker variable, and both the signed in and anonymous counters resolve through the same source. Creating a cloud vault or issuing an API key past the plan cap is refused with a message naming the limit, counted live from Turso and Clerk so nothing has to be reconciled locally.
+
+  Plan limits, feature slugs and auth scopes now live in one place in shared config, and the pricing tiers page derives its copy from the same limits, so advertised numbers cannot drift from the ones actually enforced.
+
+### Patch Changes
+
+- 95d715c: Cap every new cloud vault at 100mb. Vaults were provisioned with no size limit, so a single vault could grow until it consumed the whole Turso storage allowance for the organisation. New databases now have Turso's own `size_limit` applied at creation, which bounds the worst case without depending on any client behaving.
+
+  The limit is deliberately far above what a vault should ever hold. It measures the database file rather than the secrets inside it, so page allocation, the primary key index, free pages left behind by deletes, and the write ahead log history kept for replica sync all count against it. A vault whose secrets are rotated often sits at several times the size of the values it holds, and a tighter limit would refuse writes to a vault that had done nothing wrong. Per secret and per vault limits that can explain themselves belong in the client, and are tracked separately.
+
+  Provisioning is also no longer able to leave a vault behind when it half succeeds. Applying the limit is a second call after the database is created, and if it failed the database survived uncapped while the caller saw an error. Because vaults are counted by name prefix when a plan cap is checked, that orphan still counted against its owner, which could permanently consume the single vault a Supporter is allowed. A failed limit now deletes the database it was created for before the error propagates.
+
+- Updated dependencies [1502f27]
+- Updated dependencies [95d715c]
+- Updated dependencies [1502f27]
+  - shared@1.5.0
+
 ## 1.5.0
 
 ### Minor Changes
