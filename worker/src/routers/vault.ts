@@ -16,7 +16,6 @@ import {
 import {
   apiKey,
   authenticated,
-  restricted,
   service,
 } from '../lib/middleware';
 import {
@@ -31,8 +30,10 @@ import {
 const vaultRouter = hono()
   .post(
     AppRouteParts.Root,
-    authenticated({ allowApiKey: true }),
-    restricted(),
+    authenticated({
+      allowApiKey: true,
+      feature: FEATURE_SLUGS.CLOUD_VAULT,
+    }),
     zValidator('json', CreateVaultSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -72,8 +73,10 @@ const vaultRouter = hono()
   )
   .post(
     AppRouteParts.Tokens,
-    authenticated({ allowApiKey: true }),
-    restricted(),
+    authenticated({
+      allowApiKey: true,
+      feature: FEATURE_SLUGS.CLOUD_VAULT,
+    }),
     zValidator('json', VaultTokenSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -118,7 +121,6 @@ const vaultRouter = hono()
   .post(
     AppRouteParts.CiTokens,
     apiKey({ scopes: [AuthScopes.VaultInject] }),
-    restricted(),
     async (c) => {
       const { vaultName, environment } = c.get(
         'claims',
@@ -182,8 +184,7 @@ const vaultRouter = hono()
   )
   .delete(
     AppRouteParts.NameParam,
-    authenticated(),
-    restricted(),
+    authenticated({ feature: FEATURE_SLUGS.CLOUD_VAULT }),
     zValidator('param', VaultNameSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -207,8 +208,7 @@ const vaultRouter = hono()
   // `allowApiKey`: destructive, so it needs an interactive session.
   .post(
     AppRouteParts.Rotate,
-    authenticated(),
-    restricted(),
+    authenticated({ feature: FEATURE_SLUGS.CLOUD_VAULT }),
     zValidator('json', VaultRotateSchema),
     async (c) => {
       const userId = c.get('userId')!;

@@ -1,6 +1,6 @@
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
-import { authenticated, restricted } from '../lib/middleware';
+import { authenticated } from '../lib/middleware';
 import { KeyNotIssued } from '../lib/messages';
 import { zValidator } from '@hono/zod-validator';
 import { vaultNameFromUserId } from '@shared/lib/turso';
@@ -31,8 +31,7 @@ const authRouter = hono()
   )
   .get(
     AppRouteParts.ApiKeys,
-    authenticated(),
-    restricted(),
+    authenticated({ feature: FEATURE_SLUGS.API_KEYS }),
     zValidator('query', ListApiKeysQuerySchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -85,8 +84,7 @@ const authRouter = hono()
   )
   .post(
     AppRouteParts.ApiKeys,
-    authenticated(),
-    restricted(),
+    authenticated({ feature: FEATURE_SLUGS.API_KEYS }),
     zValidator('json', VaultInjectClaimsSchema),
     async (c) => {
       const userId = c.get('userId')!;

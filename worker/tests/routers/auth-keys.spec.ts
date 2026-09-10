@@ -5,12 +5,15 @@ import { AuthScopes } from '@shared/config/plans';
 const list = vi.fn();
 const create = vi.fn();
 
+// Stands in for what authenticated() resolves off the caller's claims.
+let planLimits: { apiKeys: number } | undefined;
+
 vi.mock('../../src/lib/middleware', () => ({
-  authenticated: () => createMiddleware(async (_c, next) => next()),
-  restricted: () =>
+  authenticated: () =>
     createMiddleware(async (c, next) => {
       c.set('userId', 'user_123');
       c.set('clerk', { apiKeys: { list, create } });
+      if (planLimits) c.set('planLimits', planLimits);
       await next();
     }),
   apiKey: () => createMiddleware(async (_c, next) => next()),
@@ -143,7 +146,10 @@ describe('GET /auth/keys', () => {
 });
 
 describe('POST /auth/keys', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    planLimits = undefined;
+  });
 
   it('issues a scoped key against the resolved vault name', async () => {
     create.mockResolvedValue({
