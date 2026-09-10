@@ -77,7 +77,13 @@ export const EditSecretModal = ({
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title={'Edit secret'}>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={'Edit secret'}
+      // Higher than the default 5dvh, short of `centered`.
+      yOffset={'18dvh'}
+    >
       <Stack gap={'md'}>
         <TextInput
           label={'Name'}
