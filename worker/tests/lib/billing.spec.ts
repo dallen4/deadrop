@@ -74,16 +74,19 @@ describe('billing', () => {
     });
 
     it('does not grant features outside the supporter allowlist', () => {
-      expect(hasFeature({ plan: 'supporter' }, FEATURE_SLUGS.SSO)).toBe(
-        false,
-      );
+      expect(
+        hasFeature(
+          { plan: 'supporter' },
+          FEATURE_SLUGS.VAULT_SHARING_WRITE,
+        ),
+      ).toBe(false);
     });
 
     it('grants a feature present in the fea claim for pro users', () => {
       expect(
         hasFeature(
-          { pla: 'u:pro', fea: 'cloud_vault,sso' },
-          FEATURE_SLUGS.SSO,
+          { pla: 'u:pro', fea: 'cloud_vault,vault_sharing_write' },
+          FEATURE_SLUGS.VAULT_SHARING_WRITE,
         ),
       ).toBe(true);
     });
@@ -92,7 +95,7 @@ describe('billing', () => {
       expect(
         hasFeature(
           { pla: 'u:pro', fea: 'cloud_vault' },
-          FEATURE_SLUGS.SSO,
+          FEATURE_SLUGS.VAULT_SHARING_WRITE,
         ),
       ).toBe(false);
     });

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMiddleware } from 'hono/factory';
-import { AuthScopes } from '@shared/lib/constants';
+import { AuthScopes } from '@shared/config/plans';
 
 const list = vi.fn();
 const create = vi.fn();

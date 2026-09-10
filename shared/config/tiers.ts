@@ -1,3 +1,11 @@
+import { PLAN_LIMITS } from './plans';
+
+const { free, supporter, pro } = PLAN_LIMITS;
+
+// Tier copy is derived from PLAN_LIMITS so advertised numbers cannot
+// drift from the limits actually enforced.
+const count = (n: number) => (n === Infinity ? 'Unlimited' : `${n}`);
+
 export type FeatureEntry = {
   label: string;
   included: boolean | 'partial';
@@ -32,12 +40,15 @@ export const TIERS: TierDef[] = [
     price: '$0',
     tagline: 'Get started with secure drops.',
     features: [
-      { label: '5 drops/day', included: true },
+      {
+        label: `${count(free.dailyDrops)} drops/day`,
+        included: true,
+      },
       { label: 'Local vaults', included: true },
       { label: 'CLI access', included: true },
       { label: 'Cloud-synced vault', included: false },
       { label: 'VSCode extension', included: false },
-      { label: 'CI/CD pipeline injection', included: false },
+      { label: 'CI/CD API keys', included: false },
     ],
     ctaLabel: 'Start for Free',
     ctaVariant: 'outline',
@@ -50,12 +61,25 @@ export const TIERS: TierDef[] = [
     priceBadge: 'one-time',
     tagline: 'Solo dev. Cloud vault + pipelines.',
     features: [
-      { label: '15 drops/day', included: true },
-      { label: '1 cloud vault (3 environments)', included: true },
+      {
+        label: `${count(supporter.cloudVaults)} cloud vault (${count(
+          supporter.envsPerVault,
+        )} environments)`,
+        included: true,
+      },
       { label: 'VSCode extension', included: true },
-      { label: 'CI/CD service tokens (up to 10)', included: true },
+      {
+        label: `CI/CD API keys (up to ${count(
+          supporter.apiKeys,
+        )})`,
+        included: true,
+      },
       { label: 'No captcha on drops', included: true },
       { label: 'Read-only sharing for humans', included: true },
+      {
+        label: `${count(supporter.dailyDrops)} drops/day`,
+        included: true,
+      },
       { label: 'Share write access with humans', included: false },
     ],
     ctaLabel: 'Become a Supporter',
@@ -69,12 +93,20 @@ export const TIERS: TierDef[] = [
     priceSubLabel: 'or $60/yr — save $2/mo',
     tagline: 'Delegate access to collaborators.',
     features: [
-      { label: 'Unlimited drops', included: true },
       {
-        label: '3 cloud vaults (unlimited environments)',
+        label: `${count(pro.dailyDrops)} drops/day`,
         included: true,
       },
-      { label: 'Unlimited CI/CD service tokens', included: true },
+      {
+        label: `${count(pro.cloudVaults)} cloud vaults (${count(
+          pro.envsPerVault,
+        ).toLowerCase()} environments)`,
+        included: true,
+      },
+      {
+        label: `${count(pro.apiKeys)} CI/CD API keys`,
+        included: true,
+      },
       { label: 'Read-only sharing for humans', included: true },
       { label: 'Write delegation (up to 5 humans)', included: true },
       { label: '30-day audit log', included: true },

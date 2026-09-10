@@ -7,7 +7,8 @@ import {
   vaultPrefixFromUserId,
   TursoApiError,
 } from '@shared/lib/turso';
-import { AuthScopes, VaultTokenAccess } from '@shared/lib/constants';
+import { VaultTokenAccess } from '@shared/lib/constants';
+import { AuthScopes, FEATURE_SLUGS } from '@shared/config/plans';
 import {
   MintedVaultCreds,
   VaultApiKeyCreds,

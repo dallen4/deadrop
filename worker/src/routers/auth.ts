@@ -9,7 +9,7 @@ import {
   ApiKeyClaimsFilterSchema,
   ListApiKeysQuerySchema,
 } from '../lib/auth';
-import { AuthScopes } from '@shared/lib/constants';
+import { AuthScopes, FEATURE_SLUGS } from '@shared/config/plans';
 
 const authRouter = hono()
   .get(

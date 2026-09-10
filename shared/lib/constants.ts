@@ -91,6 +91,3 @@ export enum VaultTokenAccess {
 // (e.g. web billing webhooks → Worker vault lock/unlock)
 export const SERVICE_TOKEN_HEADER = 'x-deadrop-service-token';
 
-export enum AuthScopes {
-  VaultInject = 'vault:inject',
-}
