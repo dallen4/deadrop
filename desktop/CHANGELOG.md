@@ -1,5 +1,28 @@
 # desktop
 
+## 0.5.0
+
+### Minor Changes
+
+- 1502f27: Rework the actions on each secret in the desktop vault. The row had four cramped icon buttons; it now has three larger ones: reveal, edit, and an overflow menu. Editing opens a modal that renames the key and changes its value in one place, with the value masked until you toggle it.
+
+  The overflow menu adds two things. "Copy to" copies the secret to the clipboard or into another environment in the same vault, marking any environment that already holds a secret of that name so you can see it is a replacement before you click. "Drop secret" hands a single secret to the drop flow, rather than making you share the whole vault to send one value.
+
+  Clicking a secret name copies the name, and clicking a revealed value copies the value. Revealed values now render on their own line under the row and are clipped at the pane edge, so revealing a long secret no longer reflows the list.
+
+  The header also picks up a docs button that opens the documentation in your browser instead of navigating the app window away.
+
+### Patch Changes
+
+- 1502f27: Stop the cloud sync toggle from deleting your cloud vault. Clicking "Synced" sent `DELETE /vault/:name`, which destroyed the Turso database and every token minted from it in a single click, with no confirmation. Turning sync back on then provisioned an empty database in its place.
+
+  Turning sync off is now local only. The cloud vault and its contents survive, so turning it back on reattaches to the existing database and mints a fresh credential instead of provisioning a new one. Deleting the cloud copy moved to its own item in the vault menu, behind a dialog that spells out what is destroyed and asks you to type the vault name.
+
+- Updated dependencies [1502f27]
+- Updated dependencies [95d715c]
+- Updated dependencies [1502f27]
+  - shared@1.5.0
+
 ## 0.4.1
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # cli
 
+## 1.11.3
+
+### Patch Changes
+
+- Updated dependencies [1502f27]
+- Updated dependencies [95d715c]
+- Updated dependencies [1502f27]
+  - shared@1.5.0
+
 ## 1.11.2
 
 ### Patch Changes
