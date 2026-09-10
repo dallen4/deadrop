@@ -1,20 +1,26 @@
 import { useRef, useState } from 'react';
 import {
   ActionIcon,
-  CopyButton,
+  Box,
   Group,
+  Menu,
+  Stack,
   Text,
-  TextInput,
   Tooltip,
 } from '@mantine/core';
+import { useClipboard } from '@mantine/hooks';
 import {
   IconCheck,
+  IconClipboard,
   IconCopy,
+  IconDots,
   IconEdit,
   IconEye,
   IconEyeOff,
+  IconSend,
   IconTrash,
 } from '@tabler/icons-react';
+import { EditSecretModal } from './EditSecretModal';
 
 const REVEAL_TIMEOUT_MS = 15_000;
 
@@ -26,6 +32,9 @@ export const SecretRow = ({
   onUpdate,
   onRename,
   onDelete,
+  onDrop,
+  copyTargets,
+  onCopyTo,
 }: {
   name: string;
   environment: string;
@@ -43,12 +52,23 @@ export const SecretRow = ({
     environment: string,
   ) => Promise<void>;
   onDelete: (name: string, environment: string) => Promise<void>;
+  onDrop: (name: string, environment: string) => void;
+  // Sibling environments this secret can be copied into, flagged when a
+  // secret of the same name is already there and would be replaced.
+  copyTargets: { environment: string; exists: boolean }[];
+  onCopyTo: (
+    name: string,
+    fromEnv: string,
+    toEnv: string,
+  ) => Promise<void>;
 }) => {
-  const [revealedValue, setRevealedValue] = useState<string | null>(null);
-  const [revealing, setRevealing] = useState(false);
-  const [editingValue, setEditingValue] = useState<string | null>(null);
-  const [renaming, setRenaming] = useState(false);
-  const [renameValue, setRenameValue] = useState(name);
+  const [revealedValue, setRevealedValue] = useState<string | null>(
+    null,
+  );
+  const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const clipboard = useClipboard({ timeout: 2000 });
+  const nameClipboard = useClipboard({ timeout: 2000 });
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleReveal = async () => {
@@ -57,7 +77,7 @@ export const SecretRow = ({
       clearTimeout(hideTimer.current);
       return;
     }
-    setRevealing(true);
+    setBusy(true);
     try {
       const value = await onReveal(name, environment);
       setRevealedValue(value);
@@ -66,144 +86,205 @@ export const SecretRow = ({
         REVEAL_TIMEOUT_MS,
       );
     } finally {
-      setRevealing(false);
+      setBusy(false);
     }
   };
 
-  const handleSaveEdit = async () => {
-    if (editingValue === null) return;
-    await onUpdate(name, environment, editingValue);
-    setEditingValue(null);
-  };
-
-  const handleSaveRename = async () => {
-    if (renameValue.trim() && renameValue !== name) {
-      await onRename(name, renameValue.trim(), environment);
+  const handleCopy = async () => {
+    setBusy(true);
+    try {
+      clipboard.copy(
+        revealedValue ?? (await onReveal(name, environment)),
+      );
+    } finally {
+      setBusy(false);
     }
-    setRenaming(false);
   };
-
-  if (editingValue !== null) {
-    return (
-      <Group gap={'xs'} py={4}>
-        <TextInput
-          size={'sm'}
-          style={{ flex: 1 }}
-          value={editingValue}
-          onChange={(e) => setEditingValue(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') void handleSaveEdit();
-            if (e.key === 'Escape') setEditingValue(null);
-          }}
-          autoFocus
-        />
-        <ActionIcon
-          size={'sm'}
-          color={'green'}
-          onClick={() => void handleSaveEdit()}
-        >
-          <IconCheck size={14} />
-        </ActionIcon>
-      </Group>
-    );
-  }
 
   return (
-    <Group justify={'space-between'} py={4} wrap={'nowrap'}>
-      {renaming ? (
-        <TextInput
-          size={'sm'}
-          style={{ flex: 1 }}
-          value={renameValue}
-          onChange={(e) => setRenameValue(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') void handleSaveRename();
-            if (e.key === 'Escape') setRenaming(false);
-          }}
-          autoFocus
-        />
-      ) : (
-        <Text
-          size={'sm'}
-          ff={'monospace'}
-          style={{ flex: 1, minWidth: 0, cursor: 'text' }}
-          truncate
-          onDoubleClick={() => {
-            if (readOnly) return;
-            setRenameValue(name);
-            setRenaming(true);
-          }}
-        >
-          {name}
-          {revealedValue !== null && (
-            <Text span size={'sm'} c={'dimmed'} ml={'sm'}>
-              = {revealedValue}
+    <Stack gap={0} py={2} style={{ minWidth: 0 }}>
+      <Group justify={'space-between'} wrap={'nowrap'}>
+        {/* The Box takes the row's spare width; the Text shrink-wraps
+            inside it so hover and click stop at the end of the name. */}
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Tooltip
+            label={nameClipboard.copied ? 'Copied' : 'Copy name'}
+            color={'gray'}
+            openDelay={400}
+          >
+            <Text
+              // Mantine jumps sm(14) to md(16); monospace reads cramped at
+              // sm and shouty at md, so this splits them.
+              fz={15}
+              ff={'monospace'}
+              c={
+                nameClipboard.copied
+                  ? 'var(--mantine-primary-color-light-color)'
+                  : undefined
+              }
+              display={'inline-block'}
+              maw={'100%'}
+              truncate
+              style={{ verticalAlign: 'bottom', cursor: 'pointer' }}
+              onClick={() => nameClipboard.copy(name)}
+            >
+              {name}
             </Text>
+          </Tooltip>
+        </Box>
+
+        <Group gap={4} wrap={'nowrap'}>
+          <Tooltip label={revealedValue !== null ? 'Hide' : 'Reveal'}>
+            <ActionIcon
+              size={'lg'}
+              variant={'subtle'}
+              loading={busy}
+              aria-label={`${
+                revealedValue !== null ? 'Hide' : 'Reveal'
+              } ${name}`}
+              onClick={() => void handleReveal()}
+            >
+              {revealedValue !== null ? (
+                <IconEyeOff size={18} />
+              ) : (
+                <IconEye size={18} />
+              )}
+            </ActionIcon>
+          </Tooltip>
+          {!readOnly && (
+            <Tooltip label={'Edit'}>
+              <ActionIcon
+                size={'lg'}
+                variant={'subtle'}
+                aria-label={`Edit ${name}`}
+                onClick={() => setEditing(true)}
+              >
+                <IconEdit size={18} />
+              </ActionIcon>
+            </Tooltip>
           )}
-        </Text>
+          <Menu position={'bottom-end'} width={180}>
+            <Menu.Target>
+              <ActionIcon
+                size={'lg'}
+                variant={'subtle'}
+                aria-label={`More actions for ${name}`}
+              >
+                <IconDots size={18} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Sub>
+                <Menu.Sub.Target>
+                  <Menu.Sub.Item
+                    leftSection={
+                      clipboard.copied ? (
+                        <IconCheck size={16} />
+                      ) : (
+                        <IconCopy size={16} />
+                      )
+                    }
+                  >
+                    {clipboard.copied ? 'Copied' : 'Copy to'}
+                  </Menu.Sub.Item>
+                </Menu.Sub.Target>
+                <Menu.Sub.Dropdown>
+                  <Menu.Item
+                    leftSection={<IconClipboard size={16} />}
+                    onClick={() => void handleCopy()}
+                  >
+                    Clipboard
+                  </Menu.Item>
+                  {!readOnly && copyTargets.length > 0 && (
+                    <>
+                      <Menu.Divider />
+                      {copyTargets.map((target) => (
+                        <Menu.Item
+                          key={target.environment}
+                          onClick={() =>
+                            void onCopyTo(
+                              name,
+                              environment,
+                              target.environment,
+                            )
+                          }
+                          rightSection={
+                            target.exists ? (
+                              <Text size={'xs'} c={'dimmed'}>
+                                replace
+                              </Text>
+                            ) : undefined
+                          }
+                        >
+                          {target.environment}
+                        </Menu.Item>
+                      ))}
+                    </>
+                  )}
+                </Menu.Sub.Dropdown>
+              </Menu.Sub>
+              <Menu.Item
+                leftSection={<IconSend size={16} />}
+                onClick={() => onDrop(name, environment)}
+              >
+                Drop secret
+              </Menu.Item>
+              {!readOnly && (
+                <>
+                  <Menu.Divider />
+                  <Menu.Item
+                    color={'red'}
+                    leftSection={<IconTrash size={16} />}
+                    onClick={() => void onDelete(name, environment)}
+                  >
+                    Delete
+                  </Menu.Item>
+                </>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+        </Group>
+      </Group>
+
+      {revealedValue !== null && (
+        <Tooltip
+          label={clipboard.copied ? 'Copied' : 'Copy value'}
+          color={'gray'}
+          openDelay={400}
+        >
+          <Text
+            size={'sm'}
+            c={
+              clipboard.copied
+                ? 'var(--mantine-primary-color-light-color)'
+                : 'dimmed'
+            }
+            ff={'monospace'}
+            truncate
+            pb={6}
+            maw={'100%'}
+            // alignSelf stops the Stack stretching it, so the hit area ends
+            // with the value; truncate still ellipsises at the pane edge.
+            style={{
+              alignSelf: 'flex-start',
+              cursor: 'pointer',
+            }}
+            onClick={() => clipboard.copy(revealedValue)}
+          >
+            {revealedValue}
+          </Text>
+        </Tooltip>
       )}
 
-      <Group gap={4} wrap={'nowrap'}>
-        <Tooltip label={revealedValue !== null ? 'Hide' : 'Reveal'}>
-          <ActionIcon
-            size={'sm'}
-            variant={'subtle'}
-            loading={revealing}
-            onClick={() => void handleReveal()}
-          >
-            {revealedValue !== null ? (
-              <IconEyeOff size={14} />
-            ) : (
-              <IconEye size={14} />
-            )}
-          </ActionIcon>
-        </Tooltip>
-        <CopyButton
-          value={revealedValue ?? ''}
-          timeout={2000}
-        >
-          {({ copied, copy }) => (
-            <Tooltip label={copied ? 'Copied' : 'Copy'}>
-              <ActionIcon
-                size={'sm'}
-                variant={'subtle'}
-                disabled={revealedValue === null}
-                color={copied ? 'teal' : undefined}
-                onClick={copy}
-              >
-                {copied ? (
-                  <IconCheck size={14} />
-                ) : (
-                  <IconCopy size={14} />
-                )}
-              </ActionIcon>
-            </Tooltip>
-          )}
-        </CopyButton>
-        {!readOnly && (
-          <>
-            <Tooltip label={'Edit value'}>
-              <ActionIcon
-                size={'sm'}
-                variant={'subtle'}
-                onClick={() => setEditingValue('')}
-              >
-                <IconEdit size={14} />
-              </ActionIcon>
-            </Tooltip>
-            <Tooltip label={'Delete'}>
-              <ActionIcon
-                size={'sm'}
-                variant={'subtle'}
-                color={'red'}
-                onClick={() => void onDelete(name, environment)}
-              >
-                <IconTrash size={14} />
-              </ActionIcon>
-            </Tooltip>
-          </>
-        )}
-      </Group>
-    </Group>
+      <EditSecretModal
+        opened={editing}
+        onClose={() => setEditing(false)}
+        name={name}
+        environment={environment}
+        onReveal={onReveal}
+        onUpdate={onUpdate}
+        onRename={onRename}
+      />
+    </Stack>
   );
 };

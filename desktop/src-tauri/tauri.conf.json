@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "deadrop",
-        "width": 1024,
-        "height": 720,
+        "width": 1100,
+        "height": 740,
         "minWidth": 720,
         "minHeight": 560
       }

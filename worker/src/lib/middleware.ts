@@ -1,11 +1,14 @@
 import { TokenType } from '@clerk/backend/internal';
 import { getAuth } from '@clerk/hono';
-import { AuthScopes, SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
+import { SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
+import { AuthScopes, FeatureSlug } from '@shared/config/plans';
+import { getPlanLimits, hasFeature, isExperimental } from './billing';
 import { TEST_TOKEN_HEADER } from '@shared/tests/http';
 import { Redis } from '@upstash/redis/cloudflare';
 import { cors as baseCors } from 'hono/cors';
 import { createMiddleware } from 'hono/factory';
 import { AppHeaders } from '../constants';
+import type { Context } from 'hono';
 import { HonoCtx, Middleware } from './http/core';
 import {
   AuthUnavailable,
@@ -79,24 +82,49 @@ export const redis = () =>
 
 type AuthOptions = {
   allowApiKey?: boolean;
+  // When set, the caller's plan must grant this feature. Optional because
+  // some routes authenticate without gating (e.g. reading vault metadata).
+  feature?: FeatureSlug;
 };
 
 type ApiKeyOptions = {
   scopes: AuthScopes[];
 };
 
+// Read live rather than off the token, so entitlement never silently
+// depends on the session template projecting `plan`/`early_access`. Pro is
+// the one plan absent here by nature: Clerk Billing subscriptions are not
+// public metadata, which is why getUserPlan reads the `pla` claim for it.
+const grantedByMetadata = async (
+  c: Context<HonoCtx>,
+  feature: FeatureSlug,
+) => {
+  const { publicMetadata } = await c.var.clerk.users.getUser(
+    c.get('userId')!,
+  );
+
+  if (publicMetadata.early_access || publicMetadata.internal)
+    return true;
+
+  // Hand the metadata back to the same resolver rather than restating the
+  // supporter allowlist here.
+  return hasFeature({ plan: publicMetadata.plan }, feature);
+};
+
 export const authenticated = (
-  { allowApiKey }: AuthOptions = { allowApiKey: false },
+  { allowApiKey, feature }: AuthOptions = { allowApiKey: false },
 ) =>
   createMiddleware<HonoCtx>(async (c, next) => {
     // acceptsToken arrays don't narrow (m2m_token stays in the union,
     // sans userId) — request 'any' and gate on tokenType ourselves
     const auth = getAuth(c, { acceptsToken: 'any' });
 
+    const isApiKey = auth.tokenType === TokenType.ApiKey;
+
     const allowed =
       auth.tokenType === TokenType.SessionToken ||
       auth.tokenType === TokenType.OAuthToken ||
-      (allowApiKey && auth.tokenType === TokenType.ApiKey);
+      (allowApiKey && isApiKey);
 
     // unauthenticated/org-scoped variants carry userId: null, so one
     // check covers signed-out, invalid, and userless tokens
@@ -106,21 +134,32 @@ export const authenticated = (
 
     c.set('userId', userId);
 
-    await next();
-  });
+    // An API key *does* carry claims, but they are the ones stamped at
+    // issuance (vaultName, environment) — not Clerk Billing's pla/fea. So
+    // the plan is unresolvable in-band, and feeding those claims to
+    // getPlanLimits would silently resolve `free`, whose vault cap is zero.
+    // Leaving planLimits unset says "unknown"; handlers skip the count.
+    // Same narrowing quirk as above: 'any' keeps m2m_token (which has no
+    // sessionClaims) in the union, so reach for the claims deliberately.
+    const claims = isApiKey
+      ? null
+      : ((auth as { sessionClaims?: Record<string, unknown> | null })
+          .sessionClaims ?? null);
 
-// only allowed if user has been granted early_access or marked as internal
-export const restricted = () =>
-  createMiddleware<HonoCtx>(async (c, next) => {
-    const userId = c.get('userId')!;
+    if (!isApiKey) c.set('planLimits', getPlanLimits(claims));
 
-    const user = await c.var.clerk.users.getUser(userId);
-
-    const canAccess = !!(
-      user.publicMetadata.early_access || user.publicMetadata.internal
-    );
-
-    if (!canAccess) return c.json(PermissionDenied, 401);
+    // An API key is itself proof of entitlement: it could only have been
+    // issued to a caller who passed this check. Narrowing which keys reach
+    // which route is the apiKey({ scopes }) middleware's job, not this one.
+    // Downgrades are handled by /vault/lock, not re-checked on every use.
+    if (
+      feature &&
+      !isApiKey &&
+      !hasFeature(claims, feature) &&
+      !isExperimental(claims) &&
+      !(await grantedByMetadata(c, feature))
+    )
+      return c.json(PermissionDenied, 401);
 
     await next();
   });

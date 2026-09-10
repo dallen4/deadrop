@@ -6,6 +6,7 @@ import { unwrapSecret, wrapSecret } from '@shared/lib/secrets';
 import type {
   DeadropConfig,
   SharedVault,
+  VaultDBConfig,
 } from '@shared/types/config';
 import { isExperimental } from '../lib/billing';
 import { useApiHeaders } from '../lib/api-headers';
@@ -19,6 +20,7 @@ import {
 } from '../lib/vault-config';
 import {
   deleteCloudVault,
+  findCloudVaultName,
   issueVaultToken,
   provisionCloudVault,
   rotateVaultTokens,
@@ -208,28 +210,60 @@ export const useVault = () => {
       await saveVaultConfig(next);
     });
 
+  const persistVault = async (nextVault: VaultDBConfig) => {
+    if (!config) return;
+
+    const next: DeadropConfig = {
+      ...config,
+      vaults: { ...config.vaults, [activeVaultName]: nextVault },
+    };
+    setConfig(next);
+    await saveVaultConfig(next);
+    await ensureVaultSchema(nextVault);
+  };
+
+  // Detaching is local-only; destroying the cloud copy is deleteCloudCopy.
   const toggleCloudSync = () =>
     withBusy(async () => {
       if (!config || !activeVault) return;
       const nextVault = { ...activeVault };
 
       if (cloudSync) {
-        await deleteCloudVault(activeVaultName, await getApiHeaders());
         delete nextVault.cloud;
       } else {
-        nextVault.cloud = await provisionCloudVault(
+        const headers = await getApiHeaders();
+        const existing = await findCloudVaultName(
           activeVaultName,
-          await getApiHeaders(),
+          headers,
         );
+
+        nextVault.cloud = existing
+          ? {
+              name: existing,
+              authToken: await issueVaultToken(
+                activeVaultName,
+                VaultTokenAccess.FullAccess,
+                undefined,
+                headers,
+              ),
+            }
+          : await provisionCloudVault(activeVaultName, headers);
       }
 
-      const next: DeadropConfig = {
-        ...config,
-        vaults: { ...config.vaults, [activeVaultName]: nextVault },
-      };
-      setConfig(next);
-      await saveVaultConfig(next);
-      await ensureVaultSchema(nextVault);
+      await persistVault(nextVault);
+    });
+
+  // Irreversible: drops the Turso database, every secret in it, and every
+  // token minted from it. The local replica is left untouched.
+  const deleteCloudCopy = () =>
+    withBusy(async () => {
+      if (!config || !activeVault) return;
+
+      await deleteCloudVault(activeVaultName, await getApiHeaders());
+
+      const nextVault = { ...activeVault };
+      delete nextVault.cloud;
+      await persistVault(nextVault);
     });
 
   const issueToken = async (
@@ -379,6 +413,47 @@ export const useVault = () => {
       await refreshSecretNames();
     });
 
+  // Each environment holds its own key, so a cross-env copy is an
+  // unwrap-then-rewrap, and it upserts because (name, env) is the PK.
+  const copySecretTo = (
+    name: string,
+    fromEnv: string,
+    toEnv: string,
+  ) =>
+    withBusy(async () => {
+      if (!activeVault) return;
+      const encrypted = await getEncryptedSecret(
+        activeVault,
+        name,
+        fromEnv,
+      );
+      if (!encrypted) throw new Error('Secret not found.');
+      const value = await unwrapSecret(
+        activeVault.environments[fromEnv],
+        encrypted,
+      );
+      const rewrapped = await wrapSecret(
+        activeVault.environments[toEnv],
+        value,
+      );
+      const existing = await getEncryptedSecret(
+        activeVault,
+        name,
+        toEnv,
+      );
+      if (existing) {
+        await updateEncryptedSecret(
+          activeVault,
+          name,
+          toEnv,
+          rewrapped,
+        );
+      } else {
+        await addEncryptedSecret(activeVault, name, toEnv, rewrapped);
+      }
+      await refreshSecretNames();
+    });
+
   const revealSecret = async (
     name: string,
     environment: string,
@@ -412,6 +487,7 @@ export const useVault = () => {
     importVault,
     createEnvironment,
     toggleCloudSync,
+    deleteCloudCopy,
     issueToken,
     saveCloudToken,
     rotateTokens,
@@ -422,5 +498,6 @@ export const useVault = () => {
     renameSecret,
     deleteSecret,
     revealSecret,
+    copySecretTo,
   };
 };

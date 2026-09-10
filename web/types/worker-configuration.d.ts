@@ -4,8 +4,6 @@ interface Env {
   // Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
   PEER_SERVER: DurableObjectNamespace;
 
-  // variables
-  DAILY_DROP_LIMIT: number;
 
   // secrets
   CLERK_SECRET_KEY: string;

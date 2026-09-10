@@ -1,7 +1,35 @@
 import type { ReactNode } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { UserButton, SignInButton, useUser } from '@clerk/react';
-import { AppShell, Button, Group, Anchor, Text } from '@mantine/core';
+import {
+  AppShell,
+  Button,
+  Group,
+  Anchor,
+  Text,
+  ActionIcon,
+  Tooltip,
+} from '@mantine/core';
+import { IconBook } from '@tabler/icons-react';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { DESKTOP_DOCS_PATH } from '@shared/config/paths';
+import { WEB_URL } from '../env';
+
+// Docs live on the web app, so hand them to the user's browser rather
+// than navigating this window away from the app.
+const DocsButton = () => (
+  <Tooltip label={'Docs'} position={'bottom'} withArrow>
+    <ActionIcon
+      variant={'subtle'}
+      color={'gray'}
+      size={'lg'}
+      aria-label={'Open documentation'}
+      onClick={() => openUrl(`${WEB_URL}${DESKTOP_DOCS_PATH}`)}
+    >
+      <IconBook size={20} stroke={1.5} />
+    </ActionIcon>
+  </Tooltip>
+);
 
 const NavLink = ({
   to,
@@ -63,7 +91,8 @@ export const RootLayout = () => {
               <NavLink to={'/vault'}>Vault</NavLink>
             </Group>
           </Group>
-          <Group>
+          <Group gap={'sm'}>
+            <DocsButton />
             {isSignedIn ? (
               <UserButton
                 appearance={{

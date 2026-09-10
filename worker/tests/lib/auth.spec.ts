@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AuthScopes } from '@shared/lib/constants';
+import { AuthScopes } from '@shared/config/plans';
 import { ListApiKeysQuerySchema } from '../../src/lib/auth';
 
 const target = { vaultName: 'demo', environment: 'production' };

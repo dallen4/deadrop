@@ -3,28 +3,55 @@ import type {
   CreateDatabaseResponse,
   GetDatabaseResponse,
   ListDatabasesResponse,
+  UpdateDatabaseRequest,
+  UpdateDatabaseResponse,
 } from '../../types/db';
 import type { TursoClient } from './client';
 import { VaultTokenAccess } from '../constants';
+import { createLifecycleHandlers } from './lifecycle';
+import { TURSO_DB_GROUP, TURSO_DB_SIZE_LIMIT } from './utils';
 
-export const createProvisionHandlers = (
-  client: TursoClient,
-) => {
+export const createProvisionHandlers = (client: TursoClient) => {
+  const { deleteVault } = createLifecycleHandlers(client);
+
+  const updateVault = async (
+    vaultName: string,
+    input: UpdateDatabaseRequest,
+  ) => {
+    const vaultConfig = await client.patch<UpdateDatabaseResponse>(
+      `/${vaultName}/configuration`,
+      input,
+    );
+
+    return vaultConfig;
+  };
+
   const createVault = async (
     vaultName: string,
     seed?: 'database_upload',
   ) => {
     const body: CreateDatabaseRequest = {
       name: vaultName,
-      group: 'deadrop',
+      group: TURSO_DB_GROUP,
       ...(seed
         ? { seed: { type: seed } }
         : { schema: 'parent-vault-schema' }),
     };
 
-    const { database } = await client.post<
-      CreateDatabaseResponse
-    >('', body);
+    const { database } = await client.post<CreateDatabaseResponse>(
+      '',
+      body,
+    );
+
+    try {
+      await updateVault(database.Name, {
+        size_limit: TURSO_DB_SIZE_LIMIT,
+      });
+    } catch (error) {
+      await deleteVault(database.Name).catch(() => {});
+
+      throw error;
+    }
 
     return database;
   };

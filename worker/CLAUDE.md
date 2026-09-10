@@ -24,7 +24,7 @@ worker/
 │   │   └── vault.ts          # Vault create/tokens/get/delete/lock/unlock (Turso via @shared/lib/turso)
 │   └── lib/
 │       ├── http/core.ts      # Hono instance + custom context/middleware types
-│       ├── middleware.ts     # cors, tracing, redis, authenticated(), restricted(), apiKey(), service()
+│       ├── middleware.ts     # cors, tracing, redis, authenticated(), apiKey(), service()
 │       ├── billing.ts        # getUserPlan/getPlanLimits/hasFeature from Clerk claims
 │       ├── messages.ts       # Message validation helpers
 │       ├── durable_objects/
@@ -49,16 +49,16 @@ worker/
 |--------|------|-------------|
 | GET | `/` | Health check (API metadata) |
 | `*` | `/auth/*` | Clerk auth endpoints |
-| GET | `/auth/keys` | List the caller's `vault:inject` API keys for a vault + environment, filtered by scope and claims, returning `id`/`name`/`expired`/`revoked` only (`authenticated()` + `restricted()`) |
-| POST | `/auth/keys` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated()` + `restricted()`) |
+| GET | `/auth/keys` | List the caller's `vault:inject` API keys for a vault + environment, filtered by scope and claims, returning `id`/`name`/`expired`/`revoked` only (`authenticated({ feature: API_KEYS })`) |
+| POST | `/auth/keys` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated({ feature: API_KEYS })`), refusing past the plan's `apiKeys` cap counted live from Clerk |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
-| POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true })` + `restricted()`) |
-| POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true })` + `restricted()`) |
-| POST | `/vault/tokens/ci` | Exchange a `vault:inject` API key for a 5m read-only Turso token — vault and environment come off the key's claims, no request body (`apiKey()` + `restricted()`) |
-| POST | `/vault/rotate` | Invalidate **every** token for a vault — optional `name` in the body, same as `/vault/tokens`, so the default vault stays addressable (`authenticated()` + `restricted()`, deliberately no `allowApiKey`) |
+| POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`), refusing past the plan's `cloudVaults` cap counted via `listVaults` |
+| POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`) |
+| POST | `/vault/tokens/ci` | Exchange a `vault:inject` API key for a 5m read-only Turso token — vault and environment come off the key's claims, no request body (`apiKey()` alone — the required scope *is* the entitlement check) |
+| POST | `/vault/rotate` | Invalidate **every** token for a vault — optional `name` in the body, same as `/vault/tokens`, so the default vault stays addressable (`authenticated({ feature: CLOUD_VAULT })`, deliberately no `allowApiKey`) |
 | GET | `/vault/:name` | Get vault metadata (`authenticated({ allowApiKey: true })`) |
-| DELETE | `/vault/:name` | Delete a vault (`authenticated()` + `restricted()`) |
+| DELETE | `/vault/:name` | Delete a vault (`authenticated({ feature: CLOUD_VAULT })`) |
 | POST | `/vault/lock` | Lock all of a user's vaults on cancel (`service()`, `{ userId }`) |
 | POST | `/vault/unlock` | Restore all of a user's vaults on reactivate (`service()`, `{ userId }`) |
 
@@ -72,9 +72,11 @@ worker/
 5. `redis()` — attaches an Upstash client to `c.get('redis')`
 
 ### Auth gates (`src/lib/middleware.ts`)
-- The two gates are **layered, not standalone**: `authenticated()` resolves identity and `c.set('userId', ...)`; `restricted()` reads that `userId` back and gates on entitlement. A `restricted()` route must chain `authenticated()` before it, or `c.get('userId')` is undefined.
-- `authenticated({ allowApiKey?: boolean })` — calls `getAuth(c, { acceptsToken: 'any' })` directly (not `c.var.clerkAuth()`, which defaults to session-tokens-only) and gates on `auth.tokenType` itself: 401s unless the type is `session_token`/`oauth_token`, or `api_key` with `allowApiKey: true`. Requesting `'any'` (rather than an `acceptsToken` array) is deliberate — a `TokenType[]` array doesn't type-narrow, so the return type keeps `m2m_token` (unused here, and its auth object has no `userId`) in the union. The single `if (!userId)` 401 also catches org-scoped API keys, whose `userId` is `null`. On success `c.set('userId', ...)` — handlers read `c.get('userId')!`, never `c.var.clerkAuth().userId!`, so identity always matches whichever token type actually authenticated.
-- `restricted()` — takes no options; reads `c.get('userId')` (set by a preceding `authenticated()`) and 401s unless `early_access`/`internal` is set. Always resolves the flag from the owner's **live** Clerk metadata (`c.var.clerk.users.getUser(userId)`), for every token type — it no longer reads `sessionClaims`, so the check is independent of the JWT template (a per-request Clerk API call is the tradeoff). Interactive surfaces (web `isExperimental`, the VS Code extension's `hasCloudAccess`) still read the claim off the session token, so those *do* need `early_access`/`internal` in the JWT template even though the worker doesn't.
+- **One middleware owns identity and entitlement.** `authenticated({ allowApiKey?, feature? })` resolves the caller, sets `userId`, and — when `feature` is given — gates on entitlement in the same pass. Authorization is not a separate middleware you can forget to chain, and `getAuth` is called once rather than twice. `feature` is optional because some routes authenticate without gating (`GET /vault/:name`, `GET /auth/sign-in-token`).
+- Token gating: calls `getAuth(c, { acceptsToken: 'any' })` directly (not `c.var.clerkAuth()`, which defaults to session-tokens-only) and gates on `auth.tokenType` itself: 401s unless the type is `session_token`/`oauth_token`, or `api_key` with `allowApiKey: true`. Requesting `'any'` (rather than an `acceptsToken` array) is deliberate — a `TokenType[]` array doesn't type-narrow, so the return type keeps `m2m_token` in the union. That same quirk means `sessionClaims` needs a deliberate cast to read, since `m2m_token` has none. The single `if (!userId)` 401 also catches org-scoped API keys, whose `userId` is `null`. Handlers read `c.get('userId')!`, never `c.var.clerkAuth().userId!`, so identity always matches whichever token type actually authenticated.
+- Entitlement (`feature` set): passes when the caller's plan grants it via `hasFeature` on the session claims, or via **live** Clerk metadata (`c.var.clerk.users.getUser`) — which covers both the `early_access`/`internal` bypass *and* `publicMetadata.plan`, so a Supporter is entitled whether or not the session template projects `plan`. Pro is the one plan absent from that fallback by nature: Clerk Billing subscriptions are not public metadata, which is why `getUserPlan` reads the `pla` claim for it. An **API key short-circuits**: it could only have been issued to a caller who passed this check, and narrowing which keys reach which route is `apiKey({ scopes })`'s job, not this middleware's. Downgrades are handled by `/vault/lock`, not re-checked on every use.
+- On the session path it also sets `c.set('planLimits', getPlanLimits(claims))` so handlers enforce counts without re-deriving the plan. **`planLimits` being `undefined` means unresolvable** (API key caller), not unlimited — handlers must skip the count rather than fall back to the free cap of zero, which would break every CI caller.
+- `apiKey({ scopes })` routes need no `feature`: the required scope is itself the entitlement check, and `SCOPE_FEATURES` in `shared/config/plans.ts` records which feature each scope delegates.
 - `service()` — first-party service-to-service auth (no Clerk session): constant-time checks `SERVICE_TOKEN_HEADER` against `WORKER_SERVICE_TOKEN`. Used by `/vault/lock` and `/vault/unlock`, which billing webhooks call. Authenticates the *caller*; the subject `userId` is in the request body — treat the token as high-value.
 - Routes with neither gate (e.g. `/drop`) work anonymously; if a caller *is* authenticated, `clerkAuth()` still resolves so the route can read identity opportunistically
 
@@ -92,11 +94,13 @@ worker/
 
 ### Vaults — Turso
 - Provisioning + lifecycle live in `shared/lib/turso/` (`createVaultUtils`) — see `shared/lib/turso/CLAUDE.md`. The former `worker/src/lib/vault.ts` was collapsed into it.
-- `vault.ts` router: create/tokens layer `authenticated({ allowApiKey: true })` + `restricted()`; get is `authenticated({ allowApiKey: true })` alone; delete and rotate are `authenticated()` + `restricted()`. API keys (`DEADROP_API_KEY`) are accepted on create/tokens/get for CI/`inject`, but **not** on rotate — it is destructive and needs an interactive session; `lock`/`unlock` are `service()`-gated for billing webhooks
+- `vault.ts` router: create/tokens layer `authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`; get is `authenticated({ allowApiKey: true })` alone; delete and rotate are `authenticated({ feature: CLOUD_VAULT })`. API keys (`DEADROP_API_KEY`) are accepted on create/tokens/get for CI/`inject`, but **not** on rotate — it is destructive and needs an interactive session; `lock`/`unlock` are `service()`-gated for billing webhooks
 - Cancel-on-billing fans out over **all** of a user's vaults via `listVaults(<hash13>)`; org-payer cancellations are a known gap (vaults are named per user, not per org)
 
 ### Billing/plans (`src/lib/billing.ts`)
-- Plan limits and feature slugs are defined once in `shared/config/plans.ts`; the Worker derives `getUserPlan`/`getPlanLimits`/`hasFeature` from Clerk session claims (`pla` claim, `public_metadata.plan`) — this is the source of truth for enforcement, mirrored client-side in `web/lib/billing.ts` for UI gating only
+- Plan limits, feature slugs, `AuthScopes` and the `SCOPE_FEATURES` map (a scope is a delegation of a feature) are defined once in `shared/config/plans.ts`; the Worker derives `getUserPlan`/`getPlanLimits`/`hasFeature` from Clerk session claims (`pla` claim, `public_metadata.plan`) — this is the source of truth for enforcement, mirrored client-side in `web/lib/billing.ts` for UI gating only
+- Enforced today: `maxGrabbers` (`checkMaxGrabbers`), `dailyDrops` (per plan, and the anonymous per-IP counter resolves to the free tier through the same `getPlanLimits` call), `cloudVaults` (vault create), `apiKeys` (key issuance). Still unenforced: `envsPerVault`, `no_captcha`, vault sharing
+- A drop refused for quota returns **429**, never 500 — a client must be able to tell a limit it cannot clear from a server fault it should retry
 
 ### Typed Hono RPC
 - `src/app.ts` exports `DeadropWorkerApi` type
@@ -108,7 +112,7 @@ worker/
 - Main: `src/index.ts`
 - Domain: `deadrop.nieky.dev`
 - DO: `PeerServerDO` class (binding `PEER_SERVER`)
-- Vars: `DAILY_DROP_LIMIT=5` — anonymous drops only, counted per IP; signed-in droppers count per `userId` against `PLAN_LIMITS.free.dailyDrops` (`shared/config/plans.ts`) until the limit reads off the user's plan (the Turso org slug is the shared `TURSO_ORGANIZATION` constant in `shared/lib/constants.ts`, not an env var)
+- Vars: none. Drop limits come from `PLAN_LIMITS` (`shared/config/plans.ts`) for both branches — `getPlanLimits(claims).dailyDrops` resolves anonymous callers to the free tier, so the per-IP and per-user counters share one source of truth (the Turso org slug is likewise the shared `TURSO_ORGANIZATION` constant in `shared/lib/constants.ts`, not an env var)
 - Observability: logs + invocation logs enabled
 
 ## Path Aliases (tsconfig.json)

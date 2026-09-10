@@ -15,7 +15,7 @@ Find documentation that has gone stale relative to what actually shipped, and fi
 
 1. **User-facing docs** — `web/pages/docs/**/*.mdx` (overview, features/index roadmap, features/cli, features/vscode, faqs)
 2. **Agent/dev docs** — root `CLAUDE.md` and each workspace's `CLAUDE.md` (command lists, directory trees, architecture notes)
-3. **Internal tracking specs** — `specs/*.md`, especially any doc that tracks open/in-progress/done items (e.g. `post-v1-fast-follows.md`)
+3. **Internal tracking specs** — `specs/*.md`, especially any doc that tracks open/in-progress/done items
 
 Staleness looks like: a roadmap item still marked 🧪/🛠️/📋 that has actually shipped; a command list missing a new subcommand; a directory-tree comment describing removed/replaced behavior (e.g. "filesystem" when it's now keychain-backed); a spec's checklist item not marked DONE when the code confirms it landed; **or the same feature described under different terminology in two places with different, contradictory status** (e.g. `features/index.mdx` calls it "multidrop" and marks it 🧪 Experimental, while `overview.mdx`'s compact list calls it "multi-user sharing" and marks it 📋 Planned, or `faqs.mdx` says it's "on the roadmap"). This last kind is invisible to PR-diffing — a fix to one file doesn't touch the others' wording — so it needs the dedicated sweep in Step 3b below, run regardless of PR window.
 

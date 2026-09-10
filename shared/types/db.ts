@@ -10,6 +10,7 @@ export type TursoDatabase = {
   type: string;
   version: string;
   group: string;
+  delete_protection: boolean;
   is_schema: boolean;
   schema: string;
   archived: boolean;
@@ -25,6 +26,22 @@ export type CreateDatabaseRequest = {
 export type CreateDatabaseResponse = {
   database: Pick<TursoDatabase, 'DbId' | 'Hostname' | 'Name'>;
 };
+
+export type UpdateDatabaseResponse = Pick<
+  TursoDatabase,
+  | 'allow_attach'
+  | 'block_reads'
+  | 'block_writes'
+  | 'delete_protection'
+> & {
+  size_limit: string; // numeric string
+  allowed_ips: string[];
+  allowed_aws_vpc_ids: string[];
+};
+
+export type UpdateDatabaseRequest = Partial<
+  Omit<UpdateDatabaseResponse, 'allow_attach'>
+>;
 
 export type GetDatabaseResponse = {
   database: TursoDatabase;

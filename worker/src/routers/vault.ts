@@ -4,9 +4,11 @@ import { hono } from '../lib/http/core';
 import {
   createVaultUtils,
   vaultNameFromUserId,
+  vaultPrefixFromUserId,
   TursoApiError,
 } from '@shared/lib/turso';
-import { AuthScopes, VaultTokenAccess } from '@shared/lib/constants';
+import { VaultTokenAccess } from '@shared/lib/constants';
+import { AuthScopes, FEATURE_SLUGS } from '@shared/config/plans';
 import {
   MintedVaultCreds,
   VaultApiKeyCreds,
@@ -14,7 +16,6 @@ import {
 import {
   apiKey,
   authenticated,
-  restricted,
   service,
 } from '../lib/middleware';
 import {
@@ -29,18 +30,38 @@ import {
 const vaultRouter = hono()
   .post(
     AppRouteParts.Root,
-    authenticated({ allowApiKey: true }),
-    restricted(),
+    authenticated({
+      allowApiKey: true,
+      feature: FEATURE_SLUGS.CLOUD_VAULT,
+    }),
     zValidator('json', CreateVaultSchema),
     async (c) => {
       const userId = c.get('userId')!;
 
-      const { createVault, createVaultToken } = createVaultUtils(
-        c.env.TURSO_PLATFORM_API_TOKEN,
-      );
+      const { createVault, createVaultToken, listVaults } =
+        createVaultUtils(c.env.TURSO_PLATFORM_API_TOKEN);
 
       try {
         const { name, seed } = c.req.valid('json');
+
+        // undefined = API key caller, plan unresolvable, count unenforced.
+        const cap = c.get('planLimits')?.cloudVaults;
+
+        if (cap !== undefined && cap !== Infinity) {
+          const owned = await listVaults(
+            await vaultPrefixFromUserId(userId),
+          );
+
+          if (owned.length >= cap)
+            return c.json(
+              {
+                error:
+                  `Your plan allows ${cap} cloud vault(s). ` +
+                  `Delete one or upgrade to add another.`,
+              },
+              403,
+            );
+        }
 
         const vaultName = await vaultNameFromUserId(userId, name);
 
@@ -70,8 +91,10 @@ const vaultRouter = hono()
   )
   .post(
     AppRouteParts.Tokens,
-    authenticated({ allowApiKey: true }),
-    restricted(),
+    authenticated({
+      allowApiKey: true,
+      feature: FEATURE_SLUGS.CLOUD_VAULT,
+    }),
     zValidator('json', VaultTokenSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -116,7 +139,6 @@ const vaultRouter = hono()
   .post(
     AppRouteParts.CiTokens,
     apiKey({ scopes: [AuthScopes.VaultInject] }),
-    restricted(),
     async (c) => {
       const { vaultName, environment } = c.get(
         'claims',
@@ -180,8 +202,7 @@ const vaultRouter = hono()
   )
   .delete(
     AppRouteParts.NameParam,
-    authenticated(),
-    restricted(),
+    authenticated({ feature: FEATURE_SLUGS.CLOUD_VAULT }),
     zValidator('param', VaultNameSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -205,8 +226,7 @@ const vaultRouter = hono()
   // `allowApiKey`: destructive, so it needs an interactive session.
   .post(
     AppRouteParts.Rotate,
-    authenticated(),
-    restricted(),
+    authenticated({ feature: FEATURE_SLUGS.CLOUD_VAULT }),
     zValidator('json', VaultRotateSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -249,7 +269,7 @@ const vaultRouter = hono()
       );
 
       try {
-        const prefix = await vaultNameFromUserId(userId);
+        const prefix = await vaultPrefixFromUserId(userId);
         const vaults = await listVaults(prefix);
 
         await Promise.all(
@@ -279,7 +299,7 @@ const vaultRouter = hono()
       );
 
       try {
-        const prefix = await vaultNameFromUserId(userId);
+        const prefix = await vaultPrefixFromUserId(userId);
         const vaults = await listVaults(prefix);
 
         await Promise.all(

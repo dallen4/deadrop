@@ -5,7 +5,7 @@ import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
 import { formatDropKey } from '@shared/lib/util';
 import { createCacheHandlers } from '../lib/cache';
-import { checkMaxGrabbers } from '../lib/billing';
+import { checkMaxGrabbers, getPlanLimits } from '../lib/billing';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { SessionNotFound, PermissionDenied } from '../lib/messages';
@@ -14,7 +14,6 @@ import {
   TEST_TOKEN_HEADER,
   testTokenKey,
 } from '@shared/tests/http';
-import { PLAN_LIMITS } from '@shared/config/plans';
 
 const dropIdSchema = z.object({ id: z.string() });
 
@@ -59,13 +58,13 @@ const dropRouter = hono()
         ? await verifyTestToken(testToken)
         : false;
 
+      const claims = getAuth(c)?.sessionClaims;
+
       if (
         requestedMaxGrabbers &&
         requestedMaxGrabbers > 1 &&
         !isTestSession
       ) {
-        const claims = getAuth(c)?.sessionClaims;
-
         const { allowed } = checkMaxGrabbers(
           requestedMaxGrabbers,
           claims,
@@ -77,16 +76,24 @@ const dropRouter = hono()
       if (!isTestSession) {
         const userId = c.get('userId');
 
-        // TODO dynamic limit check based off of user plan
+        // Anonymous callers have no claims, so getPlanLimits resolves
+        // them to the free tier rather than a separate env-var limit.
+        const { dailyDrops } = getPlanLimits(claims);
+
         const canDrop = !!userId
           ? await checkAndIncrementAuthUserDropCount(
               userId,
-              PLAN_LIMITS.free.dailyDrops,
+              dailyDrops,
             )
-          : await checkAndIncrementUserDropCount(ipAddress!);
+          : await checkAndIncrementUserDropCount(
+              ipAddress!,
+              dailyDrops,
+            );
 
+        // 429, not 500: a quota denial must be distinguishable from a
+        // server fault, or clients retry a limit they cannot clear.
         if (!canDrop)
-          return c.json({ message: 'Daily drop limit reached' }, 500);
+          return c.json({ message: 'Daily drop limit reached' }, 429);
       }
 
       const { dropId, nonce } = await createDrop(

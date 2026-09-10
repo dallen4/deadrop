@@ -2,11 +2,11 @@ import {
   clerkMiddleware,
   createRouteMatcher,
 } from '@clerk/nextjs/server';
-import { get } from '@vercel/edge-config';
 import {
   DAILY_DROP_LIMIT_COOKIE,
   NONCE_COOKIE,
 } from 'config/cookies';
+import { PLAN_LIMITS } from '@shared/config/plans';
 import { nanoid } from 'nanoid';
 import { NextResponse } from 'next/server';
 
@@ -33,11 +33,11 @@ export default clerkMiddleware(async (auth, req) => {
   const limitCookie = req.cookies.get(DAILY_DROP_LIMIT_COOKIE);
 
   if (!limitCookie) {
-    const dailyDropLimit = await get<number>(DAILY_DROP_LIMIT_COOKIE);
+    const dailyDropLimit = PLAN_LIMITS.free.dailyDrops;
 
     response.cookies.set(
       DAILY_DROP_LIMIT_COOKIE,
-      dailyDropLimit!.toString(),
+      dailyDropLimit.toString(),
       {
         path: '/',
         secure: process.env.NODE_ENV !== 'development',

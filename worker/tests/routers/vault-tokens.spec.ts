@@ -3,8 +3,7 @@ import { createMiddleware } from 'hono/factory';
 import { TursoApiError } from '@shared/lib/turso';
 
 vi.mock('../../src/lib/middleware', () => ({
-  authenticated: () => createMiddleware(async (_c, next) => next()),
-  restricted: () =>
+  authenticated: () =>
     createMiddleware(async (c, next) => {
       c.set('userId', 'user_123');
       await next();

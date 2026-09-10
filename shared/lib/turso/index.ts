@@ -8,12 +8,14 @@ export type { TursoClient } from './client';
 export { createLifecycleHandlers } from './lifecycle';
 export { createProvisionHandlers } from './provision';
 export {
+  DEFAULT_VAULT_NAME,
   fileUrl,
   syncUrl,
   syncUrlToHttps,
   tursoUploadUrl,
   userOwnsVault,
   vaultNameFromUserId,
+  vaultPrefixFromUserId,
   vaultSyncUrl,
 } from './utils';
 

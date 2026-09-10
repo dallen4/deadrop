@@ -1,5 +1,12 @@
 # Pricing Tiers — deadrop
 
+> **Status (2026-09-07).** This is the original design spec. Parts of it have
+> shipped, parts have changed, and parts were never built. It has been
+> reconciled against the code as of this date. For what is actually enforced
+> today see `specs/entitlement-enforcement-gaps.md`; for how it gets tested see
+> `specs/paid-tier-test-strategy.md`. Where this document and the code disagree,
+> the code wins and this document is the bug.
+
 ## Context
 
 deadrop currently has a single vague "premium" Stripe link (lifetime license) in a commented-out `Premium.tsx` component, plus a hard-coded `DAILY_DROP_LIMIT=5` in the worker. There is no `/pricing` page, no tier comparison, no naming, and no structured feature breakdown.
@@ -17,7 +24,7 @@ This spec covers three things:
 |------|---------|------------|
 | **Free** | $0 | Drops + local vaults |
 | **Supporter** | **$15 one-time** | Solo dev with cloud vault + CI/CD injection |
-| **Pro** | **$8/mo or $69/yr** | Delegate write access to collaborators |
+| **Pro** | **$7/mo or $60/yr** | Delegate write access to collaborators |
 | **Org** | **$6/seat/mo** (3-seat min) | Teams: SSO, RBAC, audit, service accounts |
 
 ### Naming rationale
@@ -82,6 +89,15 @@ Clerk Billing handles Pro and Org natively. Supporter cannot be a Clerk Billing 
 Clerk embeds billing data directly in the session token JWT:
 - `pla` — active plan slug (`u:pro` for user plans, `o:org_team` for org plans)
 - `fea` — active feature slugs (e.g. `u:cloud_vault`)
+
+> **Unresolved and load-bearing.** This draft records `fea` values as carrying a
+> `u:` scope prefix, but `hasFeature` (`worker/src/lib/billing.ts`) splits `fea`
+> on commas and compares against bare slugs (`cloud_vault`), and its tests
+> assume the bare form. If Clerk actually emits `u:cloud_vault`, then **every
+> Pro feature check silently returns false** while Supporter (hardcoded list)
+> keeps working — a failure that looks like "Pro is broken but Supporter is
+> fine". Settle it by decoding a real Pro session token before wiring any
+> entitlement to `hasFeature`. Nothing else in the codebase can answer it.
 - `public_metadata` — includes `{ plan: 'supporter' }` for Supporter users
 
 The Cloudflare Worker reads these from `sessionClaims` via `@hono/clerk-auth`. No Clerk Backend API call needed on the hot path.
@@ -94,7 +110,7 @@ The Cloudflare Worker reads these from `sessionClaims` via `@hono/clerk-auth`. N
 
 | Plan slug | Pricing |
 |-----------|---------|
-| `pro` | $8/mo or $69/yr |
+| `pro` | $7/mo or $60/yr |
 
 **Org plans to create:**
 
@@ -109,44 +125,41 @@ The Cloudflare Worker reads these from `sessionClaims` via `@hono/clerk-auth`. N
 | `cloud_vault` | yes | yes | yes | Cloud-synced vault creation |
 | `vscode_extension` | yes | yes | yes | VSCode extension access |
 | `no_captcha` | yes | yes | yes | Skip hCaptcha on drops |
-| `ci_tokens` | yes | yes | yes | CI/CD service token issuance |
+| `api_keys` | yes | yes | yes | CI/CD API key issuance (renamed from `ci_tokens`) |
 | `vault_sharing_read` | yes | yes | yes | Read-only vault sharing |
 | `vault_sharing_write` | no | yes | yes | Write delegation (cap differs by plan) |
-| `audit_log` | no | yes | yes | Audit log (30d at Pro, full at Org) |
-| `sso` | no | no | yes | SSO (SAML/OIDC) |
-| `rbac` | no | no | yes | Role-based environment access |
-| `priority_support` | no | no | yes | Priority support |
+| ~~`audit_log`~~ | no | yes | yes | **Not built.** Slug removed from code; tier copy still advertises it |
+| ~~`sso`~~ | no | no | yes | **Not built.** Slug removed from code |
+| ~~`rbac`~~ | no | no | yes | **Not built.** Slug removed from code |
+| ~~`priority_support`~~ | no | no | yes | **Not built.** Slug removed from code |
 
-Supporter features (`cloud_vault`, `vscode_extension`, `no_captcha`, `ci_tokens`) are **hardcoded** in `shared/config/plans.ts` since Supporter isn't a Clerk plan. Pro/Org features come from the `fea` JWT claim.
+Supporter features (`cloud_vault`, `vscode_extension`, `no_captcha`, `api_keys`, `vault_sharing_read`) are **hardcoded** in `shared/config/plans.ts` since Supporter isn't a Clerk plan. Pro/Org features come from the `fea` JWT claim.
 
 ### Plan & feature constants — `shared/config/plans.ts` (new)
 
 ```ts
 export const PLAN_SLUGS = {
-  SUPPORTER: 'supporter',   // Stripe-only; stored in publicMetadata
-  PRO: 'pro',               // Clerk Billing user plan
-  ORG: 'org_team',          // Clerk Billing org plan
+  FREE: 'free',           // internal sentinel; Clerk's own default is `free_user`
+  SUPPORTER: 'supporter', // Stripe-only; stored in publicMetadata
+  PRO: 'pro',             // Clerk Billing user plan
+  ORG: 'org_team',        // Clerk Billing org plan - not currently supported
 } as const
 
 export const FEATURE_SLUGS = {
   CLOUD_VAULT:          'cloud_vault',
   VSCODE_EXTENSION:     'vscode_extension',
   NO_CAPTCHA:           'no_captcha',
-  CI_TOKENS:            'ci_tokens',
+  API_KEYS:             'api_keys',
   VAULT_SHARING_READ:   'vault_sharing_read',
   VAULT_SHARING_WRITE:  'vault_sharing_write',
-  AUDIT_LOG:            'audit_log',
-  SSO:                  'sso',
-  RBAC:                 'rbac',
-  PRIORITY_SUPPORT:     'priority_support',
 } as const
 
 // Numeric limits — not expressible as boolean features, enforced in code
 export const PLAN_LIMITS = {
-  free:      { dailyDrops: 5,        cloudVaults: 0,        envsPerVault: 0,        ciTokens: 0 },
-  supporter: { dailyDrops: 15,       cloudVaults: 1,        envsPerVault: 3,        ciTokens: 10 },
-  pro:       { dailyDrops: Infinity, cloudVaults: 3,        envsPerVault: Infinity, ciTokens: Infinity },
-  org:       { dailyDrops: Infinity, cloudVaults: Infinity, envsPerVault: Infinity, ciTokens: Infinity },
+  free:      { dailyDrops: 3,        cloudVaults: 0,        envsPerVault: 0,        apiKeys: 0,        maxGrabbers: 1 },
+  supporter: { dailyDrops: 5,        cloudVaults: 1,        envsPerVault: 3,        apiKeys: 10,       maxGrabbers: 5 },
+  pro:       { dailyDrops: Infinity, cloudVaults: 3,        envsPerVault: Infinity, apiKeys: Infinity, maxGrabbers: 25 },
+  org_team:  { dailyDrops: Infinity, cloudVaults: Infinity, envsPerVault: Infinity, apiKeys: Infinity, maxGrabbers: 100 },
 } as const
 
 // Supporter features hardcoded since Supporter isn't a Clerk Billing plan
@@ -154,9 +167,25 @@ export const SUPPORTER_FEATURES = [
   FEATURE_SLUGS.CLOUD_VAULT,
   FEATURE_SLUGS.VSCODE_EXTENSION,
   FEATURE_SLUGS.NO_CAPTCHA,
-  FEATURE_SLUGS.CI_TOKENS,
+  FEATURE_SLUGS.API_KEYS,
+  FEATURE_SLUGS.VAULT_SHARING_READ,
 ] as const
+
+// Delegable capabilities on an API key, mapped to the entitlement each
+// one requires. A scope is what a credential may do; a feature is what a
+// plan grants.
+export enum AuthScopes {
+  VaultInject = 'vault:inject',
+}
+
+export const SCOPE_FEATURES: Record<AuthScopes, FeatureSlug> = {
+  [AuthScopes.VaultInject]: FEATURE_SLUGS.API_KEYS,
+}
 ```
+
+> Drop limits are now the single source for **both** the per-user and the
+> anonymous per-IP counter — `getPlanLimits(claims)` resolves an anonymous
+> caller to the free tier, and the old `DAILY_DROP_LIMIT` worker var is gone.
 
 ### Worker billing helpers — `worker/src/lib/billing.ts` (new)
 
@@ -231,7 +260,7 @@ const canShareVault = has({ feature: 'vault_sharing_read' })
 
 // Client component
 const { has } = useAuth()
-has?.({ feature: 'ci_tokens' })
+has?.({ feature: 'api_keys' })
 ```
 
 ---
@@ -300,15 +329,15 @@ the KV row's `turso_token` would be a long-lived credential sitting in worker
 storage for no reason: the worker holds `TURSO_PLATFORM_API_TOKEN` and can mint
 a fresh scoped token on demand.
 
-### Enforcing `ciTokens` without a registry
+### Enforcing `apiKeys` without a registry
 
-Clerk has no built-in per-plan quota on API key count, so `PLAN_LIMITS[plan].ciTokens`
+Clerk has no built-in per-plan quota on API key count, so `PLAN_LIMITS[plan].apiKeys`
 stays and remains ours to enforce. That does not require a registry, because
 Clerk can be asked:
 
 ```ts
 const { totalCount } = await clerkClient.apiKeys.list({ subject: userId });
-if (totalCount >= PLAN_LIMITS[plan].ciTokens) return c.json(PermissionDenied, 401);
+if (totalCount >= PLAN_LIMITS[plan].apiKeys) return c.json(PermissionDenied, 401);
 ```
 
 `apiKeys.list({ subject })` filters by user or organization id and excludes
@@ -327,7 +356,7 @@ so CI keys should be issued bounded for the same reason vault tokens are.
 
 ### Issue flow
 
-1. Worker checks `has({ feature: 'ci_tokens' })`, then counts existing keys via `apiKeys.list({ subject: userId })` against `PLAN_LIMITS[plan].ciTokens`.
+1. Worker checks `has({ feature: 'api_keys' })`, then counts existing keys via `apiKeys.list({ subject: userId })` against `PLAN_LIMITS[plan].apiKeys`.
 2. Worker creates the API key through Clerk with a bounded `secondsUntilExpiration`, and returns it once.
 3. deadrop generates `deadrop-ci.json` with the vault's wrapped data key, client-side, and hands it over once.
 
@@ -336,7 +365,7 @@ The Worker stores nothing in any step.
 ### Inject flow (CI-side, `deadrop inject -- pnpm build`)
 
 1. CLI reads `DEADROP_API_KEY` + local `deadrop-ci.json`
-2. CLI calls `POST /vault/tokens` with the API key as bearer (route already accepts API keys)
+2. CLI calls `POST /vault/tokens/ci` with the API key as bearer (`apiKey()` middleware; vault and environment come off the key's claims)
 3. Worker resolves `userId` from the key, derives the vault name via `vaultNameFromUserId`, and mints a **short-lived read-only Turso token** against the platform API
 4. CLI uses libSQL embedded replica sync to pull the vault DB locally
 5. CLI decrypts rows locally using vault key from `deadrop-ci.json`
@@ -369,9 +398,14 @@ data key is never involved.
 ## CLI Tier Awareness
 
 - `lib/auth/clerk.ts` already holds the Clerk session — extend to read `pla`/`fea` claims (same `getUserPlan` / `hasFeature` helpers from `shared/config/plans.ts`)
-- Gate `vault create --cloud` behind `ci_tokens` feature check
+- Gate `vault create --cloud` behind the `cloud_vault` feature check (the
+  original draft said `ci_tokens`, which was wrong — creating a vault is not
+  issuing a key)
 - Gate `vault sync` against `cloudVaults` limit
-- Gate `deadrop inject` behind `ci_tokens` feature check
+- `deadrop inject` needs **no** gate of its own: two of its four mint
+  strategies never touch the network, so a free user injecting from a local
+  vault is correct behavior. The gate belongs on the credential it consumes
+  (`api_keys` for the CI path, `cloud_vault` for the session path)
 - Show plan name in `deadrop login` output
 
 ---

@@ -1,7 +1,7 @@
 import { createClient } from '@shared/client';
 import { useApiHeaders } from './api-headers';
 import { DEADROP_API_URL } from '../env';
-import { AuthScopes } from '@shared/lib/constants';
+import { AuthScopes } from '@shared/config/plans';
 import { useCallback } from 'react';
 
 export type VaultApiKeyTarget = {

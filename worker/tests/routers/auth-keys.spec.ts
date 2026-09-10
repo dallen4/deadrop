@@ -1,16 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createMiddleware } from 'hono/factory';
-import { AuthScopes } from '@shared/lib/constants';
+import { AuthScopes } from '@shared/config/plans';
 
 const list = vi.fn();
 const create = vi.fn();
 
+// Stands in for what authenticated() resolves off the caller's claims.
+let planLimits: { apiKeys: number } | undefined;
+
 vi.mock('../../src/lib/middleware', () => ({
-  authenticated: () => createMiddleware(async (_c, next) => next()),
-  restricted: () =>
+  authenticated: () =>
     createMiddleware(async (c, next) => {
       c.set('userId', 'user_123');
       c.set('clerk', { apiKeys: { list, create } });
+      if (planLimits) c.set('planLimits', planLimits);
       await next();
     }),
   apiKey: () => createMiddleware(async (_c, next) => next()),
@@ -143,7 +146,10 @@ describe('GET /auth/keys', () => {
 });
 
 describe('POST /auth/keys', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    planLimits = undefined;
+  });
 
   it('issues a scoped key against the resolved vault name', async () => {
     create.mockResolvedValue({
@@ -183,6 +189,87 @@ describe('POST /auth/keys', () => {
         },
       }),
     );
+  });
+
+  // The cap is counted from Clerk rather than a local tally, so a key
+  // revoked in their dashboard frees a slot with no reconciliation here.
+  it('refuses to issue past the plan cap', async () => {
+    planLimits = { apiKeys: 1 };
+    list.mockResolvedValue({ data: [key()], totalCount: 1 });
+
+    const authRouter = (await import('../../src/routers/auth'))
+      .default;
+    const res = await authRouter.request(
+      '/keys',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vaultName: 'demo',
+          environment: 'production',
+        }),
+      },
+      testEnv,
+    );
+
+    expect(res.status).toBe(403);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('issues while under the plan cap', async () => {
+    planLimits = { apiKeys: 10 };
+    list.mockResolvedValue({ data: [key()], totalCount: 1 });
+    create.mockResolvedValue({
+      id: 'key_1',
+      name: 'issued',
+      secret: 'sk_live_123',
+    });
+
+    const authRouter = (await import('../../src/routers/auth'))
+      .default;
+    const res = await authRouter.request(
+      '/keys',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vaultName: 'demo',
+          environment: 'production',
+        }),
+      },
+      testEnv,
+    );
+
+    expect(res.status).toBe(201);
+    expect(create).toHaveBeenCalled();
+  });
+
+  // An unlimited plan must not spend a round trip counting keys.
+  it('skips the count entirely when the plan is unlimited', async () => {
+    planLimits = { apiKeys: Infinity };
+    create.mockResolvedValue({
+      id: 'key_1',
+      name: 'issued',
+      secret: 'sk_live_123',
+    });
+
+    const authRouter = (await import('../../src/routers/auth'))
+      .default;
+    const res = await authRouter.request(
+      '/keys',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vaultName: 'demo',
+          environment: 'production',
+        }),
+      },
+      testEnv,
+    );
+
+    expect(res.status).toBe(201);
+    expect(list).not.toHaveBeenCalled();
   });
 
   // Clerk returns the plaintext only on create, so a key we cannot hand
