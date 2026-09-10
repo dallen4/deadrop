@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import {
   ActionIcon,
+  Box,
   Group,
   Menu,
   Stack,
@@ -67,6 +68,7 @@ export const SecretRow = ({
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const clipboard = useClipboard({ timeout: 2000 });
+  const nameClipboard = useClipboard({ timeout: 2000 });
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleReveal = async () => {
@@ -102,16 +104,34 @@ export const SecretRow = ({
   return (
     <Stack gap={0} py={2} style={{ minWidth: 0 }}>
       <Group justify={'space-between'} wrap={'nowrap'}>
-        <Text
-          // Mantine jumps sm(14) to md(16) with nothing between; monospace
-          // reads cramped at sm and shouty at md, so this splits them.
-          fz={15}
-          ff={'monospace'}
-          style={{ flex: 1, minWidth: 0 }}
-          truncate
-        >
-          {name}
-        </Text>
+        {/* The Box takes the row's spare width; the Text shrink-wraps
+            inside it so hover and click stop at the end of the name. */}
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Tooltip
+            label={nameClipboard.copied ? 'Copied' : 'Copy name'}
+            color={'gray'}
+            openDelay={400}
+          >
+            <Text
+              // Mantine jumps sm(14) to md(16); monospace reads cramped at
+              // sm and shouty at md, so this splits them.
+              fz={15}
+              ff={'monospace'}
+              c={
+                nameClipboard.copied
+                  ? 'var(--mantine-primary-color-light-color)'
+                  : undefined
+              }
+              display={'inline-block'}
+              maw={'100%'}
+              truncate
+              style={{ verticalAlign: 'bottom', cursor: 'pointer' }}
+              onClick={() => nameClipboard.copy(name)}
+            >
+              {name}
+            </Text>
+          </Tooltip>
+        </Box>
 
         <Group gap={4} wrap={'nowrap'}>
           <Tooltip label={revealedValue !== null ? 'Hide' : 'Reveal'}>
@@ -227,17 +247,33 @@ export const SecretRow = ({
       </Group>
 
       {revealedValue !== null && (
-        <Text
-          size={'sm'}
-          c={'dimmed'}
-          ff={'monospace'}
-          truncate
-          // Ellipsised at the pane edge rather than wrapping, so revealing
-          // never reflows the list.
-          style={{ width: '100%', minWidth: 0 }}
+        <Tooltip
+          label={clipboard.copied ? 'Copied' : 'Copy value'}
+          color={'gray'}
+          openDelay={400}
         >
-          {revealedValue}
-        </Text>
+          <Text
+            size={'sm'}
+            c={
+              clipboard.copied
+                ? 'var(--mantine-primary-color-light-color)'
+                : 'dimmed'
+            }
+            ff={'monospace'}
+            truncate
+            pb={6}
+            maw={'100%'}
+            // alignSelf stops the Stack stretching it, so the hit area ends
+            // with the value; truncate still ellipsises at the pane edge.
+            style={{
+              alignSelf: 'flex-start',
+              cursor: 'pointer',
+            }}
+            onClick={() => clipboard.copy(revealedValue)}
+          >
+            {revealedValue}
+          </Text>
+        </Tooltip>
       )}
 
       <EditSecretModal
