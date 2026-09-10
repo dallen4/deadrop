@@ -1,4 +1,5 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+import { DEADROP_API_URL } from '../env';
 
 // Tauri's webview auto-attaches an `Origin` header to every fetch, and
 // Clerk's backend rejects requests carrying both `Origin` and
@@ -28,6 +29,25 @@ type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
 const CLERK_FETCH_HEADER = 'x-tauri-fetch';
 const NO_ORIGIN_HEADER = 'x-no-origin';
+
+const apiOrigin = new URL(DEADROP_API_URL).origin;
+
+const urlOf = (input: FetchArgs[0]) =>
+  typeof input === 'string'
+    ? input
+    : input instanceof URL
+      ? input.href
+      : input.url;
+
+// The webview origin isn't in the worker's CORS allowlist, so these have
+// to leave from Rust rather than the window.
+const isWorkerRequest = (input: FetchArgs[0]): boolean => {
+  try {
+    return new URL(urlOf(input)).origin === apiOrigin;
+  } catch {
+    return false;
+  }
+};
 
 const shouldRunTauriFetch = (
   input: FetchArgs[0],
@@ -129,8 +149,16 @@ let patched = false;
 export const applyNativeFetchPatch = (): void => {
   if (patched) return;
   patched = true;
-  globalThis.fetch = async (input, init) =>
-    shouldRunTauriFetch(input, init)
+  globalThis.fetch = async (input, init) => {
+    if (isWorkerRequest(input)) {
+      const request = new Request(input, init);
+      request.headers.set(NO_ORIGIN_HEADER, '1');
+
+      return tauriFetch(request);
+    }
+
+    return shouldRunTauriFetch(input, init)
       ? tauriFetch(new Request(input, init))
       : runRealFetch(input, init);
+  };
 };

@@ -47,8 +47,17 @@ pnpm -F desktop typecheck  # tsc --noEmit (NON-gating; see note below)
   `tsc` pulls worker source (ambient `Env`) and pre-existing shared strictness
   warnings that fail repo-wide (web builds via `next build`, cli via esbuild for
   the same reason). `typecheck` exists for local DX but is not a build gate.
-- Tauri `security.csp` is `null` (dev-open); WebRTC/PeerJS/fetch to the worker
-  are unrestricted. CSP hardening is a follow-up.
+- Tauri `security.csp` is `null` (dev-open); WebRTC/PeerJS are unrestricted.
+  CSP hardening is a follow-up.
+- **Worker and Clerk calls leave from Rust, not the webview.**
+  `src/lib/native-fetch.ts` patches `globalThis.fetch` to route anything bound
+  for `VITE_DEADROP_API_URL` (plus Clerk FAPI) through
+  `@tauri-apps/plugin-http`. The webview origin (`tauri://localhost`, or
+  `http://localhost:1420` in dev) isn't in the worker's CORS allowlist, so
+  browser-side calls never leave the window. New hosts need a matching entry in
+  `src-tauri/capabilities/default.json`'s `http:default` scope.
+- **Inspector in a packaged build**: `pnpm tauri build --features devtools`.
+  Plain release builds compile without it, so right-click/Cmd+Opt+I do nothing.
 
 ## Vault
 

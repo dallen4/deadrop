@@ -1,5 +1,22 @@
 # cli
 
+## 1.11.2
+
+### Patch Changes
+
+- 0817197: API keys move from `POST /auth/key` to an `/auth/keys` collection that serves both issuance and listing. `GET /auth/keys` returns the caller's `vault:inject` keys for a vault and environment, filtered by scope and by the claims the key was minted with, and returns only each key's id, name, and expired/revoked state. It resolves the vault name the same way issuance does, so a caller passes the local vault name it already knows and never has to construct the hashed cloud name itself.
+
+  `deadrop apiKeys create` follows the route to its new path. The old `/auth/key` path is gone, so a CLI older than this release cannot create keys once the worker deploys.
+
+- Updated dependencies [0817197]
+  - shared@1.4.0
+
+## 1.11.1
+
+### Patch Changes
+
+- c3370db: `deadrop inject --ci` no longer needs `--no-sync`. A CI key mints a read-only token against a replica that gets thrown away at the end of the job, so there is nothing to replicate into and no permission to do it. Passing `--no-sync` alongside `--ci` still works and changes nothing.
+
 ## 1.11.0
 
 ### Minor Changes
