@@ -95,15 +95,36 @@ const authRouter = hono()
 
       const clerkClient = c.get('clerk');
 
+      const cap = c.get('planLimits')?.apiKeys;
+
+      if (cap !== undefined && cap !== Infinity) {
+        // Counted from Clerk, the system of record, so a key revoked in
+        // their dashboard frees a slot with no reconciliation here.
+        const { data, totalCount } = await clerkClient.apiKeys.list({
+          subject: userId,
+        });
+
+        if ((totalCount ?? data.length) >= cap)
+          return c.json(
+            {
+              error:
+                `Your plan allows ${cap} API key(s). ` +
+                `Revoke one or upgrade to issue another.`,
+            },
+            403,
+          );
+      }
+
       // Reissuing for the same vault/environment is normal, and the
       // Clerk modal is the only place keys are told apart and revoked.
       const issuedAt = new Date()
         .toISOString()
-        .replace(/\.\d{3}Z$/, 'Z');
+        .replace(/[-:]/g, '')
+        .replace(/T(\d{4}).*$/, '-$1');
 
       const apiKey = await clerkClient.apiKeys.create({
-        name: `${vaultName} ${environment} Key ${issuedAt}`,
-        description: `Used to inject ${environment} secrets from ${vaultName} into CI/CD processes.`,
+        name: `${name} (${environment}) ${issuedAt}`,
+        description: `Used to inject ${environment} secrets from ${name} into CI/CD processes.`,
         subject: userId,
         scopes: [AuthScopes.VaultInject],
         claims: {

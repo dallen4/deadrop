@@ -38,12 +38,30 @@ const vaultRouter = hono()
     async (c) => {
       const userId = c.get('userId')!;
 
-      const { createVault, createVaultToken } = createVaultUtils(
-        c.env.TURSO_PLATFORM_API_TOKEN,
-      );
+      const { createVault, createVaultToken, listVaults } =
+        createVaultUtils(c.env.TURSO_PLATFORM_API_TOKEN);
 
       try {
         const { name, seed } = c.req.valid('json');
+
+        // undefined = API key caller, plan unresolvable, count unenforced.
+        const cap = c.get('planLimits')?.cloudVaults;
+
+        if (cap !== undefined && cap !== Infinity) {
+          const owned = await listVaults(
+            await vaultPrefixFromUserId(userId),
+          );
+
+          if (owned.length >= cap)
+            return c.json(
+              {
+                error:
+                  `Your plan allows ${cap} cloud vault(s). ` +
+                  `Delete one or upgrade to add another.`,
+              },
+              403,
+            );
+        }
 
         const vaultName = await vaultNameFromUserId(userId, name);
 
