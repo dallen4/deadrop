@@ -390,7 +390,12 @@ export const VaultPage = () => {
             </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value={'environments'}>
+          <Tabs.Panel
+            value={'environments'}
+            // A flex item defaults to min-width auto, so without this a long
+            // secret widens the pane instead of ellipsising inside it.
+            style={{ flex: 1, minWidth: 0 }}
+          >
             <Stack gap={'sm'} pl={'md'}>
               <Tabs
                 value={vault.activeEnv}
@@ -449,7 +454,11 @@ export const VaultPage = () => {
             </Stack>
           </Tabs.Panel>
 
-          <Tabs.Panel value={'credentials'} pl={'md'}>
+          <Tabs.Panel
+            value={'credentials'}
+            pl={'md'}
+            style={{ flex: 1, minWidth: 0 }}
+          >
             <CredentialsTab
               vaultName={vault.activeVaultName}
               cloudName={vault.activeVault?.cloud?.name}
