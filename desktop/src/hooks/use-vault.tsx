@@ -50,6 +50,7 @@ export const useVault = () => {
 
   const [config, setConfig] = useState<DeadropConfig | null>(null);
   const [secretNames, setSecretNames] = useState<SecretName[]>([]);
+  const [secretsLoading, setSecretsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,9 +92,15 @@ export const useVault = () => {
     })();
   }, []);
 
+  // Only the first read per vault flips the flag; refreshSecretNames runs
+  // after every mutation too, and skeletons on those would just flicker.
   useEffect(() => {
     if (!activeVault) return;
-    refreshSecretNames().catch((err) => setError((err as Error).message));
+
+    setSecretsLoading(true);
+    refreshSecretNames()
+      .catch((err) => setError((err as Error).message))
+      .finally(() => setSecretsLoading(false));
   }, [activeVault, refreshSecretNames]);
 
   const withBusy = useCallback(
@@ -481,6 +488,7 @@ export const useVault = () => {
     activeEnv,
     environments,
     secretNames,
+    secretsLoading,
     switchVault,
     switchEnv,
     createVault,

@@ -10,6 +10,7 @@ import {
   Group,
   Loader,
   Menu,
+  Skeleton,
   Stack,
   Tabs,
   Text,
@@ -206,7 +207,12 @@ export const VaultPage = () => {
   const secretsSection = (
     <>
       <Stack gap={4}>
-        {filtered.length === 0 ? (
+        {vault.secretsLoading ? (
+          // Match the row height so the list does not jump when it resolves.
+          Array.from({ length: 3 }, (_, i) => (
+            <Skeleton key={i} height={26} my={2} radius={'sm'} />
+          ))
+        ) : filtered.length === 0 ? (
           <Text size={'sm'} c={'dimmed'}>
             No secrets yet for <b>{vault.activeEnv}</b>.
           </Text>
