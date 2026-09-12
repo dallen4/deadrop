@@ -45,9 +45,7 @@ jobs:
           # Runtime: initPeer reads the TURN creds from the env at run time.
           TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
           TURN_PWD: ${{ secrets.TURN_PWD }}
-          # The stable drop test token the dropper sends to bypass captcha/
-          # rate-limits. The worker verifies it against the persistent Redis
-          # value (test_tkn)
+          # The stable drop test token the clients send to bypass captcha
           DROP_TEST_TOKEN: ${{ secrets.DROP_TEST_TOKEN }}
         # test:e2e builds dist/deadrop.js, then runs the Vitest e2e config.
         run: CI=true pnpm -F cli test:e2e
