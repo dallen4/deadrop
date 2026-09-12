@@ -20,6 +20,8 @@ type CreateApiKeyOptions = {
   yes?: boolean;
   print?: boolean;
   copy?: boolean;
+  prefix?: string | undefined;
+  only?: string[] | undefined;
 };
 
 // A key mints Turso tokens for a remote database, so a local-only vault
@@ -175,7 +177,12 @@ export async function createApiKey(
 
   try {
     const response = await deadropClient.auth.keys.$post({
-      json: { vaultName, environment },
+      json: {
+        vaultName,
+        environment,
+        prefix: options.prefix,
+        only: options.only,
+      },
     });
 
     const data = await response.json();

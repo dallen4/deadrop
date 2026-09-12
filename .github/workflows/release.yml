@@ -128,4 +128,20 @@ jobs:
         working-directory: vscode-extension
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        run: pnpm exec vsce publish --packagePath vsix/*.vsix
+        run: |
+          # vsce only retries timeouts on the signed publish path, and one throw there aborts every remaining target
+          failed=()
+          for vsix in vsix/*.vsix; do
+            for attempt in 1 2 3; do
+              if pnpm exec vsce publish --packagePath "$vsix"; then
+                continue 2
+              fi
+              echo "::warning::publish failed for $vsix (attempt $attempt/3)"
+              if [ "$attempt" -lt 3 ]; then sleep $((attempt * 15)); fi
+            done
+            failed+=("$vsix")
+          done
+          if [ ${#failed[@]} -gt 0 ]; then
+            echo "::error::did not publish: ${failed[*]}"
+            exit 1
+          fi

@@ -4,7 +4,10 @@ import { authenticated } from '../lib/middleware';
 import { KeyNotIssued } from '../lib/messages';
 import { zValidator } from '@hono/zod-validator';
 import { vaultNameFromUserId } from '@shared/lib/turso';
-import { VaultInjectClaimsSchema } from '../lib/vault';
+import {
+  VaultInjectClaims,
+  VaultInjectClaimsSchema,
+} from '../lib/vault';
 import {
   ApiKeyClaimsFilterSchema,
   ListApiKeysQuerySchema,
@@ -88,11 +91,6 @@ const authRouter = hono()
     zValidator('json', VaultInjectClaimsSchema),
     async (c) => {
       const userId = c.get('userId')!;
-
-      const { vaultName: name, environment } = c.req.valid('json');
-
-      const vaultName = await vaultNameFromUserId(userId, name);
-
       const clerkClient = c.get('clerk');
 
       const cap = c.get('planLimits')?.apiKeys;
@@ -115,6 +113,14 @@ const authRouter = hono()
           );
       }
 
+      const {
+        vaultName: name,
+        environment,
+        ...injectOptions
+      } = c.req.valid('json');
+
+      const vaultName = await vaultNameFromUserId(userId, name);
+
       // Reissuing for the same vault/environment is normal, and the
       // Clerk modal is the only place keys are told apart and revoked.
       const issuedAt = new Date()
@@ -122,15 +128,20 @@ const authRouter = hono()
         .replace(/[-:]/g, '')
         .replace(/T(\d{4}).*$/, '-$1');
 
+      // can be parameterized in the future
+      const scopes = [AuthScopes.VaultInject];
+      const claims: VaultInjectClaims = {
+        vaultName,
+        environment,
+        ...injectOptions,
+      };
+
       const apiKey = await clerkClient.apiKeys.create({
         name: `${name} (${environment}) ${issuedAt}`,
         description: `Used to inject ${environment} secrets from ${name} into CI/CD processes.`,
         subject: userId,
-        scopes: [AuthScopes.VaultInject],
-        claims: {
-          vaultName,
-          environment,
-        },
+        scopes,
+        claims,
       });
 
       // Clerk returns the plaintext only on create and stores it hashed,
@@ -138,7 +149,12 @@ const authRouter = hono()
       if (!apiKey.secret) return c.json(KeyNotIssued, 500);
 
       return c.json(
-        { id: apiKey.id, name: apiKey.name, key: apiKey.secret },
+        {
+          id: apiKey.id,
+          name: apiKey.name,
+          key: apiKey.secret,
+          claims,
+        },
         201,
       );
     },

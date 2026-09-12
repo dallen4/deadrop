@@ -1,4 +1,5 @@
 import { createSecretsHelpers } from '@shared/db/secrets';
+import { VaultInjectOptions } from '@shared/lib/vault-tokens';
 import { VaultDBConfig } from '@shared/types/config';
 import { randomBytes } from 'crypto';
 import { initDBClient } from 'db/init';
@@ -39,6 +40,8 @@ type ResolvedVault = {
   // vault.location is a temp replica we own and must clean up on exit.
   ephemeral: boolean;
   strategy: MintStrategy;
+  // Shaping carried by an API key's claims; absent on every other path.
+  claims?: VaultInjectOptions;
 };
 
 // `--ci` asserts the machine path is available rather than selecting it, so
@@ -160,15 +163,18 @@ async function applyMintStrategy(resolved: ResolvedVault) {
   try {
     // The worker prefixes the label it is given, so send the label — an
     // already-resolved name would get prefixed a second time.
-    const { name, token, environment } = isApiKey
+    const { name, token, environment, ...claims } = isApiKey
       ? await mintVaultTokenWithApiKey()
       : await mintVaultToken(vaultName);
 
     resolved.vault.cloud = { name, authToken: token };
 
-    // The key's claims, not the local label, decide which vault an API key
-    // run reads — adopt the resolved name so logs name what actually synced.
-    if (isApiKey) resolved.vaultName = name;
+    if (isApiKey) {
+      resolved.claims = claims;
+
+      // The key's claims, not the local label, decide which vault an API key
+      resolved.vaultName = name;
+    }
 
     if (environment) bindEnvironment(resolved, environment);
   } catch (err) {
@@ -215,18 +221,34 @@ async function parseVaultFromOptions(options: InjectOptions) {
 
 // --only names the stored secrets, so the list matches `vault env list`;
 // --prefix is applied after, renaming whatever survived the filter.
+// An API key's claims are the baseline: --only may narrow within them, and
+// a --prefix that disagrees with the key's loses.
 function shapeSecrets(
   secrets: Record<string, string>,
-  { only, prefix }: InjectOptions,
+  { only, prefix }: Pick<InjectOptions, 'only' | 'prefix'>,
+  claims: VaultInjectOptions = {},
 ) {
+  const requested = only
+    ?.split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+  if (requested && claims.only) {
+    const denied = requested.filter(
+      (name) => !claims.only!.includes(name),
+    );
+
+    if (denied.length) {
+      logError(`Not permitted by this API key: ${denied.join(', ')}`);
+      process.exit(1);
+    }
+  }
+
+  const wanted = requested ?? claims.only;
+
   let shaped = secrets;
 
-  if (only) {
-    const wanted = only
-      .split(',')
-      .map((name) => name.trim())
-      .filter(Boolean);
-
+  if (wanted) {
     const missing = wanted.filter((name) => !(name in secrets));
 
     // A typo here would otherwise inject nothing and exit 0.
@@ -240,10 +262,17 @@ function shapeSecrets(
     );
   }
 
-  if (prefix)
+  if (claims.prefix && prefix && prefix !== claims.prefix)
+    logWarning(
+      `Ignoring --prefix: this API key applies '${claims.prefix}'.`,
+    );
+
+  const resolvedPrefix = claims.prefix ?? prefix;
+
+  if (resolvedPrefix)
     shaped = Object.fromEntries(
       Object.entries(shaped).map(([name, value]) => [
-        `${prefix}${name}`,
+        `${resolvedPrefix}${name}`,
         value,
       ]),
     );
@@ -262,12 +291,19 @@ export async function inject(
     process.exit(1);
   }
 
-  const { vaultName, environment, vault, ephemeral, strategy } =
-    await parseVaultFromOptions(options);
+  const {
+    vaultName,
+    environment,
+    vault,
+    ephemeral,
+    strategy,
+    claims,
+  } = await parseVaultFromOptions(options);
+
+  const isApiKey = strategy == MintStrategy.ApiKey;
 
   // CI tokens are read-only, and the replica is discarded anyway.
-  const sync =
-    strategy !== MintStrategy.ApiKey && options.sync !== false;
+  const sync = !isApiKey && options.sync !== false;
 
   const db = await initDBClient(vault.location, vault.cloud, sync);
 
@@ -276,6 +312,7 @@ export async function inject(
   const secrets = shapeSecrets(
     await getAllSecrets(environment),
     options,
+    claims,
   );
 
   const names = Object.keys(secrets);

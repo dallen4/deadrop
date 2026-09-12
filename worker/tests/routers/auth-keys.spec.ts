@@ -178,6 +178,11 @@ describe('POST /auth/keys', () => {
       id: 'key_1',
       name: 'issued',
       key: 'sk_live_123',
+      // Echoed back so a caller can show what the key is scoped to.
+      claims: {
+        vaultName: 'hash13-demo',
+        environment: 'production',
+      },
     });
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({

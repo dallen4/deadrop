@@ -639,6 +639,112 @@ describe('inject', () => {
     );
   });
 
+  // An API key's claims are the baseline: --only narrows within them and a
+  // disagreeing --prefix loses, so a pipeline cannot widen its own key.
+  const injectWithClaims = async (
+    secrets: Record<string, string>,
+    claims: { only?: string[]; prefix?: string },
+    options: Record<string, unknown> = {},
+  ) => {
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+    const { mintVaultTokenWithApiKey } =
+      await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    process.env.DEADROP_VAULT_KEY = 'aes-key';
+    process.env.DEADROP_API_KEY = 'sk_test';
+
+    vi.mocked(mintVaultTokenWithApiKey).mockImplementation(
+      minted({
+        token: 'ci-token',
+        name: 'a1b2c3d4e5f67-my-app',
+        environment: 'production',
+        ...claims,
+      }),
+    );
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue(secrets),
+    } as any);
+    const runWithEnv = vi
+      .spyOn(processModule, 'runWithEnv')
+      .mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(
+      () => undefined as never,
+    );
+
+    await inject(['node'], { override: true, ci: true, ...options });
+
+    return runWithEnv;
+  };
+
+  it("CI: applies the key's only claim with no flags", async () => {
+    const runWithEnv = await injectWithClaims(
+      { DB_URL: 'a', API_KEY: 'b', STRIPE_KEY: 'c' },
+      { only: ['DB_URL', 'API_KEY'] },
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({
+      DB_URL: 'a',
+      API_KEY: 'b',
+    });
+  });
+
+  it("CI: applies the key's prefix claim", async () => {
+    const runWithEnv = await injectWithClaims(
+      { DB_URL: 'a' },
+      { prefix: 'PROD_' },
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({ PROD_DB_URL: 'a' });
+  });
+
+  it('CI: --only narrows within the claim', async () => {
+    const runWithEnv = await injectWithClaims(
+      { DB_URL: 'a', API_KEY: 'b' },
+      { only: ['DB_URL', 'API_KEY'] },
+      { only: 'DB_URL' },
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({ DB_URL: 'a' });
+  });
+
+  it('CI: --only exits 1 on a name the key does not permit', async () => {
+    const { logError } = await import('lib/log');
+
+    // injectWithClaims installs the process.exit spy, so assert on it.
+    await injectWithClaims(
+      { DB_URL: 'a', STRIPE_KEY: 'c' },
+      { only: ['DB_URL'] },
+      { only: 'STRIPE_KEY' },
+    );
+
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('Not permitted by this API key'),
+    );
+    expect(process.exit).toHaveBeenCalledWith(1);
+  });
+
+  it("CI: a disagreeing --prefix warns and the key's prefix wins", async () => {
+    const { logWarning } = await import('lib/log');
+
+    const runWithEnv = await injectWithClaims(
+      { DB_URL: 'a' },
+      { prefix: 'PROD_' },
+      { prefix: 'STAGING_' },
+    );
+
+    expect(logWarning).toHaveBeenCalledWith(
+      expect.stringContaining("applies 'PROD_'"),
+    );
+    expect(runWithEnv.mock.calls[0][2]).toEqual({ PROD_DB_URL: 'a' });
+  });
+
   it('CI: --refresh-token does not knock the run off the API key path', async () => {
     const { initDBClient } = await import('db/init');
     const { createSecretsHelpers } =

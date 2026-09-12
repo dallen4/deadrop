@@ -140,7 +140,7 @@ const vaultRouter = hono()
     AppRouteParts.CiTokens,
     apiKey({ scopes: [AuthScopes.VaultInject] }),
     async (c) => {
-      const { vaultName, environment } = c.get(
+      const { vaultName, environment, ...injectOptions } = c.get(
         'claims',
       )! as VaultInjectClaims;
 
@@ -159,6 +159,7 @@ const vaultRouter = hono()
           name: vaultName,
           token,
           environment,
+          ...injectOptions,
         };
 
         return c.json(creds, 201);

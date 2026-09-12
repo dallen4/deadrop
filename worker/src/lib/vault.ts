@@ -1,4 +1,5 @@
 import { VaultTokenAccess } from '@shared/lib/constants';
+import { VaultInjectOptionsSchema } from '@shared/lib/vault-tokens';
 import z from 'zod';
 
 export const VaultNameSchema = z.object({ name: z.string() });
@@ -21,10 +22,12 @@ export const VaultTokenSchema = z.object({
   expiration: z.string().optional(),
 });
 
-export const VaultInjectClaimsSchema = z.object({
+export const VaultEnvSchema = z.object({
   vaultName: z.string(),
   environment: z.string(),
 });
+
+export const VaultInjectClaimsSchema = VaultEnvSchema.and(VaultInjectOptionsSchema);
 
 export type VaultInjectClaims = z.infer<
   typeof VaultInjectClaimsSchema

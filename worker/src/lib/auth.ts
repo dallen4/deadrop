@@ -1,13 +1,12 @@
 import z from 'zod';
-import { VaultInjectClaimsSchema } from './vault';
+import { VaultEnvSchema } from './vault';
 import { AuthScopes } from '@shared/config/plans';
 
-export const ApiKeyClaimsFilterSchema =
-  VaultInjectClaimsSchema.partial();
+export const ApiKeyClaimsFilterSchema = VaultEnvSchema.partial();
 
 // Claims can't nest in a query string, so they arrive flattened, and a
 // repeated `scopes` param comes through as an array of one or more.
-export const ListApiKeysQuerySchema = VaultInjectClaimsSchema.extend({
+export const ListApiKeysQuerySchema = VaultEnvSchema.extend({
   scopes: z
     .union([
       z.nativeEnum(AuthScopes),
