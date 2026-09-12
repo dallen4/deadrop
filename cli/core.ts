@@ -288,6 +288,21 @@ use it as DEADROP_API_KEY with 'deadrop inject --ci'`,
     'environment to scope the key to (prompts to select when omitted)',
   )
   .option(
+    '--only <names>',
+    `comma-separated secrets this key injects (default: the whole environment)
+a run may narrow this further with 'inject --only', never widen it`,
+    (value: string) =>
+      value
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean),
+  )
+  .option(
+    '--prefix <prefix>',
+    `prepend this to every variable name the key injects
+overrides 'inject --prefix' for runs using the key`,
+  )
+  .option(
     '-y, --yes',
     'skip the confirmation prompt (also implied by a non-TTY shell or CI)',
   )
