@@ -1,5 +1,12 @@
 # desktop
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [b4279ac]
+  - shared@1.6.0
+
 ## 0.5.0
 
 ### Minor Changes
