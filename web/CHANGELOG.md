@@ -1,5 +1,12 @@
 # web
 
+## 1.0.8
+
+### Patch Changes
+
+- Updated dependencies [b4279ac]
+  - shared@1.6.0
+
 ## 1.0.7
 
 ### Patch Changes
