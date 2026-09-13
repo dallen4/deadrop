@@ -12,6 +12,9 @@ importers:
 
   .:
     dependencies:
+      '@clerk/backend':
+        specifier: ^3.11.5
+        version: 3.16.12(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@clerk/clerk-js':
         specifier: ^6.3.3
         version: 6.3.3(@solana/web3.js@1.98.4(bufferutil@4.1.0)(typescript@5.9.3))(@types/react@19.2.17)(bs58@6.0.0)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-dom@19.2.8(react@19.2.8))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.8))(react@19.2.8)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.8))(zod@3.25.76)
