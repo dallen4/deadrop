@@ -84,6 +84,14 @@ const vaultRouter = hono()
       }
     },
   )
+  .get(
+    AppRouteParts.Root,
+    authenticated({
+      allowApiKey: true,
+      feature: FEATURE_SLUGS.CLOUD_VAULT,
+    }),
+    async (c) => {},
+  )
   .post(
     AppRouteParts.Tokens,
     authenticated({

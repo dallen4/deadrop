@@ -65,20 +65,14 @@ const dropRouter = hono()
       const { id: peerId, maxGrabbers: requestedMaxGrabbers } =
         c.req.valid('json');
 
-      const verifyTestToken = async (token: string) => {
-        const fetchedToken = await c
-          .get('redis')
-          .get<string>(testTokenKey);
-
-        return fetchedToken ? fetchedToken === token : false;
-      };
+      const tokenEntry = (await c.env.DROP_STORE.get<string>(
+        testTokenKey,
+      )) as string | null;
 
       // a valid CI test token acts as the experimental bypass (same as
       // the captcha / drop-count bypass) so multidrop caps can be
       // exercised end-to-end without a Clerk session
-      const isTestSession = testToken
-        ? await verifyTestToken(testToken)
-        : false;
+      const isTestSession = testToken ? tokenEntry : false;
 
       const claims = getAuth(c)?.sessionClaims;
 
@@ -112,8 +106,6 @@ const dropRouter = hono()
               dailyDrops,
             );
 
-        // 429, not 500: a quota denial must be distinguishable from a
-        // server fault, or clients retry a limit they cannot clear.
         if (!canDrop)
           return c.json({ message: 'Daily drop limit reached' }, 429);
       }
@@ -146,11 +138,13 @@ const dropRouter = hono()
 
       if (!dropId) return c.json(SessionNotFound, 404);
 
-      const redis = c.get('redis');
-
       // get drop
       const dropKey = formatDropKey(dropId);
-      const dropDetails = await redis.hgetall<DropDetails>(dropKey);
+      // Annotated because `web` typechecks this file without
+      // @cloudflare/workers-types, where KVNamespace resolves to unknown
+      // and the RPC response type collapses to {}.
+      const dropDetails: DropDetails | null =
+        await c.env.DROP_STORE.get<DropDetails>(dropKey, 'json');
 
       if (!dropDetails) return c.json(SessionNotFound, 404);
 
@@ -175,14 +169,11 @@ const dropRouter = hono()
     async (c) => {
       const { id: dropId } = c.req.valid('json');
 
-      const redis = c.get('redis');
-
       const dropKey = formatDropKey(dropId);
 
-      // delete drop
-      const dropsDeleted = await redis.del(dropKey);
-
-      const success = dropsDeleted === 1;
+      const success = await c.env.DROP_STORE.delete(dropKey)
+        .then(() => true)
+        .catch(() => false);
 
       return c.json({ success }, success ? 200 : 500);
     },
