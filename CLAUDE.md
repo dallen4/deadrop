@@ -12,7 +12,7 @@ pnpm Workspaces (see `pnpm-workspace.yaml`):
 
 - `shared/` — Core crypto primitives, XState state machines, PeerJS utilities, the Hono RPC client, billing/plan config, and shared types. Consumed by `web`, `cli`, and `vscode-extension`.
 - `web/` — Next.js 14 (Pages Router) PWA deployed on Vercel.
-- `worker/` — Cloudflare Worker (Hono framework) providing the backend API, Redis-backed (Upstash) drop session storage, Turso-backed vaults, and PeerJS signaling via Durable Objects.
+- `worker/` — Cloudflare Worker (Hono framework) providing the backend API, Cloudflare KV-backed drop session storage, Turso-backed vaults, and PeerJS signaling via Durable Objects.
 - `cli/` — Node.js CLI published to npm as `deadrop`.
 - `vscode-extension/` — VS Code extension (`deadrop-vsc`), see its own `CLAUDE.md`.
 - `desktop/` — Tauri v2 desktop app (Rust shell + React 19 / Vite webview), the "true hub". Consumes the shared drop/grab hooks (`shared/hooks/`) + Mantine components (`shared/components/`). See its own `CLAUDE.md`.
@@ -53,7 +53,7 @@ pnpm analyze:unused     # Find unused TS exports (ts-prune)
 ### Data Flow
 
 1. **Dropper** creates a PeerJS peer → Cloudflare Durable Object (`PeerServerDO`) handles signaling
-2. Drop ID + peer ID + nonce + maxGrabbers stored in Upstash Redis via the Worker API
+2. Drop ID + peer ID + nonce + maxGrabbers stored in Cloudflare KV via the Worker API
 3. **Grabber** fetches drop metadata → WebRTC P2P connection established directly between peers
 4. ECDH key exchange + AES-256-GCM encryption over WebRTC DataChannel; SHA-256 hash verifies transfer integrity
 
@@ -89,7 +89,7 @@ Both `web` and `cli` send a Clerk bearer token on every Worker API call when the
 Hono routes:
 - `/auth` — Clerk auth middleware
 - `/peers` — PeerJS signaling (backed by `PeerServerDO` Durable Object)
-- `/drop` — Drop session management (Redis-backed, Upstash)
+- `/drop` — Drop session management (Cloudflare KV-backed)
 - `/vault` — Vault management (Turso-backed, gated by `authenticated({ feature: CLOUD_VAULT })` — plan entitlement, with an `early_access`/`internal` bypass)
 
 ### CLI (`cli/`)
@@ -107,7 +107,7 @@ Hono routes:
 | Auth | Clerk |
 | P2P | PeerJS + WebRTC (browser: native, Node.js: `@roamhq/wrtc`) |
 | Crypto | Web Crypto API (ECDH, AES-256-GCM, SHA-256) |
-| Backend | Cloudflare Workers, Hono, Upstash Redis, Durable Objects, Turso (vaults) |
+| Backend | Cloudflare Workers, Hono, Cloudflare KV, Durable Objects, Turso (vaults) |
 | Billing | Clerk Billing + Stripe (`web/pages/api/stripe`, `web/pages/api/webhooks`) |
 | CLI DB | Drizzle ORM + SQLite (libsql) |
 | Testing | Vitest 2 + Istanbul, Playwright (11 browser configs), cross-platform e2e (`tests/`) |
@@ -149,7 +149,7 @@ Prettier config (`.prettierrc`): 70-char print width, 2-space indent, single quo
 Each workspace has its own `CLAUDE.md` with package-specific context:
 - `shared/CLAUDE.md` — crypto primitives, XState machines, handler factories, billing config, types
 - `web/CLAUDE.md` — Next.js Pages Router, Mantine UI, Playwright e2e
-- `worker/CLAUDE.md` — Hono routes, Durable Objects, Redis/Turso patterns
+- `worker/CLAUDE.md` — Hono routes, Durable Objects, KV/Turso patterns
 - `cli/CLAUDE.md` — Commander.js commands, Drizzle ORM, esbuild
 - `vscode-extension/CLAUDE.md` — extension host + webview architecture
 - `desktop/CLAUDE.md` — Tauri shell + React/Vite webview; consumes shared hooks + Mantine components

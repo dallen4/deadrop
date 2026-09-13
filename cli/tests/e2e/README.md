@@ -26,12 +26,13 @@ grabs it, and we assert the round-tripped value.
 
 Targets a **deployed** worker (same philosophy as web e2e). No worker change is
 involved, so the currently deployed worker works as-is; the token just has to
-be seeded into the **same** Upstash that worker reads.
+be seeded into the **same** KV namespace that worker binds as `DROP_STORE`.
 
 ```bash
 DEADROP_API_URL=https://<worker-url> \
-REDIS_REST_URL=<upstash-url> \
-REDIS_REST_TOKEN=<upstash-token> \
+CLOUDFLARE_ACCOUNT_ID=<account-id> \
+CLOUDFLARE_API_TOKEN=<api-token> \
+CLOUDFLARE_KV_NAMESPACE_ID=<namespace-id> \
 pnpm -F cli test:e2e
 ```
 
@@ -58,8 +59,5 @@ pnpm -F cli test:e2e
 - `vitest.e2e.config.mts` (package root) — standalone e2e config (run via `-c`
   so the unit config and root workspace ignore these specs).
 - `config.ts` — `apiURL`, `cliEntry`, timeouts.
-- `redis.ts` — Upstash client (copied from `web/api/redis.ts`; M2 will lift).
-- `global-setup.ts` — Vitest globalSetup: seeds the token, returns the teardown
-  that deletes it.
 - `util.ts` — `CliProcess`, `dropCli`/`grabCli`, token helper.
 - `cli-drop-flow.spec.ts` — the M1 spec.
