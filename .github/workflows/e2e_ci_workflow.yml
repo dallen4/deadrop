@@ -118,9 +118,10 @@ jobs:
           DEADROP_API_URL:  ${{ steps.resolve-api.outputs.api_url }}
           TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
           TURN_PWD: ${{ secrets.TURN_PWD }}
-          # Source of truth for the test token: read it from Redis, fallback to local
-          REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
-          REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
+          # Source of truth for the test token: read it from KV, fallback to local
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
           DROP_TEST_TOKEN: ${{ secrets.DROP_TEST_TOKEN }}
           # Point the harness at the Bun binary (absolute: the test runs with
           # cwd=tests/). CliProcess invokes a non-.js entry directly.
