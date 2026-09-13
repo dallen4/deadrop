@@ -40,8 +40,9 @@ pnpm test:e2e:run   # skip the CLI build (use when dist/ is already current)
 ```
 
 Copy `.env.example` to `.env` and fill in `DEADROP_API_URL`, `XPLAT_BASE_URL`,
-and `DROP_TEST_TOKEN` for local runs (or `REDIS_REST_URL`/`REDIS_REST_TOKEN` to
-read the live token straight from Redis instead of a pinned value).
+and `DROP_TEST_TOKEN` for local runs (or the `CLOUDFLARE_ACCOUNT_ID` /
+`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_KV_NAMESPACE_ID` trio to read the live
+token straight from Cloudflare KV instead of a pinned value).
 
 ## Notes / gotchas
 
