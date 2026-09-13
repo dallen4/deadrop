@@ -18,10 +18,11 @@ shared/
 │   ├── crypto/         # getCrypto()/getSubtle() + ECDH/AES-256-GCM/SHA-256 ops — see Crypto below
 │   ├── turso/          # Turso vault provisioning/lifecycle — own CLAUDE.md, read it before touching
 │   ├── kv.ts           # KV key patterns + the Cloudflare REST wrapper
+│   ├── redis.ts        # Upstash client, only for the transitional dual-write
 │   └── ...             # messages, secrets, vault, vault-share, peer, data, fetch, constants, util
 ├── db/                 # Drizzle schema shared between cli (libsql) and worker (vault provisioning)
 ├── tests/lib/ + mocks/ # Vitest specs + fixtures; tests/http.ts has the e2e test-bypass constants
-├── scripts/hydrate-test-token.ts  # Seeds the stable e2e DROP_TEST_TOKEN into Cloudflare KV
+├── scripts/hydrate-test-token.ts  # Rotates the e2e test token into Cloudflare KV + Redis (transitional dual-write)
 ├── scripts/bootstrap-kv.ts       # Bootstraps/reconciles the KV namespace (`pnpm bootstrap:kv`)
 ├── client.ts           # createClient() + DeadropApiClient type
 └── tsconfig.json

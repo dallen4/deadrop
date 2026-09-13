@@ -65,10 +65,14 @@ const listAllUsers = async () => {
 };
 
 const syncTestToken = async (): Promise<KvEntry[]> => {
-  const existing = rotateToken ? null : await getKeyValue(testTokenKey).catch(() => null);
+  const existing = rotateToken
+    ? null
+    : await getKeyValue(testTokenKey).catch(() => null);
 
   if (existing) {
-    log(`test token: present, leaving as-is (--rotate-token to replace)`);
+    log(
+      `test token: present, leaving as-is (--rotate-token to replace)`,
+    );
 
     return [];
   }
@@ -83,12 +87,12 @@ const syncTestToken = async (): Promise<KvEntry[]> => {
 const syncUsersAndVaults = async (): Promise<KvEntry[]> => {
   const [users, allDatabases] = await Promise.all([
     listAllUsers(),
-    createVaultUtils(process.env.TURSO_PLATFORM_API_TOKEN!).listVaults(''),
+    createVaultUtils(
+      process.env.TURSO_PLATFORM_API_TOKEN!,
+    ).listVaults(''),
   ]);
 
-  // Every vault lives in the one shared `deadrop` group — it is not a per-user
-  // grouping, just how deadrop databases are told apart from the unrelated
-  // projects in the same org. Schema parents are infrastructure, not vaults.
+  // One shared group, not per-user; schema parents are infrastructure.
   const databases = allDatabases.filter(
     (db) => db.group === TURSO_DB_GROUP && !db.is_schema,
   );
@@ -97,9 +101,7 @@ const syncUsersAndVaults = async (): Promise<KvEntry[]> => {
     ? 'live'
     : 'test';
 
-  // Vault names carry a hash of the owner's id, so which users exist decides
-  // which databases look owned. Running against the wrong instance silently
-  // reports every production vault as an orphan.
+  // Wrong instance silently reports every vault as an orphan.
   log(`clerk instance: ${instance} (${users.length} users)`);
   log(
     `turso databases: ${databases.length} in group "${TURSO_DB_GROUP}" ` +
@@ -112,7 +114,9 @@ const syncUsersAndVaults = async (): Promise<KvEntry[]> => {
 
   for (const { id: userId } of users) {
     const prefix = await vaultPrefixFromUserId(userId);
-    const owned = databases.filter((db) => db.Name.startsWith(prefix));
+    const owned = databases.filter((db) =>
+      db.Name.startsWith(prefix),
+    );
 
     for (const db of owned) {
       claimed.add(db.Name);
@@ -153,10 +157,7 @@ const syncUsersAndVaults = async (): Promise<KvEntry[]> => {
     });
   }
 
-  // A database whose prefix matches no current Clerk user is orphaned — report
-  // it rather than inventing an owner for it. Split the unowned ones by shape:
-  // a `<hash13>-<name>` that matched nobody is a real orphan (deleted user, or
-  // the other Clerk instance), while anything else never was a user vault.
+  // Report unowned databases rather than inventing an owner for them.
   const unowned = databases.filter((db) => !claimed.has(db.Name));
   const vaultShaped = /^[0-9a-f]{13}-.+$/;
 
@@ -169,7 +170,9 @@ const syncUsersAndVaults = async (): Promise<KvEntry[]> => {
     .map((db) => db.Name);
 
   if (orphans.length)
-    log(`\norphaned vaults (no matching ${instance} user): ${orphans.join(', ')}`);
+    log(
+      `\norphaned vaults (no matching ${instance} user): ${orphans.join(', ')}`,
+    );
 
   if (unrecognized.length)
     log(`not vault-shaped, ignored: ${unrecognized.join(', ')}`);
@@ -180,7 +183,11 @@ const syncUsersAndVaults = async (): Promise<KvEntry[]> => {
 const main = async () => {
   requireEnv();
 
-  log(commit ? '== bootstrap-kv (COMMIT) ==' : '== bootstrap-kv (dry run) ==');
+  log(
+    commit
+      ? '== bootstrap-kv (COMMIT) =='
+      : '== bootstrap-kv (dry run) ==',
+  );
 
   const entries = [
     ...(await syncTestToken()),
@@ -188,16 +195,22 @@ const main = async () => {
   ];
 
   const existingKeys = new Set(await listKeys());
-  const created = entries.filter((e) => !existingKeys.has(e.key)).length;
+  const created = entries.filter(
+    (e) => !existingKeys.has(e.key),
+  ).length;
 
-  log(`\nentries to write: ${entries.length} (${created} new, ${entries.length - created} overwritten)`);
+  log(
+    `\nentries to write: ${entries.length} (${created} new, ${entries.length - created} overwritten)`,
+  );
 
   if (!commit) {
     for (const { key } of entries.slice(0, 20)) log(`  ${key}`);
 
     if (entries.length > 20) log(`  … ${entries.length - 20} more`);
 
-    log('\nDry run — nothing written. Re-run with --commit to apply.');
+    log(
+      '\nDry run — nothing written. Re-run with --commit to apply.',
+    );
 
     return;
   }
@@ -208,8 +221,7 @@ const main = async () => {
 };
 
 main().catch((err) => {
-  // The deploy token only needs Workers Scripts:Edit; these calls go through
-  // the KV REST API, which is a separate permission people forget to grant.
+  // KV REST is a separate permission from the Workers deploy token.
   if (err?.status === 401 || err?.status === 403)
     console.error(
       `Cloudflare rejected the request (${err.status}). CLOUDFLARE_API_TOKEN ` +

@@ -65,10 +65,11 @@ const dropRouter = hono()
       const { id: peerId, maxGrabbers: requestedMaxGrabbers } =
         c.req.valid('json');
 
-      // Annotated because `web` typechecks this file without
-      // @cloudflare/workers-types, where KVNamespace resolves to unknown.
-      const tokenEntry: string | null =
-        await c.env.DROP_STORE.get(testTokenKey, 'text');
+      // Annotated: `web` typechecks this without @cloudflare/workers-types.
+      const tokenEntry: string | null = await c.env.DROP_STORE.get(
+        testTokenKey,
+        'text',
+      );
 
       // a valid CI test token acts as the experimental bypass (same as
       // the captcha / drop-count bypass) so multidrop caps can be
@@ -143,9 +144,7 @@ const dropRouter = hono()
 
       // get drop
       const dropKey = formatDropKey(dropId);
-      // Annotated because `web` typechecks this file without
-      // @cloudflare/workers-types, where KVNamespace resolves to unknown
-      // and the RPC response type collapses to {}.
+      // Annotated: `web` typechecks this without @cloudflare/workers-types.
       const dropDetails: DropDetails | null =
         await c.env.DROP_STORE.get<DropDetails>(dropKey, 'json');
 
