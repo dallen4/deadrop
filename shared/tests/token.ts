@@ -1,8 +1,7 @@
 import { testTokenKey } from './http';
 import { getKeyValue } from '../lib/kv';
 
-// The stable e2e bypass token. Rotated daily into Cloudflare KV by
-// shared/scripts/hydrate-test-token.ts; read live rather than seeded per run.
+// Rotated daily by hydrate-test-token.ts; read live rather than seeded per run.
 let cachedToken: string | null = null;
 
 const hasKvCredentials = () =>
@@ -31,8 +30,7 @@ export const getTestToken = async (): Promise<string> => {
   return (cachedToken = fromEnv);
 };
 
-// Reachable from a production request path (web/pages/api/captcha.ts), so a
-// missing/unreadable token must deny rather than throw.
+// Reachable from web/pages/api/captcha.ts, so a missing token must deny, not throw.
 export const verifyTestToken = async (token: string) => {
   if (!token) return false;
 

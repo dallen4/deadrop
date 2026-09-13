@@ -25,8 +25,7 @@ export const formatVaultKey = (
   vaultName: string = DEFAULT_VAULT_NAME,
 ) => buildKey(formatUserPrefix(userId), KeyPrefixes.Vault, vaultName);
 
-// Turso database names carry a hash of the owner's id, not the id itself, so
-// resolving a database back to its owner needs an explicit reverse entry.
+// Database names hash the owner's id, so the reverse lookup needs its own entry.
 export const formatVaultOwnerKey = (databaseName: string) =>
   buildKey(KeyPrefixes.Vault, databaseName);
 
@@ -86,8 +85,7 @@ export const listKeys = async (prefix?: string) => {
   return names;
 };
 
-// The bulk endpoint caps a request at 10k pairs; chunk rather than make
-// the caller think about it.
+// The bulk endpoint caps at 10k pairs per request.
 export const setKeyValues = async (entries: KvEntry[]) => {
   const CHUNK = 10_000;
 
