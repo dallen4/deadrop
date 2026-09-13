@@ -13,11 +13,7 @@ import {
   MintedVaultCreds,
   VaultApiKeyCreds,
 } from '@shared/lib/vault-tokens';
-import {
-  apiKey,
-  authenticated,
-  service,
-} from '../lib/middleware';
+import { apiKey, authenticated, service } from '../lib/middleware';
 import {
   CreateVaultSchema,
   VaultInjectClaims,
@@ -65,7 +61,9 @@ const vaultRouter = hono()
 
         const vaultName = await vaultNameFromUserId(userId, name);
 
-        const vaultDatabase = await createVault(vaultName, seed);
+        const vaultDatabase = await createVault(vaultName, {
+          seed,
+        });
 
         const vaultToken = await createVaultToken(
           vaultName,
