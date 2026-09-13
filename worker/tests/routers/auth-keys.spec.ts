@@ -71,6 +71,11 @@ describe('GET /auth/keys', () => {
         name: 'hash13-demo production Key',
         expired: false,
         revoked: false,
+        // Shown so a caller can tell two keys on one vault apart.
+        claims: {
+          vaultName: 'hash13-demo',
+          environment: 'production',
+        },
       },
     ]);
     expect(list).toHaveBeenCalledWith({ subject: 'user_123' });
