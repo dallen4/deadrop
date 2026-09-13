@@ -55,9 +55,11 @@
     "changeset:status": "changeset status",
     "postversion": "git push --tags",
     "prepare": "husky",
-    "sandbox": "pnpm -F tests sandbox"
+    "sandbox": "pnpm -F tests sandbox",
+    "bootstrap:kv": "tsx shared/scripts/bootstrap-kv.ts"
   },
   "dependencies": {
+    "@clerk/backend": "^3.11.5",
     "@clerk/clerk-js": "^6.3.3",
     "@libsql/client": "^0.17.2",
     "@xstate/react": "^3.0.1",
