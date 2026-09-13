@@ -1,8 +1,5 @@
-import {
-  formatDropKey,
-  generateId,
-  generateIV,
-} from '@shared/lib/util';
+import { generateId, generateIV } from '@shared/lib/util';
+import { formatDropKey } from '@shared/lib/kv';
 import { DropDetails } from '@shared/types/common';
 import { Context } from 'hono';
 import { hash } from './crypto';
