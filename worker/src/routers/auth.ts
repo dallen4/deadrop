@@ -78,6 +78,7 @@ const authRouter = hono()
         .map((key) => ({
           id: key.id,
           name: key.name,
+          claims: key.claims! as VaultInjectClaims,
           expired: key.expired,
           revoked: key.revoked,
         }));
