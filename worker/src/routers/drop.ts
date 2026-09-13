@@ -3,7 +3,7 @@ import { getAuth } from '@clerk/hono';
 import { DropDetails } from '@shared/types/common';
 import { AppRouteParts } from '../constants';
 import { hono } from '../lib/http/core';
-import { formatDropKey } from '@shared/lib/util';
+import { formatDropKey } from '@shared/lib/kv';
 import { createCacheHandlers } from '../lib/cache';
 import { checkMaxGrabbers, getPlanLimits } from '../lib/billing';
 import { zValidator } from '@hono/zod-validator';
