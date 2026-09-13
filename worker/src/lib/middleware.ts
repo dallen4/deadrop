@@ -4,7 +4,6 @@ import { SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
 import { AuthScopes, FeatureSlug } from '@shared/config/plans';
 import { getPlanLimits, hasFeature, isExperimental } from './billing';
 import { TEST_TOKEN_HEADER } from '@shared/tests/http';
-import { Redis } from '@upstash/redis/cloudflare';
 import { cors as baseCors } from 'hono/cors';
 import { createMiddleware } from 'hono/factory';
 import { AppHeaders } from '../constants';
