@@ -90,13 +90,13 @@ Hono routes:
 - `/auth` — Clerk auth middleware
 - `/peers` — PeerJS signaling (backed by `PeerServerDO` Durable Object)
 - `/drop` — Drop session management (Redis-backed, Upstash)
-- `/vault` — Vault management (Turso-backed, gated by `restricted()` — requires `early_access`/`internal` Clerk claims)
+- `/vault` — Vault management (Turso-backed, gated by `authenticated({ feature: CLOUD_VAULT })` — plan entitlement, with an `early_access`/`internal` bypass)
 
 ### CLI (`cli/`)
 
-- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `desktop install`, `vault` (create/list/use/sync/export/import/drop/delete/env), `secret` (add/remove), `apiKeys` (create)
+- Commands: `drop`, `grab`, `init`, `login`, `logout`, `whoami`, `update`, `inject`, `desktop` (install/uninstall), `vault` (create/list/use/sync/export/import/drop/delete/env), `secret` (add/remove), `apiKeys` (create)
 - Local secrets storage: Drizzle ORM + SQLite (libsql)
-- Build: esbuild → `dist/deadrop.js`; optional standalone binary via nexe
+- Build: esbuild → `dist/deadrop.js`; standalone binary via Bun (`cli/scripts/bun-build.ts`)
 
 ## Tech Stack
 
