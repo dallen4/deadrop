@@ -32,7 +32,7 @@ const TEST_EMAIL = 'clerk_test@deadrop.io';
 setup.describe.configure({ mode: 'serial' });
 
 setup('seed clerk user', async () => {
-  // The drop test token is a stable value persisted in Redis (read via util),
+  // The drop test token is a stable value persisted in Cloudflare KV (read via util),
   // so there's nothing to seed here. Auth specs only run on alpha/main (stable
   // custom domain); elsewhere there's no Clerk/Stripe setup to do.
   if (!runAuthTests) return;
