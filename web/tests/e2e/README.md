@@ -101,15 +101,15 @@ captcha and rate limits.
 The value is rotated daily by `.github/workflows/hydrate_test_token_workflow.yml`
 (`pnpm hydrate:test-token`, runs `shared/scripts/hydrate-test-token.ts`).
 Rotation is safe to run anytime, including mid-suite — nothing caches the
-token across requests, every check reads Redis fresh — but the workflow still
+token across requests, every check reads KV fresh — but the workflow still
 queues behind any in-flight e2e run via a shared concurrency group rather than
 relying on that.
 
-> The CI `REDIS_REST_URL` secret must point at the **same** Upstash instance the
-> deployed app reads, or `verifyTestToken` fails and the dropper stalls. Note
-> this is a different env var name than the worker's own Redis client uses
-> (`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`) — same instance, two
-> naming conventions depending on which client reads it.
+> The CI `CLOUDFLARE_KV_NAMESPACE_ID` secret must name the **same** namespace the
+> deployed worker binds as `DROP_STORE`, or `verifyTestToken` fails and the
+> dropper stalls. The worker reads it through the binding; everything outside
+> the worker reads it through the REST SDK in `shared/lib/kv.ts`, which needs
+> `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` alongside the namespace id.
 
 **Coverage gap:** none of these specs exercise an *authenticated* drop/grab
 call — `drop-flow`/`drop-text-init`/`multidrop` all use this anonymous
@@ -124,7 +124,7 @@ Set as CI secrets/vars and, where noted, on the **deployed** environment too:
 | Var | Where | Notes |
 |---|---|---|
 | `DEADROP_API_URL` | CI | worker URL |
-| `REDIS_REST_URL` / `REDIS_REST_TOKEN` | CI | same Upstash as the deployed app |
+| `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_KV_NAMESPACE_ID` | CI | same KV namespace the deployed worker binds as `DROP_STORE` |
 | `CLERK_SECRET_KEY` | CI | dev instance (`sk_test_…`) |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | CI | `pk_test_…` |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | CI | |
