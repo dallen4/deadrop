@@ -11,7 +11,7 @@ import {
   test as base,
 } from '@playwright/test';
 import { apiURL, baseURL, isLocal } from './config';
-import { getTestToken } from '@tests/utils/config';
+import { getTestToken } from '@shared/tests/token';
 
 type BrowserName = PlaywrightWorkerOptions['browserName'];
 
@@ -28,12 +28,6 @@ export const test = base.extend<TestOptions>({
 });
 
 let testToken: string | null = null;
-
-export const verifyTestToken = async (token: string) => {
-  const fetchedToken = testToken ?? await getTestToken();
-
-  return fetchedToken && fetchedToken === token ? true : false;
-};
 
 export const createContextForBrowser = async (
   browser: Browser,
