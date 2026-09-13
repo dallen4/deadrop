@@ -65,14 +65,15 @@ const dropRouter = hono()
       const { id: peerId, maxGrabbers: requestedMaxGrabbers } =
         c.req.valid('json');
 
-      const tokenEntry = (await c.env.DROP_STORE.get<string>(
-        testTokenKey,
-      )) as string | null;
+      // Annotated because `web` typechecks this file without
+      // @cloudflare/workers-types, where KVNamespace resolves to unknown.
+      const tokenEntry: string | null =
+        await c.env.DROP_STORE.get(testTokenKey, 'text');
 
       // a valid CI test token acts as the experimental bypass (same as
       // the captcha / drop-count bypass) so multidrop caps can be
       // exercised end-to-end without a Clerk session
-      const isTestSession = testToken ? tokenEntry : false;
+      const isTestSession = !!tokenEntry && tokenEntry === testToken;
 
       const claims = getAuth(c)?.sessionClaims;
 
@@ -106,6 +107,8 @@ const dropRouter = hono()
               dailyDrops,
             );
 
+        // 429, not 500: a quota denial must be distinguishable from a
+        // server fault, or clients retry a limit they cannot clear.
         if (!canDrop)
           return c.json({ message: 'Daily drop limit reached' }, 429);
       }
