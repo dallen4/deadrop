@@ -20,7 +20,10 @@
   design in "`--github-env` semantics" below still stands. `--only` and
   `--prefix` shipped alongside `--ci` and narrow/rename what a single
   wrapped command receives, but they do not cross step boundaries — which
-  is what blocks multi-step workflows like `desktop_publish`.
+  is what blocks multi-step workflows like `desktop_publish`. They can now
+  also be baked into an API key's claims by `apiKeys create`, so a pipeline
+  need not repeat them per call site; a run may narrow within the key's
+  list but never widen it.
 
 No GitHub Action wrapper is being built as part of this. Docs will show
 users installing `deadrop` directly (existing `install.sh` curl pattern)
@@ -76,7 +79,10 @@ For CI specifically, two more gaps remain even with `inject` built:
 **Out of scope (follow-ups, do not build):**
 - GitHub Action / composite action wrapper + Marketplace listing
 - GitLab CI / CircleCI templates
-- Tier gating (`ci_tokens`) — plan-claims plumbing isn't in the CLI yet
+- ~~Tier gating (`ci_tokens`) — plan-claims plumbing isn't in the CLI yet~~
+  **DONE.** Slug is `api_keys`; `POST /auth/keys` gates on
+  `authenticated({ feature: API_KEYS })` and enforces the plan's `apiKeys`
+  cap, counted live from Clerk.
 - Worker `/service-tokens` issue/revoke/exchange + short-lived-TTL hardening
   on top of the read-only token this session already mints
 - `GET /vault/:name` has the same missing-try/catch gap as the old
