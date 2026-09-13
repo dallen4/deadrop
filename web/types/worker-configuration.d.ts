@@ -9,9 +9,6 @@ interface Env {
   CLERK_SECRET_KEY: string;
   CLERK_PUBLISHABLE_KEY: string;
 
-  UPSTASH_REDIS_REST_URL: string;
-  UPSTASH_REDIS_REST_TOKEN: string;
-
   TURSO_PLATFORM_API_TOKEN: string;
 
   // Shared secret for first-party service-to-service calls

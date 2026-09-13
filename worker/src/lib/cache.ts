@@ -19,27 +19,42 @@ export const generateDateTotalId = (target?: Date) => {
   return `total:${month}/${date}/${year}`;
 };
 
+type IncrementOptions = {
+  limit?: number;
+  expirationTtl?: number;
+};
+
 export const createCacheHandlers = (c: Context<HonoCtx>) => {
-  const client = c.get('redis');
+  const client = c.env.DROP_STORE;
 
   const getDailyDropCount = async (target: Date) => {
     const dateId = generateDateTotalId(target);
-    const userDropCount = await client.get<number>(dateId);
+
+    const userDropCount = await client.get<number>(dateId, 'json');
 
     return userDropCount ? userDropCount : 0;
+  };
+
+  const checkAndIncrementEntry = async (
+    key: string,
+    { limit, expirationTtl }: IncrementOptions = {},
+  ) => {
+    const count = await client.get<number>(key, 'json');
+
+    const dailyCount = count !== null ? count + 1 : 1;
+
+    if (!!limit && limit !== Infinity && dailyCount > limit)
+      return false;
+
+    await client.put(key, dailyCount.toString(), { expirationTtl });
+
+    return true;
   };
 
   const incrementDailyDropCount = async () => {
     const dateId = generateDateTotalId();
 
-    const dailyDropCount = await client.get(dateId);
-
-    let dailyCount = 1;
-
-    if (!dailyDropCount) await client.set(dateId, dailyCount);
-    else dailyCount = await client.incr(dateId);
-
-    return dailyCount;
+    return checkAndIncrementEntry(dateId);
   };
 
   const FIVE_MINS_IN_SEC = 10 * 60;
@@ -56,8 +71,11 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
 
     const key = formatDropKey(dropId);
 
-    await client.hset(key, { peerId, nonce, maxGrabbers });
-    await client.expire(key, FIVE_MINS_IN_SEC);
+    await client.put(
+      key,
+      JSON.stringify({ peerId, nonce, maxGrabbers }),
+      { expirationTtl: FIVE_MINS_IN_SEC },
+    );
 
     if (!disableIncrement) await incrementDailyDropCount();
 
@@ -65,16 +83,15 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
   };
 
   const getDrop = async (id: string) => {
-    const dropItem = await client.hgetall<DropDetails>(
-      formatDropKey(id),
-    );
+    const dropItem: DropDetails | null =
+      await client.get<DropDetails>(formatDropKey(id), 'json');
 
     return dropItem;
   };
 
   const deleteDrop = async (id: string): Promise<boolean> => {
     const key = formatDropKey(id);
-    await client.del(key);
+    await client.delete(key);
 
     return true;
   };
@@ -85,16 +102,10 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
   ) => {
     const userIpHash = await hash(ipAddress);
 
-    const userDropCount = await client.get<number>(userIpHash);
-
-    if (!userDropCount) {
-      await client.setex(userIpHash, DAY_IN_SEC, 1);
-    } else {
-      if (limit !== Infinity && userDropCount >= limit) return false;
-      else await client.incr(userIpHash);
-    }
-
-    return true;
+    return checkAndIncrementEntry(userIpHash, {
+      limit,
+      expirationTtl: DAY_IN_SEC,
+    });
   };
 
   const checkAndIncrementAuthUserDropCount = async (
@@ -105,16 +116,10 @@ export const createCacheHandlers = (c: Context<HonoCtx>) => {
     const dateStr = `${currDate.getFullYear()}-${currDate.getMonth() + 1}-${currDate.getDate()}`;
     const key = `user:${userId}:drops:${dateStr}`;
 
-    const userDropCount = await client.get<number>(key);
-
-    if (!userDropCount) {
-      await client.setex(key, DAY_IN_SEC, 1);
-    } else {
-      if (limit !== Infinity && userDropCount >= limit) return false;
-      else await client.incr(key);
-    }
-
-    return true;
+    return checkAndIncrementEntry(key, {
+      limit,
+      expirationTtl: DAY_IN_SEC,
+    });
   };
 
   return {

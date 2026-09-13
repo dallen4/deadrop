@@ -72,14 +72,6 @@ export const cors = (): Middleware =>
     credentials: true,
   });
 
-export const redis = () =>
-  createMiddleware<HonoCtx>(async (c, next) => {
-    const redisClient = Redis.fromEnv(c.env);
-    c.set('redis', redisClient);
-
-    await next();
-  });
-
 type AuthOptions = {
   allowApiKey?: boolean;
   // When set, the caller's plan must grant this feature. Optional because
