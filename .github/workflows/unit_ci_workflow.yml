@@ -32,6 +32,9 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      # Nothing else compiles the worker before the deploy on main.
+      - name: Build Worker
+        run: pnpm worker build
       - name: Run Unit Tests
         run: CI="true" pnpm test:cov
       # - name: Report Coverage
