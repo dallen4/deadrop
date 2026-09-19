@@ -450,6 +450,7 @@ export const VaultPage = () => {
                         vaultName={vault.activeVaultName}
                         cloudName={vault.activeVault?.cloud?.name}
                         environment={vault.activeEnv}
+                        secretNames={filtered.map((s) => s.name)}
                       />
                     </Accordion.Panel>
                   </Accordion.Item>
