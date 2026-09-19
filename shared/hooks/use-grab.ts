@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useMachine } from '@xstate/react';
 import type Peer from 'peerjs';
+import type { IceServerCredentials } from '../types/peer';
 import { grabMachine, initGrabContext } from '../lib/machines/grab';
 import { GrabState } from '../lib/constants';
 import { createGrabHandlers } from '../handlers/grab';
@@ -12,7 +13,10 @@ import type { ApiHeadersSource } from './use-drop';
 export interface UseGrabDeps<FileType extends string | File = File> {
   apiUri: string;
   apiHeaders?: ApiHeadersSource;
-  initPeer: () => Promise<Peer>;
+  initPeer: (
+    creds: IceServerCredentials,
+    id?: string,
+  ) => Promise<Peer>;
   file: {
     decrypt: DecryptFile<FileType>;
     hash: HashFile<FileType>;

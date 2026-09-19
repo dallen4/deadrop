@@ -46,7 +46,7 @@ export default function DropPane({ config }: Props) {
             encryptRaw(key, iv, input),
           hash: (input: string) => hashRaw(input),
         },
-        initPeer: () => initPeerFromConfig(config),
+        initPeer: (creds, id) => initPeerFromConfig(config, creds, id),
         cleanupSession,
         apiUri: config.apiUrl,
       }),

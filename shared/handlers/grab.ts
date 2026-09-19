@@ -24,6 +24,7 @@ import {
   importKey,
 } from '../lib/crypto/operations';
 import { DropDetails } from '../types/common';
+import { IceServerCredentials } from '../types/peer';
 import { withMessageLock } from '../lib/messages';
 import { createClient } from '../client';
 
@@ -183,18 +184,11 @@ export const createGrabHandlers = <
   const init = async () => {
     ctx.keyPair = await generateKeyPair();
 
-    ctx.peer = await initPeer();
+    logger.info('Key pair generated, fetching drop details...');
 
-    // TODO add custom messages per error type
-    ctx.peer!.on('error', (err) => {
-      if (err.type === 'peer-unavailable')
-        logger.error('Peer not found! Ending session!');
-      else console.error(err);
-    });
-
-    logger.info('Key pair generated & peer successfully connected!');
-
-    logger.info('Fetching drop details...');
+    // the drop lookup carries the TURN credentials, so it has to land
+    // before the peer can be built
+    let turnCreds: IceServerCredentials;
 
     try {
       const resp = await client.drop.$get({ query: { id: ctx.id! } });
@@ -213,6 +207,7 @@ export const createGrabHandlers = <
 
       ctx.dropperId = details.peerId;
       ctx.nonce = details.nonce;
+      turnCreds = details.turnCreds;
     } catch (err) {
       logger.error(`Something went wrong finding drop ${ctx.id}...`);
 
@@ -220,6 +215,17 @@ export const createGrabHandlers = <
 
       return cleanupSession(ctx);
     }
+
+    ctx.peer = await initPeer(turnCreds);
+
+    // TODO add custom messages per error type
+    ctx.peer!.on('error', (err) => {
+      if (err.type === 'peer-unavailable')
+        logger.error('Peer not found! Ending session!');
+      else console.error(err);
+    });
+
+    logger.info('Peer successfully connected!');
 
     const event: InitGrabEvent = {
       type: GrabEventType.Init,
