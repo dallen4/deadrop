@@ -14,6 +14,7 @@ import {
   TEST_TOKEN_HEADER,
   testTokenKey,
 } from '@shared/tests/http';
+import { generateTurnCredentials } from '../lib/http/turn';
 
 const dropIdSchema = z.object({ id: z.string() });
 
@@ -102,10 +103,16 @@ const dropRouter = hono()
         !!testToken,
       );
 
+      const turnCreds = await generateTurnCredentials({
+        turnKeyId: c.env.TURN_KEY_ID,
+        turnKeyApiToken: c.env.TURN_KEY_API_TOKEN,
+      });
+
       return c.json(
         {
           id: dropId,
           nonce,
+          turnCreds,
         },
         200,
       );
@@ -128,8 +135,17 @@ const dropRouter = hono()
       if (!dropDetails) return c.json(SessionNotFound, 404);
 
       // lazy-default drops created before maxGrabbers existed
+      const turnCreds = await generateTurnCredentials({
+        turnKeyId: c.env.TURN_KEY_ID,
+        turnKeyApiToken: c.env.TURN_KEY_API_TOKEN,
+      });
+
       return c.json(
-        { ...dropDetails, maxGrabbers: dropDetails.maxGrabbers ?? 1 },
+        {
+          ...dropDetails,
+          maxGrabbers: dropDetails.maxGrabbers ?? 1,
+          turnCreds,
+        },
         200,
       );
     },
