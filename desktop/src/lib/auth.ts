@@ -59,8 +59,16 @@ export const useApiKeys = () => {
         },
       });
 
-      if (response.status !== 201)
-        throw new Error('Could not issue an API key for this vault.');
+      // The body explains a plan cap or a rejected claim; don't drop it.
+      if (response.status !== 201) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+
+        throw new Error(
+          body?.error ?? 'Could not issue an API key for this vault.',
+        );
+      }
 
       return response.json();
     },

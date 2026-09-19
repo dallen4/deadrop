@@ -132,7 +132,7 @@ export const ApiKeyRow = ({ apiKey }: { apiKey: ApiKeySummary }) => {
           </Group>
         ) : (
           <Text size={'sm'} c={'dimmed'} pl={34} py={'xs'}>
-            This API does not report what the key injects.
+            This deployment does not report what the key injects.
           </Text>
         )}
       </Collapse>

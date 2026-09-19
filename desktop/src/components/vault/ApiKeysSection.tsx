@@ -21,6 +21,7 @@ import {
   IconChevronRight,
   IconCopy,
 } from '@tabler/icons-react';
+import { VaultInjectOptionsSchema } from '@shared/lib/vault-tokens';
 import { useApiKeys } from '../../lib/auth';
 import { AddRowButton } from './AddRowButton';
 import { TargetDetails } from './TargetDetails';
@@ -31,7 +32,7 @@ type IssuedKey = {
   id: string;
   name: string;
   key: string;
-  claims?: { prefix?: string; only?: string[] };
+  claims?: ApiKeySummary['claims'];
 };
 
 export const ApiKeysSection = ({
@@ -84,16 +85,43 @@ export const ApiKeysSection = ({
     // target is what actually decides when to refetch.
   }, [vaultName, environment]);
 
+  // An empty MultiSelect is "no claim", not a key that injects nothing.
+  const claims = {
+    only: only.length ? only : undefined,
+    prefix: prefix.trim() || undefined,
+  };
+
+  // The worker's own schema, so the rule is stated once.
+  const parsed = VaultInjectOptionsSchema.safeParse(claims);
+
+  const prefixError = parsed.success
+    ? null
+    : (parsed.error.issues.find((issue) => issue.path[0] === 'prefix')
+        ?.message ?? null);
+
   const issue = async () => {
     setIssuing(true);
     setIssueError(null);
+
     try {
       const key = await createApiKey(
         { vaultName, environment },
-        { only, prefix: prefix.trim() || undefined },
+        claims,
       );
+
       setIssued(key);
-      setKeys(await listApiKeys({ vaultName, environment }));
+
+      // Appended: a failed refetch must not read as a failed issuance.
+      setKeys((current) => [
+        ...current,
+        {
+          id: key.id,
+          name: key.name,
+          claims: key.claims,
+          expired: false,
+          revoked: false,
+        },
+      ]);
     } catch (err) {
       setIssueError((err as Error).message);
     } finally {
@@ -246,6 +274,7 @@ export const ApiKeysSection = ({
                       'Prepended to every variable name the key injects, overriding inject --prefix.'
                     }
                     value={prefix}
+                    error={prefixError}
                     onChange={(event) =>
                       setPrefix(event.currentTarget.value)
                     }
@@ -256,10 +285,7 @@ export const ApiKeysSection = ({
                     </Text>
                     <InjectPreview
                       secretNames={secretNames}
-                      claims={{
-                        only: only.length ? only : undefined,
-                        prefix: prefix.trim() || undefined,
-                      }}
+                      claims={claims}
                     />
                   </Stack>
                 </Stack>
@@ -279,6 +305,7 @@ export const ApiKeysSection = ({
                 </Button>
                 <Button
                   loading={issuing}
+                  disabled={!!prefixError}
                   onClick={() => void issue()}
                 >
                   Create
