@@ -1,9 +1,14 @@
+import type { IceServerCredentials } from '@shared/types/peer';
 
-export const initPeer = async () => {
+export const initPeer = async (
+    creds: IceServerCredentials,
+    id?: string,
+) => {
     const { createPeer } = await import('@shared/lib/peer');
 
-    return createPeer(process.env.NEXT_PUBLIC_PEER_SERVER_URL!, {
-        username: process.env.NEXT_PUBLIC_TURN_USERNAME!,
-        credential: process.env.NEXT_PUBLIC_TURN_PWD!,
-    });
+    return createPeer(
+        process.env.NEXT_PUBLIC_PEER_SERVER_URL!,
+        creds,
+        id,
+    );
 };
