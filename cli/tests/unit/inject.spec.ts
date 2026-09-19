@@ -695,6 +695,20 @@ describe('inject', () => {
     });
   });
 
+  // Issuance refuses this now, but a key stamped before that rule would
+  // otherwise shape down to nothing and still exit 0.
+  it('CI: exits 1 on a key whose only claim is empty', async () => {
+    const { logError } = await import('lib/log');
+
+    // injectWithClaims installs the process.exit spy, so assert on it.
+    await injectWithClaims({ DB_URL: 'a' }, { only: [] });
+
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining('names no secrets to inject'),
+    );
+    expect(process.exit).toHaveBeenCalledWith(1);
+  });
+
   it("CI: applies the key's prefix claim", async () => {
     const runWithEnv = await injectWithClaims(
       { DB_URL: 'a' },
