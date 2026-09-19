@@ -1,19 +1,5 @@
-import { Code, Group, Stack, Text } from '@mantine/core';
-
-const Detail = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) => (
-  <Stack gap={2}>
-    <Text size={'xs'} c={'dimmed'} tt={'uppercase'}>
-      {label}
-    </Text>
-    {children}
-  </Stack>
-);
+import { Code, Group, Text } from '@mantine/core';
+import { Detail } from './Detail';
 
 export const TargetDetails = ({
   vaultName,
