@@ -10,35 +10,32 @@ export enum ContentType {
   Json = 'application/json',
 }
 
-export type AppRouteParts =
-  (typeof AppRouteParts)[keyof typeof AppRouteParts];
-
-export const AppRouteParts = {
-  Root: '/',
-  Drop: '/drop',
+export enum AppRouteParts {
+  Root = '/',
+  Drop = '/drop',
 
   // auth
-  AuthRoot: '/auth',
-  CreateSignInToken: '/token',
-  Me: '/me',
-  ApiKeys: '/keys',
+  AuthRoot = '/auth',
+  CreateSignInToken = '/token',
+  Me = '/me',
+  ApiKeys = '/keys',
 
   // peerjs
-  PeerJsRoot: '/peerjs',
-  GenerateId: '/id',
+  PeerJsRoot = '/peerjs',
+  GenerateId = '/id',
 
   // vaults
-  VaultRoot: '/vault',
-  NameParam: '/:name',
-  Tokens: '/tokens',
-  CiTokens: '/tokens/ci',
-  Rotate: '/rotate',
-  Lock: '/lock',
-  Unlock: '/unlock',
+  VaultRoot = '/vault',
+  NameParam = '/:name',
+  Tokens = '/tokens',
+  CiTokens = '/tokens/ci',
+  Rotate = '/rotate',
+  Lock = '/lock',
+  Unlock = '/unlock',
 
   // TODO not implemented
-  VaultExists: '/:name/exists',
-} as const;
+  VaultExists = '/:name/exists',
+};
 
 export type AppRoutes = (typeof AppRoutes)[keyof typeof AppRoutes];
 
