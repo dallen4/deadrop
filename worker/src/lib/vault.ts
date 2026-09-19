@@ -27,7 +27,9 @@ export const VaultEnvSchema = z.object({
   environment: z.string(),
 });
 
-export const VaultInjectClaimsSchema = VaultEnvSchema.and(VaultInjectOptionsSchema);
+export const VaultInjectClaimsSchema = VaultEnvSchema.and(
+  VaultInjectOptionsSchema,
+);
 
 export type VaultInjectClaims = z.infer<
   typeof VaultInjectClaimsSchema

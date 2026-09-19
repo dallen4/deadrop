@@ -1,9 +1,25 @@
 import { z } from 'zod';
 
+// inject spawns the command with an env block, so `=` and whitespace are
+// the only structural limits; shell identifier rules are a usability
+// concern the UI warns about, not a block.
 export const VaultInjectOptionsSchema = z.object({
-  prefix: z.string().optional(),
-  only: z.array(z.string()).optional(),
+  prefix: z
+    .string()
+    .min(1)
+    .regex(/^[^=\s\0]+$/, 'No whitespace or "=".')
+    .optional(),
+  // `min(1)` rather than `nonempty()`: same check, but it infers string[]
+  // instead of a tuple nothing else here can satisfy.
+  only: z.array(z.string().min(1)).min(1).optional(),
 });
+
+export function resolveInjectedNames(
+  available: string[],
+  { only, prefix }: VaultInjectOptions,
+): string[] {
+  return (only ?? available).map((name) => `${prefix ?? ''}${name}`);
+}
 
 // `name` is the resolved remote database name, not the local label —
 // vaultSyncUrl derives the sync URL from it.
