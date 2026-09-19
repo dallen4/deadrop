@@ -1,7 +1,7 @@
-import { AppRouteParts } from '../constants';
-import { hono } from '../lib/http/core';
-import { authenticated } from '../lib/middleware';
-import apiKeysRouter from './auth/apiKeys';
+import { AppRouteParts } from '../../constants';
+import { hono } from '../../lib/http/core';
+import { authenticated } from '../../lib/middleware';
+import apiKeysRouter from './apiKeys';
 
 const authRouter = hono()
   .use(authenticated())
