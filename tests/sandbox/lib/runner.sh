@@ -24,8 +24,6 @@ BUILD_ENV=(
   -e DEADROP_APP_URL=http://127.0.0.1:9
   -e PEER_SERVER_URL=http://127.0.0.1:9/peers
   -e CLERK_PUBLISHABLE_KEY=pk_test_sandbox
-  -e TURN_USERNAME=sandbox
-  -e TURN_PWD=sandbox
 )
 
 die() { printf '%s\n' "$*" >&2; exit 2; }
