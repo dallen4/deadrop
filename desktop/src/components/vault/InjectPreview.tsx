@@ -17,7 +17,9 @@ export const InjectPreview = ({
   // Optional: a worker that predates claims on its responses sends none.
   claims?: VaultInjectOptions;
 }) => {
-  const names = resolveInjectedNames(secretNames, claims ?? {});
+  const names = resolveInjectedNames(secretNames, claims ?? {}).map(
+    ([, injected]) => injected,
+  );
 
   const unreachable = names.filter((name) => !SHELL_SAFE.test(name));
 

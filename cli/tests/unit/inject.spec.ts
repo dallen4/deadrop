@@ -728,6 +728,19 @@ describe('inject', () => {
     expect(runWithEnv.mock.calls[0][2]).toEqual({ DB_URL: 'a' });
   });
 
+  // Renaming while narrowing is where a name/value zip would desync.
+  it("CI: --only narrows and the key's prefix still renames", async () => {
+    const runWithEnv = await injectWithClaims(
+      { DB_URL: 'a', API_KEY: 'b', STRIPE_KEY: 'c' },
+      { only: ['DB_URL', 'API_KEY'], prefix: 'PROD_' },
+      { only: 'API_KEY' },
+    );
+
+    expect(runWithEnv.mock.calls[0][2]).toEqual({
+      PROD_API_KEY: 'b',
+    });
+  });
+
   it('CI: --only exits 1 on a name the key does not permit', async () => {
     const { logError } = await import('lib/log');
 

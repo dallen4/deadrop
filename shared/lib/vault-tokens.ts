@@ -14,11 +14,15 @@ export const VaultInjectOptionsSchema = z.object({
   only: z.array(z.string().min(1)).min(1).optional(),
 });
 
+// Pairs so a caller zipping values back cannot desync from the names.
 export function resolveInjectedNames(
   available: string[],
   { only, prefix }: VaultInjectOptions,
-): string[] {
-  return (only ?? available).map((name) => `${prefix ?? ''}${name}`);
+): [stored: string, injected: string][] {
+  return (only ?? available).map((name) => [
+    name,
+    `${prefix ?? ''}${name}`,
+  ]);
 }
 
 // `name` is the resolved remote database name, not the local label —
