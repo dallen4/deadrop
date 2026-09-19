@@ -271,15 +271,14 @@ function shapeSecrets(
       `Ignoring --prefix: this API key applies '${claims.prefix}'.`,
     );
 
-  const source = wanted ?? Object.keys(secrets);
-
   // Shared with the desktop preview, so what it shows is what lands here.
-  const injected = resolveInjectedNames(source, {
-    prefix: claims.prefix ?? prefix,
-  });
+  const injected = resolveInjectedNames(
+    wanted ?? Object.keys(secrets),
+    { prefix: claims.prefix ?? prefix },
+  );
 
   return Object.fromEntries(
-    injected.map((name, i) => [name, secrets[source[i]]]),
+    injected.map(([stored, name]) => [name, secrets[stored]]),
   );
 }
 
