@@ -34,8 +34,6 @@ const env = {
   DEADROP_APP_URL: process.env.DEADROP_APP_URL!,
   PEER_SERVER_URL: process.env.PEER_SERVER_URL!,
   CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY!,
-  TURN_USERNAME: process.env.TURN_USERNAME!,
-  TURN_PWD: process.env.TURN_PWD!,
 };
 
 const missing = Object.entries(env)
