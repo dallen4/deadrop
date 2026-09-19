@@ -8,8 +8,6 @@ const requiredEnv = [
   'DEADROP_APP_URL',
   'PEER_SERVER_URL',
   'CLERK_PUBLISHABLE_KEY',
-  'TURN_USERNAME',
-  'TURN_PWD',
 ];
 
 const missing = requiredEnv.filter((key) => !process.env[key]);
@@ -36,8 +34,6 @@ if (missing.length) {
         DEADROP_APP_URL: process.env.DEADROP_APP_URL,
         PEER_SERVER_URL: process.env.PEER_SERVER_URL,
         CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
-        TURN_USERNAME: process.env.TURN_USERNAME,
-        TURN_PWD: process.env.TURN_PWD,
         // baked in at build time so `deadrop update` can tell which
         // pipeline produced this artifact without a runtime check
         DEADROP_INSTALL_METHOD: 'npm',

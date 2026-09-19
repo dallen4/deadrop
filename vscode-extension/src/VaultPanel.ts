@@ -166,8 +166,6 @@ export class VaultPanel {
     const config: ExtensionConfig = {
       apiUrl: process.env.DEADROP_API_URL ?? '',
       peerServerUrl: process.env.PEER_SERVER_URL ?? '',
-      turnUsername: process.env.TURN_USERNAME ?? '',
-      turnPassword: process.env.TURN_PWD ?? '',
       clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY ?? '',
       token,
       vaultName,
@@ -240,8 +238,6 @@ export class VaultPanel {
         config: {
           apiUrl: process.env.DEADROP_API_URL ?? '',
           peerServerUrl: process.env.PEER_SERVER_URL ?? '',
-          turnUsername: process.env.TURN_USERNAME ?? '',
-          turnPassword: process.env.TURN_PWD ?? '',
           clerkPublishableKey:
             process.env.CLERK_PUBLISHABLE_KEY ?? '',
           token,
