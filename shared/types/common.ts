@@ -2,6 +2,7 @@ import type { DataConnection } from 'peerjs';
 import type Peer from 'peerjs';
 import { DropMessageMeta } from './messages';
 import { MessageType } from '../lib/constants';
+import { IceServerCredentials } from './peer';
 
 export type BaseContext = {
   id: string | null;
@@ -17,11 +18,13 @@ export type DropDetails = {
   peerId: string;
   nonce: string;
   maxGrabbers: number;
+  turnCreds: IceServerCredentials;
 };
 
 export type InitDropResult = {
   id: string;
   nonce: string;
+  turnCreds: IceServerCredentials;
 };
 
 export type PayloadInputMode = 'text' | 'json' | 'file';
@@ -64,7 +67,7 @@ export type BaseHandlerInputs<Context, Event> = {
     error: (message: string) => void;
     debug: (message: string) => void;
   };
-  initPeer: () => Promise<Peer>;
+  initPeer: (creds?: IceServerCredentials) => Promise<Peer>;
   cleanupSession: (ctx: Context) => void;
   apiUri?: string;
   // Extra headers applied to API requests this handler makes (e.g. the CLI
