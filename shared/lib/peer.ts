@@ -1,6 +1,9 @@
 import Peer from 'peerjs';
 import { generateId } from './util';
-import { IceServerCredentials } from '../types/peer';
+import {
+  IceServerConfiguration,
+  IceServerCredentials,
+} from '../types/peer';
 
 const isServer =
   typeof window === 'undefined' ||
@@ -26,45 +29,43 @@ export interface PeerConfig {
   turn: IceServerCredentials;
 }
 
+// Cloudflare's generate-ice-servers response carries these same hosts; we
+// pin them rather than round-tripping the urls so the API surface stays
+// credentials-only. Port 53 variants are deliberately omitted (browsers
+// reject them).
+const buildIceServers = ({
+  username,
+  credential,
+}: IceServerCredentials): IceServerConfiguration => [
+  { urls: ['stun:stun.cloudflare.com:3478'] },
+  {
+    urls: [
+      'turn:turn.cloudflare.com:3478?transport=udp',
+      'turn:turn.cloudflare.com:3478?transport=tcp',
+      'turns:turn.cloudflare.com:5349?transport=tcp',
+    ],
+    username,
+    credential,
+  },
+];
+
 // Convenience wrapper so platform adapters can build a peer from a single
 // config object (url + TURN creds) sourced from their own env/settings.
-export const createPeerFromConfig = ({ url, turn }: PeerConfig) =>
-  createPeer(url, turn);
+export const createPeerFromConfig = (
+  { url, turn }: PeerConfig,
+  id?: string,
+) => createPeer(url, turn, id);
 
 export function createPeer(
   url: string,
-  { username, credential }: IceServerCredentials,
+  creds: IceServerCredentials,
+  // The dropper mints its peer id up front so it can claim the drop
+  // record before the peer connects; grabbers let it default.
+  id: string = generateId(),
 ) {
-  const id = generateId();
   const server = new URL(url);
 
-  const iceConfig = {
-    iceServers: [
-      {
-        urls: 'stun:stun.relay.metered.ca:80',
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:80',
-        username,
-        credential,
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:80?transport=tcp',
-        username,
-        credential,
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:443',
-        username,
-        credential,
-      },
-      {
-        urls: 'turns:standard.relay.metered.ca:443?transport=tcp',
-        username,
-        credential,
-      },
-    ],
-  };
+  const iceConfig = { iceServers: buildIceServers(creds) };
 
   const peer = new Peer(id, {
     host: server.host,
@@ -93,7 +94,7 @@ export function createPeer(
   peer.on('close', removeOnUnloadListener);
 
   return new Promise<Peer>((resolve) => {
-    peer.on('open', (id: string) => {
+    peer.on('open', () => {
       if (!isServer) window.onbeforeunload = onUnload;
 
       resolve(peer);
