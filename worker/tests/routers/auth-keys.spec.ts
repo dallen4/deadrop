@@ -71,6 +71,7 @@ describe('GET /auth/keys', () => {
         name: 'hash13-demo production Key',
         expired: false,
         revoked: false,
+        scopes: [AuthScopes.VaultInject],
         // Shown so a caller can tell two keys on one vault apart.
         claims: {
           vaultName: 'hash13-demo',

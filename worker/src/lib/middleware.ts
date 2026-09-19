@@ -126,13 +126,15 @@ export const authenticated = (
       auth.tokenType === TokenType.OAuthToken ||
       (allowApiKey && isApiKey);
 
-    // unauthenticated/org-scoped variants carry userId: null, so one
-    // check covers signed-out, invalid, and userless tokens
-    const userId = allowed ? auth.userId : null;
+    if (!c.get('userId')) {
+      // unauthenticated/org-scoped variants carry userId: null, so one
+      // check covers signed-out, invalid, and userless tokens
+      const userId = allowed ? auth.userId : null;
 
-    if (!userId) return c.json(NotAuthenticated, 401);
+      if (!userId) return c.json(NotAuthenticated, 401);
 
-    c.set('userId', userId);
+      c.set('userId', userId);
+    }
 
     // An API key *does* carry claims, but they are the ones stamped at
     // issuance (vaultName, environment) — not Clerk Billing's pla/fea. So
