@@ -26,10 +26,7 @@ import {
 const vaultRouter = hono()
   .post(
     AppRouteParts.Root,
-    authenticated({
-      allowApiKey: true,
-      feature: FEATURE_SLUGS.CLOUD_VAULT,
-    }),
+    authenticated({ feature: FEATURE_SLUGS.CLOUD_VAULT }),
     zValidator('json', CreateVaultSchema),
     async (c) => {
       const userId = c.get('userId')!;
