@@ -155,6 +155,28 @@ describe('GET /auth/keys', () => {
     expect(await res.json()).toEqual([]);
   });
 
+  // The list mirrors verification: a key this drops is a key that could
+  // not authenticate anyway, so the two never disagree.
+  it('drops a key carrying claims issuance would refuse', async () => {
+    list.mockResolvedValue({
+      data: [
+        key({
+          claims: {
+            vaultName: 'hash13-demo',
+            environment: 'production',
+            only: [],
+          },
+        }),
+      ],
+    });
+
+    const res = await listKeys(
+      'vaultName=demo&environment=production',
+    );
+
+    expect(await res.json()).toEqual([]);
+  });
+
   it('returns the inject claims a key actually carries', async () => {
     list.mockResolvedValue({
       data: [

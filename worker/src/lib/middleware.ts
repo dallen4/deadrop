@@ -165,6 +165,9 @@ export const authenticated = (
     await next();
   });
 
+// The same schema issuance validates, so what can be minted and what
+// verifies are one rule. See VaultInjectOptionsSchema on when that has to
+// split — a stamped key failing here reads as a missing scope.
 export const ScopeToClaimValidator: Record<AuthScopes, ZodSchema> = {
   [AuthScopes.VaultInject]: VaultInjectClaimsSchema,
 };
