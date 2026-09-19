@@ -14,6 +14,13 @@ vi.mock('../../src/lib/cache', () => ({
   }),
 }));
 
+vi.mock('../../src/lib/http/turn', () => ({
+  generateTurnCredentials: vi.fn().mockResolvedValue({
+    username: 'turn_user',
+    credential: 'turn_cred',
+  }),
+}));
+
 vi.mock('@clerk/hono', () => ({ getAuth: () => null }));
 
 const drop = async (userId?: string) => {
