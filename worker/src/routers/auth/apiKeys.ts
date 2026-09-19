@@ -1,4 +1,4 @@
-import { authenticated } from 'lib/middleware';
+import { authenticated } from '../../lib/middleware';
 import { hono } from '../../lib/http/core';
 import { AuthScopes, FEATURE_SLUGS } from '@shared/config/plans';
 import { AppRouteParts } from '../../constants';
@@ -6,13 +6,13 @@ import { zValidator } from '@hono/zod-validator';
 import {
   ApiKeyClaimsFilterSchema,
   ListApiKeysQuerySchema,
-} from 'lib/auth';
+} from '../../lib/auth';
 import { vaultNameFromUserId } from '@shared/lib/turso';
 import {
   VaultInjectClaims,
   VaultInjectClaimsSchema,
-} from 'lib/vault';
-import { KeyNotIssued } from 'lib/messages';
+} from '../../lib/vault';
+import { KeyNotIssued } from '../../lib/messages';
 
 const apiKeysRouter = hono()
   .use(authenticated({ feature: FEATURE_SLUGS.API_KEYS }))
