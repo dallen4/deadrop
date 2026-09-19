@@ -16,4 +16,8 @@ interface Env {
 
   // Shared secret for first-party service-to-service calls
   WORKER_SERVICE_TOKEN: string;
+
+  // TURN server credentials
+  TURN_KEY_ID: string;
+  TURN_KEY_API_TOKEN: string;
 }
