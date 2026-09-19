@@ -306,3 +306,82 @@ describe('POST /auth/keys', () => {
     expect(res.status).toBe(500);
   });
 });
+
+describe('POST /auth/keys inject claims', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    planLimits = undefined;
+    create.mockResolvedValue({
+      id: 'key_1',
+      name: 'issued',
+      secret: 'sk_live_123',
+    });
+  });
+
+  const issue = async (body: Record<string, unknown>) => {
+    const authRouter = (await import('../../src/routers/auth'))
+      .default;
+
+    return authRouter.request(
+      '/keys',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vaultName: 'demo',
+          environment: 'production',
+          ...body,
+        }),
+      },
+      testEnv,
+    );
+  };
+
+  it('stamps prefix and only onto the claims', async () => {
+    const res = await issue({ prefix: 'DB_', only: ['A', 'B'] });
+
+    expect(res.status).toBe(201);
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claims: {
+          vaultName: 'hash13-demo',
+          environment: 'production',
+          prefix: 'DB_',
+          only: ['A', 'B'],
+        },
+      }),
+    );
+  });
+
+  // An empty list is truthy where inject applies it, so a key stamped
+  // with one would inject nothing and still exit 0.
+  it('refuses an empty only list', async () => {
+    const res = await issue({ only: [] });
+
+    expect(res.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each(['has space', 'has=equals'])(
+    'refuses a structurally invalid prefix: %s',
+    async (prefix) => {
+      const res = await issue({ prefix });
+
+      expect(res.status).toBe(400);
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
+
+  // inject spawns the command with an env block, so a hyphen is only a
+  // shell-expansion problem, warned about in the UI rather than blocked.
+  it('accepts a prefix a shell could not expand', async () => {
+    const res = await issue({ prefix: 'my-prefix-' });
+
+    expect(res.status).toBe(201);
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claims: expect.objectContaining({ prefix: 'my-prefix-' }),
+      }),
+    );
+  });
+});
