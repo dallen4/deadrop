@@ -133,6 +133,54 @@ describe('GET /auth/keys', () => {
     expect(await res.json()).toEqual([]);
   });
 
+  // Claims are hand-editable in Clerk, and a client renders these as-is.
+  it('drops keys whose inject claims are the wrong shape', async () => {
+    list.mockResolvedValue({
+      data: [
+        key({
+          id: 'only_not_an_array',
+          claims: {
+            vaultName: 'hash13-demo',
+            environment: 'production',
+            only: 'DB_URL',
+          },
+        }),
+      ],
+    });
+
+    const res = await listKeys(
+      'vaultName=demo&environment=production',
+    );
+
+    expect(await res.json()).toEqual([]);
+  });
+
+  it('returns the inject claims a key actually carries', async () => {
+    list.mockResolvedValue({
+      data: [
+        key({
+          claims: {
+            vaultName: 'hash13-demo',
+            environment: 'production',
+            prefix: 'PROD_',
+            only: ['DB_URL'],
+          },
+        }),
+      ],
+    });
+
+    const res = await listKeys(
+      'vaultName=demo&environment=production',
+    );
+
+    expect((await res.json())[0].claims).toEqual({
+      vaultName: 'hash13-demo',
+      environment: 'production',
+      prefix: 'PROD_',
+      only: ['DB_URL'],
+    });
+  });
+
   it('drops keys carrying no scopes at all', async () => {
     list.mockResolvedValue({ data: [key({ scopes: [] })] });
 

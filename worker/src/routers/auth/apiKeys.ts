@@ -3,10 +3,7 @@ import { hono } from '../../lib/http/core';
 import { AuthScopes, FEATURE_SLUGS } from '@shared/config/plans';
 import { AppRouteParts } from '../../constants';
 import { zValidator } from '@hono/zod-validator';
-import {
-  ApiKeyClaimsFilterSchema,
-  ListApiKeysQuerySchema,
-} from '../../lib/auth';
+import { ListApiKeysQuerySchema } from '../../lib/auth';
 import { vaultNameFromUserId } from '@shared/lib/turso';
 import {
   VaultInjectClaims,
@@ -34,36 +31,43 @@ const apiKeysRouter = hono()
       } = c.req.valid('query');
 
       // Claims carry the resolved cloud name so formatting is required
-      const vaultNameFilter = await vaultNameFromUserId(userId, vaultName);
+      const vaultNameFilter = await vaultNameFromUserId(
+        userId,
+        vaultName,
+      );
 
-      const keys = userApiKeys
-        .filter(({ scopes, claims }) => {
-          if (scopes.length === 0) return false;
+      const keys = userApiKeys.flatMap((key) => {
+        if (key.scopes.length === 0) return [];
 
-          if (
-            scopesFilter &&
-            !scopes.some((scope) =>
-              scopesFilter.includes(scope as AuthScopes),
-            )
+        if (
+          scopesFilter &&
+          !key.scopes.some((scope) =>
+            scopesFilter.includes(scope as AuthScopes),
           )
-            return false;
+        )
+          return [];
 
-          if (!ApiKeyClaimsFilterSchema.safeParse(claims).success)
-            return false;
+        // Parsed, not cast: claims are hand-editable in Clerk.
+        const parsed = VaultInjectClaimsSchema.safeParse(key.claims);
 
-          return (
-            claims?.vaultName === vaultNameFilter &&
-            claims?.environment === environmentFilter
-          );
-        })
-        .map((key) => ({
-          id: key.id,
-          name: key.name,
-          scopes: key.scopes as [AuthScopes.VaultInject],
-          claims: key.claims! as VaultInjectClaims,
-          expired: key.expired,
-          revoked: key.revoked,
-        }));
+        if (
+          !parsed.success ||
+          parsed.data.vaultName !== vaultNameFilter ||
+          parsed.data.environment !== environmentFilter
+        )
+          return [];
+
+        return [
+          {
+            id: key.id,
+            name: key.name,
+            scopes: key.scopes as [AuthScopes.VaultInject],
+            claims: parsed.data,
+            expired: key.expired,
+            revoked: key.revoked,
+          },
+        ];
+      });
 
       return c.json(keys, 200);
     },
