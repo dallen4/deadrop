@@ -23,7 +23,7 @@ pnpm -F desktop typecheck  # tsc --noEmit (NON-gating; see note below)
   drop/grab components come from `@shared/components` (shared with `web` so the
   drop experience feels the same). `vscode` shares only the hooks, not the UI.
 - **Platform adapters** (`src/lib/`): `crypto.ts` (File adapter over
-  `@shared/lib/crypto`), `files.ts`, `peer.ts` (`createPeerFromConfig` + env),
+  `@shared/lib/crypto`), `files.ts`, `peer.ts` (`createPeerFromConfig` + the worker's per-session TURN creds),
   `api-headers.ts` (Clerk bearer token, opportunistic), `util.ts`
   (`generateGrabUrl` → public web origin, never `window.location`),
   `session-guard.ts` (react-router `useBlocker` + Tauri window close guard),

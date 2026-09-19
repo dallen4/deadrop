@@ -50,7 +50,7 @@ Two separate build steps, both run by `pnpm vscode:build`:
 - Format: CommonJS, platform: Node
 - Bundles pure-JS deps (`@libsql/client`, `drizzle-orm`, `cosmiconfig`, …) into the output. Externals are only `vscode` (provided by VS Code), `libsql` (native binding, staged separately), and ws's optional natives `bufferutil`/`utf-8-validate`
 - Env vars baked at build time via esbuild `define` from `.env`:
-  - `DEADROP_API_URL`, `PEER_SERVER_URL`, `TURN_USERNAME`, `TURN_PWD`, `CLERK_PUBLISHABLE_KEY`
+  - `DEADROP_API_URL`, `PEER_SERVER_URL`, `CLERK_PUBLISHABLE_KEY` (TURN creds are no longer baked — the worker mints them per session)
 - `@shared` alias → `../../shared` (relative from `scripts/`)
 - Source maps in dev; minified in production (`--production` flag)
 
