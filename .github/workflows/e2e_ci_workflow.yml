@@ -63,8 +63,6 @@ jobs:
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
           DEADROP_APP_URL: ${{ vars.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
-          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          TURN_PWD: ${{ secrets.TURN_PWD }}
         run: pnpm -F cli compile
 
       - name: Install Playwright browsers
@@ -110,8 +108,6 @@ jobs:
         env:
           XPLAT_BASE_URL: ${{ env.XPLAT_BASE_URL }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
-          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          TURN_PWD: ${{ secrets.TURN_PWD }}
           # Source of truth for the test token: read it from Redis, fallback to local
           REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
