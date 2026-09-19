@@ -3,6 +3,12 @@ import { z } from 'zod';
 // inject spawns the command with an env block, so `=` and whitespace are
 // the only structural limits; shell identifier rules are a usability
 // concern the UI warns about, not a block.
+//
+// Enforced at issuance *and* at verification, deliberately: no key has
+// been minted with these claims yet, so one rule can cover both ends.
+// Tightening this again once keys are live would fail them at auth with
+// "missing necessary scopes" — at that point verification needs its own
+// permissive schema for what was already stamped.
 export const VaultInjectOptionsSchema = z.object({
   prefix: z
     .string()
