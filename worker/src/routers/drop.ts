@@ -8,15 +8,36 @@ import { createCacheHandlers } from '../lib/cache';
 import { checkMaxGrabbers, getPlanLimits } from '../lib/billing';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { SessionNotFound, PermissionDenied } from '../lib/messages';
+import {
+  SessionNotFound,
+  PermissionDenied,
+  TurnCredentialsUnavailable,
+} from '../lib/messages';
 import {
   TEST_TOKEN_COOKIE,
   TEST_TOKEN_HEADER,
   testTokenKey,
 } from '@shared/tests/http';
 import { generateTurnCredentials } from '../lib/http/turn';
+import { Context } from 'hono';
+import { HonoCtx } from '../lib/http/core';
 
 const dropIdSchema = z.object({ id: z.string() });
+
+// A drop with no relay credentials can silently fail to connect for any
+// grabber behind a restrictive NAT, so a mint failure has to fail the
+// request loudly rather than hand back a drop that half-works.
+const mintTurnCreds = async (c: Context<HonoCtx>) => {
+  try {
+    return await generateTurnCredentials({
+      turnKeyId: c.env.TURN_KEY_ID,
+      turnKeyApiToken: c.env.TURN_KEY_API_TOKEN,
+    });
+  } catch (err) {
+    console.error('Failed to mint TURN credentials', err);
+    return null;
+  }
+};
 
 const createDropSchema = z.object({
   id: z.string(),
@@ -103,10 +124,9 @@ const dropRouter = hono()
         !!testToken,
       );
 
-      const turnCreds = await generateTurnCredentials({
-        turnKeyId: c.env.TURN_KEY_ID,
-        turnKeyApiToken: c.env.TURN_KEY_API_TOKEN,
-      });
+      const turnCreds = await mintTurnCreds(c);
+
+      if (!turnCreds) return c.json(TurnCredentialsUnavailable, 500);
 
       return c.json(
         {
@@ -135,10 +155,9 @@ const dropRouter = hono()
       if (!dropDetails) return c.json(SessionNotFound, 404);
 
       // lazy-default drops created before maxGrabbers existed
-      const turnCreds = await generateTurnCredentials({
-        turnKeyId: c.env.TURN_KEY_ID,
-        turnKeyApiToken: c.env.TURN_KEY_API_TOKEN,
-      });
+      const turnCreds = await mintTurnCreds(c);
+
+      if (!turnCreds) return c.json(TurnCredentialsUnavailable, 500);
 
       return c.json(
         {

@@ -25,3 +25,7 @@ export const AuthUnavailable = {
 export const KeyNotIssued = {
   message: 'API key was created without a usable secret!',
 };
+
+export const TurnCredentialsUnavailable = {
+  message: 'Unable to establish relay credentials for this drop!',
+};

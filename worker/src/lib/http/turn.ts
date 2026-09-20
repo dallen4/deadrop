@@ -31,9 +31,14 @@ export async function generateTurnCredentials({
     { ttl: number }
   >(url, { ttl }, { Authorization: `Bearer ${turnKeyApiToken}` });
 
-  const itemWithCreds = credentialsResponse.iceServers.find(
+  const itemWithCreds = credentialsResponse.iceServers?.find(
     (item) => !!item.username && !!item.credential,
-  )!;
+  );
+
+  if (!itemWithCreds)
+    throw new Error(
+      `Cloudflare Realtime API returned no usable ICE server credentials: ${JSON.stringify(credentialsResponse)}`,
+    );
 
   return {
     username: itemWithCreds.username!,
