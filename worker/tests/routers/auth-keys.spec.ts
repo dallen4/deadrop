@@ -71,6 +71,12 @@ describe('GET /auth/keys', () => {
         name: 'hash13-demo production Key',
         expired: false,
         revoked: false,
+        scopes: [AuthScopes.VaultInject],
+        // Shown so a caller can tell two keys on one vault apart.
+        claims: {
+          vaultName: 'hash13-demo',
+          environment: 'production',
+        },
       },
     ]);
     expect(list).toHaveBeenCalledWith({ subject: 'user_123' });
@@ -125,6 +131,76 @@ describe('GET /auth/keys', () => {
     );
 
     expect(await res.json()).toEqual([]);
+  });
+
+  // Claims are hand-editable in Clerk, and a client renders these as-is.
+  it('drops keys whose inject claims are the wrong shape', async () => {
+    list.mockResolvedValue({
+      data: [
+        key({
+          id: 'only_not_an_array',
+          claims: {
+            vaultName: 'hash13-demo',
+            environment: 'production',
+            only: 'DB_URL',
+          },
+        }),
+      ],
+    });
+
+    const res = await listKeys(
+      'vaultName=demo&environment=production',
+    );
+
+    expect(await res.json()).toEqual([]);
+  });
+
+  // The list mirrors verification: a key this drops is a key that could
+  // not authenticate anyway, so the two never disagree.
+  it('drops a key carrying claims issuance would refuse', async () => {
+    list.mockResolvedValue({
+      data: [
+        key({
+          claims: {
+            vaultName: 'hash13-demo',
+            environment: 'production',
+            only: [],
+          },
+        }),
+      ],
+    });
+
+    const res = await listKeys(
+      'vaultName=demo&environment=production',
+    );
+
+    expect(await res.json()).toEqual([]);
+  });
+
+  it('returns the inject claims a key actually carries', async () => {
+    list.mockResolvedValue({
+      data: [
+        key({
+          claims: {
+            vaultName: 'hash13-demo',
+            environment: 'production',
+            prefix: 'PROD_',
+            only: ['DB_URL'],
+          },
+        }),
+      ],
+    });
+
+    const res = await listKeys(
+      'vaultName=demo&environment=production',
+    );
+
+    expect((await res.json())[0].claims).toEqual({
+      vaultName: 'hash13-demo',
+      environment: 'production',
+      prefix: 'PROD_',
+      only: ['DB_URL'],
+    });
   });
 
   it('drops keys carrying no scopes at all', async () => {
@@ -298,5 +374,84 @@ describe('POST /auth/keys', () => {
     );
 
     expect(res.status).toBe(500);
+  });
+});
+
+describe('POST /auth/keys inject claims', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    planLimits = undefined;
+    create.mockResolvedValue({
+      id: 'key_1',
+      name: 'issued',
+      secret: 'sk_live_123',
+    });
+  });
+
+  const issue = async (body: Record<string, unknown>) => {
+    const authRouter = (await import('../../src/routers/auth'))
+      .default;
+
+    return authRouter.request(
+      '/keys',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vaultName: 'demo',
+          environment: 'production',
+          ...body,
+        }),
+      },
+      testEnv,
+    );
+  };
+
+  it('stamps prefix and only onto the claims', async () => {
+    const res = await issue({ prefix: 'DB_', only: ['A', 'B'] });
+
+    expect(res.status).toBe(201);
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claims: {
+          vaultName: 'hash13-demo',
+          environment: 'production',
+          prefix: 'DB_',
+          only: ['A', 'B'],
+        },
+      }),
+    );
+  });
+
+  // An empty list is truthy where inject applies it, so a key stamped
+  // with one would inject nothing and still exit 0.
+  it('refuses an empty only list', async () => {
+    const res = await issue({ only: [] });
+
+    expect(res.status).toBe(400);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it.each(['has space', 'has=equals'])(
+    'refuses a structurally invalid prefix: %s',
+    async (prefix) => {
+      const res = await issue({ prefix });
+
+      expect(res.status).toBe(400);
+      expect(create).not.toHaveBeenCalled();
+    },
+  );
+
+  // inject spawns the command with an env block, so a hyphen is only a
+  // shell-expansion problem, warned about in the UI rather than blocked.
+  it('accepts a prefix a shell could not expand', async () => {
+    const res = await issue({ prefix: 'my-prefix-' });
+
+    expect(res.status).toBe(201);
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        claims: expect.objectContaining({ prefix: 'my-prefix-' }),
+      }),
+    );
   });
 });

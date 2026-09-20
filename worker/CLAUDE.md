@@ -24,6 +24,7 @@ worker/
 │   │   └── vault.ts          # Vault create/tokens/get/delete/lock/unlock (Turso via @shared/lib/turso)
 │   └── lib/
 │       ├── http/core.ts      # Hono instance + custom context/middleware types
+│       ├── http/turn.ts      # Mints per-session TURN credentials from Cloudflare's Realtime API
 │       ├── middleware.ts     # cors, tracing, redis, authenticated(), apiKey(), service()
 │       ├── billing.ts        # getUserPlan/getPlanLimits/hasFeature from Clerk claims
 │       ├── messages.ts       # Message validation helpers
@@ -49,11 +50,11 @@ worker/
 |--------|------|-------------|
 | GET | `/` | Health check (API metadata) |
 | `*` | `/auth/*` | Clerk auth endpoints |
-| GET | `/auth/keys` | List the caller's `vault:inject` API keys for a vault + environment, filtered by scope and claims, returning `id`/`name`/`expired`/`revoked` only (`authenticated({ feature: API_KEYS })`) |
+| GET | `/auth/keys` | List the caller's `vault:inject` API keys for a vault + environment, filtered by scope and claims, returning `id`/`name`/`scopes`/`claims`/`expired`/`revoked` (`authenticated({ feature: API_KEYS })`). Claims are re-parsed against `VaultInjectClaimsSchema` (the same schema issuance validates, so the list and `apiKey()` verification never disagree), and a claim that fails is dropped rather than handed to a client |
 | POST | `/auth/keys` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated({ feature: API_KEYS })`), refusing past the plan's `apiKeys` cap counted live from Clerk |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
 | GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
-| POST | `/vault` | Create a Turso vault database (`authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`), refusing past the plan's `cloudVaults` cap counted via `listVaults` |
+| POST | `/vault` | Create a Turso vault database (`authenticated({ feature: CLOUD_VAULT })` — deliberately no `allowApiKey`: an API key carries no plan claims, so the cap below is unenforceable on that path), refusing past the plan's `cloudVaults` cap counted via `listVaults` |
 | POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`) |
 | POST | `/vault/tokens/ci` | Exchange a `vault:inject` API key for a 5m read-only Turso token — vault and environment come off the key's claims, no request body (`apiKey()` alone — the required scope *is* the entitlement check) |
 | POST | `/vault/rotate` | Invalidate **every** token for a vault — optional `name` in the body, same as `/vault/tokens`, so the default vault stays addressable (`authenticated({ feature: CLOUD_VAULT })`, deliberately no `allowApiKey`) |
@@ -73,7 +74,7 @@ worker/
 
 ### Auth gates (`src/lib/middleware.ts`)
 - **One middleware owns identity and entitlement.** `authenticated({ allowApiKey?, feature? })` resolves the caller, sets `userId`, and — when `feature` is given — gates on entitlement in the same pass. Authorization is not a separate middleware you can forget to chain, and `getAuth` is called once rather than twice. `feature` is optional because some routes authenticate without gating (`GET /vault/:name`, `GET /auth/sign-in-token`).
-- Token gating: calls `getAuth(c, { acceptsToken: 'any' })` directly (not `c.var.clerkAuth()`, which defaults to session-tokens-only) and gates on `auth.tokenType` itself: 401s unless the type is `session_token`/`oauth_token`, or `api_key` with `allowApiKey: true`. Requesting `'any'` (rather than an `acceptsToken` array) is deliberate — a `TokenType[]` array doesn't type-narrow, so the return type keeps `m2m_token` in the union. That same quirk means `sessionClaims` needs a deliberate cast to read, since `m2m_token` has none. The single `if (!userId)` 401 also catches org-scoped API keys, whose `userId` is `null`. Handlers read `c.get('userId')!`, never `c.var.clerkAuth().userId!`, so identity always matches whichever token type actually authenticated.
+- Token gating: calls `getAuth(c, { acceptsToken: 'any' })` directly (not `c.var.clerkAuth()`, which defaults to session-tokens-only) and gates on `auth.tokenType` itself: 401s unless the type is `session_token`/`oauth_token`, or `api_key` with `allowApiKey: true`. Requesting `'any'` (rather than an `acceptsToken` array) is deliberate — a `TokenType[]` array doesn't type-narrow, so the return type keeps `m2m_token` in the union. That same quirk means `sessionClaims` needs a deliberate cast to read, since `m2m_token` has none. The `if (!userId)` 401 also catches org-scoped API keys, whose `userId` is `null`, and runs unconditionally — an outer `authenticated()` having already set `userId` must never let a nested one skip its own token check. Handlers read `c.get('userId')!`, never `c.var.clerkAuth().userId!`, so identity always matches whichever token type actually authenticated.
 - Entitlement (`feature` set): passes when the caller's plan grants it via `hasFeature` on the session claims, or via **live** Clerk metadata (`c.var.clerk.users.getUser`) — which covers both the `early_access`/`internal` bypass *and* `publicMetadata.plan`, so a Supporter is entitled whether or not the session template projects `plan`. Pro is the one plan absent from that fallback by nature: Clerk Billing subscriptions are not public metadata, which is why `getUserPlan` reads the `pla` claim for it. An **API key short-circuits**: it could only have been issued to a caller who passed this check, and narrowing which keys reach which route is `apiKey({ scopes })`'s job, not this middleware's. Downgrades are handled by `/vault/lock`, not re-checked on every use.
 - On the session path it also sets `c.set('planLimits', getPlanLimits(claims))` so handlers enforce counts without re-deriving the plan. **`planLimits` being `undefined` means unresolvable** (API key caller), not unlimited — handlers must skip the count rather than fall back to the free cap of zero, which would break every CI caller.
 - `apiKey({ scopes })` routes need no `feature`: the required scope is itself the entitlement check, and `SCOPE_FEATURES` in `shared/config/plans.ts` records which feature each scope delegates.
@@ -86,6 +87,12 @@ worker/
 - `maxGrabbers` defaults to `1` for drops created before the field existed (lazy default in the GET handler)
 - **Env var naming differs from the rest of the monorepo**: `Redis.fromEnv()` (the cloudflare adapter) only reads `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` — these are the actual deployed secret names (`wrangler secret list`). `shared/lib/redis.ts` (used by `web`/`tests`/the hydrate-test-token script) reads `REDIS_REST_URL`/`REDIS_REST_TOKEN` instead. Same Upstash instance, two different env var names depending on which client reads it — a local `worker/.dev.vars` needs the `UPSTASH_` prefixed names or `c.get('redis')` silently goes unauthenticated.
 
+### TURN credentials (`src/lib/http/turn.ts`)
+- `generateTurnCredentials` calls Cloudflare's Realtime API (`rtc.live.cloudflare.com/.../generate-ice-servers`) with `TURN_KEY_ID`/`TURN_KEY_API_TOKEN` and reduces the response to a `username`/`credential` pair, TTL defaulting to 24h
+- Both `POST /drop` and `GET /drop` return `turnCreds` on `DropDetails`/`InitDropResult` (`shared/types/common.ts`, `shared/types/peer.ts`) so dropper and grabber each mint their own short-lived pair — additive and backward compatible, current clients ignore the field
+- No local `.dev.vars` entry exists yet, so `wrangler dev` fails on the drop routes until `TURN_KEY_ID`/`TURN_KEY_API_TOKEN` are added locally
+- Server-side only so far: nothing in `web`/`cli`/`desktop` consumes `turnCreds` to build ICE server config yet (tracked as Linear DD-5, client half in progress) — signaling/relay behavior for real clients hasn't changed
+
 ### Durable Objects — PeerServerDO
 - **Not live in production** — clients signal through a separate Render-hosted PeerJS server at `peers.deadrop.io` instead (see top of this file). This is implemented and bound but parked until the DO pattern is proven out.
 - Each peer gets its own Durable Object instance (actor per peer ID)
@@ -94,7 +101,7 @@ worker/
 
 ### Vaults — Turso
 - Provisioning + lifecycle live in `shared/lib/turso/` (`createVaultUtils`) — see `shared/lib/turso/CLAUDE.md`. The former `worker/src/lib/vault.ts` was collapsed into it.
-- `vault.ts` router: create/tokens layer `authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`; get is `authenticated({ allowApiKey: true })` alone; delete and rotate are `authenticated({ feature: CLOUD_VAULT })`. API keys (`DEADROP_API_KEY`) are accepted on create/tokens/get for CI/`inject`, but **not** on rotate — it is destructive and needs an interactive session; `lock`/`unlock` are `service()`-gated for billing webhooks
+- `vault.ts` router: tokens is `authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`; get is `authenticated({ allowApiKey: true })` alone; create, delete and rotate are `authenticated({ feature: CLOUD_VAULT })`. API keys (`DEADROP_API_KEY`) are accepted on tokens/get for CI/`inject`, but **not** on create (unenforceable plan cap) or rotate (destructive) — both need an interactive session; `lock`/`unlock` are `service()`-gated for billing webhooks
 - Cancel-on-billing fans out over **all** of a user's vaults via `listVaults(<hash13>)`; org-payer cancellations are a known gap (vaults are named per user, not per org)
 
 ### Billing/plans (`src/lib/billing.ts`)
@@ -110,8 +117,9 @@ worker/
 ## Cloudflare Config (wrangler.toml)
 
 - Main: `src/index.ts`
-- Domain: `deadrop.nieky.dev`
-- DO: `PeerServerDO` class (binding `PEER_SERVER`)
+- Domain: `deadrop.nieky.dev` (production); `alpha.deadrop.nieky.dev` for `env.alpha` — CI deploys `--env alpha` on pushes to the `alpha` branch, plain `deploy` (production) on pushes to `main` (`.github/workflows/deploy_worker_workflow.yml`)
+- DO: `PeerServerDO` class (binding `PEER_SERVER`) — bindings don't inherit across named environments, so `env.alpha` redeclares its own `PEER_SERVER`/`DROP_STORE` bindings; secrets likewise don't inherit and must be set separately per environment (`wrangler secret put <NAME> --env alpha`)
+- Secrets: `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `TURN_KEY_ID`, `TURN_KEY_API_TOKEN`, `TURSO_PLATFORM_API_TOKEN`, `UPSTASH_REDIS_REST_TOKEN`, `UPSTASH_REDIS_REST_URL`, `WORKER_SERVICE_TOKEN` (`wrangler secret list`)
 - Vars: none. Drop limits come from `PLAN_LIMITS` (`shared/config/plans.ts`) for both branches — `getPlanLimits(claims).dailyDrops` resolves anonymous callers to the free tier, so the per-IP and per-user counters share one source of truth (the Turso org slug is likewise the shared `TURSO_ORGANIZATION` constant in `shared/lib/constants.ts`, not an env var)
 - Observability: logs + invocation logs enabled
 

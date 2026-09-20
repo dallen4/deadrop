@@ -13,11 +13,7 @@ import {
   MintedVaultCreds,
   VaultApiKeyCreds,
 } from '@shared/lib/vault-tokens';
-import {
-  apiKey,
-  authenticated,
-  service,
-} from '../lib/middleware';
+import { apiKey, authenticated, service } from '../lib/middleware';
 import {
   CreateVaultSchema,
   VaultInjectClaims,
@@ -30,10 +26,7 @@ import {
 const vaultRouter = hono()
   .post(
     AppRouteParts.Root,
-    authenticated({
-      allowApiKey: true,
-      feature: FEATURE_SLUGS.CLOUD_VAULT,
-    }),
+    authenticated({ feature: FEATURE_SLUGS.CLOUD_VAULT }),
     zValidator('json', CreateVaultSchema),
     async (c) => {
       const userId = c.get('userId')!;
@@ -65,7 +58,9 @@ const vaultRouter = hono()
 
         const vaultName = await vaultNameFromUserId(userId, name);
 
-        const vaultDatabase = await createVault(vaultName, seed);
+        const vaultDatabase = await createVault(vaultName, {
+          seed,
+        });
 
         const vaultToken = await createVaultToken(
           vaultName,

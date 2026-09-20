@@ -1,8 +1,7 @@
 name: Release Worker
 on:
   push:
-    branches:
-      - main
+    branches: [main, alpha]
     paths:
       - 'worker/**'
       - 'shared/**'
@@ -24,9 +23,11 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - uses: cloudflare/wrangler-action@v3
+      - uses: cloudflare/wrangler-action@v4
         name: Deploy Worker w/ Wrangler
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: 'worker'
+          # alpha pushes deploy the alpha environment, main stays production
+          command: deploy${{ github.ref_name == 'alpha' && ' --env alpha' || '' }}

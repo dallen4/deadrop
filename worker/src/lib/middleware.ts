@@ -126,6 +126,7 @@ export const authenticated = (
       auth.tokenType === TokenType.OAuthToken ||
       (allowApiKey && isApiKey);
 
+    // Unconditional, so nesting never widens an inner gate. The
     // unauthenticated/org-scoped variants carry userId: null, so one
     // check covers signed-out, invalid, and userless tokens
     const userId = allowed ? auth.userId : null;
@@ -164,6 +165,9 @@ export const authenticated = (
     await next();
   });
 
+// The same schema issuance validates, so what can be minted and what
+// verifies are one rule. See VaultInjectOptionsSchema on when that has to
+// split — a stamped key failing here reads as a missing scope.
 export const ScopeToClaimValidator: Record<AuthScopes, ZodSchema> = {
   [AuthScopes.VaultInject]: VaultInjectClaimsSchema,
 };

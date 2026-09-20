@@ -1,6 +1,7 @@
 import {
   TEST_FLAG_COOKIE,
   TEST_TOKEN_COOKIE,
+  TEST_TOKEN_HEADER,
   testTokenKey,
 } from '@shared/tests/http';
 import {
@@ -81,6 +82,23 @@ export const createContextForBrowser = async (
       secure: !isLocal,
     },
   ]);
+
+  // The `test-tkn` cookie is blocked on cross-site requests to the worker
+  // (mirrors the same workaround in tests/e2e/actors/web.ts), so mirror it
+  // as an explicit header on every request to the worker's origin rather
+  // than trusting the cookie to survive the cross-origin hop.
+  const apiOrigin = apiURL.replace(/\/$/, '');
+
+  await context.route(
+    (url) => url.href.startsWith(apiOrigin),
+    (route) =>
+      route.continue({
+        headers: {
+          ...route.request().headers(),
+          [TEST_TOKEN_HEADER]: testToken!,
+        },
+      }),
+  );
 
   return context;
 };

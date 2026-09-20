@@ -2,6 +2,7 @@ import { createClient } from '@shared/client';
 import { useApiHeaders } from './api-headers';
 import { DEADROP_API_URL } from '../env';
 import { AuthScopes } from '@shared/config/plans';
+import { VaultInjectOptions } from '@shared/lib/vault-tokens';
 import { useCallback } from 'react';
 
 export type VaultApiKeyTarget = {
@@ -42,15 +43,32 @@ export const useApiKeys = () => {
   );
 
   const createApiKey = useCallback(
-    async (target: VaultApiKeyTarget) => {
+    async (
+      target: VaultApiKeyTarget,
+      { only, prefix }: VaultInjectOptions = {},
+    ) => {
       const client = await initClient();
 
       const response = await client.auth.keys.$post({
-        json: target,
+        // An empty `only` would stamp a key that injects nothing, so the
+        // untouched MultiSelect has to read as "no claim" instead.
+        json: {
+          ...target,
+          ...(only?.length ? { only } : {}),
+          ...(prefix ? { prefix } : {}),
+        },
       });
 
-      if (response.status !== 201)
-        throw new Error('Could not issue an API key for this vault.');
+      // The body explains a plan cap or a rejected claim; don't drop it.
+      if (response.status !== 201) {
+        const body = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+
+        throw new Error(
+          body?.error ?? 'Could not issue an API key for this vault.',
+        );
+      }
 
       return response.json();
     },

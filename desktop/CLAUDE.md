@@ -63,7 +63,10 @@ pnpm -F desktop typecheck  # tsc --noEmit (NON-gating; see note below)
 
 Local vault at `/vault`: Rust-side SQLite via the `libsql` crate
 (`src-tauri/src/vault_store.rs`), optional Turso cloud sync
-(`src/lib/vault-cloud.ts`), gated by `isExperimental` (`src/lib/billing.ts`).
+(`src/lib/vault-cloud.ts`), gated client-side by `isExperimental`
+(`src/lib/billing.ts`) — note the worker now gates `/vault` on plan
+entitlement instead, so this UI gate is stricter than the API and a
+Supporter without `early_access` sees the toggle disabled anyway.
 Encryption reuses `shared/lib/secrets.ts` directly; config persisted to
 `.deadroprc` (same shape as CLI/vscode-extension, but read/written via Rust
 commands — `read_app_vault_config`/`write_app_vault_config` in
@@ -93,6 +96,31 @@ token is the only way in and must never be cleared. "Share vault"
 (`ShareVaultModal.tsx`) mints a read-only token, composes the payload with
 `shared/lib/vault-share.ts`, and routes it into the drop flow via router
 state; the grab side adopts one through `useVault`'s `adoptVault`.
+
+Toggling cloud sync off is **local only** — it deletes the `cloud` block
+from the config and nothing else, so re-enabling reattaches to the existing
+Turso database (`findCloudVaultName` resolves it, then a fresh token is
+minted) rather than provisioning a new one. Destroying the cloud copy is
+`deleteCloudCopy`, behind `DeleteCloudVaultModal.tsx`, which requires typing
+the vault name. The toggle used to fire `DELETE /vault/:name` directly,
+which cost a real vault its contents.
+
+**Known gap**: enabling cloud sync on a local vault that already holds
+secrets does not work from the desktop. libsql treats the primary as
+authoritative, so attaching a populated local file to an empty database
+strands every row, and the fix (`shared/db/migrate.ts`'s
+`migrateToCloudSync`, which uploads the `.db` with Turso's
+`database_upload` seed and reopens as a replica) is node-only — `fs` plus a
+`file:` libsql client, neither available in the webview. Use
+`deadrop vault create <name> --cloud` from the CLI until a Rust-side
+equivalent exists.
+
+`SecretRow.tsx` gives each secret reveal / edit / overflow. Edit opens
+`EditSecretModal.tsx` (rename and re-value in one place). The overflow menu
+copies to the clipboard or into another environment (`copySecretTo`
+unwraps with the source env key and rewraps with the target's, upserting
+since `(name, environment)` is the PK), and drops a single secret into the
+drop flow via the same staged-payload path a vault share uses.
 
 ## Auth keychain backend
 
