@@ -24,6 +24,7 @@ worker/
 │   │   └── vault.ts          # Vault create/tokens/get/delete/lock/unlock (Turso via @shared/lib/turso)
 │   └── lib/
 │       ├── http/core.ts      # Hono instance + custom context/middleware types
+│       ├── http/turn.ts      # Mints per-session TURN credentials from Cloudflare's Realtime API
 │       ├── middleware.ts     # cors, tracing, redis, authenticated(), apiKey(), service()
 │       ├── billing.ts        # getUserPlan/getPlanLimits/hasFeature from Clerk claims
 │       ├── messages.ts       # Message validation helpers
@@ -86,6 +87,12 @@ worker/
 - `maxGrabbers` defaults to `1` for drops created before the field existed (lazy default in the GET handler)
 - **Env var naming differs from the rest of the monorepo**: `Redis.fromEnv()` (the cloudflare adapter) only reads `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` — these are the actual deployed secret names (`wrangler secret list`). `shared/lib/redis.ts` (used by `web`/`tests`/the hydrate-test-token script) reads `REDIS_REST_URL`/`REDIS_REST_TOKEN` instead. Same Upstash instance, two different env var names depending on which client reads it — a local `worker/.dev.vars` needs the `UPSTASH_` prefixed names or `c.get('redis')` silently goes unauthenticated.
 
+### TURN credentials (`src/lib/http/turn.ts`)
+- `generateTurnCredentials` calls Cloudflare's Realtime API (`rtc.live.cloudflare.com/.../generate-ice-servers`) with `TURN_KEY_ID`/`TURN_KEY_API_TOKEN` and reduces the response to a `username`/`credential` pair, TTL defaulting to 24h
+- Both `POST /drop` and `GET /drop` return `turnCreds` on `DropDetails`/`InitDropResult` (`shared/types/common.ts`, `shared/types/peer.ts`) so dropper and grabber each mint their own short-lived pair — additive and backward compatible, current clients ignore the field
+- No local `.dev.vars` entry exists yet, so `wrangler dev` fails on the drop routes until `TURN_KEY_ID`/`TURN_KEY_API_TOKEN` are added locally
+- Server-side only so far: nothing in `web`/`cli`/`desktop` consumes `turnCreds` to build ICE server config yet (tracked as Linear DD-5, client half in progress) — signaling/relay behavior for real clients hasn't changed
+
 ### Durable Objects — PeerServerDO
 - **Not live in production** — clients signal through a separate Render-hosted PeerJS server at `peers.deadrop.io` instead (see top of this file). This is implemented and bound but parked until the DO pattern is proven out.
 - Each peer gets its own Durable Object instance (actor per peer ID)
@@ -110,8 +117,9 @@ worker/
 ## Cloudflare Config (wrangler.toml)
 
 - Main: `src/index.ts`
-- Domain: `deadrop.nieky.dev`
-- DO: `PeerServerDO` class (binding `PEER_SERVER`)
+- Domain: `deadrop.nieky.dev` (production); `alpha.deadrop.nieky.dev` for `env.alpha` — CI deploys `--env alpha` on pushes to the `alpha` branch, plain `deploy` (production) on pushes to `main` (`.github/workflows/deploy_worker_workflow.yml`)
+- DO: `PeerServerDO` class (binding `PEER_SERVER`) — bindings don't inherit across named environments, so `env.alpha` redeclares its own `PEER_SERVER`/`DROP_STORE` bindings; secrets likewise don't inherit and must be set separately per environment (`wrangler secret put <NAME> --env alpha`)
+- Secrets: `CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `TURN_KEY_ID`, `TURN_KEY_API_TOKEN`, `TURSO_PLATFORM_API_TOKEN`, `UPSTASH_REDIS_REST_TOKEN`, `UPSTASH_REDIS_REST_URL`, `WORKER_SERVICE_TOKEN` (`wrangler secret list`)
 - Vars: none. Drop limits come from `PLAN_LIMITS` (`shared/config/plans.ts`) for both branches — `getPlanLimits(claims).dailyDrops` resolves anonymous callers to the free tier, so the per-IP and per-user counters share one source of truth (the Turso org slug is likewise the shared `TURSO_ORGANIZATION` constant in `shared/lib/constants.ts`, not an env var)
 - Observability: logs + invocation logs enabled
 

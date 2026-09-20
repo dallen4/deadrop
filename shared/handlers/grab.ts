@@ -201,7 +201,12 @@ export const createGrabHandlers = <
         throw new Error('Invalid drop ID provided');
       }
 
-      const details: DropDetails = await resp.json();
+      if (!resp.ok)
+        throw new Error(
+          `Failed to fetch drop ${ctx.id}: ${resp.status}`,
+        );
+
+      const details = (await resp.json()) as DropDetails;
 
       logger.info(`Drop ${ctx.id} found!`);
 
