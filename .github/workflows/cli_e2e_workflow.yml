@@ -36,9 +36,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run CLI e2e tests
         env:
-          # Build-time: esbuild bakes DEADROP_API_URL + PEER_SERVER_URL into the
-          # bundle (and guards on both), so they must be present for `pnpm build`.
-          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          DEADROP_API_URL: ${{ github.ref_name == 'main' && secrets.DEADROP_API_URL || secrets.DEADROP_ALPHA_API_URL }}
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
           DEADROP_APP_URL: ${{ vars.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
