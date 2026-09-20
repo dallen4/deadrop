@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - alpha
     paths:
       - 'worker/**'
       - 'shared/**'
@@ -30,3 +31,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: 'worker'
+          # alpha pushes deploy the alpha environment, main stays production
+          command: ${{ github.ref_name == 'alpha' && 'deploy --env alpha' || 'deploy' }}
