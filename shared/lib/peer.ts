@@ -40,26 +40,15 @@ export function createPeer(
 
   const iceConfig = {
     iceServers: [
+      { urls: ['stun:stun.cloudflare.com:3478'] },
       {
-        urls: 'stun:stun.relay.metered.ca:80',
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:80',
-        username,
-        credential,
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:80?transport=tcp',
-        username,
-        credential,
-      },
-      {
-        urls: 'turn:standard.relay.metered.ca:443',
-        username,
-        credential,
-      },
-      {
-        urls: 'turns:standard.relay.metered.ca:443?transport=tcp',
+        urls: [
+          'turn:turn.cloudflare.com:3478?transport=udp',
+          'turn:turn.cloudflare.com:3478?transport=tcp',
+          'turns:turn.cloudflare.com:5349?transport=tcp',
+          'turn:turn.cloudflare.com:80?transport=tcp',
+          'turns:turn.cloudflare.com:443?transport=tcp',
+        ],
         username,
         credential,
       },

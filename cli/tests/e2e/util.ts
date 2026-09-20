@@ -1,26 +1,13 @@
 import { execa, type ResultPromise } from 'execa';
 import { onTestFinished } from 'vitest';
 import { apiURL, cliEntry, dropTimeout, grabTimeout } from './config';
+import { getTestToken } from '@tests/utils/config';
 
 // chalk wraps CLI output in ANSI color codes (and figlet/QR add decoration);
 // strip them so we match against plain text.
 // eslint-disable-next-line no-control-regex
 const ANSI = /\[[0-9;]*m/g;
 const stripAnsi = (s: string) => s.replace(ANSI, '');
-
-// The drop test token is a stable value persisted in Redis under `test_tkn`
-// (the worker verifies against it). It does not rotate per run, so suites just
-// read it from the env — no seeding, no teardown, no cross-suite races. See
-// DROP_TEST_TOKEN in cli/.env / the repo secret.
-export const getTestToken = (): string => {
-  const token = process.env.DROP_TEST_TOKEN;
-  if (!token)
-    throw new Error(
-      'DROP_TEST_TOKEN is not set (expected in cli/.env locally or the ' +
-        'repo secret in CI).',
-    );
-  return token;
-};
 
 /**
  * A spawned `deadrop` process whose stdout we watch for expected lines.
@@ -52,7 +39,10 @@ export class CliProcess {
   }
 
   /** Resolve with the first regex match once it appears in stdout. */
-  waitFor(pattern: RegExp, timeout: number): Promise<RegExpMatchArray> {
+  waitFor(
+    pattern: RegExp,
+    timeout: number,
+  ): Promise<RegExpMatchArray> {
     return new Promise((resolve, reject) => {
       let done = false;
       const finish = (cb: () => void) => {
@@ -114,14 +104,23 @@ export type DropResult = {
 };
 
 /** Spawn `deadrop drop <secret>`, return the parsed grab id + link. */
-export const dropCli = async (secret: string): Promise<DropResult> => {
-  const token = getTestToken();
+export const dropCli = async (
+  secret: string,
+): Promise<DropResult> => {
+  const token = await getTestToken();
+
   const cli = new CliProcess(['drop', secret], {
     DEADROP_API_URL: apiURL,
     TEST_TOKEN: token,
   });
+
   onTestFinished(() => cli.kill());
-  const match = await cli.waitFor(/grab\?drop=([^\s&]+)/, dropTimeout);
+
+  const match = await cli.waitFor(
+    /grab\?drop=([^\s&]+)/,
+    dropTimeout,
+  );
+
   return { id: match[1], link: match[0], proc: cli };
 };
 
@@ -130,8 +129,11 @@ export const grabCli = async (id: string): Promise<string> => {
   const cli = new CliProcess(['grab', id], {
     DEADROP_API_URL: apiURL,
   });
+
   onTestFinished(() => cli.kill());
+
   // grab handler logs: "Message validated!\n\nSecret: <value>"
   const match = await cli.waitFor(/Secret:\s*(.+)/, grabTimeout);
+
   return match[1].trim();
 };

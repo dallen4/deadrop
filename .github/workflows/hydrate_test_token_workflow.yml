@@ -1,7 +1,7 @@
 name: Hydrate Test Token
 
 # Rotates the stable e2e bypass token (shared/tests/http.ts's `test_tkn` key)
-# in Redis. All three e2e suites (web, cli, cross-platform) read this value
+# in Cloudflare KV and Redis. All three e2e suites (web, cli, cross-platform) read it
 # live per-run rather than seeding/tearing it down themselves, so it has to
 # exist independently of any test run — this is what keeps it there.
 #
@@ -37,6 +37,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Hydrate test token
         env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
+          # Transitional: the deployed worker still reads Redis.
           REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
           REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
         run: pnpm hydrate:test-token

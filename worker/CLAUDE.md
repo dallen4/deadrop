@@ -1,6 +1,6 @@
 # CLAUDE.md — worker/
 
-Cloudflare Worker using Hono framework. Provides the backend API: Redis-backed (Upstash) drop session storage, Turso-backed vaults, and a `PeerServerDO` Durable Object for PeerJS signaling — **not yet live in production**. `wrangler.toml` only routes `deadrop.nieky.dev` to this Worker; the actual production signaling host, `peers.deadrop.io` (`NEXT_PUBLIC_PEER_SERVER_URL`/`PEER_SERVER_URL`), is a separate standalone PeerJS server on Render. `PeerServerDO` is a parked experiment — the DO pattern isn't considered production-ready yet. Don't assume it's handling real traffic just because it's implemented and bound.
+Cloudflare Worker using Hono framework. Provides the backend API: KV-backed drop session storage, Turso-backed vaults, and a `PeerServerDO` Durable Object for PeerJS signaling — **not yet live in production**. `wrangler.toml` only routes `deadrop.nieky.dev` to this Worker; the actual production signaling host, `peers.deadrop.io` (`NEXT_PUBLIC_PEER_SERVER_URL`/`PEER_SERVER_URL`), is a separate standalone PeerJS server on Render. `PeerServerDO` is a parked experiment — the DO pattern isn't considered production-ready yet. Don't assume it's handling real traffic just because it's implemented and bound.
 
 ## Commands
 
@@ -20,12 +20,12 @@ worker/
 │   ├── routers/
 │   │   ├── auth.ts           # Clerk auth endpoints
 │   │   ├── peers.ts          # PeerJS signaling (upgrades to WebSocket → Durable Object)
-│   │   ├── drop.ts           # Drop CRUD (Redis-backed)
+│   │   ├── drop.ts           # Drop CRUD (KV-backed)
 │   │   └── vault.ts          # Vault create/tokens/get/delete/lock/unlock (Turso via @shared/lib/turso)
 │   └── lib/
 │       ├── http/core.ts      # Hono instance + custom context/middleware types
 │       ├── http/turn.ts      # Mints per-session TURN credentials from Cloudflare's Realtime API
-│       ├── middleware.ts     # cors, tracing, redis, authenticated(), apiKey(), service()
+│       ├── middleware.ts     # cors, tracing, authenticated(), apiKey(), service()
 │       ├── billing.ts        # getUserPlan/getPlanLimits/hasFeature from Clerk claims
 │       ├── messages.ts       # Message validation helpers
 │       ├── durable_objects/
@@ -33,7 +33,7 @@ worker/
 │       │   ├── DropSession.ts# Drop session state DO (not active in current flow)
 │       │   └── index.ts
 │       ├── crypto.ts         # Validation-side crypto utilities
-│       └── cache.ts          # Redis caching helpers
+│       └── cache.ts          # KV caching helpers
 │  # Turso vault provisioning/lifecycle now lives in shared/lib/turso/ (see its CLAUDE.md)
 ├── client.ts                  # Re-exports DeadropWorkerApi type (consumed by shared/client.ts)
 ├── types/
@@ -53,7 +53,7 @@ worker/
 | GET | `/auth/keys` | List the caller's `vault:inject` API keys for a vault + environment, filtered by scope and claims, returning `id`/`name`/`scopes`/`claims`/`expired`/`revoked` (`authenticated({ feature: API_KEYS })`). Claims are re-parsed against `VaultInjectClaimsSchema` (the same schema issuance validates, so the list and `apiKey()` verification never disagree), and a claim that fails is dropped rather than handed to a client |
 | POST | `/auth/keys` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated({ feature: API_KEYS })`), refusing past the plan's `apiKeys` cap counted live from Clerk |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
-| GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
+| GET/POST/DELETE | `/drop` | Drop session CRUD (KV) |
 | POST | `/vault` | Create a Turso vault database (`authenticated({ feature: CLOUD_VAULT })` — deliberately no `allowApiKey`: an API key carries no plan claims, so the cap below is unenforceable on that path), refusing past the plan's `cloudVaults` cap counted via `listVaults` |
 | POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`) |
 | POST | `/vault/tokens/ci` | Exchange a `vault:inject` API key for a 5m read-only Turso token — vault and environment come off the key's claims, no request body (`apiKey()` alone — the required scope *is* the entitlement check) |
@@ -70,7 +70,6 @@ worker/
 2. `tracing()` — captures request IP
 3. `requestId()`
 4. `clerkMiddleware()` — decodes `Authorization: Bearer <token>` *or* the Clerk session cookie into `c.var.clerkAuth()`; never throws on missing/anonymous auth
-5. `redis()` — attaches an Upstash client to `c.get('redis')`
 
 ### Auth gates (`src/lib/middleware.ts`)
 - **One middleware owns identity and entitlement.** `authenticated({ allowApiKey?, feature? })` resolves the caller, sets `userId`, and — when `feature` is given — gates on entitlement in the same pass. Authorization is not a separate middleware you can forget to chain, and `getAuth` is called once rather than twice. `feature` is optional because some routes authenticate without gating (`GET /vault/:name`, `GET /auth/sign-in-token`).
@@ -81,11 +80,13 @@ worker/
 - `service()` — first-party service-to-service auth (no Clerk session): constant-time checks `SERVICE_TOKEN_HEADER` against `WORKER_SERVICE_TOKEN`. Used by `/vault/lock` and `/vault/unlock`, which billing webhooks call. Authenticates the *caller*; the subject `userId` is in the request body — treat the token as high-value.
 - Routes with neither gate (e.g. `/drop`) work anonymously; if a caller *is* authenticated, `clerkAuth()` still resolves so the route can read identity opportunistically
 
-### Drop storage — Redis (Upstash)
-- `c.get('redis')` (set by the `redis()` middleware) — `@upstash/redis/cloudflare`, `Redis.fromEnv(c.env)`
-- Drop details are an HSET keyed by `formatDropKey(dropId)`; no separate KV/DO needed for drop metadata
+### Drop storage — Cloudflare KV
+- `c.env.DROP_STORE` — the `DROP_STORE` binding in `wrangler.toml`; no middleware, read it off the env directly
+- Drop details are one JSON value keyed by `formatDropKey(dropId)`, written with a `expirationTtl`; counters are plain numeric values
 - `maxGrabbers` defaults to `1` for drops created before the field existed (lazy default in the GET handler)
-- **Env var naming differs from the rest of the monorepo**: `Redis.fromEnv()` (the cloudflare adapter) only reads `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` — these are the actual deployed secret names (`wrangler secret list`). `shared/lib/redis.ts` (used by `web`/`tests`/the hydrate-test-token script) reads `REDIS_REST_URL`/`REDIS_REST_TOKEN` instead. Same Upstash instance, two different env var names depending on which client reads it — a local `worker/.dev.vars` needs the `UPSTASH_` prefixed names or `c.get('redis')` silently goes unauthenticated.
+- **Always pass the type argument to `get`.** `KVNamespace.get<T>(key)` type-checks as `T | null` but returns a **string** at runtime — `get<number>(key)` then makes the drop counter do `"1" + 1 === "11"`. Use `get<T>(key, 'json')` for objects/numbers and `get(key, 'text')` for strings.
+- **Annotate KV call sites with an explicit return type.** `web` typechecks `worker/` (via the Hono RPC client) without `@cloudflare/workers-types`, so `KVNamespace` resolves to `unknown` there and the RPC response type collapses to `{}` — failing the Vercel build in `shared/handlers/grab.ts`. `worker/src/routers/drop.ts` and `worker/src/lib/cache.ts` carry explicit annotations for this reason; keep them.
+- Out-of-worker readers (`web`'s captcha route, the e2e suites, the hydrate script) go through `shared/lib/kv.ts`, which wraps the `cloudflare` REST SDK and needs `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, and `CLOUDFLARE_KV_NAMESPACE_ID`.
 
 ### TURN credentials (`src/lib/http/turn.ts`)
 - `generateTurnCredentials` calls Cloudflare's Realtime API (`rtc.live.cloudflare.com/.../generate-ice-servers`) with `TURN_KEY_ID`/`TURN_KEY_API_TOKEN` and reduces the response to a `username`/`credential` pair, TTL defaulting to 24h

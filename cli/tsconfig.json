@@ -17,7 +17,8 @@
     "jsxImportSource": "hono/jsx",
     "paths": {
       "@api/*": ["../worker/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
+      "@tests/*": ["../tests/*"]
     },
     "typeRoots": [
       "./node_modules/@types/",
