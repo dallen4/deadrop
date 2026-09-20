@@ -33,6 +33,7 @@ import {
 import { DataConnection } from 'peerjs';
 import { withGrabberMessageLock } from '../lib/messages';
 import { createClient } from '../client';
+import { generateId } from '../lib/util';
 
 export const createDropHandlers = <
   FileType extends string | File = string,
@@ -368,13 +369,13 @@ export const createDropHandlers = <
   const init = async () => {
     ctx.keyPair = await generateKeyPair();
 
-    ctx.peer = await initPeer();
-
-    ctx.peer.on('connection', onConnection);
+    // minted here rather than by the peer: creating the drop record is
+    // what returns the TURN credentials the peer needs to come up
+    const peerId = generateId();
 
     const resp = await client.drop.$post({
       json: {
-        id: ctx.peer.id,
+        id: peerId,
         ...(ctx.maxGrabbers != null
           ? { maxGrabbers: ctx.maxGrabbers }
           : {}),
@@ -393,10 +394,15 @@ export const createDropHandlers = <
       return;
     }
 
-    const { id, nonce }: InitDropResult = await resp.json();
+    const { id, nonce, turnCreds }: InitDropResult =
+      await resp.json();
 
     ctx.id = id;
     ctx.nonce = nonce;
+
+    ctx.peer = await initPeer(turnCreds, peerId);
+
+    ctx.peer.on('connection', onConnection);
 
     const initEvent: InitDropEvent = {
       type: DropEventType.Init,

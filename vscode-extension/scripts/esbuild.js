@@ -16,8 +16,6 @@ const define = {
   'process.env.PEER_SERVER_URL': JSON.stringify(
     process.env.PEER_SERVER_URL || '',
   ),
-  'process.env.TURN_USERNAME': JSON.stringify(process.env.TURN_USERNAME || ''),
-  'process.env.TURN_PWD': JSON.stringify(process.env.TURN_PWD || ''),
   'process.env.CLERK_PUBLISHABLE_KEY': JSON.stringify(
     process.env.CLERK_PUBLISHABLE_KEY || '',
   ),

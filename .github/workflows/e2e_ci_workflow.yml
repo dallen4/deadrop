@@ -69,8 +69,6 @@ jobs:
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
           DEADROP_APP_URL: ${{ vars.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
-          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          TURN_PWD: ${{ secrets.TURN_PWD }}
         run: pnpm -F cli compile
 
       - name: Install Playwright browsers

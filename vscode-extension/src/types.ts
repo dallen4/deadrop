@@ -6,8 +6,6 @@ export type VaultSummary = {
 export type ExtensionConfig = {
   apiUrl: string;
   peerServerUrl: string;
-  turnUsername: string;
-  turnPassword: string;
   clerkPublishableKey: string;
   token: string | null;
   vaultName?: string | null;
