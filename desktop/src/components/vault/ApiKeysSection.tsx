@@ -1,65 +1,50 @@
 import { useEffect, useState } from 'react';
 import {
   Alert,
-  Badge,
   Button,
   Code,
+  Collapse,
   CopyButton,
   Divider,
   Group,
-  Loader,
   Modal,
+  MultiSelect,
+  Skeleton,
   Stack,
   Text,
+  TextInput,
+  UnstyledButton,
 } from '@mantine/core';
 import {
   IconAlertCircle,
   IconCheck,
+  IconChevronRight,
   IconCopy,
 } from '@tabler/icons-react';
+import { VaultInjectOptionsSchema } from '@shared/lib/vault-tokens';
 import { useApiKeys } from '../../lib/auth';
 import { AddRowButton } from './AddRowButton';
 import { TargetDetails } from './TargetDetails';
+import { ApiKeyRow, ApiKeySummary } from './ApiKeyRow';
+import { InjectPreview } from './InjectPreview';
 
-type ApiKeySummary = {
+type IssuedKey = {
   id: string;
   name: string;
-  expired: boolean;
-  revoked: boolean;
-};
-
-type IssuedKey = { id: string; name: string; key: string };
-
-const StatusBadge = ({ expired, revoked }: ApiKeySummary) => {
-  if (revoked)
-    return (
-      <Badge size={'sm'} color={'red'} variant={'light'}>
-        Revoked
-      </Badge>
-    );
-
-  if (expired)
-    return (
-      <Badge size={'sm'} color={'gray'} variant={'light'}>
-        Expired
-      </Badge>
-    );
-
-  return (
-    <Badge size={'sm'} color={'teal'} variant={'light'}>
-      Active
-    </Badge>
-  );
+  key: string;
+  claims?: ApiKeySummary['claims'];
 };
 
 export const ApiKeysSection = ({
   vaultName,
   cloudName,
   environment,
+  secretNames,
 }: {
   vaultName: string;
   cloudName?: string;
   environment: string;
+  secretNames: string[];
 }) => {
   const { listApiKeys, createApiKey } = useApiKeys();
 
@@ -71,6 +56,10 @@ export const ApiKeysSection = ({
   const [issuing, setIssuing] = useState(false);
   const [issued, setIssued] = useState<IssuedKey | null>(null);
   const [issueError, setIssueError] = useState<string | null>(null);
+
+  const [shaping, setShaping] = useState(false);
+  const [only, setOnly] = useState<string[]>([]);
+  const [prefix, setPrefix] = useState('');
 
   useEffect(() => {
     let stale = false;
@@ -96,13 +85,43 @@ export const ApiKeysSection = ({
     // target is what actually decides when to refetch.
   }, [vaultName, environment]);
 
+  // An empty MultiSelect is "no claim", not a key that injects nothing.
+  const claims = {
+    only: only.length ? only : undefined,
+    prefix: prefix.trim() || undefined,
+  };
+
+  // The worker's own schema, so the rule is stated once.
+  const parsed = VaultInjectOptionsSchema.safeParse(claims);
+
+  const prefixError = parsed.success
+    ? null
+    : (parsed.error.issues.find((issue) => issue.path[0] === 'prefix')
+        ?.message ?? null);
+
   const issue = async () => {
     setIssuing(true);
     setIssueError(null);
+
     try {
-      const key = await createApiKey({ vaultName, environment });
+      const key = await createApiKey(
+        { vaultName, environment },
+        claims,
+      );
+
       setIssued(key);
-      setKeys(await listApiKeys({ vaultName, environment }));
+
+      // Appended: a failed refetch must not read as a failed issuance.
+      setKeys((current) => [
+        ...current,
+        {
+          id: key.id,
+          name: key.name,
+          claims: key.claims,
+          expired: false,
+          revoked: false,
+        },
+      ]);
     } catch (err) {
       setIssueError((err as Error).message);
     } finally {
@@ -114,17 +133,20 @@ export const ApiKeysSection = ({
     setModalOpen(false);
     setIssued(null);
     setIssueError(null);
+    setShaping(false);
+    setOnly([]);
+    setPrefix('');
   };
 
   return (
     <>
       {loading ? (
-        <Group gap={'xs'} py={4}>
-          <Loader size={'xs'} />
-          <Text size={'sm'} c={'dimmed'}>
-            Loading API keys…
-          </Text>
-        </Group>
+        <Stack gap={4}>
+          {/* Match the row height so the list does not jump when it resolves. */}
+          {Array.from({ length: 2 }, (_, i) => (
+            <Skeleton key={i} height={26} my={2} radius={'sm'} />
+          ))}
+        </Stack>
       ) : error ? (
         <Alert color={'red'} icon={<IconAlertCircle size={16} />}>
           {error}
@@ -136,24 +158,7 @@ export const ApiKeysSection = ({
               No API keys yet for <b>{environment}</b>.
             </Text>
           ) : (
-            keys.map((key) => (
-              <Group
-                key={key.id}
-                justify={'space-between'}
-                py={4}
-                wrap={'nowrap'}
-              >
-                <Text
-                  size={'sm'}
-                  ff={'monospace'}
-                  style={{ flex: 1, minWidth: 0 }}
-                  truncate
-                >
-                  {key.name}
-                </Text>
-                <StatusBadge {...key} />
-              </Group>
-            ))
+            keys.map((key) => <ApiKeyRow key={key.id} apiKey={key} />)
           )}
         </Stack>
       )}
@@ -187,6 +192,13 @@ export const ApiKeysSection = ({
               <Code block style={{ wordBreak: 'break-all' }}>
                 {issued.key}
               </Code>
+              <Text size={'xs'} c={'dimmed'} tt={'uppercase'}>
+                Injects
+              </Text>
+              <InjectPreview
+                secretNames={secretNames}
+                claims={issued.claims}
+              />
               <Group justify={'flex-end'}>
                 <CopyButton value={issued.key}>
                   {({ copied, copy }) => (
@@ -215,6 +227,70 @@ export const ApiKeysSection = ({
                 Mints a key scoped to this vault and environment, for
                 injecting secrets into CI/CD.
               </Text>
+
+              <UnstyledButton
+                onClick={() => setShaping((was) => !was)}
+                aria-expanded={shaping}
+              >
+                <Group gap={4}>
+                  <IconChevronRight
+                    size={14}
+                    style={{
+                      transform: shaping
+                        ? 'rotate(90deg)'
+                        : undefined,
+                      transition: 'transform 150ms ease',
+                    }}
+                  />
+                  <Text size={'sm'} fw={500}>
+                    Shape injection (optional)
+                  </Text>
+                </Group>
+              </UnstyledButton>
+
+              <Collapse in={shaping}>
+                <Stack gap={'sm'}>
+                  <MultiSelect
+                    label={'Secrets'}
+                    placeholder={
+                      only.length ? undefined : 'Whole environment'
+                    }
+                    description={
+                      secretNames.length
+                        ? 'Shapes what inject writes; it does not limit what the key can read.'
+                        : 'No secrets in this environment yet.'
+                    }
+                    data={secretNames}
+                    value={only}
+                    onChange={setOnly}
+                    disabled={!secretNames.length}
+                    clearable
+                    searchable
+                  />
+                  <TextInput
+                    label={'Prefix'}
+                    placeholder={'DB_'}
+                    description={
+                      'Prepended to every variable name the key injects, overriding inject --prefix.'
+                    }
+                    value={prefix}
+                    error={prefixError}
+                    onChange={(event) =>
+                      setPrefix(event.currentTarget.value)
+                    }
+                  />
+                  <Stack gap={4}>
+                    <Text size={'xs'} c={'dimmed'} tt={'uppercase'}>
+                      Injects
+                    </Text>
+                    <InjectPreview
+                      secretNames={secretNames}
+                      claims={claims}
+                    />
+                  </Stack>
+                </Stack>
+              </Collapse>
+
               {issueError && (
                 <Alert
                   color={'red'}
@@ -229,6 +305,7 @@ export const ApiKeysSection = ({
                 </Button>
                 <Button
                   loading={issuing}
+                  disabled={!!prefixError}
                   onClick={() => void issue()}
                 >
                   Create

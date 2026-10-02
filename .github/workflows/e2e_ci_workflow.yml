@@ -53,13 +53,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Resolve worker API URL
+        id: resolve-api
+        env:
+          API_URL: ${{ (github.event.deployment.environment == 'Production' || github.ref_name == 'main') && secrets.DEADROP_API_URL || secrets.DEADROP_ALPHA_API_URL }}
+        run: echo "api_url=$API_URL" >> "$GITHUB_OUTPUT"
+
       - name: Build CLI binary (Bun)
         # bun-build.ts bakes all six via `define` and asserts all six are set.
         # URLs + the Clerk publishable key are non-secret, so they live as
         # repo-level vars (the env-scoped NEXT_PUBLIC_* copies aren't readable
         # here — this job deliberately has no `environment:`).
         env:
-          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          DEADROP_API_URL:  ${{ steps.resolve-api.outputs.api_url }}
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
           DEADROP_APP_URL: ${{ vars.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ vars.CLERK_PUBLISHABLE_KEY }}
@@ -109,7 +115,7 @@ jobs:
       - name: Run cross-platform e2e tests
         env:
           XPLAT_BASE_URL: ${{ env.XPLAT_BASE_URL }}
-          DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
+          DEADROP_API_URL:  ${{ steps.resolve-api.outputs.api_url }}
           TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
           TURN_PWD: ${{ secrets.TURN_PWD }}
           # Source of truth for the test token: read it from Redis, fallback to local

@@ -1,5 +1,8 @@
 import { createSecretsHelpers } from '@shared/db/secrets';
-import { VaultInjectOptions } from '@shared/lib/vault-tokens';
+import {
+  resolveInjectedNames,
+  VaultInjectOptions,
+} from '@shared/lib/vault-tokens';
 import { VaultDBConfig } from '@shared/types/config';
 import { randomBytes } from 'crypto';
 import { initDBClient } from 'db/init';
@@ -246,7 +249,12 @@ function shapeSecrets(
 
   const wanted = requested ?? claims.only;
 
-  let shaped = secrets;
+  // Issuance rejects this now, but a key stamped before that rule would
+  // otherwise inject nothing and exit 0.
+  if (wanted && !wanted.length) {
+    logError('This API key names no secrets to inject.');
+    process.exit(1);
+  }
 
   if (wanted) {
     const missing = wanted.filter((name) => !(name in secrets));
@@ -256,10 +264,6 @@ function shapeSecrets(
       logError(`Not in this environment: ${missing.join(', ')}`);
       process.exit(1);
     }
-
-    shaped = Object.fromEntries(
-      wanted.map((name) => [name, secrets[name]]),
-    );
   }
 
   if (claims.prefix && prefix && prefix !== claims.prefix)
@@ -267,17 +271,15 @@ function shapeSecrets(
       `Ignoring --prefix: this API key applies '${claims.prefix}'.`,
     );
 
-  const resolvedPrefix = claims.prefix ?? prefix;
+  // Shared with the desktop preview, so what it shows is what lands here.
+  const injected = resolveInjectedNames(
+    wanted ?? Object.keys(secrets),
+    { prefix: claims.prefix ?? prefix },
+  );
 
-  if (resolvedPrefix)
-    shaped = Object.fromEntries(
-      Object.entries(shaped).map(([name, value]) => [
-        `${resolvedPrefix}${name}`,
-        value,
-      ]),
-    );
-
-  return shaped;
+  return Object.fromEntries(
+    injected.map(([stored, name]) => [name, secrets[stored]]),
+  );
 }
 
 export async function inject(

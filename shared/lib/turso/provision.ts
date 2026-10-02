@@ -11,6 +11,10 @@ import { VaultTokenAccess } from '../constants';
 import { createLifecycleHandlers } from './lifecycle';
 import { TURSO_DB_GROUP, TURSO_DB_SIZE_LIMIT } from './utils';
 
+type CreateVaultOptions = {
+  seed?: 'database_upload';
+};
+
 export const createProvisionHandlers = (client: TursoClient) => {
   const { deleteVault } = createLifecycleHandlers(client);
 
@@ -28,7 +32,7 @@ export const createProvisionHandlers = (client: TursoClient) => {
 
   const createVault = async (
     vaultName: string,
-    seed?: 'database_upload',
+    { seed }: CreateVaultOptions = {},
   ) => {
     const body: CreateDatabaseRequest = {
       name: vaultName,

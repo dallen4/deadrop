@@ -7,8 +7,7 @@ Node.js CLI published to npm as `deadrop`. Reuses `shared/` for crypto, XState m
 ```bash
 pnpm build      # esbuild → dist/deadrop.js
 pnpm test       # Vitest unit tests
-pnpm package    # nexe standalone binary (macOS, Linux, Windows)
-pnpm compile    # build + package
+pnpm compile    # Bun standalone binary (macOS, Linux, Windows)
 pnpm release    # build + npm publish
 ```
 
@@ -63,6 +62,7 @@ deadrop vault env add   # Add a new environment (fresh key) to the active vault
 deadrop secret add      # Add secret to vault
 deadrop secret remove
 deadrop apiKeys create  # Issue a CI key scoped to one cloud vault + environment
+                        # (--only/--prefix bake inject shaping into the key's claims)
 ```
 
 ## Key Patterns
@@ -103,7 +103,7 @@ deadrop apiKeys create  # Issue a CI key scoped to one cloud vault + environment
 esbuild compiles `index.ts` → `dist/deadrop.js`:
 - Target: Node.js, CommonJS output
 - External: native modules that can't be bundled
-- nexe wraps `dist/deadrop.js` into platform-specific binaries
+- `scripts/bun-build.ts` compiles platform-specific binaries with Bun
 
 ## TypeScript Config
 

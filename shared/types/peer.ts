@@ -1,10 +1,10 @@
 export type IceServerCredentials = {
-  username?: string;
+  username: string;
   credential: string;
 };
 
 export type IceServerConfigurationItem = {
-  urls: string;
-} & IceServerCredentials;
+  urls: string[];
+} & Partial<IceServerCredentials>;
 
 export type IceServerConfiguration = IceServerConfigurationItem[];

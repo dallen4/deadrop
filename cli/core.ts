@@ -290,6 +290,7 @@ use it as DEADROP_API_KEY with 'deadrop inject --ci'`,
   .option(
     '--only <names>',
     `comma-separated secrets this key injects (default: the whole environment)
+shapes what 'inject' writes; it does not limit what the key can read
 a run may narrow this further with 'inject --only', never widen it`,
     (value: string) =>
       value

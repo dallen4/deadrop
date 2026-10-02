@@ -263,7 +263,7 @@ Run a command with a vault's secrets injected directly into its environment. Sec
 | `--refresh-token`         | Mint a fresh read-only Turso token before running, instead of reusing a cached one.        |
 | `--ci`                    | Authenticate with a `DEADROP_API_KEY` instead of your signed-in session. See below.        |
 | `--no-sync`               | Read a cloud vault directly instead of replicating it locally. Needed for read-only tokens. |
-| `--only <names>`          | Inject only these secrets, comma-separated. Errors on a name the environment doesn't have. |
+| `--only <names>`          | Inject only these secrets, comma-separated. Errors on a name the environment doesn't have, or one the API key doesn't permit. |
 | `--prefix <prefix>`       | Prepend this to every injected variable name, e.g. `--prefix VITE_`.                        |
 | `--verbose`               | Log the names of injected variables. Values are never logged.                              |
 
@@ -316,9 +316,15 @@ deadrop apiKeys create -v my-app -e production
 | ------------------------- | -------------------------------------------------------------------- |
 | `-v, --vault <name>`      | Cloud vault to scope the key to (prompts to select when omitted).    |
 | `-e, --environment <env>` | Environment to scope the key to (prompts to select when omitted).    |
+| `--only <names>`          | Comma-separated secrets this key injects. Defaults to the whole environment. |
+| `--prefix <prefix>`       | Prepend this to every variable name the key injects.                 |
 | `-y, --yes`               | Skip the confirmation prompt.                                        |
 | `--copy`                  | Copy the key to your clipboard without displaying it.                |
 | `--print`                 | Write the key to stdout so it can be piped.                          |
+
+`--only` and `--prefix` travel with the key, so a pipeline sets `DEADROP_API_KEY` and gets the right variables under the right names without repeating the flags at every call site. A run can narrow what the key allows but never widen it: [`inject --only`](#inject) may pick a subset of the key's list, and naming anything outside it fails. An `inject --prefix` that disagrees with the key's warns and the key's prefix is used.
+
+Both shape what `inject` writes into the process; neither limits what the key can read. Secrets never pass through our servers, so the filtering happens on your machine. What separates environments is that each has its own encryption key, so a key issued for `production` cannot decrypt anything from `development`. Secret and environment names are stored unencrypted and stay visible across environments, the same way a committed `.env.example` lists names without values.
 
 Only cloud vaults are offered — a key mints sync tokens for a remote database, so a local-only vault has nothing for it to authorize.
 

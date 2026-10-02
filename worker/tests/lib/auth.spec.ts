@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AuthScopes } from '@shared/config/plans';
 import { ListApiKeysQuerySchema } from '../../src/lib/auth';
+import { ScopeToClaimValidator } from '../../src/lib/middleware';
 
 const target = { vaultName: 'demo', environment: 'production' };
 
@@ -29,7 +30,9 @@ describe('ListApiKeysQuerySchema', () => {
   });
 
   it('treats scopes as optional', () => {
-    expect(ListApiKeysQuerySchema.parse(target).scopes).toBeUndefined();
+    expect(
+      ListApiKeysQuerySchema.parse(target).scopes,
+    ).toBeUndefined();
   });
 
   it('rejects a scope outside the known set', () => {
@@ -48,6 +51,46 @@ describe('ListApiKeysQuerySchema', () => {
     expect(
       ListApiKeysQuerySchema.safeParse({ environment: 'production' })
         .success,
+    ).toBe(false);
+  });
+});
+
+describe('ScopeToClaimValidator', () => {
+  const claims = {
+    vaultName: 'hash13-demo',
+    environment: 'production',
+  };
+
+  it('verifies a well-formed claim', () => {
+    expect(
+      ScopeToClaimValidator[AuthScopes.VaultInject].safeParse({
+        ...claims,
+        only: ['DB_URL'],
+        prefix: 'PROD_',
+      }).success,
+    ).toBe(true);
+  });
+
+  // Mirrors issuance on purpose. If this ever has to accept something
+  // POST /auth/keys refuses, verification needs its own schema — a live
+  // key failing here surfaces as "missing necessary scopes".
+  it.each([{ only: [] }, { prefix: '' }])(
+    'refuses %j, exactly as issuance does',
+    (options) => {
+      expect(
+        ScopeToClaimValidator[AuthScopes.VaultInject].safeParse({
+          ...claims,
+          ...options,
+        }).success,
+      ).toBe(false);
+    },
+  );
+
+  it('refuses claims missing the vault target', () => {
+    expect(
+      ScopeToClaimValidator[AuthScopes.VaultInject].safeParse({
+        prefix: 'PROD_',
+      }).success,
     ).toBe(false);
   });
 });

@@ -8,7 +8,7 @@
     "start": "wrangler dev"
   },
   "devDependencies": {
-    "wrangler": "^3.99.0"
+    "wrangler": "^4.135.0"
   },
   "dependencies": {
     "@clerk/backend": "^3.11.5",
