@@ -43,9 +43,9 @@ const accountId = () => process.env.CLOUDFLARE_ACCOUNT_ID!;
 
 const namespaceId = () => process.env.CLOUDFLARE_KV_NAMESPACE_ID!;
 
-const kvConfig = () => ({
+const kvConfig = (namespace = namespaceId()) => ({
   account_id: accountId(),
-  namespace_id: namespaceId(),
+  namespace_id: namespace,
 });
 
 export const getKeyValue = async (
@@ -64,8 +64,15 @@ export const getKeyValue = async (
   return resolvedValue;
 };
 
-export const setKeyValue = async (key: string, value: string) =>
-  getKv().namespaces.values.update(key, { value, ...kvConfig() });
+export const setKeyValue = async (
+  key: string,
+  value: string,
+  namespace?: string,
+) =>
+  getKv().namespaces.values.update(key, {
+    value,
+    ...kvConfig(namespace),
+  });
 
 export const deleteKeyValue = async (key: string) =>
   getKv().namespaces.values.delete(key, kvConfig());
