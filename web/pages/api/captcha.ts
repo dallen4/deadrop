@@ -3,7 +3,7 @@ import { runMiddleware } from 'api/middleware';
 import { cors } from 'api/middleware/cors';
 import { verifyCaptcha } from 'api/captcha';
 import { TEST_TOKEN_COOKIE } from '@shared/tests/http';
-import { verifyTestToken } from 'tests/e2e/util';
+import { verifyTestToken } from '@shared/tests/token';
 
 export default async function verifyCatpcha(
   req: NextApiRequest,

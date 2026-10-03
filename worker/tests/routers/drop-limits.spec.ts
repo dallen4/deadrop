@@ -29,7 +29,6 @@ const drop = async (userId?: string) => {
   const app = hono()
     .use(async (c, next) => {
       c.set('ipAddress', '203.0.113.7');
-      c.set('redis', { get: async () => null } as never);
       if (userId) c.set('userId', userId);
       await next();
     })
@@ -42,7 +41,8 @@ const drop = async (userId?: string) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: 'peer_1' }),
     },
-    {},
+    // The route reads the binding off env, not the request context.
+    { DROP_STORE: { get: async () => null } },
   );
 };
 

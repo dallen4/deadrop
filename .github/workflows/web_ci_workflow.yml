@@ -32,8 +32,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEPLOY_SHA: ${{ github.event.deployment.sha }}
           DEADROP_API_URL: ${{ github.event.deployment.environment == 'Production' && secrets.DEADROP_API_URL || secrets.DEADROP_ALPHA_API_URL }}
-          REDIS_REST_URL: ${{ secrets.REDIS_REST_URL }}
-          REDIS_REST_TOKEN: ${{ secrets.REDIS_REST_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
           # Payment/Clerk test creds: repo-level TEST_* secrets holding the
           # Preview values (auth specs run on Preview/alpha only — see below).
           STRIPE_SECRET_KEY: ${{ secrets.TEST_STRIPE_SECRET_KEY }}

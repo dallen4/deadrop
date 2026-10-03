@@ -16,7 +16,7 @@ export default defineConfig({
     setupFiles: ['dotenv/config'],
     testTimeout: 90_000,
     hookTimeout: 30_000,
-    // One flow at a time: the drop token is a single shared Redis key and
+    // One flow at a time: the drop token is a single shared cache key and
     // WebRTC peers are chatty. Keeps the first proof deterministic.
     fileParallelism: false,
     pool: 'forks',

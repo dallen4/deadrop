@@ -2,7 +2,7 @@ import { clerkMiddleware } from '@clerk/hono';
 import { requestId } from 'hono/request-id';
 import { AppRoutes } from './constants';
 import { hono, Middleware } from './lib/http/core';
-import { cors, redis, tracing } from './lib/middleware';
+import { cors, tracing } from './lib/middleware';
 import authRouter from './routers/auth';
 import peersRouter from './routers/peers';
 import dropRouter from './routers/drop';
@@ -14,7 +14,6 @@ api.use(cors());
 api.use(tracing());
 api.use(requestId());
 api.use(clerkMiddleware() as Middleware);
-api.use(redis());
 
 export const app = api
   .get(AppRoutes.Root, (c) =>

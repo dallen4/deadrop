@@ -2,7 +2,6 @@ import {
   TEST_FLAG_COOKIE,
   TEST_TOKEN_COOKIE,
   TEST_TOKEN_HEADER,
-  testTokenKey,
 } from '@shared/tests/http';
 import {
   Browser,
@@ -12,7 +11,7 @@ import {
   test as base,
 } from '@playwright/test';
 import { apiURL, baseURL, isLocal } from './config';
-import { getRedis } from 'api/redis';
+import { getTestToken } from '@shared/tests/token';
 
 type BrowserName = PlaywrightWorkerOptions['browserName'];
 
@@ -30,21 +29,6 @@ export const test = base.extend<TestOptions>({
 
 let testToken: string | null = null;
 
-const getTestToken = async () => getRedis().get<string>(testTokenKey);
-
-export const getOrCreateTestToken = async () => {
-  if (!testToken)
-    testToken = process.env.TEST_TOKEN ?? (await getTestToken());
-
-  return testToken;
-};
-
-export const verifyTestToken = async (token: string) => {
-  const fetchedToken = await getTestToken();
-
-  return fetchedToken && fetchedToken === token ? true : false;
-};
-
 export const createContextForBrowser = async (
   browser: Browser,
   options?: BrowserContextOptions,
@@ -54,7 +38,7 @@ export const createContextForBrowser = async (
     bypassCSP: true,
   });
 
-  if (!testToken) testToken = await getOrCreateTestToken();
+  if (!testToken) testToken = await getTestToken();
 
   await context.addCookies([
     {
@@ -121,7 +105,8 @@ export const createPeerPage = async (
   browserTypes: Record<NonNullable<BrowserName>, BrowserType>,
   browserType?: BrowserName,
 ) => {
-  if (browserType) return createPageForBrowser(browserTypes[browserType]);
+  if (browserType)
+    return createPageForBrowser(browserTypes[browserType]);
 
   const context = await createContextForBrowser(browser);
 

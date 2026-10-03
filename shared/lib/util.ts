@@ -28,4 +28,3 @@ export const generateGrabUrl = (url: string, id: string) => {
   return `${baseUrl.toString()}?${params.toString()}`;
 };
 
-export const formatDropKey = (id: string) => `drop:${id}`;

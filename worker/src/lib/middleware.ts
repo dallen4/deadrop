@@ -4,7 +4,6 @@ import { SERVICE_TOKEN_HEADER } from '@shared/lib/constants';
 import { AuthScopes, FeatureSlug } from '@shared/config/plans';
 import { getPlanLimits, hasFeature, isExperimental } from './billing';
 import { TEST_TOKEN_HEADER } from '@shared/tests/http';
-import { Redis } from '@upstash/redis/cloudflare';
 import { cors as baseCors } from 'hono/cors';
 import { createMiddleware } from 'hono/factory';
 import { AppHeaders } from '../constants';
@@ -72,19 +71,13 @@ export const cors = (): Middleware =>
     credentials: true,
   });
 
-export const redis = () =>
-  createMiddleware<HonoCtx>(async (c, next) => {
-    const redisClient = Redis.fromEnv(c.env);
-    c.set('redis', redisClient);
-
-    await next();
-  });
-
 type AuthOptions = {
   allowApiKey?: boolean;
   // When set, the caller's plan must grant this feature. Optional because
   // some routes authenticate without gating (e.g. reading vault metadata).
   feature?: FeatureSlug;
+  // Defaults true: opt out only where anonymous callers are intended.
+  required?: boolean;
 };
 
 type ApiKeyOptions = {
@@ -112,7 +105,9 @@ const grantedByMetadata = async (
 };
 
 export const authenticated = (
-  { allowApiKey, feature }: AuthOptions = { allowApiKey: false },
+  { allowApiKey, feature, required = true }: AuthOptions = {
+    allowApiKey: false,
+  },
 ) =>
   createMiddleware<HonoCtx>(async (c, next) => {
     // acceptsToken arrays don't narrow (m2m_token stays in the union,
@@ -131,9 +126,9 @@ export const authenticated = (
     // check covers signed-out, invalid, and userless tokens
     const userId = allowed ? auth.userId : null;
 
-    if (!userId) return c.json(NotAuthenticated, 401);
+    if (!userId && required) return c.json(NotAuthenticated, 401);
 
-    c.set('userId', userId);
+    c.set('userId', userId ?? undefined);
 
     // An API key *does* carry claims, but they are the ones stamped at
     // issuance (vaultName, environment) — not Clerk Billing's pla/fea. So
@@ -216,7 +211,7 @@ export const apiKey = ({ scopes }: ApiKeyOptions) => {
           'API key missing necessary scopes!',
         );
 
-      c.set('userId', userId);
+      c.set('userId', userId ?? undefined);
       c.set('claims', keyDetails.claims ?? undefined);
     } catch (err) {
       return isCallerFault(err)
