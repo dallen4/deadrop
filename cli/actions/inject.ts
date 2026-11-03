@@ -1,5 +1,6 @@
 import { createSecretsHelpers } from '@shared/db/secrets';
 import {
+  blockedInjectNames,
   resolveInjectedNames,
   VaultInjectOptions,
 } from '@shared/lib/vault-tokens';
@@ -31,6 +32,7 @@ type InjectOptions = {
   only?: string;
   prefix?: string;
   sync?: boolean;
+  allowEnv?: string;
 };
 
 type ResolvedVault = {
@@ -228,7 +230,11 @@ async function parseVaultFromOptions(options: InjectOptions) {
 // a --prefix that disagrees with the key's loses.
 function shapeSecrets(
   secrets: Record<string, string>,
-  { only, prefix }: Pick<InjectOptions, 'only' | 'prefix'>,
+  {
+    only,
+    prefix,
+    allowEnv,
+  }: Pick<InjectOptions, 'only' | 'prefix' | 'allowEnv'>,
   claims: VaultInjectOptions = {},
 ) {
   const requested = only
@@ -276,6 +282,19 @@ function shapeSecrets(
     wanted ?? Object.keys(secrets),
     { prefix: claims.prefix ?? prefix },
   );
+
+  const blocked = blockedInjectNames(
+    injected.map(([, name]) => name),
+    allowEnv?.split(',').map((name) => name.trim()),
+  );
+
+  if (blocked.length) {
+    logError(
+      `Refusing to inject ${blocked.join(', ')}: these control how the ` +
+        `command loads code. Pass --allow-env ${blocked.join(',')} if intended.`,
+    );
+    process.exit(1);
+  }
 
   return Object.fromEntries(
     injected.map(([stored, name]) => [name, secrets[stored]]),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  blockedInjectNames,
   resolveInjectedNames,
   VaultInjectOptionsSchema,
 } from '../../lib/vault-tokens';
@@ -59,5 +60,33 @@ describe('resolveInjectedNames', () => {
     expect(resolveInjectedNames(['DB_URL'], {})).toEqual([
       ['DB_URL', 'DB_URL'],
     ]);
+  });
+});
+
+describe('blockedInjectNames', () => {
+  it('flags variables that change how a process loads code', () => {
+    expect(
+      blockedInjectNames([
+        'API_URL',
+        'NODE_OPTIONS',
+        'LD_PRELOAD',
+        'DYLD_INSERT_LIBRARIES',
+        'PATH',
+        'GIT_SSH_COMMAND',
+        'DATABASE_URL',
+      ]),
+    ).toEqual([
+      'NODE_OPTIONS',
+      'LD_PRELOAD',
+      'DYLD_INSERT_LIBRARIES',
+      'PATH',
+      'GIT_SSH_COMMAND',
+    ]);
+  });
+
+  it('lets explicitly allowed names through', () => {
+    expect(
+      blockedInjectNames(['NODE_OPTIONS'], ['NODE_OPTIONS']),
+    ).toEqual([]);
   });
 });

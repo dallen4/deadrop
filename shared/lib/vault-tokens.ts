@@ -20,6 +20,20 @@ export const VaultInjectOptionsSchema = z.object({
   only: z.array(z.string().min(1)).min(1).optional(),
 });
 
+// Variables that change how the spawned process loads code. Vault rows can
+// be written by someone else (a shared vault), so these never ride along
+// unless the user names them explicitly.
+const LOADER_ENV_NAME =
+  /^(NODE_OPTIONS|NODE_PATH|LD_.+|DYLD_.+|BASH_ENV|ENV|PATH|PYTHON(PATH|STARTUP|HOME)|PERL5(OPT|LIB)|RUBYOPT|RUBYLIB|GIT_.+|SHELLOPTS|PS4|IFS)$/;
+
+export const blockedInjectNames = (
+  names: string[],
+  allowed: string[] = [],
+) =>
+  names.filter(
+    (n) => LOADER_ENV_NAME.test(n) && !allowed.includes(n),
+  );
+
 // Pairs so a caller zipping values back cannot desync from the names.
 export function resolveInjectedNames(
   available: string[],
