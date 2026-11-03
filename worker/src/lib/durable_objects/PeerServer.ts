@@ -18,7 +18,14 @@ export class PeerServerDO implements DurableObject {
     const id = url.searchParams.get('id');
     const token = url.searchParams.get('token');
 
-    if (!id || !token) return new Response(null, { status: 400 });
+    // PeerJS's own id rule; peers relay and print each other's ids.
+    if (
+      !id ||
+      !token ||
+      id.length > 64 ||
+      !/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/.test(id)
+    )
+      return new Response(null, { status: 400 });
 
     const { 0: wsClient, 1: wsServer } = new WebSocketPair();
 
