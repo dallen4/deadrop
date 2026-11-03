@@ -9,6 +9,8 @@ export { createLifecycleHandlers } from './lifecycle';
 export { createProvisionHandlers } from './provision';
 export {
   DEFAULT_VAULT_NAME,
+  InvalidVaultNameError,
+  VAULT_NAME_PATTERN,
   fileUrl,
   syncUrl,
   syncUrlToHttps,

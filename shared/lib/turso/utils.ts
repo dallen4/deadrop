@@ -50,12 +50,29 @@ export const TURSO_DB_SIZE_LIMIT = '100mb';
 export const vaultPrefixFromUserId = async (userId: string) =>
   `${await userIdToIndex(userId)}-`;
 
+// Turso's own naming rule. Also what keeps a name from escaping the
+// caller's prefix: '/' or '..' would resolve away in a URL path.
+export const VAULT_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+
+export class InvalidVaultNameError extends Error {
+  constructor(name: string) {
+    super(
+      `Invalid vault name '${name}': ` +
+        'use lowercase letters, numbers and dashes.',
+    );
+    this.name = 'InvalidVaultNameError';
+  }
+}
+
 export const vaultNameFromUserId = async (
   userId: string,
   vaultName: string = DEFAULT_VAULT_NAME,
 ) => {
   const userIndex = await userIdToIndex(userId);
   const name = vaultName.trim() || DEFAULT_VAULT_NAME;
+
+  if (!VAULT_NAME_PATTERN.test(name))
+    throw new InvalidVaultNameError(name);
 
   return [userIndex, name].join('-').substring(0, 63);
 };

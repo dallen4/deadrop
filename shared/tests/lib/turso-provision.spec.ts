@@ -49,3 +49,32 @@ describe('createVaultToken', () => {
     ).toBe('a-jwt');
   });
 });
+
+describe('path encoding', () => {
+  it('encodes the database name as one path segment', async () => {
+    const { post, handlers } = stubClient();
+
+    await handlers.createVaultToken(
+      'a/../b',
+      VaultTokenAccess.ReadOnly,
+    );
+
+    expect(post).toHaveBeenCalledWith(
+      '/a%2F..%2Fb/auth/tokens?authorization=read-only',
+    );
+  });
+
+  it('keeps the expiration from injecting query params', async () => {
+    const { post, handlers } = stubClient();
+
+    await handlers.createVaultToken(
+      'my-vault',
+      VaultTokenAccess.ReadOnly,
+      '5m&authorization=full-access',
+    );
+
+    expect(post).toHaveBeenCalledWith(
+      '/my-vault/auth/tokens?authorization=read-only&expiration=5m%26authorization%3Dfull-access',
+    );
+  });
+});
