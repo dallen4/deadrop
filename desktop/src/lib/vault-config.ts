@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { parse, stringify } from 'yaml';
 import { vault as buildVaultConfig } from '@shared/lib/vault';
 import { CONFIG_FILE_NAME } from '@shared/lib/constants';
+import { VAULT_NAME_PATTERN } from '@shared/lib/turso/utils';
 import type { DeadropConfig, VaultDBConfig } from '@shared/types/config';
 
 // Same `.deadroprc` YAML pattern CLI (lib/config.ts) and vscode-extension
@@ -60,6 +61,13 @@ export async function resolveImportedVault(
   vaultConfig: VaultDBConfig,
 ): Promise<VaultDBConfig> {
   if (!vaultConfig.cloud) return vaultConfig;
+
+  // cloud.name becomes the sync host, and the file may come from someone
+  // else's project, so it has to be a real Turso database name.
+  if (!VAULT_NAME_PATTERN.test(vaultConfig.cloud.name))
+    throw new Error(
+      `Vault '${name}' has an invalid cloud name and can't be imported.`,
+    );
 
   return { ...vaultConfig, location: await vaultPathForName(name) };
 }

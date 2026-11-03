@@ -105,7 +105,7 @@ describe('saveGrabbedVault', () => {
     });
   });
 
-  it('falls back to the remote name when the rename prompt is blank', async () => {
+  it('falls back to a free suffixed name when the rename prompt is blank', async () => {
     const { findConfig, saveConfig } = await import('lib/config');
     const { input } = await import('@inquirer/prompts');
     const { saveGrabbedVault } = await import('logic/vault-grab');
@@ -126,7 +126,44 @@ describe('saveGrabbedVault', () => {
 
     const [, config] = vi.mocked(saveConfig).mock.calls[0];
 
-    expect(config.vaults['a1b2c3d4e5f67-acme']).toBeDefined();
+    expect(config.vaults['acme-2']).toBeDefined();
+    expect(config.vaults.acme.location).toBe('/proj/acme.db');
+  });
+
+  it('never overwrites an existing vault via the share’s cloud name', async () => {
+    const { findConfig, saveConfig } = await import('lib/config');
+    const { input } = await import('@inquirer/prompts');
+    const { saveGrabbedVault } = await import('logic/vault-grab');
+
+    vi.mocked(findConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'acme', environment: 'development' },
+        vaults: {
+          acme: { location: '/proj/acme.db', environments: {} },
+          personal: {
+            location: '/proj/personal.db',
+            environments: { production: 'my-key' },
+          },
+        },
+      },
+      filepath: '/proj/.deadroprc',
+      isEmpty: false,
+    } as any);
+    vi.mocked(input)
+      .mockResolvedValueOnce('personal')
+      .mockResolvedValueOnce('');
+
+    await saveGrabbedVault('acme', {
+      ...share,
+      cloud: { ...share.cloud, name: 'personal' },
+    });
+
+    const [, config] = vi.mocked(saveConfig).mock.calls[0];
+
+    expect(config.vaults.personal.environments).toEqual({
+      production: 'my-key',
+    });
+    expect(config.vaults['acme-2']).toBeDefined();
   });
 
   it('prompts for a scope when no config exists anywhere', async () => {

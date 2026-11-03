@@ -39,18 +39,30 @@ const resolveTarget = async (): Promise<Target> => {
 // existing vault's environment keys.
 const resolveName = async (
   name: string,
-  vault: SharedVault,
   existing: DeadropConfig | null,
 ): Promise<string> => {
-  if (!existing?.vaults?.[name]) return name;
+  const taken = (candidate: string) =>
+    !!existing?.vaults?.[candidate];
 
-  const answer = await input({
-    message:
-      `A vault named '${name}' already exists. ` +
-      `New name (blank uses '${vault.cloud.name}'):`,
-  });
+  if (!taken(name)) return name;
 
-  return answer.trim() || vault.cloud.name;
+  // The fallback is derived from the share's own name, never its
+  // cloud.name, so a dropper can't steer it onto an existing vault.
+  let fallback = `${name}-2`;
+  for (let i = 3; taken(fallback); i++) fallback = `${name}-${i}`;
+
+  for (;;) {
+    const answer = (
+      await input({
+        message:
+          `A vault named '${name}' already exists. ` +
+          `New name (blank uses '${fallback}'):`,
+      })
+    ).trim();
+
+    if (!answer) return fallback;
+    if (!taken(answer)) return answer;
+  }
 };
 
 export async function saveGrabbedVault(
@@ -59,7 +71,7 @@ export async function saveGrabbedVault(
 ): Promise<void> {
   const { dir, config } = await resolveTarget();
 
-  const finalName = await resolveName(name, vault, config);
+  const finalName = await resolveName(name, config);
   const [firstEnv] = Object.keys(vault.environments);
 
   const next: DeadropConfig = {

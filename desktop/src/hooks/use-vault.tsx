@@ -359,7 +359,11 @@ export const useVault = () => {
   };
 
   // Throws rather than setting error state; the grab UI reports inline.
+  // Never replaces an existing entry: that would drop its env keys.
   const adoptVault = async (name: string, shared: SharedVault) => {
+    if (config?.vaults[name])
+      throw new Error(`A vault named '${name}' already exists.`);
+
     const [firstEnv] = Object.keys(shared.environments);
     const next: DeadropConfig = {
       active_vault: { name, environment: firstEnv ?? 'development' },
