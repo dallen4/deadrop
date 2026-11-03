@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { SignedIn, SignedOut, SignIn, useClerk } from '@clerk/nextjs';
 import { IconX } from '@tabler/icons-react';
 import { MainWrapper } from 'atoms/MainWrapper';
+import { parseLoopbackRedirect } from 'lib/loopback';
 
 const PLATFORMS: Record<string, string> = {
   cli: 'CLI',
@@ -14,9 +15,14 @@ const PLATFORMS: Record<string, string> = {
 const PlatformAuth = () => {
   const clerk = useClerk();
   const router = useRouter();
-  const { platform, redirectUrl } = router.query;
+  const { platform, redirectUrl, state } = router.query;
 
   const platformKey = typeof platform === 'string' ? platform : '';
+
+  const retryQuery = new URLSearchParams({
+    redirectUrl: typeof redirectUrl === 'string' ? redirectUrl : '',
+    state: typeof state === 'string' ? state : '',
+  });
   const label = PLATFORMS[platformKey] ?? platformKey;
 
   const notifyError = (message: string) =>
@@ -28,6 +34,15 @@ const PlatformAuth = () => {
     });
 
   const getTokenAndRedirect = async () => {
+    const localhostRedirect = parseLoopbackRedirect(redirectUrl);
+
+    if (!localhostRedirect) {
+      notifyError(
+        'Invalid redirect URL, restart the sign-in from your device.',
+      );
+      return;
+    }
+
     const sessionToken = await clerk.session!.getToken();
 
     if (!sessionToken) {
@@ -52,20 +67,9 @@ const PlatformAuth = () => {
       return;
     }
 
-    if (typeof redirectUrl !== 'string') {
-      notifyError('Missing redirect URL, restart the sign-in from your device.');
-      return;
-    }
-
-    let localhostRedirect: URL;
-    try {
-      localhostRedirect = new URL(redirectUrl);
-    } catch {
-      notifyError(`Invalid redirect URL: ${redirectUrl}`);
-      return;
-    }
-
     localhostRedirect.searchParams.set('token', payload.token);
+    if (typeof state === 'string')
+      localhostRedirect.searchParams.set('state', state);
 
     window.location.href = localhostRedirect.href;
   };
@@ -80,7 +84,9 @@ const PlatformAuth = () => {
       <SignedOut>
         <SignIn
           routing={'hash'}
-          forceRedirectUrl={`/auth/${platformKey}?redirectUrl=${redirectUrl}`}
+          forceRedirectUrl={`/auth/${encodeURIComponent(
+            platformKey,
+          )}?${retryQuery}`}
         />
       </SignedOut>
       <SignedIn>
