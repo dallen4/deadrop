@@ -8,6 +8,7 @@ import {
 } from './types';
 import { getSessionToken, hasCloudAccess } from './auth/clerk';
 import { getNonce } from './lib/nonce';
+import { plainNotification } from './lib/notify';
 import { loadConfig, saveConfig } from './lib/config';
 import {
   openVaultHelpers,
@@ -128,10 +129,14 @@ export class VaultPanel {
             await this._onDeleteSecret(msg.name, msg.environment);
             break;
           case VaultExtensionMessageType.OnInfo:
-            vscode.window.showInformationMessage(msg.message);
+            vscode.window.showInformationMessage(
+              plainNotification(msg.message),
+            );
             break;
           case VaultExtensionMessageType.OnError:
-            vscode.window.showErrorMessage(msg.message);
+            vscode.window.showErrorMessage(
+              plainNotification(msg.message),
+            );
             break;
         }
       },
@@ -193,7 +198,7 @@ export class VaultPanel {
   }
 
   private _sendError(operation: string, message: string) {
-    vscode.window.showErrorMessage(message);
+    vscode.window.showErrorMessage(plainNotification(message));
     this.sendMessage({
       type: VaultWebviewMessageType.OperationError,
       operation,
