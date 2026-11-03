@@ -298,4 +298,39 @@ describe('createDropHandlers (multidrop)', () => {
       GrabberStatus.Failed,
     );
   });
+  it('refuses connections past maxGrabbers so only one peer gets the payload', async () => {
+    const { ctx, fakePeer } = await setup(1);
+
+    const connA = createFakeConnection('grabber-a');
+    const connB = createFakeConnection('grabber-b');
+
+    fakePeer.connect(connA.connection);
+    fakePeer.connect(connB.connection);
+
+    expect(ctx.grabbers.has('grabber-a')).toBe(true);
+    expect(ctx.grabbers.has('grabber-b')).toBe(false);
+    expect(connB.connection.close).toHaveBeenCalled();
+
+    const grabberB = await grabberHandshake(
+      await exportKey(ctx.keyPair!.publicKey),
+    );
+    await connB.emitData({
+      type: MessageType.Handshake,
+      input: grabberB.publicKeyExport,
+    });
+
+    expect(connB.connection.send).not.toHaveBeenCalled();
+  });
+
+  it('refuses new connections after stopAccepting', async () => {
+    const { ctx, fakePeer, handlers } = await setup(null);
+
+    handlers.stopAccepting();
+
+    const late = createFakeConnection('late-grabber');
+    fakePeer.connect(late.connection);
+
+    expect(ctx.grabbers.has('late-grabber')).toBe(false);
+    expect(late.connection.close).toHaveBeenCalled();
+  });
 });
