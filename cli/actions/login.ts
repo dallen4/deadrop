@@ -3,6 +3,7 @@ import { createLocalAuthServer } from 'lib/auth/localhostServer';
 import { LOCALHOST_AUTH_URL, LOGIN_URL } from 'lib/constants';
 import { loader, logDebug, logError, logInfo } from 'lib/log';
 import open from 'open';
+import { randomBytes } from 'crypto';
 
 export default async function login() {
   const clerkClient = await createClerkClient();
@@ -15,10 +16,14 @@ export default async function login() {
     return process.exit(0);
   }
 
-  const { listenForAuthRedirect } = await createLocalAuthServer();
+  const state = randomBytes(16).toString('hex');
+
+  const { listenForAuthRedirect } =
+    await createLocalAuthServer(state);
 
   const newUrl = new URL(LOGIN_URL);
   newUrl.searchParams.set('redirectUrl', LOCALHOST_AUTH_URL);
+  newUrl.searchParams.set('state', state);
 
   const url = newUrl.toString();
 
