@@ -84,6 +84,16 @@ describe('blockedInjectNames', () => {
     ]);
   });
 
+  it('leaves ordinary GIT_ secrets alone', () => {
+    expect(
+      blockedInjectNames([
+        'GIT_TOKEN',
+        'GIT_AUTHOR_NAME',
+        'GITHUB_TOKEN',
+      ]),
+    ).toEqual([]);
+  });
+
   it('lets explicitly allowed names through', () => {
     expect(
       blockedInjectNames(['NODE_OPTIONS'], ['NODE_OPTIONS']),
