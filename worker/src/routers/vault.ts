@@ -84,6 +84,8 @@ const vaultRouter = hono()
       }
     },
   )
+  // API keys may mint too; the name is always derived from the key
+  // owner's userId, so they only ever reach that owner's vaults.
   .post(
     AppRouteParts.Tokens,
     authenticated({

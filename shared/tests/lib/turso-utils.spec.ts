@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TURSO_ORGANIZATION } from '../../lib/constants';
 import {
+  InvalidVaultNameError,
   userOwnsVault,
   vaultNameFromUserId,
   vaultPrefixFromUserId,
@@ -49,5 +50,29 @@ describe('userOwnsVault', () => {
 
     expect(name.endsWith('-default')).toBe(true);
     expect(await userOwnsVault(userId, name)).toBe(true);
+  });
+});
+
+describe('vaultNameFromUserId', () => {
+  it.each([
+    'x/../16c5c842d269c-default',
+    '../other',
+    'a/b',
+    'Work',
+    'a b',
+    'a?b',
+  ])(
+    'rejects %j so it cannot escape the caller’s prefix',
+    async (name) => {
+      await expect(
+        vaultNameFromUserId('user_1', name),
+      ).rejects.toThrow(InvalidVaultNameError);
+    },
+  );
+
+  it('accepts lowercase names with dashes', async () => {
+    const name = await vaultNameFromUserId('user_1', 'my-vault-2');
+
+    expect(name.endsWith('-my-vault-2')).toBe(true);
   });
 });
