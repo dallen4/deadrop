@@ -16,7 +16,7 @@ import {
   VaultNotFoundError,
 } from 'lib/auth/vault-token';
 import { loadConfig, loadConfigFromPath } from 'lib/config';
-import { applyWithheldDotenv } from 'lib/dotenv';
+import { applyWithheldDotenv, withheldDotenvNames } from 'lib/dotenv';
 import { logError, logInfo, logWarning } from 'lib/log';
 import { runWithEnv } from 'lib/process';
 import { tmpdir } from 'os';
@@ -54,7 +54,15 @@ type ResolvedVault = {
 // a misconfigured pipeline fails here instead of silently falling back to an
 // interactive session that has no way to authenticate.
 function assertCiCredentials(options: InjectOptions) {
-  if (!options.ci) return;
+  if (!options.ci) {
+    // Earlier versions read these from .env, so say why they stopped.
+    const ignored = withheldDotenvNames();
+    if (ignored.length)
+      logWarning(
+        `Ignoring ${ignored.join(', ')} from .env, pass --ci to use them.`,
+      );
+    return;
+  }
 
   // --ci is the explicit opt-in to a .env that picks the vault.
   applyWithheldDotenv();

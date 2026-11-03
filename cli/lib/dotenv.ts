@@ -24,6 +24,8 @@ export const loadDotenv = (path?: string) => {
   }
 };
 
+export const withheldDotenvNames = () => Object.keys(withheld);
+
 // Exported values still win over the file, same as the rest of dotenv.
 export const applyWithheldDotenv = () => {
   for (const [key, value] of Object.entries(withheld))
