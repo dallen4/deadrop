@@ -13,6 +13,7 @@ import Head from 'next/head';
 import { description, title } from '@config/app';
 import { SWProvider } from 'contexts/SWContext';
 import { useRouter } from 'next/router';
+import { scrubDropId } from 'lib/telemetry';
 
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
@@ -77,7 +78,14 @@ export default function MyApp(props: AppProps) {
             </Layout>
           </SWProvider>
         </MantineProvider>
-        {!isPreview && <Analytics />}
+        {!isPreview && (
+          <Analytics
+            beforeSend={(event) => ({
+              ...event,
+              url: scrubDropId(event.url),
+            })}
+          />
+        )}
         <SpeedInsights />
       </ClerkProvider>
     </>
