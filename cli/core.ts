@@ -129,6 +129,10 @@ deadrop
     '--prefix <prefix>',
     'prepend this to every injected variable name',
   )
+  .option(
+    '--allow-env <names>',
+    'allow injecting loader variables such as NODE_OPTIONS, comma-separated',
+  )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);
 
