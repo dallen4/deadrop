@@ -329,8 +329,27 @@ export const createDropHandlers = <
     }
   };
 
+  // The machine's canAccept guard only tracks state; this is what actually
+  // keeps a payload from going to more peers than maxGrabbers allows.
+  const canAdmit = (grabberId: string) => {
+    if (!ctx.accepting || ctx.grabbers.has(grabberId)) return false;
+    if (ctx.maxGrabbers == null) return true;
+
+    const inflight = [...ctx.grabbers.values()].filter(
+      (g) => g.status !== GrabberStatus.Failed,
+    ).length;
+
+    return inflight < ctx.maxGrabbers;
+  };
+
   const onConnection = (newConnection: DataConnection) => {
     const grabberId = newConnection.peer;
+
+    if (!canAdmit(grabberId)) {
+      logger.info('Rejected a grab request, drop is not accepting.');
+      newConnection.close();
+      return;
+    }
 
     logger.info(`Grab request received from ${grabberId}!`);
 
