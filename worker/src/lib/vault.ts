@@ -27,8 +27,9 @@ export const VaultTokenSchema = z.object({
   expiration: Expiration.optional(),
 });
 
+// Also parses stored claims, whose resolved `<hash>-name` fits too.
 export const VaultEnvSchema = z.object({
-  vaultName: z.string(),
+  vaultName: VaultName,
   environment: z.string(),
 });
 
