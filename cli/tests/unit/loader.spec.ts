@@ -64,3 +64,13 @@ describe('renderGrabberList', () => {
     expect(text).toContain('1/3 confirmed');
   });
 });
+
+describe('printable', () => {
+  it('escapes terminal control sequences but keeps newlines', async () => {
+    const { printable } = await import('../../lib/log/text');
+
+    expect(printable('a\x1b]52;c;ZHVtbXk=\x07b\nc')).toBe(
+      'a\\x1b]52;c;ZHVtbXk=\\x07b\nc',
+    );
+  });
+});

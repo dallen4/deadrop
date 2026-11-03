@@ -3,6 +3,7 @@ import Ora from 'ora';
 import type { Color } from 'ora';
 import { GrabberStatus } from '@shared/types/drop';
 import type { GrabberRecord } from '@shared/types/drop';
+import { printable } from './text';
 
 export const loader = Ora();
 
@@ -33,7 +34,7 @@ const STATUS_COLOR: Record<GrabberStatus, (msg: string) => string> = {
   [GrabberStatus.Failed]: chalk.red,
 };
 
-const shortPeerId = (peerId: string) => peerId.slice(0, 8);
+const shortPeerId = (peerId: string) => printable(peerId.slice(0, 8));
 
 const elapsedSeconds = (grabber: GrabberRecord) => {
   const end = grabber.confirmedAt ?? Date.now();
