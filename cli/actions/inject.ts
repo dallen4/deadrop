@@ -16,6 +16,7 @@ import {
   VaultNotFoundError,
 } from 'lib/auth/vault-token';
 import { loadConfig, loadConfigFromPath } from 'lib/config';
+import { applyWithheldDotenv } from 'lib/dotenv';
 import { logError, logInfo, logWarning } from 'lib/log';
 import { runWithEnv } from 'lib/process';
 import { tmpdir } from 'os';
@@ -54,6 +55,9 @@ type ResolvedVault = {
 // interactive session that has no way to authenticate.
 function assertCiCredentials(options: InjectOptions) {
   if (!options.ci) return;
+
+  // --ci is the explicit opt-in to a .env that picks the vault.
+  applyWithheldDotenv();
 
   const missing: string[] = [];
 

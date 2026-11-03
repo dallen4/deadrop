@@ -703,6 +703,92 @@ describe('inject', () => {
     );
   });
 
+  const dotenvWithVaultKey = async () => {
+    const { mkdtempSync, writeFileSync } = await import('fs');
+    const { tmpdir } = await import('os');
+    const { join } = await import('path');
+    const { loadDotenv } = await import('lib/dotenv');
+
+    const file = join(mkdtempSync(join(tmpdir(), 'inject-env-')), '.env');
+    writeFileSync(file, 'DEADROP_VAULT_KEY=aes-key\n');
+    loadDotenv(file);
+  };
+
+  it('a .env vault key does not take inject off the config without --ci', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    await dotenvWithVaultKey();
+    process.env.DEADROP_API_KEY = 'sk_test';
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: {
+          default: { location: './vault.db', environments: {} },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(
+      () => undefined as never,
+    );
+
+    await inject(['node'], { override: true });
+
+    expect(loadConfig).toHaveBeenCalled();
+    expect(process.env.DEADROP_VAULT_KEY).toBeUndefined();
+  });
+
+  it('--ci opts in to a vault key from .env', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+    const { mintVaultTokenWithApiKey } =
+      await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    await dotenvWithVaultKey();
+    process.env.DEADROP_API_KEY = 'sk_test';
+
+    vi.mocked(mintVaultTokenWithApiKey).mockImplementation(
+      minted({
+        token: 'ci-token',
+        name: 'a1b2c3d4e5f67-my-app',
+        environment: 'production',
+      }),
+    );
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(
+      () => undefined as never,
+    );
+
+    await inject(['node'], { override: true, ci: true });
+
+    expect(loadConfig).not.toHaveBeenCalled();
+    expect(
+      vi.mocked(createSecretsHelpers).mock.calls[0][0],
+    ).toMatchObject({ environments: { production: 'aes-key' } });
+  });
+
   // An API key's claims are the baseline: --only narrows within them and a
   // disagreeing --prefix loses, so a pipeline cannot widen its own key.
   const injectWithClaims = async (

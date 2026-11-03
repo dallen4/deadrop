@@ -289,6 +289,8 @@ deadrop inject --ci -- pnpm build
 
 Those two variables are all a pipeline needs. `--ci` fails immediately naming whichever one is missing, rather than falling back to an interactive sign-in that can't succeed in a container. The token it mints is read-only and expires in five minutes.
 
+They can also live in a `.env` in the working directory, but `inject` only reads `DEADROP_VAULT_KEY`, `DEADROP_VAULT` and `DEADROP_ENVIRONMENT` from a `.env` when you pass `--ci`. A stray `.env` can't move a normal run off your config.
+
 Pair it with `--no-sync` for a cold read. Building a local replica is itself a write, which a read-only token forbids, so `--no-sync` reads the vault straight over the network instead — there's nothing to keep in sync when the replica is thrown away at the end of the job anyway. The same applies to a vault someone shared with you.
 
 Secrets reach only the command `inject` spawns, so each step that needs them takes its own wrapper. Use `--only` and `--prefix` when one environment serves several jobs — `--only` matches the names as stored, and `--prefix` renames whatever survives the filter:
