@@ -115,7 +115,7 @@ deadrop
   )
   .option(
     '--ci',
-    'mint a fresh read-only Turso token for CI/CD via /vault/tokens/ci',
+    'CI/CD: mint a read-only token via /vault/tokens/ci (also reads DEADROP_VAULT_KEY from .env)',
   )
   .option(
     '--no-sync',
