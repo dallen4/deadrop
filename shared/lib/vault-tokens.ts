@@ -24,7 +24,7 @@ export const VaultInjectOptionsSchema = z.object({
 // be written by someone else (a shared vault), so these never ride along
 // unless the user names them explicitly.
 const LOADER_ENV_NAME =
-  /^(NODE_OPTIONS|NODE_PATH|LD_.+|DYLD_.+|BASH_ENV|ENV|PATH|PYTHON(PATH|STARTUP|HOME)|PERL5(OPT|LIB)|RUBYOPT|RUBYLIB|GIT_.+|SHELLOPTS|PS4|IFS)$/;
+  /^(NODE_OPTIONS|NODE_PATH|LD_.+|DYLD_.+|BASH_ENV|ENV|PATH|PYTHON(PATH|STARTUP|HOME)|PERL5(OPT|LIB)|RUBYOPT|RUBYLIB|GIT_(SSH|SSH_COMMAND|ASKPASS|EXEC_PATH|CONFIG.*|EXTERNAL_DIFF|PAGER|EDITOR|PROXY_COMMAND|TEMPLATE_DIR|DIR|WORK_TREE)|SHELLOPTS|PS4|IFS)$/;
 
 export const blockedInjectNames = (
   names: string[],
