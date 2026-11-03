@@ -6,7 +6,10 @@ export const LOGIN_URL = `${DEADROP_URL}/auth/cli`;
 
 export const LOCALHOST_AUTH_PORT = 1337;
 
-export const LOCALHOST_AUTH_URL = `http://localhost:${LOCALHOST_AUTH_PORT}`;
+export const LOCALHOST_AUTH_HOST = '127.0.0.1';
+
+export const LOCALHOST_AUTH_URL =
+  `http://${LOCALHOST_AUTH_HOST}:${LOCALHOST_AUTH_PORT}`;
 
 // `deadrop update` binary-install path — same repo/naming convention as install.sh
 export const GITHUB_REPO = 'dallen4/deadrop';
