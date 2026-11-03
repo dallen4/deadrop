@@ -746,8 +746,13 @@ describe('inject', () => {
 
     await inject(['node'], { override: true });
 
+    const { logWarning } = await import('lib/log');
+
     expect(loadConfig).toHaveBeenCalled();
     expect(process.env.DEADROP_VAULT_KEY).toBeUndefined();
+    expect(logWarning).toHaveBeenCalledWith(
+      expect.stringContaining('DEADROP_VAULT_KEY from .env'),
+    );
   });
 
   it('--ci opts in to a vault key from .env', async () => {
