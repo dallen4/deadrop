@@ -385,6 +385,70 @@ describe('inject', () => {
     );
   });
 
+  const injectLocal = async (
+    secrets: Record<string, string>,
+    options: Record<string, unknown> = {},
+  ) => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: {
+          default: { location: './vault.db', environments: {} },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue(secrets),
+    } as any);
+    const run = vi
+      .spyOn(processModule, 'runWithEnv')
+      .mockResolvedValue(0);
+    const exit = vi.spyOn(process, 'exit').mockImplementation((() => {
+      throw new Error('exit');
+    }) as never);
+
+    const result = await inject(['node'], {
+      override: true,
+      ...options,
+    }).catch((e) => e);
+
+    return { run, exit, result };
+  };
+
+  it('refuses to inject loader variables such as NODE_OPTIONS', async () => {
+    const { run, exit } = await injectLocal({
+      API_URL: 'x',
+      NODE_OPTIONS: '--require ./evil.js',
+    });
+
+    expect(exit).toHaveBeenCalledWith(1);
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('injects a loader variable the user explicitly allows', async () => {
+    const { run } = await injectLocal(
+      { API_URL: 'x', NODE_OPTIONS: '--max-old-space-size=4096' },
+      { allowEnv: 'NODE_OPTIONS' },
+    );
+
+    expect(run).toHaveBeenCalledWith(
+      'node',
+      [],
+      { API_URL: 'x', NODE_OPTIONS: '--max-old-space-size=4096' },
+      { override: true },
+    );
+  });
+
   it('--refresh-token forces a re-mint even when a token exists', async () => {
     const { loadConfig } = await import('lib/config');
     const { initDBClient } = await import('db/init');
@@ -637,6 +701,97 @@ describe('inject', () => {
     expect(logInfo).toHaveBeenCalledWith(
       expect.stringContaining("'a1b2c3d4e5f67-my-app' (production)"),
     );
+  });
+
+  const dotenvWithVaultKey = async () => {
+    const { mkdtempSync, writeFileSync } = await import('fs');
+    const { tmpdir } = await import('os');
+    const { join } = await import('path');
+    const { loadDotenv } = await import('lib/dotenv');
+
+    const file = join(mkdtempSync(join(tmpdir(), 'inject-env-')), '.env');
+    writeFileSync(file, 'DEADROP_VAULT_KEY=aes-key\n');
+    loadDotenv(file);
+  };
+
+  it('a .env vault key does not take inject off the config without --ci', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    await dotenvWithVaultKey();
+    process.env.DEADROP_API_KEY = 'sk_test';
+
+    vi.mocked(loadConfig).mockResolvedValue({
+      config: {
+        active_vault: { name: 'default', environment: 'dev' },
+        vaults: {
+          default: { location: './vault.db', environments: {} },
+        },
+      },
+    } as any);
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(
+      () => undefined as never,
+    );
+
+    await inject(['node'], { override: true });
+
+    const { logWarning } = await import('lib/log');
+
+    expect(loadConfig).toHaveBeenCalled();
+    expect(process.env.DEADROP_VAULT_KEY).toBeUndefined();
+    expect(logWarning).toHaveBeenCalledWith(
+      expect.stringContaining('DEADROP_VAULT_KEY from .env'),
+    );
+  });
+
+  it('--ci opts in to a vault key from .env', async () => {
+    const { loadConfig } = await import('lib/config');
+    const { initDBClient } = await import('db/init');
+    const { createSecretsHelpers } =
+      await import('@shared/db/secrets');
+    const { mintVaultTokenWithApiKey } =
+      await import('lib/auth/vault-token');
+    const processModule = await import('lib/process');
+    const { inject } = await import('actions/inject');
+
+    await dotenvWithVaultKey();
+    process.env.DEADROP_API_KEY = 'sk_test';
+
+    vi.mocked(mintVaultTokenWithApiKey).mockImplementation(
+      minted({
+        token: 'ci-token',
+        name: 'a1b2c3d4e5f67-my-app',
+        environment: 'production',
+      }),
+    );
+    vi.mocked(initDBClient).mockResolvedValue({
+      $client: { close: vi.fn() },
+    } as any);
+    vi.mocked(createSecretsHelpers).mockReturnValue({
+      getAllSecrets: vi.fn().mockResolvedValue({}),
+    } as any);
+    vi.spyOn(processModule, 'runWithEnv').mockResolvedValue(0);
+    vi.spyOn(process, 'exit').mockImplementation(
+      () => undefined as never,
+    );
+
+    await inject(['node'], { override: true, ci: true });
+
+    expect(loadConfig).not.toHaveBeenCalled();
+    expect(
+      vi.mocked(createSecretsHelpers).mock.calls[0][0],
+    ).toMatchObject({ environments: { production: 'aes-key' } });
   });
 
   // An API key's claims are the baseline: --only narrows within them and a

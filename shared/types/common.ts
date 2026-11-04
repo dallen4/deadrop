@@ -67,7 +67,10 @@ export type BaseHandlerInputs<Context, Event> = {
     error: (message: string) => void;
     debug: (message: string) => void;
   };
-  initPeer: (creds?: IceServerCredentials) => Promise<Peer>;
+  initPeer: (
+    creds: IceServerCredentials,
+    id?: string,
+  ) => Promise<Peer>;
   cleanupSession: (ctx: Context) => void;
   apiUri?: string;
   // Extra headers applied to API requests this handler makes (e.g. the CLI

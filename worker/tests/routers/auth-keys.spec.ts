@@ -219,6 +219,15 @@ describe('GET /auth/keys', () => {
     expect(res.status).toBe(400);
     expect(list).not.toHaveBeenCalled();
   });
+
+  it('rejects an invalid vault name with a 400, not a 500', async () => {
+    const res = await listKeys(
+      'vaultName=..%2Fother&environment=production',
+    );
+
+    expect(res.status).toBe(400);
+    expect(list).not.toHaveBeenCalled();
+  });
 });
 
 describe('POST /auth/keys', () => {

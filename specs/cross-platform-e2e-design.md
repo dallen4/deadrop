@@ -40,7 +40,7 @@ tests/
 ├── package.json            # name "tests"; deps: vitest, playwright, execa
 ├── tsconfig.json           # extends root; paths @shared/*, @api/*; allow web import
 ├── vitest.e2e.config.mts   # node env, single fork, setupFiles ['dotenv/config'], include e2e/**/*.spec.ts
-├── .env                    # local: BASE_URL, DEADROP_API_URL, DROP_TEST_TOKEN, PEER_SERVER_URL, TURN_*
+├── .env                    # local: BASE_URL, DEADROP_API_URL, DROP_TEST_TOKEN, PEER_SERVER_URL
 ├── utils/                  # cross-suite (integration reuses) — NOT e2e-specific
 │   ├── config.ts           # resolved env/targets/token (§5a)
 │   └── cli-process.ts      # execa-based CliProcess (§4)
@@ -74,7 +74,6 @@ Same philosophy as the other suites: **deployed**.
 | `BASE_URL` | deployed web app (e.g. `https://alpha.deadrop.io/`) |
 | `DEADROP_API_URL` | deployed worker |
 | `PEER_SERVER_URL` | signaling (baked into the CLI build; needed for `pnpm -F cli build`) |
-| `TURN_USERNAME` / `TURN_PWD` | CLI runtime ICE creds |
 | `DROP_TEST_TOKEN` | stable drop test token (cookie for web, env for CLI) — bypasses captcha/rate-limits |
 
 The token is the **stable persistent value** (already in Redis under `test_tkn`,
@@ -151,7 +150,7 @@ import {
 const cliEnv = () => ({
   DEADROP_API_URL: apiURL,
   TEST_TOKEN: testToken(),   // logic/drop.ts reads TEST_TOKEN → sends the cookie
-  // PEER_SERVER_URL/TURN_* are baked at build / inherited from process.env
+  // PEER_SERVER_URL is baked at build / inherited from process.env
 });
 
 export const cliDropActor = (): DropActor => {
@@ -344,8 +343,7 @@ The additive cross-platform workflow (separate from `cli_e2e` and `web_ci`):
     (`alpha.deadrop.io` / `deadrop.io`).
   - `concurrency: group: ${{ github.workflow }}-${{ github.event.deployment.environment || github.ref }}`, `cancel-in-progress: true` — cancels superseded runs (mirrors web_ci).
 - **Env (all repo secrets):** `BASE_URL` (resolved per event),
-  `DEADROP_API_URL`, `PEER_SERVER_URL`, `TURN_USERNAME`, `TURN_PWD`,
-  `DROP_TEST_TOKEN`.
+  `DEADROP_API_URL`, `PEER_SERVER_URL`, `DROP_TEST_TOKEN`.
 - **Steps:** checkout → `pnpm/action-setup@v6` → `setup-node@v6` (node 22, pnpm
   cache) → `pnpm install --frozen-lockfile` → `pnpm exec playwright install
   chromium` → `pnpm -F tests test:e2e`.

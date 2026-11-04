@@ -44,7 +44,7 @@ export default function GrabPane({ config }: Props) {
             decryptRaw(key, iv, input),
           hash: (input: string) => hashRaw(input),
         },
-        initPeer: () => initPeerFromConfig(config),
+        initPeer: (creds, id) => initPeerFromConfig(config, creds, id),
         cleanupSession,
         apiUri: config.apiUrl,
       }),

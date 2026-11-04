@@ -8,6 +8,7 @@ import {
 } from './types';
 import { getSessionToken } from './auth/clerk';
 import { getNonce } from './lib/nonce';
+import { plainNotification } from './lib/notify';
 import { loadConfig, saveConfig } from './lib/config';
 import { VaultPanel } from './VaultPanel';
 
@@ -45,10 +46,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             vscode.window.showInformationMessage('Secret received!');
             break;
           case ExtensionMessageType.OnInfo:
-            vscode.window.showInformationMessage(msg.message);
+            vscode.window.showInformationMessage(
+              plainNotification(msg.message),
+            );
             break;
           case ExtensionMessageType.OnError:
-            vscode.window.showErrorMessage(msg.message);
+            vscode.window.showErrorMessage(
+              plainNotification(msg.message),
+            );
             break;
           case ExtensionMessageType.OpenVault:
             vscode.commands.executeCommand('deadrop.openVault');
@@ -77,8 +82,6 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     return {
       apiUrl: process.env.DEADROP_API_URL ?? '',
       peerServerUrl: process.env.PEER_SERVER_URL ?? '',
-      turnUsername: process.env.TURN_USERNAME ?? '',
-      turnPassword: process.env.TURN_PWD ?? '',
       clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY ?? '',
       token,
       vaultName,

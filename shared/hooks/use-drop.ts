@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react';
 import { useMachine } from '@xstate/react';
 import type Peer from 'peerjs';
+import type { IceServerCredentials } from '../types/peer';
 import { dropMachine, initDropContext } from '../lib/machines/drop';
 import { DropState } from '../lib/constants';
 import { createDropHandlers } from '../handlers/drop';
@@ -17,7 +18,10 @@ export type ApiHeadersSource =
 export interface UseDropDeps<FileType extends string | File = File> {
   apiUri: string;
   apiHeaders?: ApiHeadersSource;
-  initPeer: () => Promise<Peer>;
+  initPeer: (
+    creds: IceServerCredentials,
+    id?: string,
+  ) => Promise<Peer>;
   file: {
     encrypt: EncryptFile<FileType>;
     hash: HashFile<FileType>;

@@ -1,5 +1,6 @@
 import { createSecretsHelpers } from '@shared/db/secrets';
 import {
+  blockedInjectNames,
   resolveInjectedNames,
   VaultInjectOptions,
 } from '@shared/lib/vault-tokens';
@@ -15,6 +16,7 @@ import {
   VaultNotFoundError,
 } from 'lib/auth/vault-token';
 import { loadConfig, loadConfigFromPath } from 'lib/config';
+import { applyWithheldDotenv, withheldDotenvNames } from 'lib/dotenv';
 import { logError, logInfo, logWarning } from 'lib/log';
 import { runWithEnv } from 'lib/process';
 import { tmpdir } from 'os';
@@ -31,6 +33,7 @@ type InjectOptions = {
   only?: string;
   prefix?: string;
   sync?: boolean;
+  allowEnv?: string;
 };
 
 type ResolvedVault = {
@@ -51,7 +54,18 @@ type ResolvedVault = {
 // a misconfigured pipeline fails here instead of silently falling back to an
 // interactive session that has no way to authenticate.
 function assertCiCredentials(options: InjectOptions) {
-  if (!options.ci) return;
+  if (!options.ci) {
+    // Earlier versions read these from .env, so say why they stopped.
+    const ignored = withheldDotenvNames();
+    if (ignored.length)
+      logWarning(
+        `Ignoring ${ignored.join(', ')} from .env, pass --ci to use them.`,
+      );
+    return;
+  }
+
+  // --ci is the explicit opt-in to a .env that picks the vault.
+  applyWithheldDotenv();
 
   const missing: string[] = [];
 
@@ -228,7 +242,11 @@ async function parseVaultFromOptions(options: InjectOptions) {
 // a --prefix that disagrees with the key's loses.
 function shapeSecrets(
   secrets: Record<string, string>,
-  { only, prefix }: Pick<InjectOptions, 'only' | 'prefix'>,
+  {
+    only,
+    prefix,
+    allowEnv,
+  }: Pick<InjectOptions, 'only' | 'prefix' | 'allowEnv'>,
   claims: VaultInjectOptions = {},
 ) {
   const requested = only
@@ -276,6 +294,19 @@ function shapeSecrets(
     wanted ?? Object.keys(secrets),
     { prefix: claims.prefix ?? prefix },
   );
+
+  const blocked = blockedInjectNames(
+    injected.map(([, name]) => name),
+    allowEnv?.split(',').map((name) => name.trim()),
+  );
+
+  if (blocked.length) {
+    logError(
+      `Refusing to inject ${blocked.join(', ')}: these control how the ` +
+        `command loads code. Pass --allow-env ${blocked.join(',')} if intended.`,
+    );
+    process.exit(1);
+  }
 
   return Object.fromEntries(
     injected.map(([stored, name]) => [name, secrets[stored]]),

@@ -62,11 +62,13 @@ const GrabInner = ({ dropId }: { dropId: string }) => {
     const { shared } = collision!;
     setCollision(null);
 
+    const existing = vault.config?.vaults ?? {};
+    let fallback = `${collision!.name}-2`;
+    for (let i = 3; existing[fallback]; i++)
+      fallback = `${collision!.name}-${i}`;
+
     try {
-      await vault.adoptVault(
-        rename.trim() || shared.cloud.name,
-        shared,
-      );
+      await vault.adoptVault(rename.trim() || fallback, shared);
       pending.current?.resolve();
     } catch (err) {
       pending.current?.reject(err as Error);
@@ -99,7 +101,9 @@ const GrabInner = ({ dropId }: { dropId: string }) => {
           </Text>
           <TextInput
             label={'Local name'}
-            placeholder={collision?.shared.cloud.name}
+            placeholder={
+              collision ? `${collision.name}-2` : undefined
+            }
             value={rename}
             onChange={(e) => setRename(e.currentTarget.value)}
           />

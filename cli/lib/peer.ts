@@ -1,7 +1,5 @@
 import { createPeer } from '@shared/lib/peer';
+import type { IceServerCredentials } from '@shared/types/peer';
 
-export const initPeer = () =>
-  createPeer(process.env.PEER_SERVER_URL!, {
-    username: process.env.TURN_USERNAME!,
-    credential: process.env.TURN_PWD!,
-  });
+export const initPeer = (creds: IceServerCredentials, id?: string) =>
+  createPeer(process.env.PEER_SERVER_URL!, creds, id);

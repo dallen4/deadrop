@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import './scripts/bun-inject';
-import 'dotenv/config';
+import 'lib/dotenv-load';
 import { deadrop } from 'core';
 import { checkNodeVersion, checkBunVersion } from 'lib/util';
 import { migrateLegacyCreds } from 'lib/auth/cache';

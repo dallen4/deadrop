@@ -23,7 +23,7 @@ export const createProvisionHandlers = (client: TursoClient) => {
     input: UpdateDatabaseRequest,
   ) => {
     const vaultConfig = await client.patch<UpdateDatabaseResponse>(
-      `/${vaultName}/configuration`,
+      `/${encodeURIComponent(vaultName)}/configuration`,
       input,
     );
 
@@ -67,9 +67,10 @@ export const createProvisionHandlers = (client: TursoClient) => {
     access: VaultTokenAccess,
     expiration?: string,
   ) => {
-    const path =
-      `/${vaultName}/auth/tokens?authorization=${access}` +
-      (expiration ? `&expiration=${expiration}` : '');
+    const query = new URLSearchParams({ authorization: access });
+    if (expiration) query.set('expiration', expiration);
+
+    const path = `/${encodeURIComponent(vaultName)}/auth/tokens?${query}`;
 
     const { jwt } = await client.post<{ jwt: string }>(path);
 
@@ -78,7 +79,7 @@ export const createProvisionHandlers = (client: TursoClient) => {
 
   const getVault = async (vaultName: string) => {
     const data = await client.get<GetDatabaseResponse>(
-      `/${vaultName}`,
+      `/${encodeURIComponent(vaultName)}`,
     );
 
     return data?.database ?? null;

@@ -1,5 +1,6 @@
 import { parse, stringify } from 'yaml';
 import { z } from 'zod';
+import { VAULT_NAME_PATTERN } from './turso/utils';
 import type {
   SharedVault,
   VaultDBConfig,
@@ -8,16 +9,22 @@ import type {
 
 // The payload arrives from an untrusted peer, so it is validated rather
 // than cast — YAML alone says nothing about shape.
+// The vault name becomes a local file name and cloud.name the sync
+// host, so both are held to safe charsets rather than trusted.
+const SharedVaultName = z
+  .string()
+  .regex(/^[A-Za-z0-9](?:[A-Za-z0-9 ._-]{0,62}[A-Za-z0-9_-])?$/);
+
 const SharedVaultSchema = z.object({
   environments: z.record(z.string(), z.string()).default({}),
   cloud: z.object({
-    name: z.string().min(1),
+    name: z.string().regex(VAULT_NAME_PATTERN),
     authToken: z.string().optional(),
   }),
 }) satisfies z.ZodType<SharedVault, z.ZodTypeDef, unknown>;
 
 const VaultSharePayloadSchema = z.object({
-  vaults: z.record(z.string(), SharedVaultSchema),
+  vaults: z.record(SharedVaultName, SharedVaultSchema),
 });
 
 export const composeVaultShare = (

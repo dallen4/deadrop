@@ -115,7 +115,7 @@ deadrop
   )
   .option(
     '--ci',
-    'mint a fresh read-only Turso token for CI/CD via /vault/tokens/ci',
+    'CI/CD: mint a read-only token via /vault/tokens/ci (also reads DEADROP_VAULT_KEY from .env)',
   )
   .option(
     '--no-sync',
@@ -128,6 +128,10 @@ deadrop
   .option(
     '--prefix <prefix>',
     'prepend this to every injected variable name',
+  )
+  .option(
+    '--allow-env <names>',
+    'allow injecting loader variables such as NODE_OPTIONS, comma-separated',
   )
   .option('--verbose', 'log injected variable names (never values)')
   .action(inject);

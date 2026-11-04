@@ -53,7 +53,7 @@ worker/
 | GET | `/auth/keys` | List the caller's `vault:inject` API keys for a vault + environment, filtered by scope and claims, returning `id`/`name`/`scopes`/`claims`/`expired`/`revoked` (`authenticated({ feature: API_KEYS })`). Claims are re-parsed against `VaultInjectClaimsSchema` (the same schema issuance validates, so the list and `apiKey()` verification never disagree), and a claim that fails is dropped rather than handed to a client |
 | POST | `/auth/keys` | Issue a `vault:inject` API key whose claims carry the caller's resolved vault + environment (`authenticated({ feature: API_KEYS })`), refusing past the plan's `apiKeys` cap counted live from Clerk |
 | `*` | `/peers/*` | PeerJS signaling via `PeerServerDO` — implemented but not live (see top of file); production uses `peers.deadrop.io` on Render |
-| GET/POST/DELETE | `/drop` | Drop session CRUD (Redis) |
+| GET/POST/DELETE | `/drop` | Drop session CRUD (Redis). Create and fetch also mint short-lived Cloudflare TURN credentials (`turnCreds`) for the caller's peer |
 | POST | `/vault` | Create a Turso vault database (`authenticated({ feature: CLOUD_VAULT })` — deliberately no `allowApiKey`: an API key carries no plan claims, so the cap below is unenforceable on that path), refusing past the plan's `cloudVaults` cap counted via `listVaults` |
 | POST | `/vault/tokens` | Mint a Turso token for a vault — `access` defaults to `read-only`, optional `expiration` (`authenticated({ allowApiKey: true, feature: CLOUD_VAULT })`) |
 | POST | `/vault/tokens/ci` | Exchange a `vault:inject` API key for a 5m read-only Turso token — vault and environment come off the key's claims, no request body (`apiKey()` alone — the required scope *is* the entitlement check) |

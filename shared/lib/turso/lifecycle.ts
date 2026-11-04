@@ -20,12 +20,14 @@ export const createLifecycleHandlers = (client: TursoClient) => {
     config: DatabaseConfiguration,
   ) =>
     client.patch<ConfigurationResponse>(
-      `/${vaultName}/configuration`,
+      `/${encodeURIComponent(vaultName)}/configuration`,
       config,
     );
 
   const invalidateTokens = async (vaultName: string) =>
-    client.post<void>(`/${vaultName}/auth/rotate`);
+    client.post<void>(
+      `/${encodeURIComponent(vaultName)}/auth/rotate`,
+    );
 
   const suspendVault = async (vaultName: string) => {
     await updateConfiguration(vaultName, {
@@ -44,7 +46,7 @@ export const createLifecycleHandlers = (client: TursoClient) => {
 
   const deleteVault = async (vaultName: string) => {
     const resp = await client.del<{ database: string }>(
-      `/${vaultName}`,
+      `/${encodeURIComponent(vaultName)}`,
     );
 
     return !!resp?.database;

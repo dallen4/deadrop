@@ -39,8 +39,6 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
-          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          TURN_PWD: ${{ secrets.TURN_PWD }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           DEADROP_APP_URL: ${{ secrets.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
@@ -109,8 +107,6 @@ jobs:
         run: pnpm vscode:build
         env:
           PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
-          TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
-          TURN_PWD: ${{ secrets.TURN_PWD }}
           DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           DEADROP_APP_URL: ${{ secrets.DEADROP_APP_URL }}
           CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}

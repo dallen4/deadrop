@@ -87,6 +87,11 @@ const grabberHandshake = async (dropperPublicKeyExport: string) => {
 describe('createDropHandlers (multidrop)', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
+  const TURN_CREDS = {
+    username: 'turn-user',
+    credential: 'turn-secret',
+  };
+
   beforeEach(() => {
     fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = input.toString();
@@ -96,6 +101,7 @@ describe('createDropHandlers (multidrop)', () => {
         return fetchJson({
           id: 'mock-drop-id',
           nonce: generateIV(),
+          turnCreds: TURN_CREDS,
         });
       }
 
@@ -117,6 +123,7 @@ describe('createDropHandlers (multidrop)', () => {
     const fakePeer = createFakePeer();
     const sendEvent = vi.fn();
     const cleanupSession = vi.fn();
+    const initPeer = vi.fn(async () => fakePeer.peer);
 
     const handlers = createDropHandlers({
       ctx,
@@ -127,15 +134,35 @@ describe('createDropHandlers (multidrop)', () => {
         hash: async () => '',
       },
       cleanupSession,
-      initPeer: async () => fakePeer.peer,
+      initPeer,
     });
 
     await handlers.init();
     await handlers.stagePayload('the secret', 'raw');
     await handlers.startSession();
 
-    return { ctx, handlers, fakePeer, sendEvent, cleanupSession };
+    return {
+      ctx,
+      handlers,
+      fakePeer,
+      sendEvent,
+      cleanupSession,
+      initPeer,
+    };
   };
+
+  it('claims the drop record first, then builds the peer with that session\u2019s TURN credentials', async () => {
+    const { initPeer } = await setup(1);
+
+    const createCall = fetchMock.mock.calls.find(([input, init]) => {
+      const url = input.toString();
+      return url.includes('/drop') && init?.method === 'POST';
+    })!;
+
+    const { id: peerId } = JSON.parse(createCall[1]!.body as string);
+
+    expect(initPeer).toHaveBeenCalledWith(TURN_CREDS, peerId);
+  });
 
   it('derives a distinct drop key per grabber and encrypts the payload separately for each', async () => {
     const { ctx, fakePeer } = await setup(2);
@@ -270,5 +297,40 @@ describe('createDropHandlers (multidrop)', () => {
     expect(ctx.grabbers.get('grabber-a')?.status).toBe(
       GrabberStatus.Failed,
     );
+  });
+  it('refuses connections past maxGrabbers so only one peer gets the payload', async () => {
+    const { ctx, fakePeer } = await setup(1);
+
+    const connA = createFakeConnection('grabber-a');
+    const connB = createFakeConnection('grabber-b');
+
+    fakePeer.connect(connA.connection);
+    fakePeer.connect(connB.connection);
+
+    expect(ctx.grabbers.has('grabber-a')).toBe(true);
+    expect(ctx.grabbers.has('grabber-b')).toBe(false);
+    expect(connB.connection.close).toHaveBeenCalled();
+
+    const grabberB = await grabberHandshake(
+      await exportKey(ctx.keyPair!.publicKey),
+    );
+    await connB.emitData({
+      type: MessageType.Handshake,
+      input: grabberB.publicKeyExport,
+    });
+
+    expect(connB.connection.send).not.toHaveBeenCalled();
+  });
+
+  it('refuses new connections after stopAccepting', async () => {
+    const { ctx, fakePeer, handlers } = await setup(null);
+
+    handlers.stopAccepting();
+
+    const late = createFakeConnection('late-grabber');
+    fakePeer.connect(late.connection);
+
+    expect(ctx.grabbers.has('late-grabber')).toBe(false);
+    expect(late.connection.close).toHaveBeenCalled();
   });
 });

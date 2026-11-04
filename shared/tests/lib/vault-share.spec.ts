@@ -112,3 +112,42 @@ describe('tryParseVaultShare', () => {
     expect(tryParseVaultShare('foo: bar\n')).toBeNull();
   });
 });
+
+describe('untrusted share names', () => {
+  it.each(['Acme Prod', 'my_app.v2', 'Work'])(
+    'accepts existing-style vault name %j',
+    (name) => {
+      expect(
+        tryParseVaultShare(composeVaultShare(name, share))?.name,
+      ).toBe(name);
+    },
+  );
+
+  it.each([
+    '../../outside',
+    'x/../work',
+    '.hidden',
+    'a\u001b[2Kb',
+    'trailing.',
+    'trailing ',
+  ])(
+    'rejects vault name %j',
+    (name) => {
+      expect(
+        tryParseVaultShare(composeVaultShare(name, share)),
+      ).toBeNull();
+    },
+  );
+
+  it.each(['attacker.example/x?', 'Work', 'a/b'])(
+    'rejects cloud.name %j that would steer the sync host',
+    (name) => {
+      const payload = composeVaultShare('acme', {
+        ...share,
+        cloud: { ...share.cloud, name },
+      });
+
+      expect(tryParseVaultShare(payload)).toBeNull();
+    },
+  );
+});
