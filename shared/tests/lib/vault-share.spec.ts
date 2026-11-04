@@ -114,7 +114,23 @@ describe('tryParseVaultShare', () => {
 });
 
 describe('untrusted share names', () => {
-  it.each(['../../outside', 'x/../work', '.hidden', 'a\u001b[2Kb'])(
+  it.each(['Acme Prod', 'my_app.v2', 'Work'])(
+    'accepts existing-style vault name %j',
+    (name) => {
+      expect(
+        tryParseVaultShare(composeVaultShare(name, share))?.name,
+      ).toBe(name);
+    },
+  );
+
+  it.each([
+    '../../outside',
+    'x/../work',
+    '.hidden',
+    'a\u001b[2Kb',
+    'trailing.',
+    'trailing ',
+  ])(
     'rejects vault name %j',
     (name) => {
       expect(
