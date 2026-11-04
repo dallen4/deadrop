@@ -13,7 +13,7 @@ import type {
 // host, so both are held to safe charsets rather than trusted.
 const SharedVaultName = z
   .string()
-  .regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/);
+  .regex(/^[A-Za-z0-9](?:[A-Za-z0-9 ._-]{0,62}[A-Za-z0-9_-])?$/);
 
 const SharedVaultSchema = z.object({
   environments: z.record(z.string(), z.string()).default({}),
