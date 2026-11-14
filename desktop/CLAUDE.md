@@ -105,15 +105,17 @@ minted) rather than provisioning a new one. Destroying the cloud copy is
 the vault name. The toggle used to fire `DELETE /vault/:name` directly,
 which cost a real vault its contents.
 
-**Known gap**: enabling cloud sync on a local vault that already holds
-secrets does not work from the desktop. libsql treats the primary as
-authoritative, so attaching a populated local file to an empty database
-strands every row, and the fix (`shared/db/migrate.ts`'s
-`migrateToCloudSync`, which uploads the `.db` with Turso's
-`database_upload` seed and reopens as a replica) is node-only — `fs` plus a
-`file:` libsql client, neither available in the webview. Use
-`deadrop vault create <name> --cloud` from the CLI until a Rust-side
-equivalent exists.
+Enabling cloud sync on a vault that started local goes through
+`vault_attach_cloud`. libsql refuses to open a populated file as a replica
+(`RequiresCleanDatabase`, unless `<db>-client_wal_index` sits beside it), so
+the command copies the local rows into a fresh `<name>-cloud.db` replica,
+keeping cloud rows on conflict, and the vault's `location` moves there. The
+original file stays as a backup. `open` refuses a cloud config pointing at
+an unlinked local file with a clear error instead of failing silently.
+
+Tauri rejects `invoke` with the Rust command's plain string, so read
+errors through `errorMessage` (`src/lib/util.ts`), never
+`(err as Error).message`, which is `undefined` for a string.
 
 `SecretRow.tsx` gives each secret reveal / edit / overflow. Edit opens
 `EditSecretModal.tsx` (rename and re-value in one place). The overflow menu

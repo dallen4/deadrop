@@ -102,3 +102,11 @@ export async function deleteSecret(
     environment,
   });
 }
+
+// Returns the path the vault now syncs through, which moves when a
+// local-only file has to be copied into a fresh replica.
+export async function attachCloudVault(
+  vault: VaultDBConfig,
+): Promise<string> {
+  return invoke('vault_attach_cloud', { config: toDto(vault) });
+}

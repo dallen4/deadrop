@@ -9,6 +9,7 @@ import type {
   VaultDBConfig,
 } from '@shared/types/config';
 import { isExperimental } from '../lib/billing';
+import { errorMessage } from '../lib/util';
 import { useApiHeaders } from '../lib/api-headers';
 import {
   createNamedVault,
@@ -33,6 +34,7 @@ import {
 } from '@shared/lib/vault-share';
 import {
   addEncryptedSecret,
+  attachCloudVault,
   deleteSecret as deleteSecretRow,
   ensureVaultSchema,
   getEncryptedSecret,
@@ -85,7 +87,7 @@ export const useVault = () => {
       try {
         setConfig(await loadVaultConfig());
       } catch (err) {
-        setError((err as Error).message);
+        setError(errorMessage(err));
       } finally {
         setLoading(false);
       }
@@ -99,24 +101,21 @@ export const useVault = () => {
 
     setSecretsLoading(true);
     refreshSecretNames()
-      .catch((err) => setError((err as Error).message))
+      .catch((err) => setError(errorMessage(err)))
       .finally(() => setSecretsLoading(false));
   }, [activeVault, refreshSecretNames]);
 
-  const withBusy = useCallback(
-    async (fn: () => Promise<void>) => {
-      setBusy(true);
-      setError(null);
-      try {
-        await fn();
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [],
-  );
+  const withBusy = useCallback(async (fn: () => Promise<void>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await fn();
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }, []);
 
   const switchVault = (name: string) => {
     if (!config) return;
@@ -164,11 +163,15 @@ export const useVault = () => {
       const imported = await pickExternalVaultConfig();
       if (!imported) return;
 
-      const existingNames = new Set(Object.keys(config?.vaults ?? {}));
+      const existingNames = new Set(
+        Object.keys(config?.vaults ?? {}),
+      );
       const nextVaults = { ...config?.vaults };
       const importedNames: string[] = [];
 
-      for (const [name, vaultConfig] of Object.entries(imported.vaults)) {
+      for (const [name, vaultConfig] of Object.entries(
+        imported.vaults,
+      )) {
         let finalName = name;
         let suffix = 2;
         while (existingNames.has(finalName)) {
@@ -209,7 +212,10 @@ export const useVault = () => {
           ...config.vaults,
           [activeVaultName]: {
             ...activeVault,
-            environments: { ...activeVault.environments, [name]: key },
+            environments: {
+              ...activeVault.environments,
+              [name]: key,
+            },
           },
         },
       };
@@ -255,6 +261,8 @@ export const useVault = () => {
               ),
             }
           : await provisionCloudVault(activeVaultName, headers);
+
+        nextVault.location = await attachCloudVault(nextVault);
       }
 
       await persistVault(nextVault);
@@ -383,7 +391,12 @@ export const useVault = () => {
         activeVault.environments[activeEnv],
         value,
       );
-      await addEncryptedSecret(activeVault, name, activeEnv, encrypted);
+      await addEncryptedSecret(
+        activeVault,
+        name,
+        activeEnv,
+        encrypted,
+      );
       await refreshSecretNames();
     });
 
@@ -413,7 +426,12 @@ export const useVault = () => {
   ) =>
     withBusy(async () => {
       if (!activeVault) return;
-      await renameSecretRow(activeVault, oldName, newName, environment);
+      await renameSecretRow(
+        activeVault,
+        oldName,
+        newName,
+        environment,
+      );
       await refreshSecretNames();
     });
 
@@ -476,7 +494,10 @@ export const useVault = () => {
       environment,
     );
     if (!encrypted) throw new Error('Secret not found.');
-    return unwrapSecret(activeVault.environments[environment], encrypted);
+    return unwrapSecret(
+      activeVault.environments[environment],
+      encrypted,
+    );
   };
 
   return {

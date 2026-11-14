@@ -5,8 +5,8 @@ mod vault_store;
 use config_import::{read_app_vault_config, read_external_text_file, write_app_vault_config};
 use keychain_store::{clear_auth_token, get_auth_token, set_auth_token};
 use vault_store::{
-    vault_add_secret, vault_delete_secret, vault_ensure_schema, vault_get_encrypted_secret,
-    vault_list_secret_names, vault_rename_secret, vault_update_secret,
+    vault_add_secret, vault_attach_cloud, vault_delete_secret, vault_ensure_schema,
+    vault_get_encrypted_secret, vault_list_secret_names, vault_rename_secret, vault_update_secret,
 };
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -38,6 +38,7 @@ pub fn run() {
             set_auth_token,
             clear_auth_token,
             vault_ensure_schema,
+            vault_attach_cloud,
             vault_list_secret_names,
             vault_get_encrypted_secret,
             vault_add_secret,
