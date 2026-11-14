@@ -1,5 +1,12 @@
 # desktop
 
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [687a8ef]
+  - shared@1.8.1
+
 ## 0.6.1
 
 ### Patch Changes

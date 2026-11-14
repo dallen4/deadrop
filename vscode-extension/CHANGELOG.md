@@ -1,5 +1,12 @@
 # deadrop-vsc
 
+## 0.1.13
+
+### Patch Changes
+
+- Updated dependencies [687a8ef]
+  - shared@1.8.1
+
 ## 0.1.12
 
 ### Patch Changes
