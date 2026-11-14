@@ -9,6 +9,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import { IconAlertTriangle, IconTrash } from '@tabler/icons-react';
+import { errorMessage } from '../../lib/util';
 
 export const DeleteCloudVaultModal = ({
   opened,
@@ -39,7 +40,7 @@ export const DeleteCloudVaultModal = ({
       await onDelete();
       onClose();
     } catch (err) {
-      setError((err as Error).message);
+      setError(errorMessage(err));
     }
   };
 

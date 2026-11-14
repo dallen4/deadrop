@@ -9,6 +9,7 @@ import {
   TextInput,
 } from '@mantine/core';
 import { IconAlertTriangle } from '@tabler/icons-react';
+import { errorMessage } from '../../lib/util';
 
 export const EditSecretModal = ({
   opened,
@@ -70,7 +71,7 @@ export const EditSecretModal = ({
       if (renamed) await onRename(name, trimmedName, environment);
       onClose();
     } catch (err) {
-      setError((err as Error).message);
+      setError(errorMessage(err));
     } finally {
       setSaving(false);
     }
