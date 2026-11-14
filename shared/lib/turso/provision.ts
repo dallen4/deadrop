@@ -6,10 +6,15 @@ import type {
   UpdateDatabaseRequest,
   UpdateDatabaseResponse,
 } from '../../types/db';
-import type { TursoClient } from './client';
+import { TursoApiError, type TursoClient } from './client';
 import { VaultTokenAccess } from '../constants';
 import { createLifecycleHandlers } from './lifecycle';
 import { TURSO_DB_GROUP, TURSO_DB_SIZE_LIMIT } from './utils';
+
+const isSizeLimitUnsupported = (error: unknown) =>
+  error instanceof TursoApiError &&
+  error.status === 400 &&
+  error.message.includes('size_limit is not supported');
 
 type CreateVaultOptions = {
   seed?: 'database_upload';
@@ -52,6 +57,9 @@ export const createProvisionHandlers = (client: TursoClient) => {
         size_limit: TURSO_DB_SIZE_LIMIT,
       });
     } catch (error) {
+      // Turso refuses size_limit on db-api controlled databases.
+      if (isSizeLimitUnsupported(error)) return database;
+
       await deleteVault(database.Name).catch(() => {});
 
       throw error;

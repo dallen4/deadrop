@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createProvisionHandlers } from '../../lib/turso/provision';
 import { VaultTokenAccess } from '../../lib/constants';
+import { TursoApiError } from '../../lib/turso/client';
 
 const stubClient = () => {
   const post = vi.fn().mockResolvedValue({ jwt: 'a-jwt' });
@@ -20,7 +21,10 @@ describe('createVaultToken', () => {
   it('sends only the authorization param when no expiration', async () => {
     const { post, handlers } = stubClient();
 
-    await handlers.createVaultToken('my-vault', VaultTokenAccess.ReadOnly);
+    await handlers.createVaultToken(
+      'my-vault',
+      VaultTokenAccess.ReadOnly,
+    );
 
     expect(post).toHaveBeenCalledWith(
       '/my-vault/auth/tokens?authorization=read-only',
@@ -45,7 +49,10 @@ describe('createVaultToken', () => {
     const { handlers } = stubClient();
 
     expect(
-      await handlers.createVaultToken('my-vault', VaultTokenAccess.ReadOnly),
+      await handlers.createVaultToken(
+        'my-vault',
+        VaultTokenAccess.ReadOnly,
+      ),
     ).toBe('a-jwt');
   });
 });
@@ -76,5 +83,54 @@ describe('path encoding', () => {
     expect(post).toHaveBeenCalledWith(
       '/my-vault/auth/tokens?authorization=read-only&expiration=5m%26authorization%3Dfull-access',
     );
+  });
+});
+
+describe('createVault', () => {
+  const database = { Name: 'abc-default', DbId: 'id', Hostname: 'h' };
+
+  const stubCreate = (patchError: Error) => {
+    const del = vi
+      .fn()
+      .mockResolvedValue({ database: database.Name });
+    const handlers = createProvisionHandlers({
+      get: vi.fn(),
+      post: vi.fn().mockResolvedValue({ database }),
+      patch: vi.fn().mockRejectedValue(patchError),
+      del,
+    } as any);
+
+    return { del, handlers };
+  };
+
+  it('keeps the vault when Turso refuses size_limit', async () => {
+    const { del, handlers } = stubCreate(
+      new TursoApiError(
+        400,
+        'PATCH',
+        '/abc-default/configuration',
+        '{"error":"size_limit is not supported for db-api controlled databases"}',
+      ),
+    );
+
+    await expect(handlers.createVault('abc-default')).resolves.toBe(
+      database,
+    );
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it('rolls back the vault on any other configuration error', async () => {
+    const error = new TursoApiError(
+      500,
+      'PATCH',
+      '/abc-default/configuration',
+      'boom',
+    );
+    const { del, handlers } = stubCreate(error);
+
+    await expect(handlers.createVault('abc-default')).rejects.toBe(
+      error,
+    );
+    expect(del).toHaveBeenCalledWith('/abc-default');
   });
 });
