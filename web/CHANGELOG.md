@@ -1,5 +1,12 @@
 # web
 
+## 1.0.11
+
+### Patch Changes
+
+- Updated dependencies [687a8ef]
+  - shared@1.8.1
+
 ## 1.0.10
 
 ### Patch Changes
