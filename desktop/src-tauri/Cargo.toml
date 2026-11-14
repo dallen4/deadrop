@@ -41,3 +41,6 @@ tokio = { version = "1.53.1", features = ["time"] }
 tauri-plugin-fs = "2.5.1"
 tauri-plugin-dialog = "2"
 
+
+[dev-dependencies]
+tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "time"] }

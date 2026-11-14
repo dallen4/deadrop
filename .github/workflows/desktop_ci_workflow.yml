@@ -61,6 +61,9 @@ jobs:
       - name: Check Rust shell
         working-directory: desktop/src-tauri
         run: cargo check
+      - name: Test Rust shell
+        working-directory: desktop/src-tauri
+        run: cargo test
 
   # NOTE: full multi-platform bundling (macOS/Windows/Linux via
   # tauri-apps/tauri-action) is a release-time job, intentionally not part of

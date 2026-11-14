@@ -10,6 +10,7 @@ import {
   Text,
 } from '@mantine/core';
 import { IconAlertTriangle, IconShare } from '@tabler/icons-react';
+import { errorMessage } from '../../lib/util';
 
 const EXPIRY_OPTIONS = [
   { value: '7d', label: '7 days' },
@@ -45,7 +46,7 @@ export const ShareVaultModal = ({
     try {
       await onShare(selected, expiry);
     } catch (err) {
-      setError((err as Error).message);
+      setError(errorMessage(err));
     } finally {
       setPending(false);
     }
@@ -78,10 +79,13 @@ export const ShareVaultModal = ({
           allowDeselect={false}
         />
 
-        <Alert color={'yellow'} icon={<IconAlertTriangle size={16} />}>
-          The recipient gets read access to every secret in the selected
-          environment{selected.length === 1 ? '' : 's'}. Access lapses on
-          its own when the token expires.
+        <Alert
+          color={'yellow'}
+          icon={<IconAlertTriangle size={16} />}
+        >
+          The recipient gets read access to every secret in the
+          selected environment{selected.length === 1 ? '' : 's'}.
+          Access lapses on its own when the token expires.
         </Alert>
 
         {error && (

@@ -25,6 +25,7 @@ import {
 } from '@tabler/icons-react';
 import { VaultTokenAccess } from '@shared/lib/constants';
 import { appConfigPath } from '../../lib/vault-config';
+import { errorMessage } from '../../lib/util';
 
 const EXPIRY_OPTIONS = [
   { value: '7d', label: '7 days' },
@@ -61,7 +62,11 @@ const TokenValue = ({ token }: { token: string }) => {
             variant={'subtle'}
             color={copied ? 'teal' : undefined}
             leftSection={
-              copied ? <IconCheck size={14} /> : <IconCopy size={14} />
+              copied ? (
+                <IconCheck size={14} />
+              ) : (
+                <IconCopy size={14} />
+              )
             }
             onClick={copy}
           >
@@ -130,7 +135,7 @@ export const CredentialsTab = ({
         ),
       );
     } catch (err) {
-      setIssueError((err as Error).message);
+      setIssueError(errorMessage(err));
     }
   };
 
@@ -165,10 +170,10 @@ export const CredentialsTab = ({
           icon={<IconAlertTriangle size={16} />}
           title={'You do not own this vault'}
         >
-          Tokens for <Code>{cloudName}</Code> can only be issued by its
-          owner. Keep the token above safe — if the owner rotates their
-          vault, you lose access until they send you a new one out of
-          band.
+          Tokens for <Code>{cloudName}</Code> can only be issued by
+          its owner. Keep the token above safe — if the owner rotates
+          their vault, you lose access until they send you a new one
+          out of band.
         </Alert>
       )}
 
@@ -224,13 +229,16 @@ export const CredentialsTab = ({
 
             {expiry === 'never' && (
               <Text size={'xs'} c={'orange'}>
-                Tokens that never expire can only be revoked by rotating
-                the whole vault.
+                Tokens that never expire can only be revoked by
+                rotating the whole vault.
               </Text>
             )}
 
             {issueError && (
-              <Alert color={'red'} icon={<IconAlertTriangle size={16} />}>
+              <Alert
+                color={'red'}
+                icon={<IconAlertTriangle size={16} />}
+              >
                 {issueError}
               </Alert>
             )}
@@ -266,10 +274,11 @@ export const CredentialsTab = ({
             <Title order={5}>Rotate all tokens</Title>
             <Text size={'sm'} c={'dimmed'}>
               Turso cannot revoke a single token, so this invalidates
-              every token for <Code>{cloudName}</Code>. The CLI, the VS
-              Code extension, and anyone you have shared this vault with
-              all lose access until they get a new token out of band.
-              Bounded expiry is the routine path; this is break-glass.
+              every token for <Code>{cloudName}</Code>. The CLI, the
+              VS Code extension, and anyone you have shared this vault
+              with all lose access until they get a new token out of
+              band. Bounded expiry is the routine path; this is
+              break-glass.
             </Text>
             <Group>
               <Button
@@ -293,8 +302,8 @@ export const CredentialsTab = ({
         <Stack gap={'md'}>
           <Text size={'sm'}>
             This app will immediately mint and store a replacement so
-            your own sync keeps working. Every other token stops working
-            right away.
+            your own sync keeps working. Every other token stops
+            working right away.
           </Text>
           <TextInput
             label={`Type "${vaultName}" to confirm`}

@@ -27,6 +27,7 @@ import { AddRowButton } from './AddRowButton';
 import { TargetDetails } from './TargetDetails';
 import { ApiKeyRow, ApiKeySummary } from './ApiKeyRow';
 import { InjectPreview } from './InjectPreview';
+import { errorMessage } from '../../lib/util';
 
 type IssuedKey = {
   id: string;
@@ -123,7 +124,7 @@ export const ApiKeysSection = ({
         },
       ]);
     } catch (err) {
-      setIssueError((err as Error).message);
+      setIssueError(errorMessage(err));
     } finally {
       setIssuing(false);
     }
