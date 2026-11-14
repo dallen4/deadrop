@@ -28,6 +28,14 @@ export type PlanLimitSet = {
   maxGrabbers: number;
 };
 
+export const PLAN_LIMIT_MAXIMUMS: PlanLimitSet = {
+  dailyDrops: Infinity,
+  cloudVaults: Infinity,
+  envsPerVault: Infinity,
+  apiKeys: Infinity,
+  maxGrabbers: 100,
+};
+
 // Numeric limits for plans for features
 export const PLAN_LIMITS = {
   [PLAN_SLUGS.FREE]: {
@@ -45,19 +53,11 @@ export const PLAN_LIMITS = {
     maxGrabbers: 5,
   },
   [PLAN_SLUGS.PRO]: {
-    dailyDrops: Infinity,
+    ...PLAN_LIMIT_MAXIMUMS,
     cloudVaults: 3,
-    envsPerVault: Infinity,
-    apiKeys: Infinity,
     maxGrabbers: 25,
   },
-  [PLAN_SLUGS.ORG]: {
-    dailyDrops: Infinity,
-    cloudVaults: Infinity,
-    envsPerVault: Infinity,
-    apiKeys: Infinity,
-    maxGrabbers: 100,
-  },
+  [PLAN_SLUGS.ORG]: PLAN_LIMIT_MAXIMUMS,
 } as const;
 
 export type PlanKey = keyof typeof PLAN_LIMITS;
