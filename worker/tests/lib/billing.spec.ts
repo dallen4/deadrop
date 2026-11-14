@@ -7,7 +7,11 @@ import {
   isExperimental,
   maxGrabbersPerDrop,
 } from '../../src/lib/billing';
-import { FEATURE_SLUGS, PLAN_LIMITS } from '@shared/config/plans';
+import {
+  FEATURE_SLUGS,
+  PLAN_LIMIT_MAXIMUMS,
+  PLAN_LIMITS,
+} from '@shared/config/plans';
 
 describe('billing', () => {
   describe('getUserPlan', () => {
@@ -26,9 +30,9 @@ describe('billing', () => {
     });
 
     it('prefers a pro pla claim over a supporter plan claim', () => {
-      expect(
-        getUserPlan({ pla: 'u:pro', plan: 'supporter' }),
-      ).toBe('pro');
+      expect(getUserPlan({ pla: 'u:pro', plan: 'supporter' })).toBe(
+        'pro',
+      );
     });
 
     it('falls through to free for an unrecognized plan claim', () => {
@@ -53,13 +57,21 @@ describe('billing', () => {
         PLAN_LIMITS.pro,
       );
     });
+
+    it.each([
+      { early_access: true },
+      { internal: true, plan: 'supporter' },
+    ])(
+      'returns the maximums for experimental claims %j',
+      (claims) => {
+        expect(getPlanLimits(claims)).toEqual(PLAN_LIMIT_MAXIMUMS);
+      },
+    );
   });
 
   describe('hasFeature', () => {
     it('returns false for a free user', () => {
-      expect(hasFeature({}, FEATURE_SLUGS.CLOUD_VAULT)).toBe(
-        false,
-      );
+      expect(hasFeature({}, FEATURE_SLUGS.CLOUD_VAULT)).toBe(false);
     });
 
     it('grants the hardcoded supporter feature set', () => {
@@ -68,9 +80,9 @@ describe('billing', () => {
       expect(hasFeature(claims, FEATURE_SLUGS.CLOUD_VAULT)).toBe(
         true,
       );
-      expect(
-        hasFeature(claims, FEATURE_SLUGS.VSCODE_EXTENSION),
-      ).toBe(true);
+      expect(hasFeature(claims, FEATURE_SLUGS.VSCODE_EXTENSION)).toBe(
+        true,
+      );
     });
 
     it('does not grant features outside the supporter allowlist', () => {
@@ -170,12 +182,19 @@ describe('billing', () => {
     });
 
     it('accepts maxGrabbers > 1 for an experimental user regardless of plan', () => {
-      expect(checkMaxGrabbers(2, { early_access: true }).allowed).toBe(
-        true,
-      );
+      expect(
+        checkMaxGrabbers(2, { early_access: true }).allowed,
+      ).toBe(true);
       expect(checkMaxGrabbers(10, { internal: true }).allowed).toBe(
         true,
       );
+    });
+
+    it('caps an experimental user at the maximum', () => {
+      const result = checkMaxGrabbers(101, { early_access: true });
+
+      expect(result.allowed).toBe(false);
+      expect(result.cap).toBe(PLAN_LIMIT_MAXIMUMS.maxGrabbers);
     });
   });
 });

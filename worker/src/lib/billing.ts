@@ -1,4 +1,5 @@
 import {
+  PLAN_LIMIT_MAXIMUMS,
   PLAN_LIMITS,
   PLAN_SLUGS,
   SUPPORTER_FEATURES,
@@ -26,6 +27,7 @@ export function getUserPlan(claims: SessionClaims): PlanKey {
 }
 
 export function getPlanLimits(claims: SessionClaims) {
+  if (isExperimental(claims)) return PLAN_LIMIT_MAXIMUMS;
   return PLAN_LIMITS[getUserPlan(claims)];
 }
 
@@ -66,13 +68,7 @@ export const checkMaxGrabbers = (
   requested: number,
   claims: SessionClaims,
 ): MaxGrabbersCheck => {
-  const plan = getUserPlan(claims);
-  const planCap = maxGrabbersPerDrop(plan);
+  const { maxGrabbers: cap } = getPlanLimits(claims);
 
-  if (requested <= planCap) return { allowed: true, cap: planCap };
-
-  if (isExperimental(claims))
-    return { allowed: true, cap: requested };
-
-  return { allowed: false, cap: planCap };
+  return { allowed: requested <= cap, cap };
 };
