@@ -91,11 +91,11 @@ the test-mode bypass Clerk-free.
 
 ## The test token (drop/grab bypass)
 
-The token is a **stable** value persisted in Redis (`test_tkn` key) — it is
-not seeded or torn down per run. `global-setup` does nothing for it (see the
-comment there); `util.ts` reads the live value straight from Redis and sets it
+The token is a **stable** value persisted in Cloudflare KV (`test_tkn` key) —
+it is not seeded or torn down per run. `global-setup` does nothing for it (see
+the comment there); `util.ts` reads the live value straight from KV and sets it
 as the `test-tkn` cookie (plus the `test-mode` flag). The Next API
-(`/api/captcha`) and the worker (`/drop`) verify it against Redis to skip the
+(`/api/captcha`) and the worker (`/drop`) verify it against KV to skip the
 captcha and rate limits.
 
 The value is rotated daily by `.github/workflows/hydrate_test_token_workflow.yml`
