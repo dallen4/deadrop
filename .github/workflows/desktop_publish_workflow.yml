@@ -82,13 +82,18 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=${tag#deadrop-desktop@}" >> "$GITHUB_OUTPUT"
 
-      # Tauri ad-hoc signs when these are unset, which runs but still trips
-      # Gatekeeper. Warn until the Developer ID secrets land (DD-32).
-      - name: Check Apple signing secrets
+      # Tauri tries to import any APPLE_CERTIFICATE it sees, even an empty
+      # one, so only export the signing env when the secrets exist. Without
+      # them it ad-hoc signs, which runs but still trips Gatekeeper (DD-32).
+      - name: Load Apple signing secrets
         if: runner.os == 'macOS'
         shell: bash
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
         run: |
           if [ -z "$APPLE_CERTIFICATE" ]; then
@@ -96,18 +101,17 @@ jobs:
             exit 0
           fi
           printf '%s' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+          {
+            for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_API_ISSUER APPLE_API_KEY; do
+              echo "$v=${!v}"
+            done
+            echo "APPLE_API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8"
+          } >> "$GITHUB_ENV"
 
       - name: Build + release Tauri app
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # macOS signing + notarization; ignored on the other runners.
-          APPLE_CERTIFICATE: ${{ runner.os == 'macOS' && secrets.APPLE_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ runner.os == 'macOS' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_API_ISSUER: ${{ runner.os == 'macOS' && secrets.APPLE_API_ISSUER || '' }}
-          APPLE_API_KEY: ${{ runner.os == 'macOS' && secrets.APPLE_API_KEY || '' }}
-          APPLE_API_KEY_PATH: ${{ runner.os == 'macOS' && format('{0}/AuthKey.p8', runner.temp) || '' }}
           # Prod secrets only (never dev `vars.*`) — mixing dev Clerk creds with the prod Worker breaks auth.
           VITE_DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           VITE_PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
