@@ -1,5 +1,11 @@
 # desktop
 
+## 0.6.3
+
+### Patch Changes
+
+- 9daac1e: Turning on cloud sync for a vault that already has secrets copies them into the cloud copy instead of leaving every write failing, and vault errors now show up instead of failing silently.
+
 ## 0.6.2
 
 ### Patch Changes
