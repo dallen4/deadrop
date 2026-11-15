@@ -82,10 +82,32 @@ jobs:
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "version=${tag#deadrop-desktop@}" >> "$GITHUB_OUTPUT"
 
+      # Tauri ad-hoc signs when these are unset, which runs but still trips
+      # Gatekeeper. Warn until the Developer ID secrets land (DD-32).
+      - name: Check Apple signing secrets
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "::warning::No Apple signing secrets, desktop ships ad-hoc signed"
+            exit 0
+          fi
+          printf '%s' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+
       - name: Build + release Tauri app
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS signing + notarization; ignored on the other runners.
+          APPLE_CERTIFICATE: ${{ runner.os == 'macOS' && secrets.APPLE_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ runner.os == 'macOS' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ runner.os == 'macOS' && secrets.APPLE_SIGNING_IDENTITY || '' }}
+          APPLE_API_ISSUER: ${{ runner.os == 'macOS' && secrets.APPLE_API_ISSUER || '' }}
+          APPLE_API_KEY: ${{ runner.os == 'macOS' && secrets.APPLE_API_KEY || '' }}
+          APPLE_API_KEY_PATH: ${{ runner.os == 'macOS' && format('{0}/AuthKey.p8', runner.temp) || '' }}
           # Prod secrets only (never dev `vars.*`) — mixing dev Clerk creds with the prod Worker breaks auth.
           VITE_DEADROP_API_URL: ${{ secrets.DEADROP_API_URL }}
           VITE_PEER_SERVER_URL: ${{ secrets.PEER_SERVER_URL }}
@@ -145,11 +167,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # NOTE: unsigned builds on every platform — no Apple Developer ID /
-      # notarization, no Windows code-signing cert (matches the CLI's own
-      # binaries, also unsigned today). macOS users hit Gatekeeper's
-      # "unidentified developer" warning; Windows users hit SmartScreen.
-      # Signing is a tracked fast-follow, not a blocker for this pipeline.
+      # NOTE: macOS signs with our Developer ID and notarizes once the APPLE_*
+      # secrets exist (DD-32), ad-hoc until then. Windows and Linux are
+      # unsigned; Windows users hit SmartScreen until we have a cert.
       #
       # NOTE: only `deadrop desktop install`/`install-desktop.sh` (macOS)
       # know how to consume these releases today — Linux/Windows artifacts

@@ -59,6 +59,56 @@ jobs:
         run: |
           cd cli/dist
           mv deadrop ${{ matrix.artifact-name }} 2>/dev/null || mv deadrop.exe ${{ matrix.artifact-name }}.exe 2>/dev/null || true
+      # Bun appends the bundle after linking, which breaks the linker's ad-hoc
+      # signature, and Apple Silicon SIGKILLs it at launch. Re-sign: Developer
+      # ID + notarize when the Apple secrets exist, ad-hoc until then. Bun needs
+      # JIT and runtime native loads (libsql) under the hardened runtime, hence
+      # cli/entitlements.plist.
+      - name: Sign macOS binary
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          bin="cli/dist/${{ matrix.artifact-name }}"
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "::warning::No Apple signing secrets, ad-hoc signing $bin"
+            codesign --force --sign - "$bin"
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/signing.keychain-db"
+          kc_pass=$(openssl rand -hex 16)
+          printf '%s' "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$kc_pass" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$kc_pass" "$keychain"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$kc_pass" "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+
+          codesign --force --timestamp --options runtime \
+            --entitlements cli/entitlements.plist \
+            --keychain "$keychain" --sign "$APPLE_SIGNING_IDENTITY" "$bin"
+
+          printf '%s' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+          ditto -c -k --keepParent "$bin" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+            --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$APPLE_API_KEY" \
+            --issuer "$APPLE_API_ISSUER" --wait
+      # Every release before this shipped a darwin binary macOS killed on
+      # launch, so prove it starts before uploading.
+      - name: Verify binary launches
+        shell: bash
+        run: |
+          cd cli/dist
+          f=$(ls ${{ matrix.artifact-name }}* | grep -v '\.sha256$')
+          if [ "$RUNNER_OS" = "macOS" ]; then codesign --verify --strict --verbose=2 "$f"; fi
+          "./$f" --version
       - name: Generate checksum
         shell: bash
         run: |

@@ -154,4 +154,6 @@ time; it still needs a running D-Bus session + Secret Service provider
   `install-desktop.sh` mirrors macOS/Linux; no native Windows shell support yet
   (`install-desktop.ps1` is a tracked fast-follow — Windows installs go through
   the CLI for now).
-- Signing — every platform ships unsigned (Gatekeeper/SmartScreen warnings).
+- Windows signing. macOS desktop and CLI binaries are signed with our
+  Developer ID and notarized in CI (`APPLE_*` secrets); Windows still hits
+  SmartScreen and Linux ships unsigned.
