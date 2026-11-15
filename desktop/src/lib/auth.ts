@@ -18,7 +18,7 @@ export const useApiKeys = () => {
   const initClient = useCallback(
     async () =>
       createClient(DEADROP_API_URL, {
-        init: { headers: await getApiHeaders() },
+        headers: await getApiHeaders(),
       }),
     [getApiHeaders],
   );
