@@ -11,11 +11,6 @@
     "./fonts/Standard.flf"
   ],
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dallen4/deadrop.git",
-    "directory": "cli"
-  },
   "private": false,
   "publishConfig": {
     "name": "deadrop",
