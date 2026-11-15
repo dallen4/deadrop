@@ -23,7 +23,7 @@ export async function provisionCloudVault(
   requireVaultName(vaultNameInput);
 
   const client = createClient(DEADROP_API_URL, {
-    init: { headers: apiHeaders },
+    headers: apiHeaders,
   });
 
   const response = await client.vault.$post({
@@ -48,7 +48,7 @@ export async function findCloudVaultName(
   requireVaultName(vaultName);
 
   const client = createClient(DEADROP_API_URL, {
-    init: { headers: apiHeaders },
+    headers: apiHeaders,
   });
 
   const response = await client.vault[':name'].$get({
@@ -69,7 +69,7 @@ export async function issueVaultToken(
   apiHeaders: Record<string, string>,
 ): Promise<string> {
   const client = createClient(DEADROP_API_URL, {
-    init: { headers: apiHeaders },
+    headers: apiHeaders,
   });
 
   const response = await client.vault.tokens.$post({
@@ -92,7 +92,7 @@ export async function rotateVaultTokens(
   apiHeaders: Record<string, string>,
 ): Promise<void> {
   const client = createClient(DEADROP_API_URL, {
-    init: { headers: apiHeaders },
+    headers: apiHeaders,
   });
 
   const response = await client.vault.rotate.$post({
@@ -109,7 +109,7 @@ export async function deleteCloudVault(
   apiHeaders: Record<string, string>,
 ): Promise<void> {
   const client = createClient(DEADROP_API_URL, {
-    init: { headers: apiHeaders },
+    headers: apiHeaders,
   });
 
   const response = await client.vault[':name'].$delete({
