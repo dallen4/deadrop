@@ -39,10 +39,37 @@ const CREATE_SECRETS_TABLE: &str = "CREATE TABLE IF NOT EXISTS secrets (
 const UNLINKED_VAULT: &str =
     "This vault's local file isn't linked to its cloud copy. Turn cloud sync off and back on to link it.";
 
-// libsql only opens an existing file as a replica when this index sits
-// beside it, so a vault that started local never has one.
+// Turso no longer serves the v1 replication protocol, so v1 replicas are
+// dead caches. v1 delegated every write to the primary, so they hold no
+// local-only data and are safe to clear.
+const V1_INDEX: &str = "-client_wal_index";
+const DB_FILES: [&str; 5] = ["", "-wal", "-shm", "-info", V1_INDEX];
+
+// libsql's v2 sync opens an existing file only beside its `-info` metadata.
 fn is_replica(location: &str) -> bool {
-    Path::new(&format!("{location}-client_wal_index")).exists()
+    Path::new(&format!("{location}-info")).exists()
+}
+
+fn is_v1_cache(location: &str) -> bool {
+    !is_replica(location) && Path::new(&format!("{location}{V1_INDEX}")).exists()
+}
+
+fn remove_db_files(location: &str) {
+    for suffix in DB_FILES {
+        let _ = std::fs::remove_file(format!("{location}{suffix}"));
+    }
+}
+
+async fn open_replica(location: &str, cloud: &CloudConfigDto) -> Result<libsql::Database, String> {
+    Builder::new_remote_replica(
+        location,
+        cloud.sync_url.clone(),
+        cloud.auth_token.clone().unwrap_or_default(),
+    )
+    .sync_protocol(libsql::SyncProtocol::V2)
+    .build()
+    .await
+    .map_err(|e| e.to_string())
 }
 
 fn replica_path(location: &str) -> String {
@@ -54,16 +81,13 @@ fn replica_path(location: &str) -> String {
 
 async fn open(config: &VaultDbConfigDto) -> Result<libsql::Database, String> {
     let db = match &config.cloud {
-        Some(_) if Path::new(&config.location).exists() && !is_replica(&config.location) => {
-            return Err(UNLINKED_VAULT.to_string());
-        }
         Some(cloud) => {
-            let builder = Builder::new_remote_replica(
-                &config.location,
-                cloud.sync_url.clone(),
-                cloud.auth_token.clone().unwrap_or_default(),
-            );
-            builder.build().await.map_err(|e| e.to_string())?
+            if is_v1_cache(&config.location) {
+                remove_db_files(&config.location);
+            } else if Path::new(&config.location).exists() && !is_replica(&config.location) {
+                return Err(UNLINKED_VAULT.to_string());
+            }
+            open_replica(&config.location, cloud).await?
         }
         None => Builder::new_local(&config.location)
             .build()
@@ -126,6 +150,9 @@ pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, Stri
         .as_ref()
         .ok_or_else(|| "Cloud config is required.".to_string())?;
 
+    if is_v1_cache(&config.location) {
+        remove_db_files(&config.location);
+    }
     if !Path::new(&config.location).exists() || is_replica(&config.location) {
         return Ok(config.location);
     }
@@ -155,18 +182,9 @@ pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, Stri
 
     // A leftover replica from a failed attempt is only a cache of the cloud.
     let replica = replica_path(&config.location);
-    for suffix in ["", "-wal", "-shm", "-client_wal_index"] {
-        let _ = std::fs::remove_file(format!("{replica}{suffix}"));
-    }
+    remove_db_files(&replica);
 
-    let db = Builder::new_remote_replica(
-        &replica,
-        cloud.sync_url.clone(),
-        cloud.auth_token.clone().unwrap_or_default(),
-    )
-    .build()
-    .await
-    .map_err(|e| e.to_string())?;
+    let db = open_replica(&replica, cloud).await?;
     sync_with_retry(&db, 8, 750).await?;
 
     let conn = db.connect().map_err(|e| e.to_string())?;
@@ -328,6 +346,61 @@ mod tests {
         }
     }
 
+    // Runs the real attach against Turso:
+    // DEADROP_LIVE_URL=libsql://... DEADROP_LIVE_TOKEN=... cargo test live -- --ignored
+    #[tokio::test(flavor = "multi_thread")]
+    #[ignore]
+    async fn live_attach_copies_local_rows_into_turso() {
+        let sync_url = std::env::var("DEADROP_LIVE_URL").unwrap();
+        let token = std::env::var("DEADROP_LIVE_TOKEN").unwrap();
+        let location = temp_db("live");
+        let replica = replica_path(&location);
+        remove_db_files(&location);
+        remove_db_files(&replica);
+
+        let local = Builder::new_local(&location).build().await.unwrap();
+        let conn = local.connect().unwrap();
+        conn.execute(CREATE_SECRETS_TABLE, ()).await.unwrap();
+        conn.execute("INSERT INTO secrets VALUES ('live', 'x', 'live')", ())
+            .await
+            .unwrap();
+        drop(conn);
+        drop(local);
+
+        let config = |location: &str| VaultDbConfigDto {
+            location: location.to_string(),
+            cloud: Some(CloudConfigDto {
+                sync_url: sync_url.clone(),
+                auth_token: Some(token.clone()),
+            }),
+        };
+
+        // A failed attempt's leftovers must not wedge the retry.
+        std::fs::write(format!("{replica}-info"), b"{}").unwrap();
+
+        let attached = vault_attach_cloud(config(&location)).await.unwrap();
+        assert_eq!(attached, replica);
+        assert!(is_replica(&attached));
+
+        let names = vault_list_secret_names(config(&attached)).await.unwrap();
+        assert!(names.iter().any(|s| s.name == "live"));
+
+        // A dead v1 cache re-pulls over v2 instead of erroring. Same order
+        // as useVault: ensure schema (which syncs), then read.
+        let v1 = temp_db("live-v1");
+        remove_db_files(&v1);
+        std::fs::write(&v1, b"").unwrap();
+        std::fs::write(format!("{v1}{V1_INDEX}"), b"").unwrap();
+        vault_ensure_schema(config(&v1)).await.unwrap();
+        let names = vault_list_secret_names(config(&v1)).await.unwrap();
+        assert!(names.iter().any(|s| s.name == "live"));
+        assert!(is_replica(&v1));
+
+        vault_delete_secret(config(&attached), "live".into(), Some("live".into()))
+            .await
+            .unwrap();
+    }
+
     #[test]
     fn replica_path_sits_beside_the_local_file() {
         assert_eq!(replica_path("/a/default.db"), "/a/default-cloud.db");
@@ -345,14 +418,36 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn opens_a_v2_replica() {
+        let location = temp_db("v2");
+        std::fs::write(&location, b"").unwrap();
+        std::fs::write(format!("{location}-info"), b"").unwrap();
+
+        assert!(is_replica(&location));
+    }
+
+    #[tokio::test]
     async fn attach_keeps_the_path_when_already_a_replica() {
         let location = temp_db("replica");
         std::fs::write(&location, b"").unwrap();
-        std::fs::write(format!("{location}-client_wal_index"), b"").unwrap();
+        std::fs::write(format!("{location}-info"), b"").unwrap();
 
         let path = vault_attach_cloud(cloud_config(&location)).await;
 
         assert_eq!(path, Ok(location));
+    }
+
+    #[tokio::test]
+    async fn attach_clears_a_v1_cache_in_place() {
+        let location = temp_db("v1");
+        std::fs::write(&location, b"").unwrap();
+        std::fs::write(format!("{location}{V1_INDEX}"), b"").unwrap();
+
+        let path = vault_attach_cloud(cloud_config(&location)).await;
+
+        assert_eq!(path, Ok(location.clone()));
+        assert!(!Path::new(&location).exists());
+        assert!(!Path::new(&format!("{location}{V1_INDEX}")).exists());
     }
 
     #[tokio::test]
