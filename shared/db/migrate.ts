@@ -8,7 +8,8 @@ import {
   vaultSyncUrl,
 } from '../lib/turso/utils';
 import type { VaultDBConfig } from '../types/config';
-import { readFile, unlink } from 'fs/promises';
+import { readFile } from 'fs/promises';
+import { removeDbFiles } from './replica';
 
 /**
  * Migrate an existing local-only vault DB to a
@@ -60,14 +61,9 @@ export async function migrateToCloudSync(
     );
   }
 
-  // 3. Remove local DB files (db, WAL, SHM)
-  for (const suffix of ['', '-wal', '-shm']) {
-    try {
-      await unlink(dbPath + suffix);
-    } catch {
-      // file may not exist, that's fine
-    }
-  }
+  // 3. Remove local DB files, including sync metadata a failed attempt
+  // may have left, which would otherwise wedge the reopen.
+  removeDbFiles(dbPath);
 
   // 4. Re-open as embedded replica — fresh .db + metadata
   const [config] = initDBConfig(dbPath, vault.cloud);

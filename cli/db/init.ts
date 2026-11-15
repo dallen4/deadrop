@@ -4,6 +4,7 @@ import {
   initDBConfig,
   syncWithRetry,
 } from '@shared/db/init';
+import { prepareReplica } from '@shared/db/replica';
 import { CloudVaultConfig } from '@shared/types/config';
 import { drizzle } from 'drizzle-orm/libsql/node';
 
@@ -12,6 +13,8 @@ export const initDBClient = async (
   cloudConfig?: CloudVaultConfig,
   sync: boolean = true,
 ) => {
+  if (cloudConfig && sync) prepareReplica(path);
+
   const [config, drizzleConfig] = initDBConfig(
     path,
     cloudConfig,

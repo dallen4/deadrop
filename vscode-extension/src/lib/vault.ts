@@ -5,6 +5,7 @@ import {
   initDBConfig,
   syncWithRetry,
 } from '@shared/db/init';
+import { prepareReplica } from '@shared/db/replica';
 import { createSecretsHelpers } from '@shared/db/secrets';
 import { secretsTable } from '@shared/db/schema';
 import { vault as buildVaultConfig } from '@shared/lib/vault';
@@ -15,6 +16,7 @@ import * as path from 'path';
 export { migrateToCloudSync } from '@shared/db/migrate';
 
 async function openDB(vault: VaultDBConfig) {
+  if (vault.cloud) prepareReplica(vault.location);
   const [config] = initDBConfig(vault.location, vault.cloud);
   const client = createClient(config);
   const db = drizzle(client, {
