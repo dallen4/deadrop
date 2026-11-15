@@ -105,13 +105,19 @@ minted) rather than provisioning a new one. Destroying the cloud copy is
 the vault name. The toggle used to fire `DELETE /vault/:name` directly,
 which cost a real vault its contents.
 
-Enabling cloud sync on a vault that started local goes through
-`vault_attach_cloud`. libsql refuses to open a populated file as a replica
-(`RequiresCleanDatabase`, unless `<db>-client_wal_index` sits beside it), so
-the command copies the local rows into a fresh `<name>-cloud.db` replica,
-keeping cloud rows on conflict, and the vault's `location` moves there. The
-original file stays as a backup. `open` refuses a cloud config pointing at
-an unlinked local file with a clear error instead of failing silently.
+Cloud replicas are pinned to libsql's v2 sync protocol
+(`SyncProtocol::V2`). Turso no longer serves v1, so a v1 replica
+(`-client_wal_index` beside the file) is a dead cache. v1 sent every write
+to the primary, so `open`/`vault_attach_cloud` clear it and re-pull. A v2
+replica is marked by `<db>-info`, and libsql refuses a populated file
+without one. So enabling sync on a vault that started local goes through
+`vault_attach_cloud`, which copies the local rows into a fresh
+`<name>-cloud.db` replica, keeping cloud rows on conflict, and the vault's
+`location` moves there. The original file stays as a backup. `open` refuses
+a cloud config pointing at an unlinked local file with a clear error.
+`cargo test live -- --ignored` (with `DEADROP_LIVE_URL`/`DEADROP_LIVE_TOKEN`)
+runs the attach against a real Turso database; the default tests can't
+reach the v2 path.
 
 Tauri rejects `invoke` with the Rust command's plain string, so read
 errors through `errorMessage` (`src/lib/util.ts`), never
