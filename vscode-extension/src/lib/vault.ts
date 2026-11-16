@@ -13,7 +13,7 @@ import type { VaultDBConfig } from '@shared/types/config';
 import { mkdir } from 'fs/promises';
 import * as path from 'path';
 
-export { migrateToCloudSync } from '@shared/db/migrate';
+export { attachCloudVault } from '@shared/db/attach';
 
 async function openDB(vault: VaultDBConfig) {
   if (vault.cloud) prepareReplica(vault.location);

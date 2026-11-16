@@ -99,8 +99,10 @@ state; the grab side adopts one through `useVault`'s `adoptVault`.
 
 Toggling cloud sync off is **local only** — it deletes the `cloud` block
 from the config and nothing else, so re-enabling reattaches to the existing
-Turso database (`findCloudVaultName` resolves it, then a fresh token is
-minted) rather than provisioning a new one. Destroying the cloud copy is
+Turso database (`connectCloudVault` in `shared/lib/vault-cloud.ts` finds
+it and mints a fresh token) rather than provisioning a new one. The CLI and
+vscode extension use the same helper, and their row copy is
+`shared/db/attach.ts`. Destroying the cloud copy is
 `deleteCloudCopy`, behind `DeleteCloudVaultModal.tsx`, which requires typing
 the vault name. The toggle used to fire `DELETE /vault/:name` directly,
 which cost a real vault its contents.
@@ -113,7 +115,11 @@ replica is marked by `<db>-info`, and libsql refuses a populated file
 without one. So enabling sync on a vault that started local goes through
 `vault_attach_cloud`, which copies the local rows into a fresh
 `<name>-cloud.db` replica, keeping cloud rows on conflict, and the vault's
-`location` moves there. The original file stays as a backup. `open` refuses
+`location` moves there. The original file stays as a backup. Turning sync
+back on after a detach re-pulls the replica in place, since local writes
+made while detached leave its sync metadata stale; the rows are copied back
+and a `<name>-detached.db` backup is kept. The CLI and vscode do the same
+through `shared/db/attach.ts`. `open` refuses
 a cloud config pointing at an unlinked local file with a clear error.
 `cargo test live -- --ignored` (with `DEADROP_LIVE_URL`/`DEADROP_LIVE_TOKEN`)
 runs the attach against a real Turso database; the default tests can't

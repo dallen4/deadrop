@@ -39,29 +39,6 @@ export async function provisionCloudVault(
   return { name, authToken: token };
 }
 
-// A vault detached from sync still exists at Turso, so re-enabling looks
-// it up first and mints a fresh credential instead of provisioning anew.
-export async function findCloudVaultName(
-  vaultName: string,
-  apiHeaders: Record<string, string>,
-): Promise<string | null> {
-  requireVaultName(vaultName);
-
-  const client = createClient(DEADROP_API_URL, {
-    headers: apiHeaders,
-  });
-
-  const response = await client.vault[':name'].$get({
-    param: { name: vaultName },
-  });
-
-  if (response.status !== 200) return null;
-
-  const { vault } = await response.json();
-
-  return vault?.Name ?? null;
-}
-
 export async function issueVaultToken(
   vaultName: string,
   access: VaultTokenAccess,
