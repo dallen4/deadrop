@@ -1,5 +1,16 @@
 # cli
 
+## 1.13.0
+
+### Minor Changes
+
+- 69dd31a: Add `deadrop apiKeys list` to show the API keys for a cloud vault environment, with their status and what they inject. `--json` prints them for scripts.
+
+### Patch Changes
+
+- 57b2c8c: Opening a vault someone shared with you no longer sends a schema write that a read-only token refuses. The secrets table is only created when it's missing.
+- c4edf94: Turning cloud sync off in the VS Code extension no longer deletes the vault's Turso database. Turning it back on reattaches to the existing database, and local vaults now copy their secrets into a fresh replica instead of uploading the raw file. The CLI and desktop app share the same path.
+
 ## 1.12.5
 
 ### Patch Changes
