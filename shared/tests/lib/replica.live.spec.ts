@@ -12,6 +12,8 @@ import { TURSO_ORGANIZATION } from '../../lib/constants';
 // DEADROP_LIVE_URL=libsql://... DEADROP_LIVE_TOKEN=... pnpm vitest run shared/tests/lib/replica.live.spec.ts --project 'shared (node)'
 const syncUrl = process.env.DEADROP_LIVE_URL;
 const authToken = process.env.DEADROP_LIVE_TOKEN;
+// A read-only token for the same db, as a share recipient holds.
+const readOnlyToken = process.env.DEADROP_LIVE_RO_TOKEN;
 
 const tempDb = () =>
   join(mkdtempSync(join(tmpdir(), 'deadrop-live-')), 'vault.db');
@@ -102,4 +104,25 @@ describe.skipIf(!syncUrl || !authToken)('replica against turso', () => {
     await syncWithRetry(client);
     client.close();
   }, 120_000);
+
+  it.skipIf(!readOnlyToken)(
+    'opens a shared vault with a read-only token',
+    async () => {
+      const client = createClient({
+        url: `file:${tempDb()}`,
+        syncUrl,
+        authToken: readOnlyToken,
+      });
+      await syncWithRetry(client);
+      await ensureSecretsSchema(client);
+      await syncWithRetry(client);
+
+      const { rows } = await client.execute(
+        'SELECT count(*) AS n FROM secrets',
+      );
+      expect(Number(rows[0].n)).toBeGreaterThanOrEqual(0);
+      client.close();
+    },
+    60_000,
+  );
 });

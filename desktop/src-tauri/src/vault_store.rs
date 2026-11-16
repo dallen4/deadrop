@@ -36,6 +36,25 @@ const CREATE_SECRETS_TABLE: &str = "CREATE TABLE IF NOT EXISTS secrets (
     PRIMARY KEY (name, environment)
 )";
 
+const HAS_SECRETS_TABLE: &str =
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'secrets'";
+
+// Mirrors shared/db/init.ts's ensureSecretsSchema. DDL counts as a write
+// even when it's a no-op, and a shared vault's read-only token refuses it.
+async fn ensure_secrets_table(conn: &libsql::Connection) -> Result<(), String> {
+    let mut rows = conn
+        .query(HAS_SECRETS_TABLE, ())
+        .await
+        .map_err(|e| e.to_string())?;
+    if rows.next().await.map_err(|e| e.to_string())?.is_some() {
+        return Ok(());
+    }
+    conn.execute(CREATE_SECRETS_TABLE, ())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 const UNLINKED_VAULT: &str =
     "This vault's local file isn't linked to its cloud copy. Turn cloud sync off and back on to link it.";
 
@@ -147,10 +166,7 @@ pub async fn vault_ensure_schema(config: VaultDbConfigDto) -> Result<(), String>
         sync_with_retry(&db, 8, 750).await?;
     }
     let conn = db.connect().map_err(|e| e.to_string())?;
-    conn.execute(CREATE_SECRETS_TABLE, ())
-        .await
-        .map_err(|e| e.to_string())?;
-    Ok(())
+    ensure_secrets_table(&conn).await
 }
 
 // Mirrors shared/db/attach.ts. Copies the vault's rows into a fresh replica
@@ -176,10 +192,7 @@ pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, Stri
         .await
         .map_err(|e| e.to_string())?;
     let local_conn = local.connect().map_err(|e| e.to_string())?;
-    local_conn
-        .execute(CREATE_SECRETS_TABLE, ())
-        .await
-        .map_err(|e| e.to_string())?;
+    ensure_secrets_table(&local_conn).await?;
     let mut rows = local_conn
         .query("SELECT name, value, environment FROM secrets", ())
         .await
@@ -214,9 +227,7 @@ pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, Stri
     sync_with_retry(&db, 8, 750).await?;
 
     let conn = db.connect().map_err(|e| e.to_string())?;
-    conn.execute(CREATE_SECRETS_TABLE, ())
-        .await
-        .map_err(|e| e.to_string())?;
+    ensure_secrets_table(&conn).await?;
     for (name, value, environment) in secrets {
         conn.execute(
             "INSERT OR IGNORE INTO secrets (name, value, environment) VALUES (?1, ?2, ?3)",
@@ -439,6 +450,29 @@ mod tests {
                 .await
                 .unwrap();
         }
+    }
+
+    // DEADROP_LIVE_RO_TOKEN: a read-only token for the same db, as a share
+    // recipient holds.
+    #[tokio::test(flavor = "multi_thread")]
+    #[ignore]
+    async fn live_opens_a_shared_vault_with_a_read_only_token() {
+        let sync_url = std::env::var("DEADROP_LIVE_URL").unwrap();
+        let Ok(token) = std::env::var("DEADROP_LIVE_RO_TOKEN") else {
+            return;
+        };
+        let location = temp_db("live-ro");
+        remove_db_files(&location);
+        let config = || VaultDbConfigDto {
+            location: location.clone(),
+            cloud: Some(CloudConfigDto {
+                sync_url: sync_url.clone(),
+                auth_token: Some(token.clone()),
+            }),
+        };
+
+        vault_ensure_schema(config()).await.unwrap();
+        vault_list_secret_names(config()).await.unwrap();
     }
 
     async fn vault_add_detached(location: &str) {
