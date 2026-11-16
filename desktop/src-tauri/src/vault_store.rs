@@ -36,6 +36,25 @@ const CREATE_SECRETS_TABLE: &str = "CREATE TABLE IF NOT EXISTS secrets (
     PRIMARY KEY (name, environment)
 )";
 
+const HAS_SECRETS_TABLE: &str =
+    "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'secrets'";
+
+// Mirrors shared/db/init.ts's ensureSecretsSchema. DDL counts as a write
+// even when it's a no-op, and a shared vault's read-only token refuses it.
+async fn ensure_secrets_table(conn: &libsql::Connection) -> Result<(), String> {
+    let mut rows = conn
+        .query(HAS_SECRETS_TABLE, ())
+        .await
+        .map_err(|e| e.to_string())?;
+    if rows.next().await.map_err(|e| e.to_string())?.is_some() {
+        return Ok(());
+    }
+    conn.execute(CREATE_SECRETS_TABLE, ())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 const UNLINKED_VAULT: &str =
     "This vault's local file isn't linked to its cloud copy. Turn cloud sync off and back on to link it.";
 
@@ -72,10 +91,23 @@ async fn open_replica(location: &str, cloud: &CloudConfigDto) -> Result<libsql::
     .map_err(|e| e.to_string())
 }
 
-fn replica_path(location: &str) -> String {
+fn sibling_path(location: &str, suffix: &str) -> String {
     match location.strip_suffix(".db") {
-        Some(stem) => format!("{stem}-cloud.db"),
-        None => format!("{location}-cloud"),
+        Some(stem) => format!("{stem}-{suffix}.db"),
+        None => format!("{location}-{suffix}"),
+    }
+}
+
+fn replica_path(location: &str) -> String {
+    sibling_path(location, "cloud")
+}
+
+// Mirrors shared/db/attach.ts's cloudReplicaPath.
+fn attach_target(location: &str) -> String {
+    if is_replica(location) {
+        location.to_string()
+    } else {
+        replica_path(location)
     }
 }
 
@@ -134,15 +166,13 @@ pub async fn vault_ensure_schema(config: VaultDbConfigDto) -> Result<(), String>
         sync_with_retry(&db, 8, 750).await?;
     }
     let conn = db.connect().map_err(|e| e.to_string())?;
-    conn.execute(CREATE_SECRETS_TABLE, ())
-        .await
-        .map_err(|e| e.to_string())?;
-    Ok(())
+    ensure_secrets_table(&conn).await
 }
 
-// Copies a local-only vault's rows into a fresh replica beside it and
-// returns the replica's path. The original file is left as a backup.
-// Rows already in the cloud copy win on conflict.
+// Mirrors shared/db/attach.ts. Copies the vault's rows into a fresh replica
+// and returns its path. A local file gets one beside it and stays as a
+// backup. A detached replica has diverged from its sync metadata, so it
+// re-pulls in place after a `-detached` backup. Cloud rows win on conflict.
 #[tauri::command]
 pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, String> {
     let cloud = config
@@ -153,7 +183,7 @@ pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, Stri
     if is_v1_cache(&config.location) {
         remove_db_files(&config.location);
     }
-    if !Path::new(&config.location).exists() || is_replica(&config.location) {
+    if !Path::new(&config.location).exists() {
         return Ok(config.location);
     }
 
@@ -162,10 +192,7 @@ pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, Stri
         .await
         .map_err(|e| e.to_string())?;
     let local_conn = local.connect().map_err(|e| e.to_string())?;
-    local_conn
-        .execute(CREATE_SECRETS_TABLE, ())
-        .await
-        .map_err(|e| e.to_string())?;
+    ensure_secrets_table(&local_conn).await?;
     let mut rows = local_conn
         .query("SELECT name, value, environment FROM secrets", ())
         .await
@@ -180,17 +207,27 @@ pub async fn vault_attach_cloud(config: VaultDbConfigDto) -> Result<String, Stri
         ));
     }
 
-    // A leftover replica from a failed attempt is only a cache of the cloud.
-    let replica = replica_path(&config.location);
+    let replica = attach_target(&config.location);
+    if replica == config.location {
+        let backup = sibling_path(&config.location, "detached");
+        let _ = std::fs::remove_file(&backup);
+        local_conn
+            .execute("VACUUM INTO ?1", libsql::params![backup])
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+    drop(rows);
+    drop(local_conn);
+    drop(local);
+
+    // Otherwise a leftover replica from a failed attempt, only a cache.
     remove_db_files(&replica);
 
     let db = open_replica(&replica, cloud).await?;
     sync_with_retry(&db, 8, 750).await?;
 
     let conn = db.connect().map_err(|e| e.to_string())?;
-    conn.execute(CREATE_SECRETS_TABLE, ())
-        .await
-        .map_err(|e| e.to_string())?;
+    ensure_secrets_table(&conn).await?;
     for (name, value, environment) in secrets {
         conn.execute(
             "INSERT OR IGNORE INTO secrets (name, value, environment) VALUES (?1, ?2, ?3)",
@@ -396,7 +433,56 @@ mod tests {
         assert!(names.iter().any(|s| s.name == "live"));
         assert!(is_replica(&v1));
 
-        vault_delete_secret(config(&attached), "live".into(), Some("live".into()))
+        // Detached: written as a plain local file, sync metadata now stale.
+        // Reattaching re-pulls in place and keeps the local write.
+        vault_add_detached(&attached).await;
+        assert_eq!(
+            vault_attach_cloud(config(&attached)).await.unwrap(),
+            attached
+        );
+        assert!(Path::new(&sibling_path(&attached, "detached")).exists());
+        let names = vault_list_secret_names(config(&attached)).await.unwrap();
+        assert!(names.iter().any(|s| s.name == "live"));
+        assert!(names.iter().any(|s| s.name == "live-detached"));
+
+        for name in ["live", "live-detached"] {
+            vault_delete_secret(config(&attached), name.into(), Some("live".into()))
+                .await
+                .unwrap();
+        }
+    }
+
+    // DEADROP_LIVE_RO_TOKEN: a read-only token for the same db, as a share
+    // recipient holds.
+    #[tokio::test(flavor = "multi_thread")]
+    #[ignore]
+    async fn live_opens_a_shared_vault_with_a_read_only_token() {
+        let sync_url = std::env::var("DEADROP_LIVE_URL").unwrap();
+        let Ok(token) = std::env::var("DEADROP_LIVE_RO_TOKEN") else {
+            return;
+        };
+        let location = temp_db("live-ro");
+        remove_db_files(&location);
+        let config = || VaultDbConfigDto {
+            location: location.clone(),
+            cloud: Some(CloudConfigDto {
+                sync_url: sync_url.clone(),
+                auth_token: Some(token.clone()),
+            }),
+        };
+
+        vault_ensure_schema(config()).await.unwrap();
+        vault_list_secret_names(config()).await.unwrap();
+    }
+
+    async fn vault_add_detached(location: &str) {
+        let db = Builder::new_local(location).build().await.unwrap();
+        db.connect()
+            .unwrap()
+            .execute(
+                "INSERT INTO secrets VALUES ('live-detached', 'x', 'live')",
+                (),
+            )
             .await
             .unwrap();
     }
@@ -426,15 +512,21 @@ mod tests {
         assert!(is_replica(&location));
     }
 
-    #[tokio::test]
-    async fn attach_keeps_the_path_when_already_a_replica() {
+    #[test]
+    fn attach_target_keeps_a_replica_in_place() {
         let location = temp_db("replica");
         std::fs::write(&location, b"").unwrap();
         std::fs::write(format!("{location}-info"), b"").unwrap();
 
-        let path = vault_attach_cloud(cloud_config(&location)).await;
+        assert_eq!(attach_target(&location), location);
+    }
 
-        assert_eq!(path, Ok(location));
+    #[test]
+    fn attach_target_moves_a_local_file_beside_it() {
+        let location = temp_db("plain");
+        remove_db_files(&location);
+
+        assert_eq!(attach_target(&location), replica_path(&location));
     }
 
     #[tokio::test]

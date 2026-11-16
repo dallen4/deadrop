@@ -21,12 +21,14 @@ import {
 } from '../lib/vault-config';
 import {
   deleteCloudVault,
-  findCloudVaultName,
   issueVaultToken,
   provisionCloudVault,
   rotateVaultTokens,
 } from '../lib/vault-cloud';
 import { VaultTokenAccess } from '@shared/lib/constants';
+import { createClient } from '@shared/client';
+import { connectCloudVault } from '@shared/lib/vault-cloud';
+import { DEADROP_API_URL } from '../env';
 import { userOwnsVault } from '@shared/lib/turso/utils';
 import {
   composeVaultShare,
@@ -244,23 +246,12 @@ export const useVault = () => {
       if (cloudSync) {
         delete nextVault.cloud;
       } else {
-        const headers = await getApiHeaders();
-        const existing = await findCloudVaultName(
+        nextVault.cloud = await connectCloudVault(
+          createClient(DEADROP_API_URL, {
+            headers: await getApiHeaders(),
+          }),
           activeVaultName,
-          headers,
         );
-
-        nextVault.cloud = existing
-          ? {
-              name: existing,
-              authToken: await issueVaultToken(
-                activeVaultName,
-                VaultTokenAccess.FullAccess,
-                undefined,
-                headers,
-              ),
-            }
-          : await provisionCloudVault(activeVaultName, headers);
 
         nextVault.location = await attachCloudVault(nextVault);
       }

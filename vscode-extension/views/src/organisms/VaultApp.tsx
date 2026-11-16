@@ -91,6 +91,9 @@ export default function VaultApp() {
           setCloudSyncing(false);
           showToast('Cloud sync enabled.');
           break;
+        case VaultWebviewMessageType.CloudSyncUnchanged:
+          setCloudSyncing(false);
+          break;
         case VaultWebviewMessageType.CloudSyncDisabled:
           setCloudSync(false);
           setCloudSyncing(false);

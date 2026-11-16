@@ -4,6 +4,7 @@ export default defineWorkspace([
   'cli/vitest.config.mts',
   'web/vitest.config.mts',
   'worker/vitest.config.mts',
+  'vscode-extension/vitest.config.mts',
   {
     extends: './vitest.config.mts',
     test: {

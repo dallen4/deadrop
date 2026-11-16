@@ -49,9 +49,17 @@ const RETRYABLE_SYNC_ERRORS = [
   'Unavailable',
 ];
 
+const HAS_SECRETS_TABLE =
+  "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'secrets'";
+
+// Read first: DDL counts as a write even when it's a no-op, and a shared
+// vault's read-only token refuses it.
 export async function ensureSecretsSchema(
   client: Client,
 ): Promise<void> {
+  const { rows } = await client.execute(HAS_SECRETS_TABLE);
+  if (rows.length) return;
+
   await client.execute(
     `CREATE TABLE IF NOT EXISTS secrets (
       name TEXT NOT NULL,

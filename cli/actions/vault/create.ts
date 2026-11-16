@@ -1,6 +1,7 @@
-import { migrateToCloudSync } from '@shared/db/migrate';
+import { attachCloudVault } from '@shared/db/attach';
 import { STORAGE_DIR_NAME } from '@shared/lib/constants';
 import { vault } from '@shared/lib/vault';
+import { connectCloudVault } from '@shared/lib/vault-cloud';
 import type { CloudVaultConfig } from '@shared/types/config';
 import type { CreateVaultResponse } from '@shared/types/fetch';
 import { initDBClient } from 'db/init';
@@ -13,7 +14,6 @@ import { cwd, exit } from 'process';
 
 async function provisionCloudVault(
   vaultNameInput: string,
-  seed?: 'database_upload',
 ): Promise<CloudVaultConfig | null> {
   try {
     logInfo('Cloud flag passed, creating cloud-synced instance');
@@ -21,7 +21,7 @@ async function provisionCloudVault(
     const deadropClient = await createDeadropClient(true);
 
     const response = await deadropClient.vault.$post({
-      json: { name: vaultNameInput, seed },
+      json: { name: vaultNameInput },
     });
 
     const data = await response.json();
@@ -57,16 +57,18 @@ export async function vaultCreate(
   }
 
   if (existingVault) {
-    const cloud = await provisionCloudVault(
-      vaultNameInput,
-      'database_upload',
-    );
-
-    if (!cloud) return process.exit(1);
-
-    existingVault.cloud = cloud;
-
-    await migrateToCloudSync(existingVault);
+    try {
+      existingVault.cloud = await connectCloudVault(
+        await createDeadropClient(true),
+        vaultNameInput,
+      );
+      existingVault.location = await attachCloudVault(existingVault);
+    } catch (err) {
+      logError(
+        `Failed to enable cloud sync: ${(err as Error).message}`,
+      );
+      return process.exit(1);
+    }
 
     await saveConfig(
       dirname(configPath),

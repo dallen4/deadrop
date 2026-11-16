@@ -6,16 +6,22 @@ import {
   VaultWebviewMessage,
   VaultWebviewMessageType,
 } from './types';
-import { getSessionToken, hasCloudAccess } from './auth/clerk';
+import {
+  getClerkClient,
+  getSessionToken,
+  hasCloudAccess,
+} from './auth/clerk';
 import { getNonce } from './lib/nonce';
 import { plainNotification } from './lib/notify';
 import { loadConfig, saveConfig } from './lib/config';
 import {
   openVaultHelpers,
   createVaultDB,
-  migrateToCloudSync,
+  attachCloudVault,
 } from './lib/vault';
 import { initEnvKey } from '@shared/lib/vault';
+import { connectCloudVault } from '@shared/lib/vault-cloud';
+import { userOwnsVault } from '@shared/lib/turso/utils';
 import { createClient } from '@shared/client';
 import type { VaultDBConfig } from '@shared/types/config';
 import type { CreateVaultResponse } from '@shared/types/fetch';
@@ -269,20 +275,23 @@ export class VaultPanel {
     }
   }
 
-  private async _provisionCloud(
-    vaultName: string,
-    vaultConfig: VaultDBConfig,
-    seed?: 'database_upload',
-  ): Promise<void> {
+  private async _apiClient() {
     const token = await getSessionToken();
     if (!token) {
       throw new Error('You must be signed in to enable cloud sync.');
     }
-    const client = createClient(process.env.DEADROP_API_URL ?? '', {
+    return createClient(process.env.DEADROP_API_URL ?? '', {
       headers: { Authorization: `Bearer ${token}` },
     });
+  }
+
+  private async _provisionCloud(
+    vaultName: string,
+    vaultConfig: VaultDBConfig,
+  ): Promise<void> {
+    const client = await this._apiClient();
     const res = await client.vault.$post({
-      json: { name: vaultName, seed },
+      json: { name: vaultName },
     });
 
     const body = await res.json();
@@ -317,22 +326,22 @@ export class VaultPanel {
     }
 
     try {
-      // Provision with database_upload seed so we can upload
-      // the existing local .db file directly to Turso.
-      await this._provisionCloud(
-        this._activeVaultName,
-        this._activeVault,
-        'database_upload',
-      );
+      const nextVault: VaultDBConfig = {
+        ...this._activeVault,
+        cloud: await connectCloudVault(
+          await this._apiClient(),
+          this._activeVaultName,
+        ),
+      };
+      nextVault.location = await attachCloudVault(nextVault);
+
       const existingConfig = await loadConfig();
       if (existingConfig?.vaults[this._activeVaultName]) {
-        existingConfig.vaults[this._activeVaultName].cloud =
-          this._activeVault.cloud;
+        existingConfig.vaults[this._activeVaultName] = nextVault;
         await saveConfig(existingConfig);
       }
+      this._activeVault = nextVault;
 
-      // Upload the local DB then re-open as an embedded replica.
-      await migrateToCloudSync(this._activeVault);
       this.sendMessage({
         type: VaultWebviewMessageType.CloudSyncEnabled,
       });
@@ -350,20 +359,43 @@ export class VaultPanel {
     if (!this._activeVault || !this._activeVaultName) return;
     if (!this._activeVault.cloud) return;
 
+    const vaultName = this._activeVaultName;
+    const cloudName = this._activeVault.cloud.name;
+    // A shared vault's DELETE would resolve to the caller's own namespace.
+    const userId = await getClerkClient()
+      .then((c) => c.user?.id)
+      .catch(() => undefined);
+    const owns = !!userId && (await userOwnsVault(userId, cloudName));
+
+    const choice = await vscode.window.showWarningMessage(
+      `Turn off cloud sync for "${vaultName}"?`,
+      {
+        modal: true,
+        detail: owns
+          ? 'Your local copy keeps working. The cloud copy stays so you can turn sync back on, unless you delete it now. Deleting it removes every secret in it and breaks every token issued for it.'
+          : 'Your local copy keeps working. The cloud copy stays with its owner.',
+      },
+      'Turn Off',
+      ...(owns ? ['Turn Off and Delete Cloud Copy'] : []),
+    );
+
+    if (!choice) return this._syncUnchanged();
+
     try {
-      const token = await getSessionToken();
-
-      if (token) {
-        const client = createClient(
-          process.env.DEADROP_API_URL ?? '',
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-
-        await client.vault[':name'].$delete({
-          param: { name: this._activeVault.cloud.name },
+      if (choice === 'Turn Off and Delete Cloud Copy') {
+        const typed = await vscode.window.showInputBox({
+          prompt: `Type "${vaultName}" to permanently delete its cloud copy.`,
+          validateInput: (v) =>
+            v === vaultName
+              ? null
+              : `Type "${vaultName}" to confirm.`,
         });
+        if (typed !== vaultName) return this._syncUnchanged();
+
+        const res = await (
+          await this._apiClient()
+        ).vault[':name'].$delete({ param: { name: vaultName } });
+        if (res.status !== 200) throw new Error(await res.text());
       }
 
       delete this._activeVault.cloud;
@@ -386,6 +418,12 @@ export class VaultPanel {
         `Failed to disable cloud sync: ${(e as Error).message}`,
       );
     }
+  }
+
+  private _syncUnchanged() {
+    this.sendMessage({
+      type: VaultWebviewMessageType.CloudSyncUnchanged,
+    });
   }
 
   private async _onCreateEnvironment(envName: string) {

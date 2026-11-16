@@ -71,8 +71,9 @@ Worker.
   parent schema DB**; the `secrets` table structure propagates from the parent.
   This is Turso's Multi-DB Schema feature, **deprecated for new orgs** but
   grandfathered for existing paid orgs like `dallen4`.
-- `seed: 'database_upload'` → migrating an existing local CLI vault to cloud
-  (`migrateToCloudSync`); does not use Multi-DB Schema.
+- `seed: 'database_upload'` → no client sends it anymore. Local vaults go
+  cloud through `attachCloudVault` (`shared/db/attach.ts`), which copies rows
+  into a fresh replica instead of uploading the raw file.
 
 Escape hatch if Multi-DB Schema is ever revoked: drop the `schema` param, create
 a plain DB, and call `ensureSecretsSchema()` (`shared/db/init.ts`, idempotent

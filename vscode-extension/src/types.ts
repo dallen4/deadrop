@@ -71,6 +71,7 @@ export enum VaultWebviewMessageType {
   EnvironmentCreated = 'environmentCreated',
   CloudSyncEnabled = 'cloudSyncEnabled',
   CloudSyncDisabled = 'cloudSyncDisabled',
+  CloudSyncUnchanged = 'cloudSyncUnchanged',
   OperationError = 'operationError',
 }
 
@@ -116,4 +117,5 @@ export type VaultWebviewMessage =
   | { type: VaultWebviewMessageType.EnvironmentCreated; name: string; key: string }
   | { type: VaultWebviewMessageType.CloudSyncEnabled }
   | { type: VaultWebviewMessageType.CloudSyncDisabled }
+  | { type: VaultWebviewMessageType.CloudSyncUnchanged }
   | { type: VaultWebviewMessageType.OperationError; operation: string; message: string };
