@@ -1,4 +1,5 @@
 import { confirm, select } from '@inquirer/prompts';
+import { AuthScopes } from '@shared/config/plans';
 import { VaultStore } from '@shared/types/config';
 import chalk from 'chalk';
 import { copyToClipboard } from 'lib/clipboard';
@@ -212,6 +213,93 @@ export async function createApiKey(
   } catch (err) {
     logDebug(err);
     logError('Could not reach the deadrop API to create a key.');
+    return exit(1);
+  }
+}
+
+type ListApiKeysOptions = {
+  vault?: string;
+  environment?: string;
+  json?: boolean;
+};
+
+type ApiKeySummary = {
+  name: string;
+  expired: boolean;
+  revoked: boolean;
+  claims: { only?: string[]; prefix?: string };
+};
+
+// Same fields the desktop API Keys section shows.
+export const formatApiKey = ({
+  name,
+  expired,
+  revoked,
+  claims,
+}: ApiKeySummary) => {
+  const status = revoked
+    ? chalk.red('revoked')
+    : expired
+      ? chalk.gray('expired')
+      : chalk.green('active');
+  const secrets = claims.only?.length
+    ? claims.only.join(', ')
+    : 'whole environment';
+  const prefix = claims.prefix ?? 'none';
+
+  return `${chalk.bold(name)} ${status} — secrets: ${secrets}, prefix: ${prefix}`;
+};
+
+export async function listApiKeys(options: ListApiKeysOptions = {}) {
+  const deadropClient = await createDeadropClient(true);
+
+  const { config } = await loadConfig();
+
+  const vaultName = await pickVault(config.vaults, options.vault);
+  const environment = await pickEnvironment(
+    config.vaults,
+    vaultName,
+    options.environment,
+  );
+
+  try {
+    const response = await deadropClient.auth.keys.$get({
+      query: {
+        scopes: [AuthScopes.VaultInject],
+        vaultName,
+        environment,
+      },
+    });
+
+    if (!response.ok) {
+      logDebug(await response.text());
+      logError(
+        `Could not load API keys for '${vaultName}' (${environment}).`,
+      );
+      return exit(1);
+    }
+
+    const keys = await response.json();
+
+    if (options.json) {
+      process.stdout.write(`${JSON.stringify(keys, null, 2)}\n`);
+      return exit(0);
+    }
+
+    if (!keys.length) {
+      logInfo(
+        `No API keys for '${vaultName}' (${environment}). Run ` +
+          '`deadrop apiKeys create` to issue one.',
+      );
+      return exit(0);
+    }
+
+    keys.forEach((key) => logInfo(formatApiKey(key)));
+
+    return exit(0);
+  } catch (err) {
+    logDebug(err);
+    logError('Could not reach the deadrop API to list keys.');
     return exit(1);
   }
 }

@@ -330,7 +330,22 @@ Both shape what `inject` writes into the process; neither limits what the key ca
 
 Only cloud vaults are offered — a key mints sync tokens for a remote database, so a local-only vault has nothing for it to authorize.
 
-The key is shown on a separate screen that leaves nothing in your terminal scrollback once you dismiss it, and it can't be retrieved afterwards. Writing one to a non-interactive stream requires `--print`, so a script can't capture one by accident. List and revoke your keys from your Clerk account settings; each is named with its vault, environment, and issue time.
+The key is shown on a separate screen that leaves nothing in your terminal scrollback once you dismiss it, and it can't be retrieved afterwards. Writing one to a non-interactive stream requires `--print`, so a script can't capture one by accident. Each key is named with its vault, environment, and issue time. Revoke keys from your Clerk account settings.
+
+#### `apiKeys list`
+
+Shows the keys issued for a cloud vault and environment, whether each is active, expired, or revoked, and what it injects.
+
+```
+deadrop apiKeys list
+deadrop apiKeys list -v my-app -e production --json
+```
+
+| Option                    | Description                                                    |
+| ------------------------- | -------------------------------------------------------------- |
+| `-v, --vault <name>`      | Cloud vault to list keys for (prompts to select when omitted). |
+| `-e, --environment <env>` | Environment to list keys for (prompts to select when omitted). |
+| `--json`                  | Print the keys as JSON.                                        |
 
 ### `desktop install`
 

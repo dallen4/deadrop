@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { description, version } from './package.json';
-import { createApiKey } from 'actions/apiKeys';
+import { createApiKey, listApiKeys } from 'actions/apiKeys';
 import init from 'actions/init';
 import login from 'actions/login';
 import { drop } from 'actions/drop';
@@ -320,5 +320,21 @@ overrides 'inject --prefix' for runs using the key`,
     'copy the key to your clipboard without showing it',
   )
   .action(createApiKey);
+
+apiKeysRoot
+  .command('list')
+  .description(
+    'list the API keys scoped to one cloud vault and environment',
+  )
+  .option(
+    '-v, --vault <name>',
+    'cloud vault to list keys for (prompts to select when omitted)',
+  )
+  .option(
+    '-e, --environment <env>',
+    'environment to list keys for (prompts to select when omitted)',
+  )
+  .option('--json', 'print the keys as JSON')
+  .action(listApiKeys);
 
 export { deadrop };

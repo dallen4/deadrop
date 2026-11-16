@@ -63,6 +63,7 @@ deadrop secret add      # Add secret to vault
 deadrop secret remove
 deadrop apiKeys create  # Issue a CI key scoped to one cloud vault + environment
                         # (--only/--prefix bake inject shaping into the key's claims)
+deadrop apiKeys list    # List the keys for one cloud vault + environment (--json)
 ```
 
 ## Key Patterns
