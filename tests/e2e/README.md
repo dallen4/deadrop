@@ -22,7 +22,7 @@ testing only itself (see `web/tests/e2e/` and `cli/tests/e2e/` for those). See
     etc.) are copied from `web/lib/constants.ts` rather than imported — pulling
     in the web tsconfig isn't worth it for a handful of string constants. If
     those IDs change in `web/`, update them here too.
-- **Token bypass:** same Redis-backed `test-tkn`/`test-mode` mechanism as both
+- **Token bypass:** same KV-backed `test-tkn`/`test-mode` mechanism as both
   platform-specific suites (`shared/tests/http.ts`). The web actor plants it as
   a cookie + a routed request header (cross-site cookies to the worker get
   blocked, so it's re-attached via `ctx.route`); the CLI actor sends it as
@@ -40,8 +40,9 @@ pnpm test:e2e:run   # skip the CLI build (use when dist/ is already current)
 ```
 
 Copy `.env.example` to `.env` and fill in `DEADROP_API_URL`, `XPLAT_BASE_URL`,
-and `DROP_TEST_TOKEN` for local runs (or `REDIS_REST_URL`/`REDIS_REST_TOKEN` to
-read the live token straight from Redis instead of a pinned value).
+and `DROP_TEST_TOKEN` for local runs (or the `CLOUDFLARE_ACCOUNT_ID` /
+`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_KV_NAMESPACE_ID` trio to read the live
+token straight from Cloudflare KV instead of a pinned value).
 
 ## Notes / gotchas
 
@@ -63,7 +64,7 @@ read the live token straight from Redis instead of a pinned value).
 - `vitest.e2e.config.mts` (package root) — standalone e2e config (run via `-c`
   so the root workspace doesn't pick these specs up).
 - `utils/config.ts` — `baseURL`/`apiURL`/timeouts + `getTestToken()`
-  (Redis-or-env).
+  (KV-or-env).
 - `utils/cli-process.ts` — child-process wrapper: spawn, `waitFor(regex)`, kill.
 - `e2e/actors/types.ts` — `ActorKind`, `DropActor`/`GrabActor` interfaces.
 - `e2e/actors/cli.ts` / `e2e/actors/web.ts` — the two actor implementations.

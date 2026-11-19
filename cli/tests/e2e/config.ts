@@ -3,7 +3,7 @@ import path from 'path';
 // The worker API the CLI talks to. The same value is passed to the spawned
 // `deadrop` processes as DEADROP_API_URL. Like the web suite, these tests are
 // meant to run against a *deployed* worker (so the test token must be seeded
-// into the same Upstash instance that worker reads).
+// into the same KV namespace that worker binds as DROP_STORE).
 export const apiURL = process.env.DEADROP_API_URL!;
 
 // Built CLI entry the actor spawns. Override with CLI_ENTRY to point at the

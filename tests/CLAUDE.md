@@ -11,7 +11,7 @@ pnpm test:e2e       # builds cli/dist/deadrop.js first, then runs the suite
 pnpm test:e2e:run   # runs the suite without rebuilding the CLI
 ```
 
-Requires `tests/.env` locally (copy from `.env.example`) — `DEADROP_API_URL`, `XPLAT_BASE_URL`, `DROP_TEST_TOKEN`, and (optionally) `REDIS_REST_URL`/`REDIS_REST_TOKEN` to read the live test token directly from Redis instead of a pinned env value. CI injects these as real env vars.
+Requires `tests/.env` locally (copy from `.env.example`) — `DEADROP_API_URL`, `XPLAT_BASE_URL`, `DROP_TEST_TOKEN`, and (optionally) `CLOUDFLARE_ACCOUNT_ID`/`CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_KV_NAMESPACE_ID` to read the live test token directly from Cloudflare KV instead of a pinned env value. CI injects these as real env vars.
 
 ## Directory Structure
 
@@ -25,7 +25,7 @@ tests/
 │       ├── cli.ts               # Spawns the built CLI binary as a child process (CliProcess)
 │       └── web.ts               # Drives a real Playwright/Chromium session against the deployed web app
 ├── utils/
-│   ├── config.ts                # baseURL/apiURL/timeouts + getTestToken() (Redis-or-env)
+│   ├── config.ts                # baseURL/apiURL/timeouts; re-exports getTestToken() from @shared/tests/token
 │   └── cli-process.ts           # Child-process wrapper: spawn, waitFor(regex), kill
 ├── .env / .env.example
 ├── tsconfig.json
@@ -41,7 +41,7 @@ Both actors implement the same `DropActor`/`GrabActor` interface (`drop(secret) 
 - **Web actor**: launches a real headless Chromium via `playwright` and drives the deployed web app's DOM directly — element IDs (`#begin-drop-btn`, etc.) are copied from `web/lib/constants.ts` rather than imported, since pulling in the web tsconfig isn't worth it for a handful of string constants. If those IDs change in `web/`, update them here too.
 
 ### Test-token bypass
-Both actors authenticate past captcha/rate-limiting using the same stable `DROP_TEST_TOKEN`/`test_tkn` Redis-backed mechanism as `web/tests/e2e/` and `cli/tests/e2e/` — see `shared/tests/http.ts` for the cookie/header constant names. This is a test-only bypass; never reuse it for anything user-facing. The value is rotated daily by `.github/workflows/hydrate_test_token_workflow.yml` (`pnpm hydrate:test-token`, runs `shared/scripts/hydrate-test-token.ts`) rather than seeded per test run — its concurrency group queues behind any in-flight e2e workflow so rotation never lands mid-run.
+Both actors authenticate past captcha/rate-limiting using the same stable `DROP_TEST_TOKEN`/`test_tkn` KV-backed mechanism as `web/tests/e2e/` and `cli/tests/e2e/` — see `shared/tests/http.ts` for the cookie/header constant names. This is a test-only bypass; never reuse it for anything user-facing. The value is rotated daily by `.github/workflows/hydrate_test_token_workflow.yml` (`pnpm hydrate:test-token`, runs `shared/scripts/hydrate-test-token.ts`) rather than seeded per test run — its concurrency group queues behind any in-flight e2e workflow so rotation never lands mid-run.
 
 ### XPLAT_ env namespacing
 Vite/Vitest reserves `BASE_URL` for its own base public path, so the deployed app URL is namespaced as `XPLAT_BASE_URL` to avoid the collision. Follow the same `XPLAT_*` prefix for any new env var this suite introduces.
